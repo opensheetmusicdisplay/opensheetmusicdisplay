@@ -588,6 +588,7 @@ export class InstrumentReader {
         }
       }
       this.attachGraceNotesAfterMainNote();
+      this.savePendingClefInstructions();
       if (this.currentXmlMeasureIndex === this.xmlMeasureList.length - 1) {
         for (let i: number = 0; i < this.instrument.Staves.length; i++) {
           if (!this.activeClefsHaveBeenInitialized[i]) {
@@ -1330,61 +1331,9 @@ export class InstrumentReader {
               this.activeClefs[key - 1] = clefInstruction;
               this.abstractInstructions.splice(i, 1);
             }
-          } else {
-            let lastStaffEntryBefore: SourceStaffEntry;
-            const duration: Fraction = this.activeRhythm.Rhythm;
-            if (duration.RealValue > 0 &&
-              instructionTimestamp.RealValue / duration.RealValue > 0.90 && // necessary for #1120
-              duration.RealValue !== instructionTimestamp.RealValue // necessary for #1461
-            ) {
-              if (!this.currentMeasure.LastInstructionsStaffEntries[key - 1]) {
-                this.currentMeasure.LastInstructionsStaffEntries[key - 1] = new SourceStaffEntry(undefined, this.instrument.Staves[key - 1]);
-              }
-              lastStaffEntryBefore = this.currentMeasure.LastInstructionsStaffEntries[key - 1];
-            }
-            // TODO figure out a more elegant way to do this. (see #1120)
-            //   the problem is that not all the staffentries in the measure exist yet,
-            //   so we can't put the clefInstruction before the correct note.
-            //   (if we try that, it's one note too early -> save instruction for later?)
-            //let lastTimestampBefore: Fraction;
-            // for (const vssec of this.currentMeasure.VerticalSourceStaffEntryContainers) {
-            //   for (const sse of vssec.StaffEntries) {
-            //     if (sse?.ParentStaff?.Id !== key) {
-            //       continue;
-            //     }
-            //     // if (!lastTimestampBefore || sse.Timestamp.lte(instructionTimestamp)) {
-            //     //   lastTimestampBefore = sse.Timestamp;
-            //     //   lastStaffEntryBefore = sse;
-            //     // } else {
-            //     //   lastStaffEntryBefore = sse;
-            //     //   break;
-            //     // }
-            //     if (sse.Timestamp.gte(instructionTimestamp)) {
-            //       lastStaffEntryBefore = sse;
-            //       break;
-            //     }
-            //   }
-            // }
-            //const sseIndex: number = this.inSourceMeasureInstrumentIndex + staffNumber - 1;
-            // if (!lastStaffEntryBefore) {
-            //   // this doesn't work for some reason
-            //   const newContainer: VerticalSourceStaffEntryContainer = new VerticalSourceStaffEntryContainer(this.currentMeasure, instructionTimestamp, 1);
-            //   const newStaffEntry: SourceStaffEntry = new SourceStaffEntry(newContainer, this.instrument.Staves[key - 1]);
-            //   newContainer.StaffEntries.push(newStaffEntry);
-            //   this.currentMeasure.VerticalSourceStaffEntryContainers.push(newContainer);
-            //   lastStaffEntryBefore = newStaffEntry;
-            // }
-            // if (!lastStaffEntryBefore) {
-              //   lastStaffEntryBefore = new SourceStaffEntry(undefined, undefined);
-              //   this.currentMeasure.LastInstructionsStaffEntries[sseIndex] = lastStaffEntryBefore;
-              // }
-            if (lastStaffEntryBefore) {
-              clefInstruction.Parent = lastStaffEntryBefore;
-              lastStaffEntryBefore.Instructions.push(clefInstruction);
-              this.activeClefs[key - 1] = clefInstruction;
-              this.abstractInstructions.splice(i, 1);
-            } // else clefinstruction might be processed later (e.g. Haydn Concertante measure 314)
           }
+          // else the clef stays in the list: the staff entry at its timestamp may only come later in the measure (e.g. in a
+          //   voice after a <backup>), or never, and then savePendingClefInstructions() places it at the end of the measure.
         } else if (key <= this.activeClefs.length && clefInstruction === this.activeClefs[key - 1]) {
           this.abstractInstructions.splice(i, 1);
         }
@@ -1440,6 +1389,51 @@ export class InstrumentReader {
           this.abstractInstructions.splice(i, 1);
         }
       }
+    }
+  }
+
+  /**
+   * Saves the clefs that saveAbstractInstructionList() left in the list, at the end of the measure, when all its staff entries
+   * exist. A clef in the middle of a measure goes to the staff entry of its staff at its timestamp, but the staff may have no
+   * note starting there: e.g. the next note of the clef's voice is on another staff (#1836), or the clef follows a `<backup>`
+   * to a time in the middle of a note. Such a clef goes before the next note of its staff, so that it applies from there on,
+   * or to the end of the measure if no note of its staff follows. These clefs were lost before, so their staff kept its clef.
+   */
+  private savePendingClefInstructions(): void {
+    for (let i: number = this.abstractInstructions.length - 1; i >= 0; i--) {
+      const staffNumber: number = this.abstractInstructions[i][0];
+      const clefInstruction: AbstractNotationInstruction = this.abstractInstructions[i][1];
+      const clefTimestamp: Fraction = this.abstractInstructions[i][2];
+      if (!(clefInstruction instanceof ClefInstruction) || staffNumber > this.instrument.Staves.length) {
+        continue;
+      }
+      this.abstractInstructions.splice(i, 1);
+      const staffIndex: number = this.inSourceMeasureInstrumentIndex + staffNumber - 1;
+      let nextStaffEntry: SourceStaffEntry;
+      for (const container of this.currentMeasure.VerticalSourceStaffEntryContainers) { // in timestamp order
+        if (container.Timestamp.gte(clefTimestamp) && container.StaffEntries[staffIndex]?.hasNotes()) {
+          nextStaffEntry = container.StaffEntries[staffIndex];
+          break;
+        }
+      }
+      let staffEntry: SourceStaffEntry = nextStaffEntry ?? this.currentMeasure.LastInstructionsStaffEntries[staffIndex];
+      if (staffEntry?.Instructions.some((instruction: AbstractNotationInstruction): boolean => instruction instanceof ClefInstruction)) {
+        continue; // a later clef change is there already
+      }
+      if (!nextStaffEntry) {
+        const activeClef: ClefInstruction = this.activeClefs[staffNumber - 1];
+        if (activeClef?.ClefType === clefInstruction.ClefType && activeClef.Line === clefInstruction.Line &&
+          activeClef.OctaveOffset === clefInstruction.OctaveOffset) {
+          continue; // no clef change, which would be drawn at the end of the measure (see saveClefInstructionAtEndOfMeasure())
+        }
+        if (!staffEntry) {
+          staffEntry = new SourceStaffEntry(undefined, undefined);
+          this.currentMeasure.LastInstructionsStaffEntries[staffIndex] = staffEntry;
+        }
+      }
+      clefInstruction.Parent = staffEntry;
+      staffEntry.Instructions.push(clefInstruction);
+      this.activeClefs[staffNumber - 1] = clefInstruction;
     }
   }
 
