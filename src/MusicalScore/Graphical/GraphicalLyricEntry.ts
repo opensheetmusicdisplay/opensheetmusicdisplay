@@ -25,6 +25,11 @@ export class GraphicalLyricEntry {
     private graphicalStaffEntry: GraphicalStaffEntry;
     /** The relative position of the label before the first layout calculation, see resetPosition(). */
     private initialLabelRelativePosition: PointF2D;
+    /** The width of the verse number at the start of the lyric's text, if it is to be left of the lyric, else 0.
+     *  See measureLeadingNumber(). */
+    private leadingNumberWidth: number = 0;
+    /** Whether the verse number is left of the lyric now, see moveLeadingNumberLeftOfLyric(). */
+    private leadingNumberMoved: boolean = false;
 
     constructor(lyricsEntry: LyricsEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricsHeight: number, staffHeight: number) {
         this.lyricsEntry = lyricsEntry;
@@ -50,7 +55,11 @@ export class GraphicalLyricEntry {
         this.graphicalLabel.Label.colorDefault = rules.DefaultColorLyrics; // if undefined, no change. saves an if check
         this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0, staffHeight);
         this.graphicalLabel.setLabelPositionAndShapeBorders(); // needed to have Size.width
-        this.moveLeadingNumberLeftOfLyric(rules);
+        this.leadingNumberWidth = this.measureLeadingNumber(rules);
+        // the first lyric of a verse in the staff is known now, the first in a system when the systems are built,
+        //   see moveLeadingNumberLeftOfLyricInStaffLine()
+        this.moveLeadingNumberLeftOfLyric(this.numbersStartTheirVerses(
+            (entry: LyricsEntry): boolean => this.isFirstOfVerseInStaff(entry.VerseNumber)));
         if (this.graphicalLabel.PositionAndShape.Size.width < rules.LyricsExtraXShiftForShortLyricsWidthThreshold) {
             this.graphicalLabel.PositionAndShape.RelativePosition.x += rules.LyricsExtraXShiftForShortLyrics;
             this.graphicalLabel.CenteringXShift = rules.LyricsExtraXShiftForShortLyrics;
@@ -61,42 +70,68 @@ export class GraphicalLyricEntry {
     }
 
     /**
-     * Aligns the first lyric of a verse whose text starts with the verse number, e.g. "1. Si", like a lyric without one, if
-     * lyrics are left-aligned: the number is left of where the lyric starts, instead of the lyric being right of that by the number.
+     * The width of the verse number at the start of the lyric's text, e.g. "1. " in "1. Si", if the number is to be left of
+     * the lyric (EngravingRules.LyricsVerseNumberLeftOfLyric, for left-aligned lyrics), else 0.
      * MusicXML has no element for such a number, it is part of the lyric's text.
-     * The label's box is the lyric without the number, so it is spaced like a lyric without one: no lyrics of its verse are
-     * before it. The box's left margin reaches to the number, which keeps the number clear of what is above it.
-     * Only if the other lyrics with a verse number at the note are the first of their verses too, see numbersStartTheirVerses().
      */
-    private moveLeadingNumberLeftOfLyric(rules: EngravingRules): void {
+    private measureLeadingNumber(rules: EngravingRules): number {
         const label: Label = this.graphicalLabel.Label;
         if (!rules.LyricsVerseNumberLeftOfLyric || !TextAlignment.IsLeft(label.textAlignment)) {
-            return;
+            return 0;
         }
         const leadingNumber: string = GraphicalLyricEntry.leadingNumber.exec(this.graphicalLabel.TextLines?.[0].text ?? "")?.[0];
-        if (!leadingNumber || !this.numbersStartTheirVerses()) {
-            return;
+        if (!leadingNumber) {
+            return 0;
         }
-        const numberWidth: number = label.fontHeight *
+        return label.fontHeight *
             MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(leadingNumber, label.font, label.fontStyle, label.fontFamily);
-        const box: BoundingBox = this.graphicalLabel.PositionAndShape;
-        box.BorderRight -= numberWidth;
-        box.BorderMarginRight -= numberWidth;
-        box.BorderMarginLeft -= numberWidth;
-        for (const line of this.graphicalLabel.TextLines) {
-            line.xOffset -= numberWidth;
-        }
     }
 
     /**
-     * Whether each lyric with a verse number at this lyric's note, in any voice of its staff, is the first lyric of its verse
-     * there. The numbers of a note are moved together, so that its lyrics stay aligned, e.g. where verse 1 sang the measures
-     * before ("1.2. When I was young") and goes on with "1. Sea" while verse 2 starts with "2. Sea".
+     * Aligns a lyric that starts its verse and whose text starts with the verse number, e.g. "1. Si", like a lyric without one:
+     * the number is left of where the lyric starts, instead of the lyric being right of that by the number.
+     * The label's box is the lyric without the number, so it is spaced like a lyric without one: no lyrics of its verse are
+     * before it. The box's left margin reaches to the number, which keeps the number clear of what is above it.
+     * Only if the other lyrics with a verse number at the note start their verses too, see numbersStartTheirVerses().
+     * @param moved true to move the number left of the lyric, false to put it back at the note, with the lyric right of it
      */
-    private numbersStartTheirVerses(): boolean {
+    private moveLeadingNumberLeftOfLyric(moved: boolean): void {
+        if (this.leadingNumberWidth === 0 || moved === this.leadingNumberMoved) {
+            return;
+        }
+        const shift: number = moved ? -this.leadingNumberWidth : this.leadingNumberWidth;
+        const box: BoundingBox = this.graphicalLabel.PositionAndShape;
+        box.BorderRight += shift;
+        box.BorderMarginRight += shift;
+        box.BorderMarginLeft += shift;
+        for (const line of this.graphicalLabel.TextLines) {
+            line.xOffset += shift;
+        }
+        this.leadingNumberMoved = moved;
+    }
+
+    /**
+     * Moves the verse number left of the lyric if the lyric is the first of its verse in its staff line, e.g. at the start of
+     * a system in a hymn that repeats the verse numbers in every system, like for the first lyric of the verse in the staff.
+     * Called when the lyrics of a staff line are positioned: the systems are built after the lyrics are created and the
+     * measures are spaced, so the space for the number after the note stays reserved. Puts the number back at the note if
+     * the lyric is no longer the first of its verse in its staff line, e.g. when the systems change with a re-render.
+     * @param isFirstOfVerseInStaffLine whether no lyric of the given lyric's verse is before it in the staff line
+     */
+    public moveLeadingNumberLeftOfLyricInStaffLine(isFirstOfVerseInStaffLine: (lyricsEntry: LyricsEntry) => boolean): void {
+        this.moveLeadingNumberLeftOfLyric(this.numbersStartTheirVerses(isFirstOfVerseInStaffLine));
+    }
+
+    /**
+     * Whether each lyric with a verse number at this lyric's note, in any voice of its staff, is the first lyric of its verse,
+     * in the staff or in the staff line. The numbers of a note are moved together, so that its lyrics stay aligned, e.g. where
+     * verse 1 sang the measures before ("1.2. When I was young") and goes on with "1. Sea" while verse 2 starts with "2. Sea".
+     * @param isFirstOfVerse whether the given lyric is the first of its verse
+     */
+    private numbersStartTheirVerses(isFirstOfVerse: (lyricsEntry: LyricsEntry) => boolean): boolean {
         for (const voiceEntry of this.lyricsEntry.Parent.ParentSourceStaffEntry.VoiceEntries) {
             for (const lyricsEntry of voiceEntry.LyricsEntries.values()) {
-                if (GraphicalLyricEntry.leadingNumber.test(lyricsEntry.Text.trim()) && !this.isFirstOfVerseInStaff(lyricsEntry.VerseNumber)) {
+                if (GraphicalLyricEntry.leadingNumber.test(lyricsEntry.Text.trim()) && !isFirstOfVerse(lyricsEntry)) {
                     return false;
                 }
             }
