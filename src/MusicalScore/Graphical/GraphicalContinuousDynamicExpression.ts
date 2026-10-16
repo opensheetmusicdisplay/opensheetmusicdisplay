@@ -351,9 +351,10 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
             this.PositionAndShape.RelativePosition.y += shift;
             this.PositionAndShape.calculateBoundingBox();
         } else {
-            this.lines[0].Start.y += shift;
-            this.lines[0].End.y += shift;
-            this.lines[1].End.y += shift;
+            // A split wedge has four endpoints; an unsplit wedge shares its tip. Move each once.
+            for (const point of new Set(this.lines.flatMap(line => [line.Start, line.End]))) {
+                point.y += shift;
+            }
         }
     }
 
@@ -362,23 +363,16 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
         if (this.IsVerbal) {
             return;
         }
-        const width: number = Math.abs(this.lines[0].End.x - this.lines[0].Start.x);
-        if (width < Math.abs(value)) {
+        const points: Set<PointF2D> = new Set(this.lines.flatMap(line => [line.Start, line.End]));
+        const left: number = Math.min(...Array.from(points, point => point.x));
+        const right: number = Math.max(...Array.from(points, point => point.x));
+        if (right - left < Math.abs(value)) {
             return;
         }
-        if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
-            if (value > 0) {
-                this.lines[0].Start.x += value;
-            } else {
-                this.lines[0].End.x += value;
-                this.lines[1].End.x += value;
-            }
-        } else {
-            if (value < 0) {
-                this.lines[0].Start.x += value;
-            } else {
-                this.lines[0].End.x += value;
-                this.lines[1].End.x += value;
+        const edge: number = value > 0 ? left : right;
+        for (const point of points) {
+            if (point.x === edge) {
+                point.x += value;
             }
         }
         this.calcPsi();

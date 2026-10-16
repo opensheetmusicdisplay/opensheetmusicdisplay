@@ -1,6 +1,5 @@
 import { StaffLine } from "../StaffLine";
 import { BoundingBox } from "../BoundingBox";
-import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
 import { AbstractGraphicalExpression } from "../AbstractGraphicalExpression";
 import { PointF2D } from "../../../Common/DataObjects/PointF2D";
 import { EngravingRules } from "../EngravingRules";
@@ -20,9 +19,15 @@ export class AlignmentManager {
         // Find close expressions along the staffline. Group them into tuples
         const groups: AbstractGraphicalExpression[][] = [];
         let tmpList: AbstractGraphicalExpression[] = new Array<AbstractGraphicalExpression>();
-        for (let aeIdx: number = 0; aeIdx < this.parentStaffline.AbstractExpressions.length - 1; aeIdx++) {
-            const currentExpression: AbstractGraphicalExpression = this.parentStaffline.AbstractExpressions[aeIdx];
-            const nextExpression: AbstractGraphicalExpression = this.parentStaffline.AbstractExpressions[aeIdx + 1];
+        // Construction order is not spatial order: dynamics are placed before wedges, and a
+        // continuation can be inserted before the expressions of the system where it ends.
+        const expressions: AbstractGraphicalExpression[] = this.parentStaffline.AbstractExpressions.slice().sort((a, b) =>
+            a.Placement - b.Placement ||
+            (a.PositionAndShape.RelativePosition.x + a.PositionAndShape.BorderMarginLeft) -
+            (b.PositionAndShape.RelativePosition.x + b.PositionAndShape.BorderMarginLeft));
+        for (let aeIdx: number = 0; aeIdx < expressions.length - 1; aeIdx++) {
+            const currentExpression: AbstractGraphicalExpression = expressions[aeIdx];
+            const nextExpression: AbstractGraphicalExpression = expressions[aeIdx + 1];
 
             const currentExpressionPlacement: PlacementEnum = currentExpression?.SourceExpression?.Placement;
             const nextExpressionPlacement: PlacementEnum = nextExpression?.SourceExpression?.Placement;
@@ -85,9 +90,9 @@ export class AlignmentManager {
                     const centerOffset: number = centerYs[exprIdx] - yIdeal;
                     const shift: number = this.limitShift(expr, -centerOffset, aes);
                     // FIXME: Expressions should not behave differently.
-                    if (expr instanceof VexFlowContinuousDynamicExpression) {
-                        (expr as VexFlowContinuousDynamicExpression).shiftYPosition(shift);
-                        (expr as VexFlowContinuousDynamicExpression).calcPsi();
+                    if (expr instanceof GraphicalContinuousDynamicExpression) {
+                        expr.shiftYPosition(shift);
+                        expr.calcPsi();
                     } else {
                         expr.PositionAndShape.RelativePosition.y += shift;
                         // note: verbal GraphicalContinuousDynamicExpressions have a label, nonverbal ones don't.
@@ -95,16 +100,16 @@ export class AlignmentManager {
                         expr.PositionAndShape.calculateBoundingBox();
                     }
                     // Squeeze wedges
-                    if ((expr as VexFlowContinuousDynamicExpression).squeeze) {
+                    if (expr instanceof GraphicalContinuousDynamicExpression) {
                         const nextExpression: AbstractGraphicalExpression = exprIdx < aes.length - 1 ? aes[exprIdx + 1] : undefined;
                         const prevExpression: AbstractGraphicalExpression = exprIdx > 0 ? aes[exprIdx - 1] : undefined;
                         if (nextExpression) {
                             const overlapRight: PointF2D = this.getOverlap(expr.PositionAndShape, nextExpression.PositionAndShape);
-                            (expr as VexFlowContinuousDynamicExpression).squeeze(-(overlapRight.x + this.rules.DynamicExpressionSpacer));
+                            expr.squeeze(-(overlapRight.x + this.rules.DynamicExpressionSpacer));
                         }
                         if (prevExpression) {
                             const overlapLeft: PointF2D = this.getOverlap(prevExpression.PositionAndShape, expr.PositionAndShape);
-                            (expr as VexFlowContinuousDynamicExpression).squeeze(overlapLeft.x + this.rules.DynamicExpressionSpacer);
+                            expr.squeeze(overlapLeft.x + this.rules.DynamicExpressionSpacer);
                         }
                     }
                 }

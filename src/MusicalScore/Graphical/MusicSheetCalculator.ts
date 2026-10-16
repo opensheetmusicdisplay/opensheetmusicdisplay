@@ -64,7 +64,7 @@ import { ContinuousTempoExpression } from "../VoiceData/Expressions/ContinuousEx
 import { FontStyles } from "../../Common/Enums/FontStyles";
 import { AbstractTempoExpression } from "../VoiceData/Expressions/AbstractTempoExpression";
 import { GraphicalInstantaneousDynamicExpression } from "./GraphicalInstantaneousDynamicExpression";
-import { ContDynamicEnum } from "../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
+import { ContDynamicEnum, ContinuousDynamicExpression } from "../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { GraphicalContinuousDynamicExpression } from "./GraphicalContinuousDynamicExpression";
 import { FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSMDOptions";
 import { IStafflineNoteCalculator } from "../Interfaces/IStafflineNoteCalculator";
@@ -1492,7 +1492,8 @@ export abstract class MusicSheetCalculator {
         return;
     }
 
-    protected calculateDynamicExpressionsForMultiExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
+    protected calculateDynamicExpressionsForMultiExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number,
+                                                                instantaneousOnly: boolean = false): void {
         return;
     }
 
@@ -1540,8 +1541,32 @@ export abstract class MusicSheetCalculator {
         // const staffIndex: number = musicSystem.StaffLines.indexOf(staffLine);
 
         // We know we have an end measure because otherwise we won't be called
+        const continuousDynamic: ContinuousDynamicExpression = graphicalContinuousDynamic.ContinuousDynamic;
+        const endAbsoluteTimestamp: Fraction = continuousDynamic.EndPositionTimestamp ?
+            Fraction.plus(continuousDynamic.EndMultiExpression.SourceMeasureParent.AbsoluteTimestamp, continuousDynamic.EndPositionTimestamp) :
+            continuousDynamic.EndMultiExpression.AbsoluteTimestamp;
+        const endOffsetFraction: Fraction = continuousDynamic.EndMultiExpression.EndOffsetFraction;
+        if (continuousDynamic.EndPositionTimestamp && !this.rules.UseEndOffsetForExpressions && endOffsetFraction) {
+            endAbsoluteTimestamp.Sub(endOffsetFraction);
+        }
+        const sourceMeasures: SourceMeasure[] = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures;
+        let endMeasureIndex: number = continuousDynamic.EndMultiExpression.SourceMeasureParent.measureListIndex;
+        while (endMeasureIndex > 0 && endAbsoluteTimestamp.lt(sourceMeasures[endMeasureIndex].AbsoluteTimestamp)) {
+            endMeasureIndex--;
+        }
+        while (endMeasureIndex + 1 < sourceMeasures.length && endAbsoluteTimestamp.gt(
+            Fraction.plus(sourceMeasures[endMeasureIndex].AbsoluteTimestamp, sourceMeasures[endMeasureIndex].Duration))) {
+            endMeasureIndex++;
+        }
+        // A stop at a bar boundary belongs visually before the barline, even when MusicXML
+        // encodes it before the first note of the following measure. Do not create a new-system continuation.
+        if (continuousDynamic.EndPositionTimestamp && endAbsoluteTimestamp.gt(continuousDynamic.StartMultiExpression.AbsoluteTimestamp)) {
+            while (endMeasureIndex > 0 && endAbsoluteTimestamp.Equals(sourceMeasures[endMeasureIndex].AbsoluteTimestamp)) {
+                endMeasureIndex--;
+            }
+        }
         const endMeasure: GraphicalMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(
-            graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.SourceMeasureParent, staffIndex);
+            sourceMeasures[endMeasureIndex], staffIndex);
         if (!endMeasure) {
             log.warn("MusicSheetCalculator.calculateGraphicalContinuousDynamic: No endMeasure found");
             return;
@@ -1561,8 +1586,8 @@ export abstract class MusicSheetCalculator {
             isPartOfMultiStaffInstrument = staffLine?.isPartOfMultiStaffInstrument();
         }
 
-        const endAbsoluteTimestamp: Fraction = Fraction.createFromFraction(graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.AbsoluteTimestamp);
-        const container: VerticalGraphicalStaffEntryContainer = this.graphicalMusicSheet.GetVerticalContainerFromTimestamp(endAbsoluteTimestamp);
+        const container: VerticalGraphicalStaffEntryContainer = this.graphicalMusicSheet.GetVerticalContainerFromTimestamp(
+            continuousDynamic.EndMultiExpression.AbsoluteTimestamp);
         const parentMeasure: GraphicalMeasure = container.getFirstNonNullStaffEntry().parentMeasure;
         const endOfMeasure: number = parentMeasure.PositionAndShape.AbsolutePosition.x + parentMeasure.PositionAndShape.BorderRight;
         let maxNoteLength: Fraction = new Fraction(0, 0, 0);
@@ -1585,7 +1610,6 @@ export abstract class MusicSheetCalculator {
 
         const beginOfNextNote: Fraction = Fraction.plus(endAbsoluteTimestamp, maxNoteLength);
         const placementFraction: Fraction = beginOfNextNote.clone();
-        const endOffsetFraction: Fraction = graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.EndOffsetFraction;
         if (endOffsetFraction && this.rules.UseEndOffsetForExpressions) {
             placementFraction.Add(graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.EndOffsetFraction);
         }
@@ -1605,6 +1629,21 @@ export abstract class MusicSheetCalculator {
             //startPosInStaffline.x -= 1;
             startPosInStaffline.x -= staffEntryWidth / 2 * sizeFactor + wedgePadding;
             endPosInStaffLine.x = startPosInStaffline.x + staffEntryWidth / 2 * sizeFactor;
+        } else if (continuousDynamic.EndPositionTimestamp) {
+            // A stop before a note belongs to its onset, not to the end of that note. After the last
+            // onset of a measure, interpolate toward its barline instead of a note on the next system.
+            const measureEnd: Fraction = Fraction.plus(endMeasure.parentSourceMeasure.AbsoluteTimestamp, endMeasure.parentSourceMeasure.Duration);
+            const measureEndX: number = endMeasure.PositionAndShape.RelativePosition.x + endMeasure.PositionAndShape.BorderRight
+                - this.rules.WedgeHorizontalMargin;
+            const lastEntry: GraphicalStaffEntry = endMeasure.staffEntries[endMeasure.staffEntries.length - 1];
+            if (endAbsoluteTimestamp.gte(measureEnd)) {
+                endPosInStaffLine.x = measureEndX;
+            } else if (lastEntry && endAbsoluteTimestamp.gt(lastEntry.getAbsoluteTimestamp())) {
+                const lastX: number = endMeasure.PositionAndShape.RelativePosition.x + lastEntry.PositionAndShape.RelativePosition.x;
+                const fraction: number = Fraction.minus(endAbsoluteTimestamp, lastEntry.getAbsoluteTimestamp()).RealValue /
+                    Fraction.minus(measureEnd, lastEntry.getAbsoluteTimestamp()).RealValue;
+                endPosInStaffLine.x = lastX + (measureEndX - lastX) * fraction;
+            }
         } else if (nextNotePosInStaffLine.x > endPosInStaffLine.x && nextNotePosInStaffLine.x < endOfMeasure) {
             endPosInStaffLine.x += (nextNotePosInStaffLine.x - endPosInStaffLine.x) / this.rules.WedgeEndDistanceBetweenTimestampsFactor;
         } else { //Otherwise extend to the end of the measure
@@ -1612,11 +1651,10 @@ export abstract class MusicSheetCalculator {
         }
 
         const startCollideBox: BoundingBox =
-            this.dynamicExpressionMap.get(graphicalContinuousDynamic.ContinuousDynamic.StartMultiExpression.AbsoluteTimestamp.RealValue);
+            this.dynamicExpressionMap.get(this.dynamicExpressionKey(staffIndex, continuousDynamic.Placement,
+                continuousDynamic.StartMultiExpression.AbsoluteTimestamp));
         if (startCollideBox) {
             if ((startCollideBox.DataObject as any).ParentStaffLine === staffLine) {
-                // TODO the dynamicExpressionMap doesn't distinguish between staffLines, so we may react to a different staffline otherwise
-                //   so the more fundamental solution would be to fix dynamicExpressionMap mapping across stafflines.
                 startPosInStaffline.x = startCollideBox.RelativePosition.x + this.rules.WedgeHorizontalMargin;
                 startPosInStaffline.x += startCollideBox.BorderMarginRight;
             }
@@ -1633,9 +1671,20 @@ export abstract class MusicSheetCalculator {
         // if ContinuousDynamicExpression is given from wedge
         let endGraphicalContinuousDynamic: GraphicalContinuousDynamicExpression = undefined;
 
-        // last length check
-        if (sameStaffLine && endPosInStaffLine.x - startPosInStaffline.x < this.rules.WedgeMinLength && !isSoftAccent) {
+        // A minimum engraving length must not move an explicit MusicXML stop past its timestamp.
+        if (sameStaffLine && !continuousDynamic.EndPositionTimestamp &&
+            endPosInStaffLine.x - startPosInStaffline.x < this.rules.WedgeMinLength && !isSoftAccent) {
             endPosInStaffLine.x = startPosInStaffline.x + this.rules.WedgeMinLength;
+        }
+
+        // Instantaneous dynamics are laid out first, including ones in later measures. Clip after the
+        // minimum-length adjustment so it cannot push the wedge through its destination dynamic.
+        const endCollideBox: BoundingBox = this.dynamicExpressionMap.get(
+            this.dynamicExpressionKey(staffIndex, continuousDynamic.Placement, endAbsoluteTimestamp));
+        if (!isSoftAccent && endCollideBox?.DataObject instanceof GraphicalInstantaneousDynamicExpression &&
+            endCollideBox.DataObject.ParentStaffLine === endStaffLine) {
+            endPosInStaffLine.x = Math.min(endPosInStaffLine.x,
+                endCollideBox.RelativePosition.x + endCollideBox.BorderMarginLeft - this.rules.WedgeHorizontalMargin);
         }
 
         // First staff wedge always starts at the given position and the last and inbetween wedges always start at the begin of measure
@@ -1943,7 +1992,10 @@ export abstract class MusicSheetCalculator {
             endGraphicalContinuousDynamic.createSecondHalfLines(lowerStartX, lowerEndX, endIdealY);
             endGraphicalContinuousDynamic.calcPsi();
         }
-        this.dynamicExpressionMap.set(endAbsoluteTimestamp.RealValue, graphicalContinuousDynamic.PositionAndShape);
+        const endKey: string = this.dynamicExpressionKey(staffIndex, continuousDynamic.Placement, endAbsoluteTimestamp);
+        if (!this.dynamicExpressionMap.has(endKey)) {
+            this.dynamicExpressionMap.set(endKey, (endGraphicalContinuousDynamic ?? graphicalContinuousDynamic).PositionAndShape);
+        }
     }
 
     /**
@@ -4164,28 +4216,30 @@ export abstract class MusicSheetCalculator {
     }
 
     //So we can track shared notes bounding boxes to avoid collision + skyline issues
-    protected dynamicExpressionMap: Map<number, BoundingBox> = new Map<number, BoundingBox>();
+    protected dynamicExpressionMap: Map<string, BoundingBox> = new Map<string, BoundingBox>();
+
+    protected dynamicExpressionKey(staffIndex: number, placement: PlacementEnum, timestamp: Fraction): string {
+        return `${staffIndex}:${placement}:${timestamp.RealValue}`;
+    }
 
     private calculateDynamicExpressions(): void {
         const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length - 1, this.rules.MaxMeasureToDrawIndex);
         const minIndex: number = Math.min(this.rules.MinMeasureToDrawIndex, this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length);
-        for (let i: number = minIndex; i <= maxIndex; i++) {
-            const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
-            //Reset, beginning of new measure
-            this.dynamicExpressionMap.clear();
-            for (let j: number = 0; j < sourceMeasure.StaffLinkedExpressions.length; j++) {
-                if (!this.graphicalMusicSheet.MeasureList[i] || !this.graphicalMusicSheet.MeasureList[i][j]) {
-                    continue;
-                }
-
-                if (this.graphicalMusicSheet.MeasureList[i][j].ParentStaff.isVisible()) {
-                    for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {
-                        if (sourceMeasure.StaffLinkedExpressions[j][k].InstantaneousDynamic !== undefined ||
-                            (sourceMeasure.StaffLinkedExpressions[j][k].StartingContinuousDynamic !== undefined &&
-                                sourceMeasure.StaffLinkedExpressions[j][k].StartingContinuousDynamic.StartMultiExpression ===
-                                sourceMeasure.StaffLinkedExpressions[j][k] && sourceMeasure.StaffLinkedExpressions[j][k].UnknownList.length === 0)
-                        ) {
-                            this.calculateDynamicExpressionsForMultiExpression(sourceMeasure.StaffLinkedExpressions[j][k], i, j);
+        this.dynamicExpressionMap.clear();
+        // Place all instantaneous dynamics before wedges: a wedge can end beside a dynamic in a
+        // later measure or system. Keep the lookup separate for each staff and placement.
+        for (const instantaneousOnly of [true, false]) {
+            for (let i: number = minIndex; i <= maxIndex; i++) {
+                const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
+                for (let j: number = 0; j < sourceMeasure.StaffLinkedExpressions.length; j++) {
+                    const measure: GraphicalMeasure = this.graphicalMusicSheet.MeasureList[i]?.[j];
+                    if (!measure?.ParentStaff.isVisible()) {
+                        continue;
+                    }
+                    for (const expression of sourceMeasure.StaffLinkedExpressions[j]) {
+                        if (instantaneousOnly ? expression.InstantaneousDynamic !== undefined :
+                            expression.StartingContinuousDynamic?.StartMultiExpression === expression && expression.UnknownList.length === 0) {
+                            this.calculateDynamicExpressionsForMultiExpression(expression, i, j, instantaneousOnly);
                         }
                     }
                 }
