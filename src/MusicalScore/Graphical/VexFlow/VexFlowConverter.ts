@@ -1136,7 +1136,7 @@ export class VexFlowConverter {
     public static CreateTabNote(gve: GraphicalVoiceEntry): VF.TabNote {
         const tabPositions: {str: number, fret: number}[] = [];
         const notes: GraphicalNote[] = gve.notes.reverse();
-        const tabPhrases: { type: number, text: string, width: number }[] = [];
+        const tabPhrases: { type: number, text: string, width: number, draw_width: number }[] = [];
         const frac: Fraction = gve.notes[0].graphicalNoteLength;
         const isTuplet: boolean = gve.notes[0].sourceNote.NoteTuplet !== undefined;
         let duration: string = VexFlowConverter.durations(frac, isTuplet)[0];
@@ -1159,7 +1159,8 @@ export class VexFlowConverter {
             if (tabNote.BendArray) {
                 tabNote.BendArray.forEach( function( bend: {bendalter: number, direction: string} ): void {
                     let phraseText: string;
-                    const phraseStep: number = bend.bendalter - tabPosition.fret;
+                    // MusicXML bend-alter is a semitone interval, independent of the fret number.
+                    const phraseStep: number = Math.abs(bend.bendalter);
                     if (phraseStep > 1) {
                         phraseText = "Full";
                     } else if (phraseStep === 1) {
@@ -1168,9 +1169,9 @@ export class VexFlowConverter {
                         phraseText = "1/4";
                     }
                     if (bend.direction === "up") {
-                        tabPhrases.push({type: VF.Bend.UP, text: phraseText, width: 10});
+                        tabPhrases.push({type: VF.Bend.UP, text: phraseText, width: 10, draw_width: 5});
                     } else {
-                        tabPhrases.push({type: VF.Bend.DOWN, text: phraseText, width: 10});
+                        tabPhrases.push({type: VF.Bend.DOWN, text: "", width: 10, draw_width: 5});
                     }
                 });
             }
@@ -1211,11 +1212,14 @@ export class VexFlowConverter {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
         }
 
-        tabPhrases.forEach(function(phrase: { type: number, text: string, width: number }): void {
-            const bend: VF.Bend = new VF.Bend(phrase.text, phrase.type !== VF.Bend.UP);
+        if (tabPhrases.length > 0) {
+            // Explicit phrase widths require draw_width as well; VexFlow only computes it for automatic widths.
+            // Pass the complete phrase so releases continue from the preceding bend.
+            // The legacy constructor's release flag adds an UP segment of its own.
+            const bend: VF.Bend = new VF.Bend("", false, tabPhrases);
             VexFlowConverter.setVexFlowTextFontOfBend(bend, rules);
             vfnote.addModifier(bend);
-        });
+        }
 
         return vfnote;
     }

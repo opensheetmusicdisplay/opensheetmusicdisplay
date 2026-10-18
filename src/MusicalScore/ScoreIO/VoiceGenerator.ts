@@ -500,9 +500,9 @@ export class VoiceGenerator {
             const bendalterNote: IXmlElement = bend.element("bend-alter");
             const releaseNode: IXmlElement = bend.element("release");
             if (releaseNode !== undefined) {
-              bends.push({bendalter: parseInt (bendalterNote.value, 10), direction: "down"});
+              bends.push({bendalter: parseFloat(bendalterNote.value), direction: "down"});
             } else {
-              bends.push({bendalter: parseInt (bendalterNote.value, 10), direction: "up"});
+              bends.push({bendalter: parseFloat(bendalterNote.value), direction: "up"});
             }
           });
       }
