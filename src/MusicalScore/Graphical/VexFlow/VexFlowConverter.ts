@@ -1161,12 +1161,18 @@ export class VexFlowConverter {
                     let phraseText: string;
                     // MusicXML bend-alter is a semitone interval, independent of the fret number.
                     const phraseStep: number = Math.abs(bend.bendalter);
-                    if (phraseStep > 1) {
+                    const tones: number = phraseStep / 2;
+                    const quarters: number = Math.round(tones * 4);
+                    if (phraseStep === 2) {
                         phraseText = "Full";
-                    } else if (phraseStep === 1) {
-                        phraseText = "1/2";
+                    } else if (Number.isInteger(tones)) {
+                        phraseText = String(tones);
+                    } else if (Math.abs(quarters / 4 - tones) < 1e-8) {
+                        const remainder: number = quarters % 4;
+                        phraseText = (quarters >= 4 ? `${Math.floor(quarters / 4)} ` : "") +
+                            (remainder === 2 ? "1/2" : `${remainder}/4`);
                     } else {
-                        phraseText = "1/4";
+                        phraseText = String(tones);
                     }
                     if (bend.direction === "up") {
                         tabPhrases.push({type: VF.Bend.UP, text: phraseText, width: 10, draw_width: 5});
