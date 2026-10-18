@@ -1,3 +1,4 @@
+import { configureTabBendLayout } from "./TabBendLayout";
 import Vex from "vexflow";
 import VF = Vex.Flow;
 import {ClefEnum} from "../../VoiceData/Instructions/ClefInstruction";
@@ -1155,6 +1156,11 @@ export class VexFlowConverter {
                 (tabPosition as any).fret = "x";
                 isXNotehead = true;
             }
+            if (tabNote.FretVisible === false) {
+                (tabPosition as any).fret = "";
+            } else if (tabNote.FretParentheses) {
+                (tabPosition as any).fret = `(${tabPosition.fret})`;
+            }
             tabPositions.push(tabPosition);
             if (tabNote.BendArray) {
                 tabNote.BendArray.forEach( function( bend: {bendalter: number, direction: string} ): void {
@@ -1227,6 +1233,7 @@ export class VexFlowConverter {
             vfnote.addModifier(bend);
         }
 
+        configureTabBendLayout(gve, vfnote);
         return vfnote;
     }
 

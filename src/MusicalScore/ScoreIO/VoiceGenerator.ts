@@ -515,6 +515,8 @@ export class VoiceGenerator {
       // create TabNote
       note = new TabNote(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch, this.currentMeasure,
                          stringNumber, fretNumber, bends);
+      (note as TabNote).FretVisible = notationNode?.attribute("print-object")?.value !== "no";
+      (note as TabNote).FretParentheses = node.element("notehead")?.attribute("parentheses")?.value === "yes";
     }
 
     this.addNoteInfo(note, noteTypeXml, printObject, isCueNote, normalNotes,

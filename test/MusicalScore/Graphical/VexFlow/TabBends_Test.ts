@@ -74,6 +74,42 @@ describe("Tablature bends", () => {
         expect(result.modifiers[0].phrase.map((step: any) => step.type)).to.deep.equal([1]);
     });
 
+    it("anchors a connected bend peak over its hidden continuation and retains visible parentheses", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div, {autoResize: false, backend: "svg"});
+        const xml: string = `<?xml version="1.0"?><score-partwise version="4.0">
+            <part-list><score-part id="P1"><part-name>Guitar</part-name></score-part></part-list>
+            <part id="P1"><measure number="1"><attributes><divisions>1</divisions>
+            <time><beats>3</beats><beat-type>4</beat-type></time><clef><sign>TAB</sign><line>5</line></clef>
+            <staff-details><staff-lines>6</staff-lines></staff-details></attributes>
+            <note><pitch><step>E</step><octave>3</octave></pitch><duration>1</duration><type>quarter</type>
+            <notations><technical><string>4</string><fret>2</fret><bend><bend-alter>1</bend-alter></bend></technical></notations></note>
+            <note><pitch><step>F</step><octave>3</octave></pitch><duration>1</duration><type>quarter</type>
+            <notehead parentheses="yes">normal</notehead>
+            <notations print-object="no"><technical><string>4</string><fret>2</fret></technical></notations>
+            <notations><technical><bend><bend-alter>-1</bend-alter></bend></technical></notations></note>
+            <note><pitch><step>E</step><octave>3</octave></pitch><duration>1</duration><type>quarter</type>
+            <notehead parentheses="yes">normal</notehead><notations><technical><string>4</string><fret>2</fret>
+            </technical></notations></note></measure></part></score-partwise>`;
+        try {
+            await osmd.load(xml);
+            osmd.render();
+            const measure: any = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
+            const target: any = measure.staffEntries[1].graphicalVoiceEntries[0].notes[0];
+            expect(target.sourceNote.FretVisible).to.equal(false);
+            const labels: string[] = Array.from(div.querySelectorAll("svg text")).map((text: Element) => text.textContent);
+            expect(labels.filter((text: string) => text === "2")).to.have.length(1);
+            expect(labels).to.include("(2)");
+            const group: Element = div.querySelector(".vf-tab-bend-span");
+            expect(group).not.to.equal(null);
+            const bendLabel: SVGGraphicsElement = group.querySelector("text");
+            const box: DOMRect = bendLabel.getBBox();
+            const targetNote: any = target.vfnote[0];
+            expect(box.x + box.width / 2).to.be.closeTo(targetNote.getAbsoluteX() + targetNote.glyph.getWidth() / 2, 0.5);
+            expect(group.querySelector("path").getAttribute("d")).not.to.match(/NaN|Infinity/);
+        } finally { div.remove(); }
+    });
+
     it("renders a bend and release as one continuous phrase", async () => {
         const result: any = await renderBend(1, 2, true);
         expect(result.modifiers).to.have.length(1);

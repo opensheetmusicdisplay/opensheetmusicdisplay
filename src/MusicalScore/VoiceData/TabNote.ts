@@ -14,6 +14,9 @@ export class TabNote extends Note {
         this.bendArray = bendArray;
     }
 
+    public FretVisible: boolean = true;
+    public FretParentheses: boolean = false;
+
     private stringNumberTab: number; // there can also be string numbers for e.g. violin in treble clef.
     private fretNumber: number;
     private bendArray: { bendalter: number, direction: string }[];
