@@ -130,7 +130,9 @@ export interface IOSMDOptions {
     fingeringPosition?: string;
     /** For above/below fingerings, whether to draw them directly above/below notes (default), or above/below staffline. */
     fingeringInsideStafflines?: boolean;
-    /** Whether to draw hidden/invisible notes (print-object="no" in XML). Default false. Not yet supported. */ // TODO
+    /** Whether to draw hidden/invisible notes and rests (print-object="no" in XML) like visible ones. Default false.
+     *  Sets EngravingRules.RenderHiddenNotes. To change it after load(), call osmd.updateGraphic() before the next render().
+     */
     drawHiddenNotes?: boolean;
     /** Whether to draw lyrics (and their extensions and dashes). */
     drawLyrics?: boolean;

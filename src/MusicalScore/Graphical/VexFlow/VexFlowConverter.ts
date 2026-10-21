@@ -414,7 +414,7 @@ export class VexFlowConverter {
                     let linesShift: number;
                     for (const staffGve of staffGves) {
                         for (const gveNote of staffGve.notes) {
-                            if (gveNote === note || gveNote.sourceNote.isRest() || !gveNote.sourceNote.PrintObject) {
+                            if (gveNote === note || gveNote.sourceNote.isRest() || !gveNote.sourceNote.isVisible()) {
                                 continue;
                             }
                             // A cross-staff note doesn't move the rest towards the staff of its voice (see restMovesTowardsStaffOfVoice()).
@@ -1000,8 +1000,8 @@ export class VexFlowConverter {
     }
 
     /** Whether a visible note or rest of another voice in the staff sounds during the voice entry, e.g. a half note of
-     *  another voice under the second quarter of the measure. Hidden notes and rests (e.g. of a voice only for playback)
-     *  don't count. */
+     *  another voice under the second quarter of the measure. Notes and rests that aren't drawn (see Note.isVisible()),
+     *  e.g. of a voice only for playback, don't count. */
     private static otherVoiceSoundsDuring(voiceEntry: VoiceEntry): boolean {
         const length: (entry: VoiceEntry) => number =
             (entry: VoiceEntry): number => Math.max(...entry.Notes.map((note: Note) => note.Length.RealValue));
@@ -1017,7 +1017,7 @@ export class VexFlowConverter {
             }
             for (const other of otherStaffEntry.VoiceEntries) {
                 if (other.ParentVoice !== voiceEntry.ParentVoice && otherStart + length(other) > start &&
-                    other.Notes.some((note: Note) => note.PrintObject)) {
+                    other.Notes.some((note: Note) => note.isVisible())) {
                     return true;
                 }
             }

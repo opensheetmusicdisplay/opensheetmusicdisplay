@@ -121,7 +121,7 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
                 }
 
                 const vexFlowVoiceEntry: VexFlowVoiceEntry = voiceEntry as VexFlowVoiceEntry;
-                if (voiceEntry.notes.length === 0 || !voiceEntry.notes[0] || !voiceEntry.notes[0].sourceNote.PrintObject) {
+                if (voiceEntry.notes.length === 0 || !voiceEntry.notes[0] || !voiceEntry.notes[0].sourceNote.isVisible()) {
                     // GhostNote, don't add modifiers like in-measure clefs
                     if (vexFlowVoiceEntry.vfGhostNotes) {
                         for (const ghostNote of vexFlowVoiceEntry.vfGhostNotes) {

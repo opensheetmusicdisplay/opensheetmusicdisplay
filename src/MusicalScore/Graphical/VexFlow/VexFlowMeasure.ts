@@ -1673,7 +1673,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
      *  (Vexflow would draw a slash through each of them), and not a hidden one (Vexflow would draw its slash anyway). */
     private hasGraceSlash(graceGve: GraphicalVoiceEntry, isFirstGraceNote: boolean): boolean {
         return isFirstGraceNote && graceGve.parentVoiceEntry.GraceNoteSlash &&
-            graceGve.notes.some((note: GraphicalNote) => note.sourceNote.PrintObject);
+            graceGve.notes.some((note: GraphicalNote) => note.sourceNote.isVisible());
     }
 
     public graphicalMeasureCreatedCalculations(): void {
@@ -1851,7 +1851,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 if (vfse && vfse.vfClefBefore && vfse.vfKeys.length === 0 &&
                     !voiceEntry.parentVoiceEntry?.GraceAfterMainNote && vfse !== staffEntryWithClef) {
                     staffEntryWithClef = vfse;
-                    if (voiceEntry.notes[0] && !voiceEntry.notes[0].sourceNote.PrintObject) {
+                    if (voiceEntry.notes[0] && !voiceEntry.notes[0].sourceNote.isVisible()) {
                         const clefColor: string = this.rules.DefaultColorMusic || "#000000";
                         // need to cast to any because ClefNote actually extends Note, which extends Tickable, which extends Element,
                         //   which has setStyle. But in our definitions, Tickable doesn't implement anything, so it doesn't have setStyle.
@@ -1865,7 +1865,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     }
                 }
 
-                if (voiceEntry.notes.length === 0 || !voiceEntry.notes[0] || !voiceEntry.notes[0].sourceNote.PrintObject) {
+                if (voiceEntry.notes.length === 0 || !voiceEntry.notes[0] || !voiceEntry.notes[0].sourceNote.isVisible()) {
                     // GhostNote: still allow in-measure clefs on invisible notes, but skip other modifiers.
                     this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
                     continue;

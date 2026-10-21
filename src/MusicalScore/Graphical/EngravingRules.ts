@@ -509,6 +509,12 @@ export class EngravingRules {
      * the ones across staves. */
     public RenderSlursAcrossStaves: boolean;
     public RenderGlissandi: boolean;
+    /** Whether to draw hidden notes and rests (Note.PrintObject false, e.g. print-object="no" in the MusicXML) like visible
+     *  ones, with their beams, ties, tuplets and fingerings, and to let the cursor stop at them. Default false.
+     *  E.g. to show what a voice hidden for playback plays, like a tremolo written out as single notes.
+     *  Set by OSMDOptions.drawHiddenNotes. Beams and tuplets are created at load(): to change this rule after load(),
+     *  call osmd.updateGraphic() before the next render(). */
+    public RenderHiddenNotes: boolean;
     public ColoringMode: ColoringMode;
     public ColoringEnabled: boolean;
     public ColorStemsLikeNoteheads: boolean;
@@ -1078,6 +1084,7 @@ export class EngravingRules {
         this.RenderSlurs = true;
         this.RenderSlursAcrossStaves = true;
         this.RenderGlissandi = true;
+        this.RenderHiddenNotes = false;
         this.ColoringMode = ColoringMode.XML;
         this.ColoringEnabled = true;
         this.ColorStemsLikeNoteheads = false;

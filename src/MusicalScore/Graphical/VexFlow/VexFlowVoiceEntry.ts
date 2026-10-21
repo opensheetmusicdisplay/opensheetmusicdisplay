@@ -135,11 +135,12 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
             const note: GraphicalNote = this.notes[i];
 
             // notehead="none" asks for no notehead at all, so it always stays hidden. print-object="no" hides it
-            // too, unless the note is drawn anyway because it shares a visible unison note's notehead: then it is
-            // drawn whole, notehead included, exactly like its stem below (see drawnAsSharedUnisonNote).
+            // too, unless EngravingRules.RenderHiddenNotes draws hidden notes (see Note.isVisible()), or the note is
+            // drawn anyway because it shares a visible unison note's notehead: then it is drawn whole, notehead
+            // included, exactly like its stem below (see drawnAsSharedUnisonNote).
             const sharedUnisonNote: Note = this.inDrawnBeam ? note.sourceNote.visibleUnisonNoteSharingNotehead() : undefined;
             const noteheadVisible: boolean = note.sourceNote.Notehead?.Shape !== NoteHeadShape.NONE &&
-                (note.sourceNote.PrintObject ||
+                (note.sourceNote.isVisible() ||
                  sharedUnisonNote !== undefined && !this.overprintsSharedHeadOfOtherShape(i, sharedUnisonNote));
             // A note drawn for its shared unison notehead takes that visible note's color: where Vexflow merges the
             // two heads into one column, its head is inked exactly over the visible one (in draw order after it,
@@ -247,7 +248,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         }
         let stemTransparent: boolean = true;
         for (const note of this.parentVoiceEntry.Notes) {
-            if (note.PrintObject && note.Notehead?.Shape !== NoteHeadShape.NONE) {
+            if (note.isVisible() && note.Notehead?.Shape !== NoteHeadShape.NONE) {
                 stemTransparent = false;
                 break;
             }
