@@ -139,6 +139,42 @@ describe("Lyrics with verse numbers", () => {
         }
     });
 
+    it("lays out a measure in a re-render like in the first render, also after its lyrics started a system with their numbers " +
+        "left of them", async () => {
+        await render((rules: EngravingRules): void => {
+            // without padding after the notes of long lyrics (VexFlowConverter), the measures are spaced by the lyrics' widths
+            rules.LyricsUseXPaddingForLongLyrics = false;
+        });
+        /** The staff entries of measure 3, in the first system. */
+        function measure3Entries(): GraphicalStaffEntry[] {
+            return osmd.GraphicSheet.MusicPages[0].MusicSystems[0].StaffLines[0].Measures
+                .find((measure: GraphicalMeasure) => measure.MeasureNumber === 3).staffEntries;
+        }
+        /** The left margin, right border and right margin of the numbered lyrics' boxes in measure 3. */
+        function numberedLyricBorders(): number[][] {
+            return measure3Entries()[0].LyricsEntries.map((lyric: GraphicalLyricEntry) => {
+                const box: BoundingBox = lyric.GraphicalLabel.PositionAndShape;
+                return [box.BorderMarginLeft, box.BorderRight, box.BorderMarginRight];
+            });
+        }
+        const firstNoteXs: number[] = measure3Entries().map((staffEntry: GraphicalStaffEntry) => staffEntry.PositionAndShape.RelativePosition.x);
+        const firstBorders: number[][] = numberedLyricBorders();
+        osmd.EngravingRules.NewSystemAtXMLNewSystemAttribute = true; // measure 3 starts the second system, its numbers move left
+        osmd.render();
+        osmd.EngravingRules.NewSystemAtXMLNewSystemAttribute = false;
+        osmd.render();
+        for (const [note, staffEntry] of measure3Entries().entries()) {
+            expect(staffEntry.PositionAndShape.RelativePosition.x, "note " + (note + 1) + " of measure 3")
+                .to.be.closeTo(firstNoteXs[note], 0.001);
+        }
+        for (const [verseIndex, borders] of numberedLyricBorders().entries()) {
+            for (const [border, name] of ["left margin", "right border", "right margin"].entries()) {
+                expect(borders[border], "the " + name + " of the lyric of verse " + (verseIndex + 1) + " in measure 3")
+                    .to.be.closeTo(firstBorders[verseIndex][border], 0.001);
+            }
+        }
+    });
+
     it("centers the text as a whole, with the number, if lyrics are centered", async () => {
         await render((rules: EngravingRules): void => {
             rules.LyricsAlignmentStandard = TextAlignmentEnum.CenterBottom;

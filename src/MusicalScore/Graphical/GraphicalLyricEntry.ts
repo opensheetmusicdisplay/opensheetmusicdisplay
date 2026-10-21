@@ -30,6 +30,9 @@ export class GraphicalLyricEntry {
     private leadingNumberWidth: number = 0;
     /** Whether the verse number is left of the lyric now, see moveLeadingNumberLeftOfLyric(). */
     private leadingNumberMoved: boolean = false;
+    /** Whether the verse number is left of the lyric before each layout calculation, as the lyric starts its verse in the staff.
+     *  See resetPosition(). */
+    private leadingNumberMovedInitially: boolean = false;
 
     constructor(lyricsEntry: LyricsEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricsHeight: number, staffHeight: number) {
         this.lyricsEntry = lyricsEntry;
@@ -58,8 +61,9 @@ export class GraphicalLyricEntry {
         this.leadingNumberWidth = this.measureLeadingNumber(rules);
         // the first lyric of a verse in the staff is known now, the first in a system when the systems are built,
         //   see moveLeadingNumberLeftOfLyricInStaffLine()
-        this.moveLeadingNumberLeftOfLyric(this.numbersStartTheirVerses(
-            (entry: LyricsEntry): boolean => this.isFirstOfVerseInStaff(entry.VerseNumber)));
+        this.leadingNumberMovedInitially = this.numbersStartTheirVerses(
+            (entry: LyricsEntry): boolean => this.isFirstOfVerseInStaff(entry.VerseNumber));
+        this.moveLeadingNumberLeftOfLyric(this.leadingNumberMovedInitially);
         if (this.graphicalLabel.PositionAndShape.Size.width < rules.LyricsExtraXShiftForShortLyricsWidthThreshold) {
             this.graphicalLabel.PositionAndShape.RelativePosition.x += rules.LyricsExtraXShiftForShortLyrics;
             this.graphicalLabel.CenteringXShift = rules.LyricsExtraXShiftForShortLyrics;
@@ -101,9 +105,14 @@ export class GraphicalLyricEntry {
         }
         const shift: number = moved ? -this.leadingNumberWidth : this.leadingNumberWidth;
         const box: BoundingBox = this.graphicalLabel.PositionAndShape;
-        box.BorderRight += shift;
-        box.BorderMarginRight += shift;
-        box.BorderMarginLeft += shift;
+        // read the borders before setting them: BorderMarginRight returns at least BorderRight, so once BorderRight has moved
+        //   right (putting the number back), the margin would be read as BorderRight and end up the number's width right of it
+        const right: number = box.BorderRight;
+        const marginRight: number = box.BorderMarginRight;
+        const marginLeft: number = box.BorderMarginLeft;
+        box.BorderRight = right + shift;
+        box.BorderMarginRight = marginRight + shift;
+        box.BorderMarginLeft = marginLeft + shift;
         for (const line of this.graphicalLabel.TextLines) {
             line.xOffset += shift;
         }
@@ -114,8 +123,8 @@ export class GraphicalLyricEntry {
      * Moves the verse number left of the lyric if the lyric is the first of its verse in its staff line, e.g. at the start of
      * a system in a hymn that repeats the verse numbers in every system, like for the first lyric of the verse in the staff.
      * Called when the lyrics of a staff line are positioned: the systems are built after the lyrics are created and the
-     * measures are spaced, so the space for the number after the note stays reserved. Puts the number back at the note if
-     * the lyric is no longer the first of its verse in its staff line, e.g. when the systems change with a re-render.
+     * measures are spaced, so the space for the number after the note stays reserved. resetPosition() puts the number back
+     * before the next layout calculation, which spaces the measures again.
      * @param isFirstOfVerseInStaffLine whether no lyric of the given lyric's verse is before it in the staff line
      */
     public moveLeadingNumberLeftOfLyricInStaffLine(isFirstOfVerseInStaffLine: (lyricsEntry: LyricsEntry) => boolean): void {
@@ -165,9 +174,15 @@ export class GraphicalLyricEntry {
      * VexFlowStaffEntry.calculateXPosition(). Without the reset, a re-render would include the previous render's position of
      * the label there, where the first render included the initial one - e.g. after a resize, a staff entry whose lyrics were
      * lower in the previous layout kept that lower bottom border, making the page taller.
+     * The verse number goes back too, see moveLeadingNumberLeftOfLyricInStaffLine(): the measures are spaced by the label's
+     * width before the systems are built (VexFlowMusicSheetCalculator.calculateElongationFactor()). Without the reset, a
+     * re-render (or the next batch of renderNext()) would space them with the numbers of the previous calculation's systems,
+     * e.g. a lyric that started a system then would get the space of a lyric without a number, also where it is in the middle
+     * of a system now.
      * The first call takes the snapshot of the initial position.
      */
     public resetPosition(): void {
+        this.moveLeadingNumberLeftOfLyric(this.leadingNumberMovedInitially);
         const relativePosition: PointF2D = this.graphicalLabel.PositionAndShape.RelativePosition;
         if (!this.initialLabelRelativePosition) {
             this.initialLabelRelativePosition = new PointF2D(relativePosition.x, relativePosition.y);
