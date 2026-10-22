@@ -4,8 +4,8 @@
   <!--
     Regression sample for slurs ending at a note with an accidental, which the curve ran into: calculateTopPoints() and
     calculateBottomPoints() stop at the left border of the end staff entry, left of the accidentals (sschmidTU's review of
-    PR 1832). The slurs now end further out, past the accidentals, at most as far from them as from the note, and keep clear
-    of them from there.
+    PR 1832). The slurs now end further out, past the accidentals, at most half as far from them as from the note, and keep
+    clear of them from there.
     Measure 1: G4 D5 D#6, stems down, slurred (after Haydn, Concertante, m. 161): rising steeply, the slur ran into the sharp.
     The same group to E6, without an accidental, for comparison.
     Measure 2: A5 slurred to Bb5, 32nds (Telemann, Sonata No. 1, Dolce, m. 13): the short slur ran into the flat.

@@ -101,7 +101,8 @@ export class GraphicalSlur extends GraphicalCurve {
      *  FingeringsRunInto. */
     private fingeringsRunInto: FingeringsRunInto;
     /** The far corners of the articulations of the start and end notes the slur clears, for clearObstacles(), see getYPastArticulations(),
-     *  and of the accidentals of its end note once its end is as far out past them as it goes, see retryPastEndAccidentals(). */
+     *  and, half SlurNoteHeadYOffset further in, of the accidentals of its end note once its end is as far out past them as it goes,
+     *  see retryPastEndAccidentals(). */
     private articulationCorners: PointF2D[] = [];
     /** The articulations of the start and end notes that getYPastArticulations() left outside the slur, from the note outward,
      *  see placeArticulationsOutside(). */
@@ -183,8 +184,11 @@ export class GraphicalSlur extends GraphicalCurve {
             const outward: number = this.placement === PlacementEnum.Above ? -1 : 1;
             endY += outward * pastAccidentals.shift;
             if (pastAccidentals.clearing) {
-                this.articulationCorners.push(...pastAccidentals.accidentals.flatMap(({left, right, far}) =>
-                    [new PointF2D(left, far * outward), new PointF2D(right, far * outward)]));
+                // clearObstacles() keeps the curve SlurNoteHeadYOffset from the corners: with them half of that further in, it keeps
+                //   half of SlurNoteHeadYOffset from the accidentals, like retryPastEndAccidentals()
+                const inward: number = rules.SlurNoteHeadYOffset / 2;
+                this.articulationCorners.push(...pastAccidentals.accidentals.flatMap(({left, right, far}: AccidentalExtent) =>
+                    [new PointF2D(left, (far - inward) * outward), new PointF2D(right, (far - inward) * outward)]));
             }
         }
         // from a note to the next one, in this staffline: nothing between them for the curve to clear (see placePastEndFingerings())
@@ -1345,10 +1349,12 @@ export class GraphicalSlur extends GraphicalCurve {
      * Not by keeping the curve clear of them with the end at the note: right next to the end, that takes a tangent steeper than
      * SlurTangentMaxAngle (see clearObstacles()), or, steeper tangents counting them in, a high arch over the whole slur.
      * Moving the end out moves the curve near it about as far, so it goes out by how deep the curve ran in, and again if the
-     * curve still does, a few times at most. But not further out than the accidentals' far edge plus SlurNoteHeadYOffset, as
-     * far from them as from the note: rising steeply to its end, the curve is lower over the accidental than there, and the end
-     * would float far from the note (Haydn, m. 161). From there, clearObstacles() keeps the curve clear of them, like of the
-     * articulations at its start and end (see articulationCorners).
+     * curve still does, a few times at most. But not further out than the accidentals' far edge plus half SlurNoteHeadYOffset,
+     * half as far from them as from the note: rising steeply to its end, the curve is lower over the accidental than there, and
+     * the end would float far from the note (Haydn, m. 161). From there, clearObstacles() keeps the curve that far from them,
+     * like from the articulations at its start and end (see articulationCorners). A slur that keeps as much space from an
+     * accidental as from a note ends far from its note, e.g. a slur below a note with a sharp (Schumann, The Wild Horseman,
+     * m. 3), and arches more than needed.
      * @returns Whether the curve was calculated again (and added to the sky or bottom line), so there is nothing left to do.
      */
     private retryPastEndAccidentals(rules: EngravingRules, endNote: GraphicalNote): boolean {
@@ -1358,14 +1364,13 @@ export class GraphicalSlur extends GraphicalCurve {
         }
         const accidentals: AccidentalExtent[] = past?.accidentals ?? this.getEndAccidentals(endNote);
         const margin: number = this.rules.SlurNoteHeadYOffset / 2;
-        const depth: number = Math.max(0, ...accidentals.map(({left, right, far}) => margin - this.getDistanceBeyond(left, right, far)));
+        const depth: number = Math.max(0, ...accidentals.map(({left, right, far}: AccidentalExtent) => margin - this.getDistanceBeyond(left, right, far)));
         if (depth <= 0) {
             return false;
         }
         const outward: number = this.placement === PlacementEnum.Above ? -1 : 1;
-        // how much further out the end may go, to as far beyond them as it is from the note
-        const room: number = Math.max(...accidentals.map(accidental => accidental.far)) + this.rules.SlurNoteHeadYOffset -
-            this.bezierEndPt.y * outward;
+        // how much further out the end may go, to half as far beyond them as it is from the note
+        const room: number = Math.max(...accidentals.map((accidental: AccidentalExtent) => accidental.far)) + margin - this.bezierEndPt.y * outward;
         const tries: number = (past?.tries ?? 0) + 1;
         const clearing: boolean = room <= 0.01 || tries > GraphicalSlur.endPastAccidentalsMaxTries;
         this.endPastAccidentals = {accidentals, shift: (past?.shift ?? 0) + (clearing ? 0 : Math.min(depth, room)), tries, clearing};

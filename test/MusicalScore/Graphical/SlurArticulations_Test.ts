@@ -353,7 +353,7 @@ describe("Slur at a note with an articulation", () => {
 
     for (const geometricSkyline of [true, false]) {
         const skyline: string = geometricSkyline ? "geometric skyline" : "raster skyline";
-        it(`keeps a slur clear of the accidentals of its end note, ending at most as far beyond them as from the note (${skyline})`,
+        it(`keeps a slur clear of the accidentals of its end note, ending at most half as far beyond them as from the note (${skyline})`,
            async () => {
             await osmd.load(TestUtils.getScore("test_slur_clear_of_end_accidentals.musicxml"));
             osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = geometricSkyline;
@@ -374,10 +374,10 @@ describe("Slur at a note with an articulation", () => {
                     for (const accidental of accidentals) {
                         expect(clearanceFrom(slur, accidental), `${render}: ${describeSlur(slur)}, over its accidental`).to.be.at.least(0.2);
                     }
-                    // not floating far beyond them: at most as far as from a note
+                    // not floating far beyond them: at most half as far as from a note
                     const all: Box = drawnMarks(slur, "end")[0];
                     const beyond: number = slur.placement === PlacementEnum.Above ? all.top - slur.bezierEndPt.y : slur.bezierEndPt.y - all.bottom;
-                    expect(beyond, `${render}: ${describeSlur(slur)}, its end beyond its accidental`).to.be.at.most(offset + 0.05);
+                    expect(beyond, `${render}: ${describeSlur(slur)}, its end beyond its accidental`).to.be.at.most(offset / 2 + 0.05);
                 }
                 expect(withAccidentals, `${render}: the slurs to a note with an accidental`).to.equal(7);
             }
