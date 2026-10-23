@@ -1,6 +1,6 @@
 import Vex from "vexflow";
 import VF = Vex.Flow;
-import { VoiceEntry } from "../../VoiceData/VoiceEntry";
+import { StemDirectionType, VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
@@ -134,13 +134,17 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
     /** (Re-)color notes and stems by setting their Vexflow styles.
      * Could be made redundant by a Vexflow PR, but Vexflow needs more solid and permanent color methods/variables for that
      * See VexFlowConverter.StaveNote()
+     * Also runs without EngravingRules.ColoringEnabled: it makes hidden notes (print-object="no") transparent, and draws the
+     * other notes in the default colors, like notes without a color in the XML.
      */
     public color(): void {
         const defaultColorNotehead: string = this.rules.DefaultColorNotehead;
         const defaultColorRest: string = this.rules.DefaultColorRest;
         const defaultColorStem: string = this.rules.DefaultColorStem;
-        const hiddenNotesColor: string = this.rules.HiddenNotesColor;
+        // without coloring, the hidden notes drawn with RenderHiddenNotes also get the default colors
+        const hiddenNotesColor: string = this.rules.ColoringEnabled ? this.rules.HiddenNotesColor : undefined;
         const transparentColor: string = "#00000000"; // transparent color in vexflow
+        const coloringMode: ColoringModes = this.rules.ColoringEnabled ? this.rules.ColoringMode : ColoringModes.XML;
         let noteheadColor: string; // if null: no noteheadcolor to set (stays black)
         let sourceNoteNoteheadColor: string;
 
@@ -161,11 +165,11 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
             // if its voice comes later) and must not overprint a color set on that note - e.g. by an app
             // highlighting the notes under the cursor, which never sees the hidden note. Where the head is laid out
             // beside the visible one, it's colored like the head it stands in for.
-            sourceNoteNoteheadColor = (sharedUnisonNote ?? note.sourceNote).NoteheadColor;
+            sourceNoteNoteheadColor = this.rules.ColoringEnabled ? (sharedUnisonNote ?? note.sourceNote).NoteheadColor : undefined;
             noteheadColor = sourceNoteNoteheadColor;
             // Switch between XML colors and automatic coloring
-            if (this.rules.ColoringMode === ColoringModes.AutoColoring ||
-                this.rules.ColoringMode === ColoringModes.CustomColorSet) {
+            if (coloringMode === ColoringModes.AutoColoring ||
+                coloringMode === ColoringModes.CustomColorSet) {
                 if (note.sourceNote.isRest()) {
                     noteheadColor = this.rules.ColoringSetCurrent.getValue(-1);
                 } else {
@@ -191,7 +195,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                     ", in measure #" + measureNumber);
             }*/
 
-            if (!sourceNoteNoteheadColor && this.rules.ColoringMode === ColoringModes.XML && noteheadVisible) {
+            if (!sourceNoteNoteheadColor && coloringMode === ColoringModes.XML && noteheadVisible) {
                 if (!note.sourceNote.isRest() && defaultColorNotehead) {
                     noteheadColor = defaultColorNotehead;
                 } else if (note.sourceNote.isRest() && defaultColorRest) {
@@ -288,7 +292,9 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                 break;
             }
         }
-        if (stemTransparent) {
+        // <stem>none</stem> is drawn as a transparent stem, given as its XML stem color (see VoiceGenerator): it stays hidden also
+        //   without coloring, which ignores that color, and with ColorStemsLikeNoteheads.
+        if (stemTransparent || this.parentVoiceEntry.StemDirectionXml === StemDirectionType.None) {
             stemColor = transparentColor;
         }
         const stemStyle: object = { fillStyle: stemColor, strokeStyle: stemColor };

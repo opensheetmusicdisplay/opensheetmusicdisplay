@@ -968,13 +968,12 @@ export abstract class MusicSheetCalculator {
                 if (graphicalMeasure?.isVisible()) {
                     visiblegraphicalMeasures.push(graphicalMeasure);
 
-                    if (this.rules.ColoringEnabled) {
-                        // (re-)color notes
-                        for (const staffEntry of graphicalMeasure.staffEntries) {
-                            for (const gve of staffEntry.graphicalVoiceEntries) {
-                                gve.applyCustomNoteheads();
-                                gve.color();
-                            }
+                    // (re-)color notes. Also without ColoringEnabled: color() makes hidden notes (print-object="no") transparent,
+                    //   and puts the default colors back on notes colored in an earlier render (the Vexflow notes are reused).
+                    for (const staffEntry of graphicalMeasure.staffEntries) {
+                        for (const gve of staffEntry.graphicalVoiceEntries) {
+                            gve.applyCustomNoteheads();
+                            gve.color();
                         }
                     }
                 }
