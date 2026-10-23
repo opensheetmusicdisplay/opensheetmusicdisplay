@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0">
+  <!--
+    Regression sample for #1840: chords are drawn with their written dots (<dot>), not with dots inferred from their duration.
+    Measures 1 and 2 (9/8): an outer 6:9 tuplet with an inner 2:3 tuplet of one note, numbers and brackets hidden,
+    as MuseScore 3.6.1 exported the measure of the issue.
+    A dyad in the inner tuplet lasts 9/4 of its written quarter note, a dyad only in the outer one 3/2 of it,
+    so their durations are not those of their written note values.
+    Measure 1: an eighth rest, then two undotted quarter-note dyads.
+    Measure 2: an undotted and a dotted quarter-note dyad.
+    Measure 3 (6/8): two dyads without <type>, whose dots come from their duration (dotted quarter notes).
+  -->
+  <work>
+    <work-title>Written dots of chords in nested tuplets (#1840)</work-title>
+  </work>
+  <identification>
+    <encoding>
+      <software>hand-written OSMD test sample</software>
+    </encoding>
+  </identification>
+  <part-list>
+    <score-part id="P1"><part-name>Piano</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>8</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>9</beats><beat-type>8</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note><rest/><duration>6</duration><voice>1</voice><type>eighth</type>
+        <time-modification><actual-notes>6</actual-notes><normal-notes>9</normal-notes></time-modification>
+        <notations><tuplet type="start" number="1" bracket="no" show-number="none"/></notations></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>18</duration><voice>1</voice><type>quarter</type>
+        <time-modification><actual-notes>12</actual-notes><normal-notes>27</normal-notes><normal-type>eighth</normal-type></time-modification>
+        <notations>
+          <tuplet type="start" number="2" bracket="no" show-number="none">
+            <tuplet-actual><tuplet-number>2</tuplet-number></tuplet-actual>
+            <tuplet-normal><tuplet-number>3</tuplet-number></tuplet-normal>
+          </tuplet>
+          <tuplet type="stop" number="2"/>
+        </notations></note>
+      <note><chord/><pitch><step>E</step><octave>5</octave></pitch><duration>18</duration><voice>1</voice><type>quarter</type>
+        <time-modification><actual-notes>12</actual-notes><normal-notes>27</normal-notes><normal-type>eighth</normal-type></time-modification></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>12</duration><voice>1</voice><type>quarter</type>
+        <time-modification><actual-notes>6</actual-notes><normal-notes>9</normal-notes><normal-type>eighth</normal-type></time-modification>
+        <notations><tuplet type="stop" number="1"/></notations></note>
+      <note><chord/><pitch><step>E</step><octave>5</octave></pitch><duration>12</duration><voice>1</voice><type>quarter</type>
+        <time-modification><actual-notes>6</actual-notes><normal-notes>9</normal-notes><normal-type>eighth</normal-type></time-modification></note>
+    </measure>
+    <measure number="2">
+      <note><pitch><step>D</step><octave>5</octave></pitch><duration>18</duration><voice>1</voice><type>quarter</type>
+        <time-modification><actual-notes>12</actual-notes><normal-notes>27</normal-notes><normal-type>eighth</normal-type></time-modification>
+        <notations>
+          <tuplet type="start" number="1" bracket="no" show-number="none"/>
+          <tuplet type="start" number="2" bracket="no" show-number="none">
+            <tuplet-actual><tuplet-number>2</tuplet-number></tuplet-actual>
+            <tuplet-normal><tuplet-number>3</tuplet-number></tuplet-normal>
+          </tuplet>
+          <tuplet type="stop" number="2"/>
+        </notations></note>
+      <note><chord/><pitch><step>F</step><octave>5</octave></pitch><duration>18</duration><voice>1</voice><type>quarter</type>
+        <time-modification><actual-notes>12</actual-notes><normal-notes>27</normal-notes><normal-type>eighth</normal-type></time-modification></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>18</duration><voice>1</voice><type>quarter</type><dot/>
+        <time-modification><actual-notes>6</actual-notes><normal-notes>9</normal-notes><normal-type>eighth</normal-type></time-modification>
+        <notations><tuplet type="stop" number="1"/></notations></note>
+      <note><chord/><pitch><step>E</step><octave>5</octave></pitch><duration>18</duration><voice>1</voice><type>quarter</type><dot/>
+        <time-modification><actual-notes>6</actual-notes><normal-notes>9</normal-notes><normal-type>eighth</normal-type></time-modification></note>
+    </measure>
+    <measure number="3">
+      <attributes>
+        <time><beats>6</beats><beat-type>8</beat-type></time>
+      </attributes>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>12</duration><voice>1</voice></note>
+      <note><chord/><pitch><step>E</step><octave>5</octave></pitch><duration>12</duration><voice>1</voice></note>
+      <note><pitch><step>D</step><octave>5</octave></pitch><duration>12</duration><voice>1</voice></note>
+      <note><chord/><pitch><step>F</step><octave>5</octave></pitch><duration>12</duration><voice>1</voice></note>
+      <barline location="right"><bar-style>light-heavy</bar-style></barline>
+    </measure>
+  </part>
+</score-partwise>
