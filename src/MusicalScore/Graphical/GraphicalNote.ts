@@ -148,6 +148,8 @@ export interface VisibilityOptions {
   /** Glissandi and slides: their lines, and in a TAB staff their label "sl." too. */
   applyToGlissandi?: boolean;
   applyToLedgerLines?: boolean;
+  /** The note's SVG group (VexFlowGraphicalNote.getSVGGElement()): its noteheads, flag and modifiers like accidentals and dots,
+   *  and the stem of a note without a beam, unless applyToStem is false. */
   applyToNotehead?: boolean;
   applyToSlurs?: boolean;
   applyToStem?: boolean;

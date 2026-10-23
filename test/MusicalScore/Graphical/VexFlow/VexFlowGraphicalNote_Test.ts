@@ -293,9 +293,10 @@ describe("VexFlow GraphicalNote", () => {
             `<voice>${voice}</voice><type>${type}</type><notations>${stop}${start}</notations></note>`;
     }
 
-    /** Renders a score of one staff (treble clef, 4/4) with the given measures, each starting a new system if systemBreaks. */
-    async function renderMeasures(div: HTMLElement, measures: string[], systemBreaks: boolean): Promise<OpenSheetMusicDisplay> {
-        const attributes: string = "<attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>" +
+    /** Renders a score of one staff (treble clef, 4/4) with the given measures, each starting a new system if systemBreaks.
+     *  The durations of their notes are in divisions per quarter. */
+    async function renderMeasures(div: HTMLElement, measures: string[], systemBreaks: boolean, divisions: number = 1): Promise<OpenSheetMusicDisplay> {
+        const attributes: string = `<attributes><divisions>${divisions}</divisions><time><beats>4</beats><beat-type>4</beat-type></time>` +
             "<clef><sign>G</sign><line>2</line></clef></attributes>";
         const measuresXml: string = measures.map((content: string, i: number) => `<measure number="${i + 1}">` +
             (i === 0 ? attributes : systemBreaks ? "<print new-system='yes'/>" : "") + content + "</measure>").join("");
@@ -376,6 +377,29 @@ describe("VexFlow GraphicalNote", () => {
         osmd.render();
         const afterRender: boolean[] = [note, hiddenNote].map(graphicalNote => osmd.EngravingRules.GNote(graphicalNote.sourceNote).isVisible());
         expect(afterRender, "drawn again by a render, and the hidden note too with RenderHiddenNotes").to.deep.equal([true, true]);
+        div.remove();
+    });
+
+    // The stem of a note without a beam is drawn in the note's SVG group, which applyToNotehead hides. A beam draws the stems
+    //   of its notes, outside their groups.
+    it("Keeps the stem as it is with setVisible() and applyToStem false, also the stem of a note without a beam", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const xmlNote: (pitch: string, eighths: number, beam?: string) => string = (pitch: string, eighths: number, beam?: string) =>
+            `<note><pitch><step>${pitch[0]}</step><octave>${pitch[1]}</octave></pitch><duration>${eighths}</duration><voice>1</voice>` +
+            `<type>${eighths === 1 ? "eighth" : eighths === 2 ? "quarter" : "half"}</type>${beam ? `<beam number="1">${beam}</beam>` : ""}</note>`;
+        const osmd: OpenSheetMusicDisplay = await renderMeasures(div, [xmlNote("C5", 2) + xmlNote("D5", 1, "begin") + xmlNote("E5", 1, "end") +
+            xmlNote("F5", 4)], false, 2); // a quarter, two beamed eighths and a half note
+        const [quarter, beamedEighth] = measureNotes(osmd, 0, 0);
+        const visibility: (element: Element) => string = (element: Element) => getComputedStyle(element).visibility;
+        for (const [note, name] of [[quarter, "quarter without a beam"], [beamedEighth, "beamed eighth"]] as [VexFlowGraphicalNote, string][]) {
+            note.setVisible(false, { applyToStem: false });
+            expect([visibility(note.getNoteheadSVGs()[0]), visibility(note.getStemSVG())], `${name}: the notehead hidden, the stem kept`)
+                .to.deep.equal(["hidden", "visible"]);
+            note.setVisible(true);
+            note.setVisible(false, { applyToNotehead: false });
+            note.setVisible(false, { applyToStem: false });
+            expect(visibility(note.getStemSVG()), `${name}: a hidden stem kept hidden`).to.equal("hidden");
+        }
         div.remove();
     });
 });

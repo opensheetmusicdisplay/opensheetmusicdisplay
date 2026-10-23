@@ -140,8 +140,17 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         const visibilityAttribute: string = "visibility";
         const visibilityString: string = visible ? "visible" : "hidden";
         if (applyToNotehead) {
+            const noteSVG: SVGGElement = this.getSVGGElement();
+            if (!applyToStem) {
+                // the stem of a note without a beam is drawn in the note's group (a beam draws the stems of its notes),
+                //   so it would be hidden with it: give it its own visibility, the one it has now, to keep it as it is.
+                const stemSVG: HTMLElement = this.getStemSVG();
+                if (noteSVG?.contains(stemSVG) && !stemSVG.hasAttribute(visibilityAttribute)) {
+                    stemSVG.setAttribute(visibilityAttribute, noteSVG.getAttribute(visibilityAttribute) === "hidden" ? "hidden" : "visible");
+                }
+            }
             // so that it also matches undefined (option not set).
-            this.getSVGGElement()?.setAttribute(visibilityAttribute, visibilityString);
+            noteSVG?.setAttribute(visibilityAttribute, visibilityString);
         }
         // instead of setAttribute, remove() also works, but isn't reversible.
         if (applyToStem) {
