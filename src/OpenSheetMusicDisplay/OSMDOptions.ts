@@ -134,6 +134,10 @@ export interface IOSMDOptions {
      *  Sets EngravingRules.RenderHiddenNotes. To change it after load(), call osmd.updateGraphic() before the next render().
      */
     drawHiddenNotes?: boolean;
+    /** The color of the hidden notes drawn with drawHiddenNotes. Default "#A0A0A0CC", a light, slightly transparent gray.
+     *  "" draws them in the colors of visible notes. Sets EngravingRules.HiddenNotesColor.
+     */
+    hiddenNotesColor?: string;
     /** Whether to draw lyrics (and their extensions and dashes). */
     drawLyrics?: boolean;
     /** Whether to calculate extra slurs with bezier curves not covered by Vexflow slurs. Default true. */

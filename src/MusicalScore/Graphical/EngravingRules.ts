@@ -515,6 +515,12 @@ export class EngravingRules {
      *  Set by OSMDOptions.drawHiddenNotes. Beams and tuplets are created at load(): to change this rule after load(),
      *  call osmd.updateGraphic() before the next render(). */
     public RenderHiddenNotes: boolean;
+    /** The color of the hidden notes and rests drawn with RenderHiddenNotes, to tell them apart from visible ones.
+     *  Default "#A0A0A0CC", a light, slightly transparent gray, like hidden notes shown in MuseScore or Sibelius.
+     *  It colors their noteheads, accidentals, dots and articulations, and their stems, flags and ledger lines where all
+     *  notes of a chord are hidden notes, and with ColorBeams the beams of such notes. Needs ColoringEnabled.
+     *  Set it to "" to draw hidden notes in the colors of visible notes. Set by OSMDOptions.hiddenNotesColor. */
+    public HiddenNotesColor: string;
     public ColoringMode: ColoringMode;
     public ColoringEnabled: boolean;
     public ColorStemsLikeNoteheads: boolean;
@@ -1085,6 +1091,7 @@ export class EngravingRules {
         this.RenderSlursAcrossStaves = true;
         this.RenderGlissandi = true;
         this.RenderHiddenNotes = false;
+        this.HiddenNotesColor = "#A0A0A0CC";
         this.ColoringMode = ColoringMode.XML;
         this.ColoringEnabled = true;
         this.ColorStemsLikeNoteheads = false;

@@ -1249,6 +1249,9 @@ export class OpenSheetMusicDisplay {
         if (options.drawHiddenNotes !== undefined) {
             this.drawingParameters.DrawHiddenNotes = options.drawHiddenNotes; // sets EngravingRules.RenderHiddenNotes
         }
+        if (options.hiddenNotesColor !== undefined) {
+            this.rules.HiddenNotesColor = options.hiddenNotesColor;
+        }
         if (options.drawCredits !== undefined) {
             this.drawingParameters.DrawCredits = options.drawCredits; // sets DrawComposer, DrawTitle, DrawSubtitle, DrawLyricist.
         }

@@ -1,10 +1,12 @@
 import { expect } from "chai";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
+import { VexFlowGraphicalNote } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
 import { TestUtils } from "../../Util/TestUtils";
 
 /** EngravingRules.RenderHiddenNotes (OSMDOptions.drawHiddenNotes) draws hidden notes and rests (print-object="no") like
- *  visible ones: the image has to be the one of the same sample with the notes visible in the XML, with their beams, ties
- *  and tuplets, and the cursor has to stop at them. */
+ *  visible ones, in EngravingRules.HiddenNotesColor (OSMDOptions.hiddenNotesColor): without that color, the image has to be
+ *  the one of the same sample with the notes visible in the XML, with their beams, ties and tuplets, and the cursor has to
+ *  stop at them. */
 describe("Drawing hidden notes (EngravingRules.RenderHiddenNotes)", (): void => {
     let div: HTMLElement;
     let osmd: OpenSheetMusicDisplay;
@@ -52,13 +54,14 @@ describe("Drawing hidden notes (EngravingRules.RenderHiddenNotes)", (): void => 
     }
 
     /**
-     * Expects the hidden notes of the score drawn like visible ones when drawHiddenNotes is switched on after load(), and
-     * hidden again when it's switched off.
+     * Expects the hidden notes of the score drawn like visible ones (without hiddenNotesColor) when drawHiddenNotes is
+     * switched on after load(), and hidden again when it's switched off.
      * @param xml the MusicXML of a score with hidden notes
      */
     async function expectHiddenNotesDrawnLikeVisibleOnes(xml: string): Promise<void> {
         const xmlWithNotesVisible: string = xml.replace(/(<note\b[^>]*?)\s+print-object="no"/g, "$1");
         expect(xmlWithNotesVisible !== xml, "premise: the score has hidden notes").to.equal(true);
+        osmd.setOptions({ hiddenNotesColor: "" });
         await osmd.load(xmlWithNotesVisible);
         osmd.render();
         const notesVisible: string[] = pageImages();
@@ -131,5 +134,52 @@ describe("Drawing hidden notes (EngravingRules.RenderHiddenNotes)", (): void => 
         expect(cursorStops(), "at each 16th").to.equal(12);
         renderWithDrawHiddenNotes(false);
         expect(cursorStops(), "only at the dotted half").to.equal(1);
+    });
+
+    // The same cymbal tremolo: the hidden 16ths with their stems and their beam in the color of hidden notes, the dotted half
+    //   as usual. The color can change between renders, like the colors of visible notes.
+    it("draws hidden notes in hiddenNotesColor, by default a light gray", async (): Promise<void> => {
+        osmd.setOptions({ backend: "svg", drawHiddenNotes: true });
+        await osmd.load(TestUtils.getScore("test_unison_hidden_tremolo_playback_notes_actor_prelude_measure33.musicxml"));
+        /** The colors drawn for the notes of the measure: of the visible note's head, and of the hidden notes' heads,
+         *  stems and beam, each listed once. */
+        const drawnColors: () => { visible: string[], hidden: string[] } = (): { visible: string[], hidden: string[] } => {
+            const visible: Set<string> = new Set<string>();
+            const hidden: Set<string> = new Set<string>();
+            const add: (colors: Set<string>, color: string) => void = (colors: Set<string>, color: string): void => {
+                colors.add(color === "black" ? "#000000" : color?.toUpperCase()); // "black": an element drawn without a style
+            };
+            for (const staffEntry of osmd.GraphicSheet.findGraphicalMeasure(0, 0).staffEntries) {
+                for (const gve of staffEntry.graphicalVoiceEntries) {
+                    const note: VexFlowGraphicalNote = gve.notes[0] as VexFlowGraphicalNote;
+                    const colors: Set<string> = note.sourceNote.PrintObject ? visible : hidden;
+                    for (const notehead of note.getNoteheadSVGs()) {
+                        add(colors, notehead.querySelector("path").getAttribute("fill"));
+                    }
+                    if (!note.sourceNote.PrintObject) {
+                        add(colors, note.getStemSVG().getAttribute("stroke"));
+                        for (const beam of note.getBeamSVGs()) { // the group of each beam line
+                            add(colors, beam.querySelector("path").getAttribute("fill"));
+                        }
+                    }
+                }
+            }
+            return { visible: [...visible], hidden: [...hidden] };
+        };
+        /** Expects the drawn colors, listing them in the message if they differ. */
+        const expectColors: (expected: { visible: string[], hidden: string[] }, message: string) => void =
+            (expected: { visible: string[], hidden: string[] }, message: string): void => {
+            const actual: string = JSON.stringify(drawnColors());
+            expect(actual, `${message}: ${actual}`).to.equal(JSON.stringify(expected));
+        };
+        osmd.render();
+        expect(osmd.EngravingRules.HiddenNotesColor, "default: a light, slightly transparent gray").to.equal("#A0A0A0CC");
+        expectColors({ visible: ["#000000"], hidden: ["#A0A0A0CC"] }, "default");
+        osmd.setOptions({ hiddenNotesColor: "#FF0000" });
+        osmd.render();
+        expectColors({ visible: ["#000000"], hidden: ["#FF0000"] }, "red");
+        osmd.setOptions({ hiddenNotesColor: "" });
+        osmd.render();
+        expectColors({ visible: ["#000000"], hidden: ["#000000"] }, "no color for hidden notes");
     });
 });
