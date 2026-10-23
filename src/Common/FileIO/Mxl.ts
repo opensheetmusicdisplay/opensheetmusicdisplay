@@ -67,7 +67,11 @@ export class MXLHelper {
         const parser: DOMParser = new DOMParser();
         const doc: Document = parser.parseFromString(container, "text/xml");
         const rootFile: string = doc.getElementsByTagName("rootfile")[0].getAttribute("full-path");
-        const xmlText: string = await zip.file(rootFile).async("text");
+        let xmlText: string = await zip.file(rootFile).async("text");
+        if (xmlText.startsWith("\ufeff")) {
+            // UTF-8 with a byte order mark: JSZip decodes it but keeps the mark (U+FEFF), which the check below would take for UTF-16
+            xmlText = xmlText.substring(1);
+        }
 
         if (!xmlText.substring(0, 1).startsWith("<")) {
             // assume UTF-16
