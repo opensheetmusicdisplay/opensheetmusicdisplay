@@ -39,6 +39,7 @@ describe("XML interface", () => {
         "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
         "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
         "VariousChordTests.musicxml",
+        "test_wedge_stop_before_note.musicxml",
     ];
     for (const score of xmlTestset) {
         testFile(score);

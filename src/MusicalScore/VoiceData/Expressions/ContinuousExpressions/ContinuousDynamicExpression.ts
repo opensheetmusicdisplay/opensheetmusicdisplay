@@ -33,6 +33,10 @@ export class ContinuousDynamicExpression extends AbstractExpression {
     private label: string;
     public IsStartOfSoftAccent: boolean;
     public YPosXml: number;
+    /** Printed position of an explicit MusicXML wedge stop in its end measure, including its divisions offset.
+     * EndMultiExpression retains its previous-note anchor for existing playback consumers.
+     */
+    public EndPositionTimestamp: Fraction;
 
     public get DynamicType(): ContDynamicEnum {
         return this.dynamicType;

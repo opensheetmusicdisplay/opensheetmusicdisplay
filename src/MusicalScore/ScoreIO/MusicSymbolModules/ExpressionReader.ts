@@ -923,6 +923,7 @@ export class ExpressionReader {
                     for (const openCont of this.openContinuousDynamicExpressions) {
                         if (openCont.NumberXml === numberXml) {
                             // if (openCont.NumberXml === numberXml) { // was there supposed to be another check here? someone wrote the same check twice.
+                            openCont.EndPositionTimestamp = this.directionTimestamp.clone();
                             this.closeOpenContinuousDynamic(openCont, currentMeasure, inSourceMeasureCurrentFraction);
                         }
                     }

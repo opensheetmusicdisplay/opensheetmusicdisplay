@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Original regression fixture. Stops precede the first note of measures 2 and 4;
+     measure 4 also begins a new system. No musical excerpt is used. -->
+<score-partwise version="4.0">
+  <work><work-title>Wedge endpoints</work-title></work>
+  <part-list><score-part id="P1"><part-name>Part</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes><divisions>4</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>
+      <direction placement="below"><direction-type><dynamics><p/></dynamics></direction-type></direction>
+      <direction placement="below"><direction-type><wedge type="crescendo"/></direction-type></direction>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>8</duration><type>half</type></note>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>8</duration><type>half</type></note>
+    </measure>
+    <measure number="2">
+      <direction placement="below"><direction-type><wedge type="stop"/></direction-type></direction>
+      <direction placement="below"><direction-type><dynamics><ff/></dynamics></direction-type></direction>
+      <note><pitch><step>D</step><octave>5</octave></pitch><duration>4</duration><type>quarter</type></note>
+      <note><pitch><step>D</step><octave>5</octave></pitch><duration>4</duration><type>quarter</type></note>
+      <note><pitch><step>D</step><octave>5</octave></pitch><duration>4</duration><type>quarter</type></note>
+      <note><pitch><step>D</step><octave>5</octave></pitch><duration>4</duration><type>quarter</type></note>
+    </measure>
+    <measure number="3">
+      <direction placement="below"><direction-type><dynamics><p/></dynamics></direction-type></direction>
+      <direction placement="below"><direction-type><wedge type="crescendo"/></direction-type></direction>
+      <note><pitch><step>E</step><octave>5</octave></pitch><duration>8</duration><type>half</type></note>
+      <note><pitch><step>E</step><octave>5</octave></pitch><duration>8</duration><type>half</type></note>
+    </measure>
+    <measure number="4">
+      <print new-system="yes"/>
+      <direction placement="below"><direction-type><wedge type="stop"/></direction-type></direction>
+      <direction placement="below"><direction-type><dynamics><ff/></dynamics></direction-type></direction>
+      <note><pitch><step>F</step><octave>5</octave></pitch><duration>4</duration><type>quarter</type></note>
+      <note><pitch><step>F</step><octave>5</octave></pitch><duration>4</duration><type>quarter</type></note>
+      <note><pitch><step>F</step><octave>5</octave></pitch><duration>4</duration><type>quarter</type></note>
+      <note><pitch><step>F</step><octave>5</octave></pitch><duration>4</duration><type>quarter</type></note>
+    </measure>
+  </part>
+</score-partwise>
