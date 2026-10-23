@@ -214,6 +214,44 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         expect(titles, titles.join("; ")).to.deep.equal(contents.map(([name]) => `${name}: Evening Song`));
     });
 
+    it("loads MusicXML without the XML declaration, e.g. starting with <!DOCTYPE or <score-partwise>, also from a Blob, an MXL file or a URL", async () => {
+        // the declaration (<?xml ...?>) is optional: e.g. jsdom's XMLSerializer and Python's ElementTree write none (#1840)
+        const scorePartwise: string = `<score-partwise version="4.0">
+                <part-list><score-part id="P1"><part-name>Flute</part-name></score-part></part-list>
+                <part id="P1"><measure number="1">
+                    <attributes><divisions>1</divisions></attributes>
+                    <note><rest/><duration>4</duration><type>whole</type></note>
+                </measure></part>
+            </score-partwise>`;
+        const doctype: string = '<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">';
+        const zip: JSZip = new JSZip();
+        zip.file("META-INF/container.xml", "<container><rootfiles><rootfile full-path='score.xml'/></rootfiles></container>");
+        zip.file("score.xml", doctype + scorePartwise);
+        const contents: [string, string | Blob][] = [
+            ["<!DOCTYPE", doctype + scorePartwise],
+            ["<score-partwise>", scorePartwise],
+            ["comment", "<!-- generated -->\n" + scorePartwise],
+            ["byte order mark and newline", "\uFEFF\n" + doctype + "\n" + scorePartwise],
+            ["Blob", new Blob([doctype + scorePartwise])],
+            ["MXL Blob", await zip.generateAsync({type: "blob"})],
+            ["URL", URL.createObjectURL(new Blob([scorePartwise]))],
+        ];
+        const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+        let xmlReads: number = 0;
+        opensheetmusicdisplay.OnXMLRead = (xml: string): string => { xmlReads++; return xml; };
+        const results: string[] = [];
+        for (const [name, content] of contents) {
+            try {
+                await opensheetmusicdisplay.load(content, "Evening Song");
+                results.push(`${name}: ${opensheetmusicdisplay.Sheet.TitleString}`);
+            } catch (error) {
+                results.push(`${name}: ${error.message}`);
+            }
+        }
+        expect(results, results.join("; ")).to.deep.equal(contents.map(([name]) => `${name}: Evening Song`));
+        expect(xmlReads, "calls of OnXMLRead").to.equal(contents.length);
+    });
+
     it("load invalid URL", (done: Mocha.Done) => {
         const url: string = "https://www.afjkhfjkauu2ui3z2uiu.com";
         const div: HTMLElement = TestUtils.getDivElement(document);

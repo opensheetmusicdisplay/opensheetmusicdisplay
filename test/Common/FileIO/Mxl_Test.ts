@@ -3,6 +3,7 @@ import { expect } from "chai";
 import { IXmlElement } from "../../../src/Common/FileIO/Xml";
 import { TestUtils } from "../../Util/TestUtils";
 import { MXLHelper } from "../../../src/Common/FileIO/Mxl";
+import JSZip from "jszip";
 
 describe("MXL Tests", () => {
   // Generates a test for a mxl file name
@@ -35,6 +36,19 @@ describe("MXL Tests", () => {
   for (const score of scores) {
     testFile(score);
   }
+
+  it("reads an MXL file whose container and score files start with a UTF-8 byte order mark", async () => {
+    const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+      <score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Flute</part-name></score-part></part-list>
+        <part id="P1"><measure number="1"><attributes><divisions>1</divisions></attributes>
+          <note><rest/><duration>4</duration><type>whole</type></note></measure></part></score-partwise>`;
+    const zip: JSZip = new JSZip();
+    // JSZip writes strings as UTF-8, so "\ufeff" becomes the byte order mark EF BB BF
+    zip.file("META-INF/container.xml", "\ufeff<container><rootfiles><rootfile full-path='score.xml'/></rootfiles></container>");
+    zip.file("score.xml", "\ufeff" + xml);
+    const xmlString: string = await MXLHelper.MXLtoXMLstring(await zip.generateAsync({type: "binarystring"}));
+    expect(xmlString).to.equal(xml);
+  });
 
   // Test failure
   it("Corrupted file", (done: Mocha.Done) => {
