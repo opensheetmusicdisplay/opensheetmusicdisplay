@@ -6,7 +6,9 @@ import { TestUtils } from "../../Util/TestUtils";
 
 /** The colors notes are drawn in (VexFlowVoiceEntry.color()): with coloring (EngravingRules.ColoringEnabled,
  *  OSMDOptions.coloringEnabled), the colors from the XML or from the coloring mode, without it, the default colors.
- *  Either way, hidden notes (print-object="no") and stems hidden with <stem>none</stem> are drawn transparent. */
+ *  Either way, hidden notes (print-object="no") and stems hidden with <stem>none</stem> are drawn transparent.
+ *  With ColorBeams, a beam takes the color of its stems (VexFlowMeasure.finalizeBeams()), e.g. the noteheads' color with
+ *  ColorStemsLikeNoteheads, but not the color of the noteheads alone. */
 describe("Coloring", (): void => {
     let div: HTMLElement;
     let osmd: OpenSheetMusicDisplay;
@@ -78,6 +80,21 @@ describe("Coloring", (): void => {
         expect(actual, `${message}: ${actual.join("; ")}`).to.deep.equal(expected);
     }
 
+    /**
+     * Expects the drawn colors of the beams of the first measure, listing them in the message if they differ.
+     * @param expected the color of each beam, e.g. "#FF0000"
+     * @param message what is checked, for a failure
+     */
+    function expectBeamColors(expected: string[], message: string): void {
+        const actual: string[] = [];
+        for (const staffEntry of osmd.GraphicSheet.findGraphicalMeasure(0, 0).staffEntries) {
+            for (const beam of (staffEntry.graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote).getBeamSVGs()) {
+                actual.push(drawnColor(beam.querySelector("path").getAttribute("fill")));
+            }
+        }
+        expect(actual, `${message}: ${actual.join(", ")}`).to.deep.equal(expected);
+    }
+
     it("keeps hidden notes and stems hidden without coloring, and draws the other notes in the default colors", async (): Promise<void> => {
         osmd.setOptions({ coloringEnabled: false }); // also when the notes are created without coloring
         await osmd.load(score(note("C", "quarter", "<notehead color=\"#FF0000\">normal</notehead>") +
@@ -117,5 +134,27 @@ describe("Coloring", (): void => {
             "D4: head #000000, stem #000000",
             "E4: head #000000, stem #00000000",
             "F4: head #000000, stem #000000"], "a hidden note drawn with drawHiddenNotes, not in hiddenNotesColor");
+    });
+
+    it("draws a beam in the color of its stems with ColorBeams, so like the noteheads only with colorStemsLikeNoteheads", async (): Promise<void> => {
+        /** Two beamed eighths, G4 and A4, with the given elements after their type. */
+        const beamed: (first: string, second: string) => string = (first: string, second: string): string =>
+            note("G", "eighth", first + "<beam number=\"1\">begin</beam>") + note("A", "eighth", second + "<beam number=\"1\">end</beam>");
+        const redHead: string = "<notehead color=\"#FF0000\">normal</notehead>";
+        const blueStem: string = "<stem color=\"#0000FF\">up</stem>";
+        await osmd.load(score(beamed(redHead, redHead) +
+            beamed(redHead, "<notehead color=\"#0000FF\">normal</notehead>") +
+            beamed(blueStem, blueStem) +
+            beamed("", "")));
+        osmd.render();
+        expectBeamColors(["#000000", "#000000", "#0000FF", "#000000"], "the stems' color, not the noteheads'");
+
+        osmd.setOptions({ colorStemsLikeNoteheads: true }); // also the blue stems, which take the default color of their heads
+        osmd.render();
+        expectBeamColors(["#FF0000", "#000000", "#000000", "#000000"], "with colorStemsLikeNoteheads");
+
+        osmd.EngravingRules.ColorBeams = false;
+        osmd.render();
+        expectBeamColors(["#000000", "#000000", "#000000", "#000000"], "without ColorBeams");
     });
 });

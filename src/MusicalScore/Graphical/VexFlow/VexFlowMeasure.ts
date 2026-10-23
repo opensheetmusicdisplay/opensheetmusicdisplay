@@ -1276,6 +1276,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                             (<any>vfBeam).render_options.beam_width = 3;
                             (<any>vfBeam).render_options.partial_beam_length = 4;
                         }
+                        // the color of the stems (ColorBeams), e.g. the noteheads' color with ColorStemsLikeNoteheads: set by
+                        //   VexFlowVoiceEntry.color() earlier in this render, before formatMeasures() calls this
                         if (stemColors.length >= 2 && this.rules.ColorBeams) {
                             beamColor = stemColors[0];
                             for (const stemColor of stemColors) {

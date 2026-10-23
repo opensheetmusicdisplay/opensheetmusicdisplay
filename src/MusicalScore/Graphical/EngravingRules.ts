@@ -525,6 +525,9 @@ export class EngravingRules {
     public ColoringEnabled: boolean;
     public ColorStemsLikeNoteheads: boolean;
     public ColorFlags: boolean;
+    /** Whether to draw a beam in the color of its stems, if two or more of them have a color, all the same, e.g. from the XML
+     *  or, with ColorStemsLikeNoteheads, the noteheads' color. Default true. The noteheads alone don't color a beam: an app
+     *  can color some noteheads without their beam. */
     public ColorBeams: boolean;
     public ColoringSetCurrent: Dictionary<NoteEnum|number, string>;
     /** Default color for all musical elements including key signature etc. Default undefined. */
