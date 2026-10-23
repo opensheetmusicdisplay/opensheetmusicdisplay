@@ -524,6 +524,8 @@ export class EngravingRules {
     public ColoringMode: ColoringMode;
     public ColoringEnabled: boolean;
     public ColorStemsLikeNoteheads: boolean;
+    /** Whether to draw a flag in the color of its stem. Default true. Otherwise, flags are drawn in DefaultColorStem.
+     *  A transparent stem, e.g. of a hidden note (print-object="no") or of `<stem>none</stem>`, hides its flag either way. */
     public ColorFlags: boolean;
     /** Whether to draw a beam in the color of its stems, if two or more of them have a color, all the same, e.g. from the XML
      *  or, with ColorStemsLikeNoteheads, the noteheads' color. Default true. The noteheads alone don't color a beam: an app

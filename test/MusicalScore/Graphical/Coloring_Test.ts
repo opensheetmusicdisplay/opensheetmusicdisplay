@@ -8,7 +8,8 @@ import { TestUtils } from "../../Util/TestUtils";
  *  OSMDOptions.coloringEnabled), the colors from the XML or from the coloring mode, without it, the default colors.
  *  Either way, hidden notes (print-object="no") and stems hidden with <stem>none</stem> are drawn transparent.
  *  With ColorBeams, a beam takes the color of its stems (VexFlowMeasure.finalizeBeams()), e.g. the noteheads' color with
- *  ColorStemsLikeNoteheads, but not the color of the noteheads alone. */
+ *  ColorStemsLikeNoteheads, but not the color of the noteheads alone. With ColorFlags, a flag takes the color of its stem,
+ *  and a transparent stem hides its flag either way. */
 describe("Coloring", (): void => {
     let div: HTMLElement;
     let osmd: OpenSheetMusicDisplay;
@@ -95,6 +96,26 @@ describe("Coloring", (): void => {
         expect(actual, `${message}: ${actual.join(", ")}`).to.deep.equal(expected);
     }
 
+    /**
+     * Expects the drawn colors of the flags of the first measure, listing them in the message if they differ.
+     * @param expected one text per note with a flag, e.g. "F4: flag #FF0000"
+     * @param message what is checked, for a failure
+     */
+    function expectFlagColors(expected: string[], message: string): void {
+        const actual: string[] = [];
+        for (const staffEntry of osmd.GraphicSheet.findGraphicalMeasure(0, 0).staffEntries) {
+            for (const gve of staffEntry.graphicalVoiceEntries) { // with grace notes
+                const gNote: VexFlowGraphicalNote = gve.notes[0] as VexFlowGraphicalNote;
+                const flag: HTMLElement = gNote.getFlagSVG();
+                if (flag) {
+                    const color: string = drawnColor(flag.querySelector("path").getAttribute("fill"));
+                    actual.push(`${gNote.sourceNote.Pitch.ToStringShort(3)}: flag ${color}`);
+                }
+            }
+        }
+        expect(actual, `${message}: ${actual.join("; ")}`).to.deep.equal(expected);
+    }
+
     it("keeps hidden notes and stems hidden without coloring, and draws the other notes in the default colors", async (): Promise<void> => {
         osmd.setOptions({ coloringEnabled: false }); // also when the notes are created without coloring
         await osmd.load(score(note("C", "quarter", "<notehead color=\"#FF0000\">normal</notehead>") +
@@ -156,5 +177,30 @@ describe("Coloring", (): void => {
         osmd.EngravingRules.ColorBeams = false;
         osmd.render();
         expectBeamColors(["#000000", "#000000", "#000000", "#000000"], "without ColorBeams");
+    });
+
+    it("draws flags in the default color with ColorFlags false, still hiding those of hidden notes and of <stem>none</stem>", async (): Promise<void> => {
+        osmd.EngravingRules.ColorFlags = false; // also when the notes are created without it
+        // the grace note's flag is drawn in the notehead style of its main note, the hidden D4, unless it has a style of its own
+        const graceNote: string = "<note><grace/><pitch><step>C</step><octave>5</octave></pitch><voice>1</voice><type>eighth</type></note>";
+        await osmd.load(score(graceNote + note("D", "eighth", "", " print-object=\"no\"") +
+            note("E", "eighth", "<stem>none</stem>") +
+            note("F", "eighth", "<stem color=\"#FF0000\">up</stem>") +
+            note("G", "eighth") +
+            "<note><rest/><duration>4</duration><type>half</type></note>"));
+        const withoutColorFlags: string[] = ["C5: flag #000000", "D4: flag #00000000", "E4: flag #00000000", "F4: flag #000000",
+            "G4: flag #000000"];
+        osmd.render();
+        expectFlagColors(withoutColorFlags, "without ColorFlags");
+
+        osmd.EngravingRules.ColorFlags = true;
+        osmd.render();
+        expectFlagColors(["C5: flag #000000", "D4: flag #00000000", "E4: flag #00000000", "F4: flag #FF0000", "G4: flag #000000"],
+            "with ColorFlags");
+
+        // the Vexflow notes are reused across renders, and keep their colors until set again
+        osmd.EngravingRules.ColorFlags = false;
+        osmd.render();
+        expectFlagColors(withoutColorFlags, "ColorFlags switched off");
     });
 });
