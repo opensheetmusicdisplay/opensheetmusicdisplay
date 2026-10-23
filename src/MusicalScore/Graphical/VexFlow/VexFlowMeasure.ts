@@ -1286,6 +1286,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
                             }
                             vfBeam.setStyle({ fillStyle: beamColor, strokeStyle: beamColor });
                         }
+                        // a beam of hidden notes drawn with RenderHiddenNotes, in their color (see VexFlowVoiceEntry.color())
+                        const hiddenNotesColor: string = this.rules.HiddenNotesColor;
+                        if (hiddenNotesColor && this.rules.ColoringEnabled && this.rules.ColorBeams &&
+                            voiceEntries.every((entry: VexFlowVoiceEntry): boolean => entry.drawsOnlyHiddenNotes())) {
+                            vfBeam.setStyle({ fillStyle: hiddenNotesColor, strokeStyle: hiddenNotesColor });
+                        }
                         if (this.rules.FlatBeams) {
                             (<any>vfBeam).render_options.flat_beams = true;
                             (<any>vfBeam).render_options.flat_beam_offset = this.rules.FlatBeamOffset;
@@ -1673,7 +1679,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
      *  (Vexflow would draw a slash through each of them), and not a hidden one (Vexflow would draw its slash anyway). */
     private hasGraceSlash(graceGve: GraphicalVoiceEntry, isFirstGraceNote: boolean): boolean {
         return isFirstGraceNote && graceGve.parentVoiceEntry.GraceNoteSlash &&
-            graceGve.notes.some((note: GraphicalNote) => note.sourceNote.PrintObject);
+            graceGve.notes.some((note: GraphicalNote) => note.sourceNote.isVisible());
     }
 
     public graphicalMeasureCreatedCalculations(): void {
@@ -1851,6 +1857,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 if (vfse && vfse.vfClefBefore && vfse.vfKeys.length === 0 &&
                     !voiceEntry.parentVoiceEntry?.GraceAfterMainNote && vfse !== staffEntryWithClef) {
                     staffEntryWithClef = vfse;
+                    // the clef is drawn with the style of a hidden note's notehead: transparent, or with RenderHiddenNotes in
+                    //   HiddenNotesColor (VexFlowVoiceEntry.color())
                     if (voiceEntry.notes[0] && !voiceEntry.notes[0].sourceNote.PrintObject) {
                         const clefColor: string = this.rules.DefaultColorMusic || "#000000";
                         // need to cast to any because ClefNote actually extends Note, which extends Tickable, which extends Element,
@@ -1865,7 +1873,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     }
                 }
 
-                if (voiceEntry.notes.length === 0 || !voiceEntry.notes[0] || !voiceEntry.notes[0].sourceNote.PrintObject) {
+                if (voiceEntry.notes.length === 0 || !voiceEntry.notes[0] || !voiceEntry.notes[0].sourceNote.isVisible()) {
                     // GhostNote: still allow in-measure clefs on invisible notes, but skip other modifiers.
                     this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
                     continue;

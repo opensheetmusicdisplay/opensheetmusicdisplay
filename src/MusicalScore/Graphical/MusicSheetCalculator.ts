@@ -2379,7 +2379,7 @@ export abstract class MusicSheetCalculator {
                 // visible unison note in another voice (print-object="no") - then its stem still has to join the
                 // beam (emanating from the shared notehead) instead of becoming an orphan flagged note.
                 // E.g. Beethoven Moonlight Sonata 1st mvt. m.37 (test_unison_notehead_moonlight_sonata_measure37).
-                if (note.NoteBeam !== undefined && (note.PrintObject || note.sharesNoteheadWithVisibleUnisonNote())) {
+                if (note.NoteBeam !== undefined && (note.isVisible() || note.sharesNoteheadWithVisibleUnisonNote())) {
                     if (!(note instanceof TabNote) || this.rules.TabBeamsRendered) {
                         this.handleBeam(graphicalNote, note.NoteBeam, openBeams);
                     }
@@ -2388,7 +2388,7 @@ export abstract class MusicSheetCalculator {
                 // (and bracket) has to span it. Leaving it out built the VF.Tuplet from the remaining notes and
                 // centered the number over those, off the beam's center.
                 // E.g. Debussy Arabesque no. 1 m.3 (test_unison_notehead_tuplet_arabesque_measure3).
-                if (note.NoteTuplets.length > 0 && (note.PrintObject || note.sharesNoteheadWithVisibleUnisonNote())) {
+                if (note.NoteTuplets.length > 0 && (note.isVisible() || note.sharesNoteheadWithVisibleUnisonNote())) {
                     // a note can be part of more than one tuplet (nested tuplets); add it to each of them
                     for (const noteTuplet of note.NoteTuplets) {
                         this.handleTuplet(graphicalNote, noteTuplet, openTuplets);
@@ -2965,7 +2965,7 @@ export abstract class MusicSheetCalculator {
             }
             endNote = endGse.findTieGraphicalNoteFromNote(tie.Notes[i]);
             if (startNote !== undefined && endNote !== undefined && endGse) {
-                if (!startNote.sourceNote.PrintObject || !endNote.sourceNote.PrintObject) {
+                if (!startNote.sourceNote.isVisible() || !endNote.sourceNote.isVisible()) {
                     continue;
                 }
                 const tieOfFoundNotes: Tie = startNote.sourceNote.NoteTie;
@@ -4479,7 +4479,8 @@ export abstract class MusicSheetCalculator {
     }
 
     /** Whether a voice other than the given entry's has an entry (note or rest) in the same measure on the same staff,
-     *  with onlyVisible one with a note or rest that is drawn, i.e. not of a voice only for playback (print-object="no").
+     *  with onlyVisible one with a note or rest that is drawn (Note.isVisible()), e.g. not of a voice only for playback
+     *  (print-object="no").
      *  A voice with most of its entries of the measure on another staff doesn't count: it only crosses into this staff,
      *  e.g. the top notes of a left-hand arpeggio in the right hand's staff (Dichterliebe m.9). */
     private otherVoicePresentInMeasure(voiceEntry: VoiceEntry, onlyVisible: boolean = false): boolean {
@@ -4493,7 +4494,7 @@ export abstract class MusicSheetCalculator {
             }
             for (const otherVoiceEntry of otherStaffEntry.VoiceEntries) {
                 if (otherVoiceEntry.ParentVoice !== voiceEntry.ParentVoice &&
-                    (!onlyVisible || otherVoiceEntry.Notes.some((note: Note) => note.PrintObject)) &&
+                    (!onlyVisible || otherVoiceEntry.Notes.some((note: Note) => note.isVisible())) &&
                     !this.voiceMostlyOnOtherStaves(otherVoiceEntry.ParentVoice, measure, staffIndex)) {
                     return true;
                 }

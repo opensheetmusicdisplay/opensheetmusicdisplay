@@ -228,6 +228,11 @@ export class Note {
     public set PrintObject(value: boolean) {
         this.printObject = value;
     }
+    /** Whether the note is drawn: it's not hidden (PrintObject), or EngravingRules.RenderHiddenNotes draws hidden notes too.
+     *  Use this instead of PrintObject to decide what to draw. */
+    public isVisible(): boolean {
+        return this.printObject || this.sourceMeasure?.Rules?.RenderHiddenNotes === true;
+    }
     /** Whether this note's own notehead is hidden (e.g. print-object="no" or notehead "none") but there is a
      * visible note on the same staff line in another voice at the same staff entry - i.e. a unison whose visible
      * notehead this note shares. Used to render such a note like a visible one instead of dropping it: its beam
@@ -245,7 +250,7 @@ export class Note {
      * {@link sharesNoteheadWithVisibleUnisonNote}), or undefined if this note's own notehead is visible or
      * there is no such note. */
     public visibleUnisonNoteSharingNotehead(): Note {
-        if (this.printObject && this.notehead?.Shape !== NoteHeadShape.NONE) {
+        if (this.isVisible() && this.notehead?.Shape !== NoteHeadShape.NONE) {
             return undefined; // this note's own notehead is visible, nothing to share
         }
         // Grace notes are ornaments before a main note, not a note sounding simultaneously - they share their
@@ -258,7 +263,7 @@ export class Note {
                 continue;
             }
             for (const otherNote of otherVoiceEntry.Notes) {
-                if (otherNote.printObject && otherNote.notehead?.Shape !== NoteHeadShape.NONE && otherNote.pitch &&
+                if (otherNote.isVisible() && otherNote.notehead?.Shape !== NoteHeadShape.NONE && otherNote.pitch &&
                     otherNote.pitch.FundamentalNote === this.pitch.FundamentalNote &&
                     otherNote.pitch.Octave === this.pitch.Octave) {
                     return otherNote; // visible note on the same staff line in another voice

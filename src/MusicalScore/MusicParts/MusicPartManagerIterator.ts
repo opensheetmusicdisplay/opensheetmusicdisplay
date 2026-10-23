@@ -702,7 +702,7 @@ export class MusicPartManagerIterator {
         if (entry.ParentVoice.Visible) {
             let anyNoteVisible: boolean = false;
             for (const note of entry.Notes) {
-                if (note.PrintObject && note.Notehead?.Shape !== NoteHeadShape.NONE) {
+                if (note.isVisible() && note.Notehead?.Shape !== NoteHeadShape.NONE) {
                     anyNoteVisible = true;
                     break;
                 }

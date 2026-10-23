@@ -306,6 +306,10 @@ async function init () {
                     staffVisibility: { 0: true, 1: false}, fileNameAddition: "right_hand_only_"}, DEBUG);
                 await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
                     staffVisibility: { 0: false, 1: true}, fileNameAddition: "left_hand_only_"}, DEBUG);
+            } else if (sampleFilename.startsWith("OSMD_function_test_invisible_notes")) {
+                // generate one more testing image with the hidden notes drawn (light gray, see EngravingRules.RenderHiddenNotes)
+                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
+                    drawHiddenNotes: true, fileNameAddition: "drawHiddenNotes_"}, DEBUG);
             }
         }
     }
@@ -734,6 +738,9 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     });
     if (options.darkMode) {
         osmdInstance.setOptions({darkMode: true}); // note that we set pageBackgroundColor above, so we need to overwrite it here.
+    }
+    if (options.drawHiddenNotes) {
+        osmdInstance.setOptions({drawHiddenNotes: true}); // before load(), which creates the beams of the hidden notes
     }
     // note that loadDefaultValues() may be executed in setOptions with drawingParameters default
     //osmdInstance.EngravingRules.RenderSingleHorizontalStaffline = true; // to use this option here, place it after setOptions(), see above

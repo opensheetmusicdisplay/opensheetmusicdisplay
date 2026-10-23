@@ -1246,8 +1246,11 @@ export class OpenSheetMusicDisplay {
 
         // alternative to if block: this.drawingsParameters.drawCursors = options.drawCursors !== false. No if, but always sets drawingParameters.
         // note that every option can be undefined, which doesn't mean the option should be set to false.
-        if (options.drawHiddenNotes) {
-            this.drawingParameters.drawHiddenNotes = true; // not yet supported
+        if (options.drawHiddenNotes !== undefined) {
+            this.drawingParameters.DrawHiddenNotes = options.drawHiddenNotes; // sets EngravingRules.RenderHiddenNotes
+        }
+        if (options.hiddenNotesColor !== undefined) {
+            this.rules.HiddenNotesColor = options.hiddenNotesColor;
         }
         if (options.drawCredits !== undefined) {
             this.drawingParameters.DrawCredits = options.drawCredits; // sets DrawComposer, DrawTitle, DrawSubtitle, DrawLyricist.

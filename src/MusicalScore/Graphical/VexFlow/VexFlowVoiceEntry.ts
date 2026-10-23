@@ -118,6 +118,19 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         return sameColumn && head.glyph_code !== sharedHead.glyph_code;
     }
 
+    /** Whether the note is hidden (print-object="no"), but drawn because of EngravingRules.RenderHiddenNotes: then it's drawn
+     *  in EngravingRules.HiddenNotesColor, if set. */
+    private static drawnAsHiddenNote(note: Note): boolean {
+        return !note.PrintObject && note.isVisible();
+    }
+
+    /** Whether all notes of this voice entry are hidden notes drawn because of EngravingRules.RenderHiddenNotes: then what they
+     *  share is drawn in EngravingRules.HiddenNotesColor too, if set: the stem with its flags, the ledger lines (see color())
+     *  and a beam that only joins such voice entries (see VexFlowMeasure.finalizeBeams()). */
+    public drawsOnlyHiddenNotes(): boolean {
+        return this.parentVoiceEntry.Notes.every((note: Note): boolean => VexFlowVoiceEntry.drawnAsHiddenNote(note));
+    }
+
     /** (Re-)color notes and stems by setting their Vexflow styles.
      * Could be made redundant by a Vexflow PR, but Vexflow needs more solid and permanent color methods/variables for that
      * See VexFlowConverter.StaveNote()
@@ -126,6 +139,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         const defaultColorNotehead: string = this.rules.DefaultColorNotehead;
         const defaultColorRest: string = this.rules.DefaultColorRest;
         const defaultColorStem: string = this.rules.DefaultColorStem;
+        const hiddenNotesColor: string = this.rules.HiddenNotesColor;
         const transparentColor: string = "#00000000"; // transparent color in vexflow
         let noteheadColor: string; // if null: no noteheadcolor to set (stays black)
         let sourceNoteNoteheadColor: string;
@@ -135,11 +149,12 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
             const note: GraphicalNote = this.notes[i];
 
             // notehead="none" asks for no notehead at all, so it always stays hidden. print-object="no" hides it
-            // too, unless the note is drawn anyway because it shares a visible unison note's notehead: then it is
-            // drawn whole, notehead included, exactly like its stem below (see drawnAsSharedUnisonNote).
+            // too, unless EngravingRules.RenderHiddenNotes draws hidden notes (see Note.isVisible()), or the note is
+            // drawn anyway because it shares a visible unison note's notehead: then it is drawn whole, notehead
+            // included, exactly like its stem below (see drawnAsSharedUnisonNote).
             const sharedUnisonNote: Note = this.inDrawnBeam ? note.sourceNote.visibleUnisonNoteSharingNotehead() : undefined;
             const noteheadVisible: boolean = note.sourceNote.Notehead?.Shape !== NoteHeadShape.NONE &&
-                (note.sourceNote.PrintObject ||
+                (note.sourceNote.isVisible() ||
                  sharedUnisonNote !== undefined && !this.overprintsSharedHeadOfOtherShape(i, sharedUnisonNote));
             // A note drawn for its shared unison notehead takes that visible note's color: where Vexflow merges the
             // two heads into one column, its head is inked exactly over the visible one (in draw order after it,
@@ -182,6 +197,9 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                 } else if (note.sourceNote.isRest() && defaultColorRest) {
                     noteheadColor = defaultColorRest;
                 }
+            }
+            if (noteheadVisible && hiddenNotesColor && VexFlowVoiceEntry.drawnAsHiddenNote(note.sourceNote)) {
+                noteheadColor = hiddenNotesColor; // tells the hidden notes drawn with RenderHiddenNotes apart from visible ones
             }
             if (noteheadColor && noteheadVisible) {
                 note.sourceNote.NoteheadColorCurrentlyRendered = noteheadColor;
@@ -230,6 +248,13 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
             }
         }
 
+        // The stem with its flags and the ledger lines belong to all notes of the voice entry: in HiddenNotesColor if all of them
+        //   are hidden notes drawn with RenderHiddenNotes.
+        const onlyHiddenNotesDrawn: boolean = Boolean(hiddenNotesColor) && this.drawsOnlyHiddenNotes();
+        if (onlyHiddenNotesDrawn && vfStaveNote?.setLedgerLineStyle) {
+            vfStaveNote.setLedgerLineStyle({ fillStyle: hiddenNotesColor, strokeStyle: hiddenNotesColor, lineWidth: this.rules.LedgerLineWidth });
+        }
+
         // color stems
         let stemColor: string = defaultColorStem; // reset to black/default when coloring was disabled. maybe needed elsewhere too
         let setVoiceEntryStemColor: boolean = false;
@@ -245,9 +270,13 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                 setVoiceEntryStemColor = true;
             }
         }
+        if (onlyHiddenNotesDrawn) {
+            stemColor = hiddenNotesColor;
+            setVoiceEntryStemColor = false; // keep the voice entry's own stem color, for when the notes are drawn as visible ones
+        }
         let stemTransparent: boolean = true;
         for (const note of this.parentVoiceEntry.Notes) {
-            if (note.PrintObject && note.Notehead?.Shape !== NoteHeadShape.NONE) {
+            if (note.isVisible() && note.Notehead?.Shape !== NoteHeadShape.NONE) {
                 stemTransparent = false;
                 break;
             }

@@ -695,13 +695,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
               if (!voiceEntry.parentVoiceEntry.IsGrace) {
                 if (voiceEntry && voiceEntry.notes && voiceEntry.notes[0] && voiceEntry.notes[0].sourceNote) {// TODO null chaining, TS 3.7
-                  if (voiceEntry.notes[0].sourceNote.PrintObject) { // only respect collision when not invisible
+                  if (voiceEntry.notes[0].sourceNote.isVisible()) { // only respect collision when not invisible
                     collidableVoiceEntries++;
                   }
                 }
               }
               if (voiceEntry && voiceEntry.notes && voiceEntry.notes[0] && voiceEntry.notes[0].sourceNote) {// TODO null chaining, TS 3.7
-                if (voiceEntry.notes[0].sourceNote.isRest() && voiceEntry.notes[0].sourceNote.PrintObject) {
+                if (voiceEntry.notes[0].sourceNote.isRest() && voiceEntry.notes[0].sourceNote.isVisible()) {
                   numberOfRests++; // only align rests if there is actually a rest (which could collide)
                 }
               }

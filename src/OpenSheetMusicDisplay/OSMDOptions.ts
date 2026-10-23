@@ -130,8 +130,14 @@ export interface IOSMDOptions {
     fingeringPosition?: string;
     /** For above/below fingerings, whether to draw them directly above/below notes (default), or above/below staffline. */
     fingeringInsideStafflines?: boolean;
-    /** Whether to draw hidden/invisible notes (print-object="no" in XML). Default false. Not yet supported. */ // TODO
+    /** Whether to draw hidden/invisible notes and rests (print-object="no" in XML) like visible ones. Default false.
+     *  Sets EngravingRules.RenderHiddenNotes. To change it after load(), call osmd.updateGraphic() before the next render().
+     */
     drawHiddenNotes?: boolean;
+    /** The color of the hidden notes drawn with drawHiddenNotes. Default "#A0A0A0CC", a light, slightly transparent gray.
+     *  "" draws them in the colors of visible notes. Sets EngravingRules.HiddenNotesColor.
+     */
+    hiddenNotesColor?: string;
     /** Whether to draw lyrics (and their extensions and dashes). */
     drawLyrics?: boolean;
     /** Whether to calculate extra slurs with bezier curves not covered by Vexflow slurs. Default true. */
