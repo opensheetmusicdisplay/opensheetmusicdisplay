@@ -136,6 +136,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
      * See VexFlowConverter.StaveNote()
      * Also runs without EngravingRules.ColoringEnabled: it makes hidden notes (print-object="no") transparent, and draws the
      * other notes in the default colors, like notes without a color in the XML.
+     * A beam takes the color of its stems, in VexFlowMeasure.finalizeBeams() (see EngravingRules.ColorBeams).
      */
     public color(): void {
         const defaultColorNotehead: string = this.rules.DefaultColorNotehead;
@@ -209,22 +210,6 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                 note.sourceNote.NoteheadColorCurrentlyRendered = noteheadColor;
             } else if (!noteheadColor) {
                 continue;
-            }
-
-            // color notebeam if all noteheads have same color and stem coloring enabled
-            if (this.rules.ColoringEnabled && note.sourceNote.NoteBeam && this.rules.ColorBeams) {
-                const beamNotes: Note[] = note.sourceNote.NoteBeam.Notes;
-                let colorBeam: boolean = true;
-                for (let j: number = 0; j < beamNotes.length; j++) {
-                    if (beamNotes[j].NoteheadColorCurrentlyRendered !== noteheadColor) {
-                        colorBeam = false;
-                    }
-                }
-                if (colorBeam) {
-                    if (vfStaveNote?.beam?.setStyle) {
-                        vfStaveNote.beam.setStyle({ fillStyle: noteheadColor, strokeStyle: noteheadColor});
-                    }
-                }
             }
 
             if (vfStaveNote) {
