@@ -355,4 +355,27 @@ describe("VexFlow GraphicalNote", () => {
             div.remove();
         }
     });
+
+    it("Tells whether a note is visible with isVisible(): false after setVisible(false), and for a note hidden in the score", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = await renderMeasures(div, [tiedNote("C5", 2, false) +
+            tiedNote("E5", 2, false).replace("<note>", "<note print-object='no'>")], false); // two half notes, the second one hidden
+        const [note, hiddenNote] = measureNotes(osmd, 0, 0);
+        expect([note.isVisible(), hiddenNote.isVisible()], "a note, and a note hidden in the score").to.deep.equal([true, false]);
+        note.setVisible(false);
+        expect(note.isVisible(), "hidden with setVisible(false)").to.equal(false);
+        note.setVisible(true);
+        expect(note.isVisible(), "shown again").to.equal(true);
+        note.setVisible(false, { applyToNotehead: false });
+        expect(note.isVisible(), "only its stem hidden, not its notehead").to.equal(true);
+        hiddenNote.setVisible(true);
+        expect(hiddenNote.isVisible(), "setVisible(true) doesn't draw a note hidden in the score").to.equal(false);
+
+        note.setVisible(false);
+        osmd.EngravingRules.RenderHiddenNotes = true;
+        osmd.render();
+        const afterRender: boolean[] = [note, hiddenNote].map(graphicalNote => osmd.EngravingRules.GNote(graphicalNote.sourceNote).isVisible());
+        expect(afterRender, "drawn again by a render, and the hidden note too with RenderHiddenNotes").to.deep.equal([true, true]);
+        div.remove();
+    });
 });

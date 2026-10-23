@@ -229,7 +229,8 @@ export class Note {
         this.printObject = value;
     }
     /** Whether the note is drawn: it's not hidden (PrintObject), or EngravingRules.RenderHiddenNotes draws hidden notes too.
-     *  Use this instead of PrintObject to decide what to draw. */
+     *  Use this instead of PrintObject to decide what to draw.
+     *  This doesn't change with GraphicalNote.setVisible(): GraphicalNote.isVisible() also checks that. */
     public isVisible(): boolean {
         return this.printObject || this.sourceMeasure?.Rules?.RenderHiddenNotes === true;
     }

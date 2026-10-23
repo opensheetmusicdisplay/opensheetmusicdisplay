@@ -101,9 +101,19 @@ export class GraphicalNote extends GraphicalObject {
      * By default, this will also hide the note's slurs, ties and glissandi, e.g. slides (see visibilityOptions).
      * (This only works with the default SVG backend, not with the Canvas backend/renderer)
      * To get a GraphicalNote from a Note, use osmd.EngravingRules.GNote(note).
+     * To check whether a note is visible, e.g. after setVisible(false), use isVisible().
      */
     public setVisible(visible: boolean, visibilityOptions: VisibilityOptions = {}): void {
       // implemented in VexFlowGraphicalNote
+    }
+
+    /** Whether the note is visible: false after setVisible(false), which hides its notehead (unless
+     * VisibilityOptions.applyToNotehead is false), and for a note hidden in the score, e.g. by print-object="no" (see Note.isVisible()).
+     * Like setVisible(), this works on the drawn SVG: a new render draws the notes hidden with setVisible() visible again.
+     * It's true for a note that isn't drawn at all, e.g. of a hidden instrument (Instrument.Visible false).
+     */
+    public isVisible(): boolean {
+      return this.sourceNote.isVisible(); // whether setVisible() hid the drawn note: see VexFlowGraphicalNote
     }
 }
 
