@@ -483,10 +483,10 @@ export class VoiceGenerator {
     let fretNumber: number = -1; //0 to always recognize as valid tab note
     const bends: {bendalter: number, direction: string}[] = [];
     // check for guitar tabs:
+    // InstrumentReader already combines repeated notations into the first block.
     const notationNode: IXmlElement = node.element("notations");
     if (notationNode) {
-      const technicalNode: IXmlElement = notationNode.element("technical");
-      if (technicalNode) {
+      for (const technicalNode of notationNode.elements("technical")) {
         const stringNode: IXmlElement = technicalNode.element("string");
         if (stringNode) {
           stringNumber = parseInt(stringNode.value, 10);
@@ -499,10 +499,10 @@ export class VoiceGenerator {
         bendElementsArr.forEach(function (bend: IXmlElement): void {
             const bendalterNote: IXmlElement = bend.element("bend-alter");
             const releaseNode: IXmlElement = bend.element("release");
-            if (releaseNode !== undefined) {
-              bends.push({bendalter: parseInt (bendalterNote.value, 10), direction: "down"});
+            if (releaseNode !== undefined || parseFloat(bendalterNote.value) < 0) {
+              bends.push({bendalter: parseFloat(bendalterNote.value), direction: "down"});
             } else {
-              bends.push({bendalter: parseInt (bendalterNote.value, 10), direction: "up"});
+              bends.push({bendalter: parseFloat(bendalterNote.value), direction: "up"});
             }
           });
       }
@@ -515,6 +515,8 @@ export class VoiceGenerator {
       // create TabNote
       note = new TabNote(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch, this.currentMeasure,
                          stringNumber, fretNumber, bends);
+      (note as TabNote).FretVisible = notationNode?.attribute("print-object")?.value !== "no";
+      (note as TabNote).FretParentheses = node.element("notehead")?.attribute("parentheses")?.value === "yes";
     }
 
     this.addNoteInfo(note, noteTypeXml, printObject, isCueNote, normalNotes,
