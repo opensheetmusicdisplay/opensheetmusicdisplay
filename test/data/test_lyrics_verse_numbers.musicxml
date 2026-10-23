@@ -6,7 +6,10 @@
   The number is left of the lyric, which starts at its note like the lyrics of the other notes, and the notes are evenly spaced.
   Measure 2: "2. lah" in the upper staff is a later lyric of its verse, it starts with the number at the note, and so does
   "4. lah", which starts its verse at that note: the numbers of a note move together.
-  "1.2. lah" in the lower staff (a lyric of two verses) is the first lyric of the verse in that staff, with the numbers left of it. -->
+  "1.2. lah" in the lower staff (a lyric of two verses) is the first lyric of the verse in that staff, with the numbers left of it.
+  Measure 3 starts a new system (if NewSystemAtXMLNewSystemAttribute is set), with the numbers repeated at the first lyrics of the
+  verses, like in a hymn: the numbers are left of the lyrics there too. In one system (the default), they are later lyrics of
+  their verses, which start with the number at the note. -->
 <score-partwise version="4.0">
   <work>
     <work-title>Lyrics with verse numbers</work-title>
@@ -166,6 +169,90 @@
           <syllabic>single</syllabic>
           <text>1.2. lah</text>
         </lyric>
+      </note>
+    </measure>
+    <measure number="3">
+      <print new-system="yes"/>
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+        <lyric number="1">
+          <syllabic>single</syllabic>
+          <text>1. lah</text>
+        </lyric>
+        <lyric number="2">
+          <syllabic>single</syllabic>
+          <text>2. lah</text>
+        </lyric>
+      </note>
+      <note>
+        <pitch>
+          <step>D</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+        <lyric number="1">
+          <syllabic>single</syllabic>
+          <text>lah</text>
+        </lyric>
+        <lyric number="2">
+          <syllabic>single</syllabic>
+          <text>lah</text>
+        </lyric>
+      </note>
+      <note>
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+        <lyric number="1">
+          <syllabic>single</syllabic>
+          <text>lah</text>
+        </lyric>
+        <lyric number="2">
+          <syllabic>single</syllabic>
+          <text>lah</text>
+        </lyric>
+      </note>
+      <note>
+        <pitch>
+          <step>D</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <staff>1</staff>
+        <lyric number="1">
+          <syllabic>single</syllabic>
+          <text>lah</text>
+        </lyric>
+        <lyric number="2">
+          <syllabic>single</syllabic>
+          <text>lah</text>
+        </lyric>
+      </note>
+      <backup>
+        <duration>4</duration>
+      </backup>
+      <note>
+        <rest measure="yes"/>
+        <duration>4</duration>
+        <voice>5</voice>
+        <staff>2</staff>
       </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>

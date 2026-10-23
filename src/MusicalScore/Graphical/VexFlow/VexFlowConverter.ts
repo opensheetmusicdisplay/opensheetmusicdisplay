@@ -323,7 +323,10 @@ export class VexFlowConverter {
             baseNote.sourceNote.TypeLength !== baseNoteLength &&
             baseNote.sourceNote.TypeLength.RealValue !== 0) {
             duration = VexFlowConverter.durations(baseNote.sourceNote.TypeLength, isTuplet)[0];
-            baseNote.numberOfDots = baseNote.sourceNote.DotsXml;
+            // Every chord member contributes to numDots below, so use the written dots for all of them.
+            for (const note of notes) {
+                note.numberOfDots = note.sourceNote.DotsXml;
+            }
         }
         let vfClefType: string = undefined;
         let numDots: number = baseNote.numberOfDots;

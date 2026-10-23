@@ -637,6 +637,8 @@ export abstract class MusicSheetCalculator {
         const relevantVerseNumbers: Map<string, boolean> = new Map<string, boolean>();
         const lyricsStaffEntriesList: GraphicalStaffEntry[] = [];
         const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
+        /** The verses with a lyric before the current staff entry in the staff line. */
+        const versesStarted: Set<string> = new Set<string>();
 
         // first find maximum Ycoordinate for the whole StaffLine
         let len: number = staffLine.Measures.length;
@@ -657,6 +659,16 @@ export abstract class MusicSheetCalculator {
                 if (len3 > 0) {
                     lyricsStaffEntriesList.push(staffEntry);
                     numberOfVerses = Math.max(numberOfVerses, staffEntry.LyricsEntries.length);
+
+                    // a lyric starting its verse in the staff line gets its verse number left of it, like the first lyric
+                    //   of the verse in the staff, e.g. at the start of a system in a hymn repeating the verse numbers
+                    for (const lyricEntry of staffEntry.LyricsEntries) {
+                        lyricEntry.moveLeadingNumberLeftOfLyricInStaffLine(
+                            (lyricsEntry: LyricsEntry): boolean => !versesStarted.has(lyricsEntry.VerseNumber));
+                    }
+                    for (const lyricEntry of staffEntry.LyricsEntries) {
+                        versesStarted.add(lyricEntry.LyricsEntry.VerseNumber);
+                    }
 
                     // Position of Staffentry relative to StaffLine
                     const staffEntryPositionX: number = staffEntry.PositionAndShape.RelativePosition.x +

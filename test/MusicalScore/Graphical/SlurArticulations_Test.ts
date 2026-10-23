@@ -35,6 +35,7 @@ interface Box {
  * test_slur_articulations_outside: accents and a fermata outside slurs, and slurs beside fingerings, see the comment in the sample.
  * test_slur_beside_fingering_obstacles: slurs that ran into accidentals and a key signature beside fingerings, and slurs from
  * notes with an ornament, see the comment in the sample.
+ * test_slur_clear_of_end_accidentals: slurs that ran into the accidentals of their end notes, see the comment in the sample.
  */
 describe("Slur at a note with an articulation", () => {
     let osmd: OpenSheetMusicDisplay;
@@ -347,6 +348,39 @@ describe("Slur at a note with an articulation", () => {
                 .map((mark: Element) => toStaffLine(mark as SVGGraphicsElement, trillNote.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentStaffLine))
                 .sort((a: Box, b: Box) => a.top - b.top)[0]; // the outermost of the marks
             expect(trillAtNote.top - firstRenderTrill.top, "without slurs: the trill of m.8, below where the slur moved it").to.be.at.least(0.1);
+        });
+    }
+
+    for (const geometricSkyline of [true, false]) {
+        const skyline: string = geometricSkyline ? "geometric skyline" : "raster skyline";
+        it(`keeps a slur clear of the accidentals of its end note, ending at most half as far beyond them as from the note (${skyline})`,
+           async () => {
+            await osmd.load(TestUtils.getScore("test_slur_clear_of_end_accidentals.musicxml"));
+            osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = geometricSkyline;
+            const offset: number = osmd.EngravingRules.SlurNoteHeadYOffset;
+            for (const render of ["first render", "re-render"]) {
+                osmd.render();
+                expect(slurs().length, render).to.equal(8);
+                let withAccidentals: number = 0;
+                for (const slur of slurs()) {
+                    // the end notes have no other marks: what is drawn among their modifiers is their accidental, a cautionary
+                    //   one's parentheses included (the E6 of m.1 has none)
+                    const accidentals: Box[] = drawnMarks(slur, "end", true);
+                    if (accidentals.length === 0) {
+                        continue;
+                    }
+                    withAccidentals++;
+                    // (before, all but m.1's second slur ran into them: by up to 1.2, the sharp of the D#6 in m.1)
+                    for (const accidental of accidentals) {
+                        expect(clearanceFrom(slur, accidental), `${render}: ${describeSlur(slur)}, over its accidental`).to.be.at.least(0.2);
+                    }
+                    // not floating far beyond them: at most half as far as from a note
+                    const all: Box = drawnMarks(slur, "end")[0];
+                    const beyond: number = slur.placement === PlacementEnum.Above ? all.top - slur.bezierEndPt.y : slur.bezierEndPt.y - all.bottom;
+                    expect(beyond, `${render}: ${describeSlur(slur)}, its end beyond its accidental`).to.be.at.most(offset / 2 + 0.05);
+                }
+                expect(withAccidentals, `${render}: the slurs to a note with an accidental`).to.equal(7);
+            }
         });
     }
 });
