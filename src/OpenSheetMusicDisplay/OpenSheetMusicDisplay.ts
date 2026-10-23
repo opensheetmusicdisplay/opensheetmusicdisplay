@@ -108,6 +108,7 @@ export class OpenSheetMusicDisplay {
      * Load a MusicXML file
      * @param content is either the url of a file, or the root node of a MusicXML document,
      *   or the string content of a .xml/.mxl file, or a file blob.
+     *   A string that starts with "<" (after whitespace) is read as XML, also without the XML declaration (<?xml ...?>).
      * @param tempTitle is used as the title for the piece if there is no title in the XML.
      *   The name or path of a MusicXML file (e.g. "scores/Sonata No. 1.musicxml") is used without its folder and extension.
      */
@@ -156,9 +157,11 @@ export class OpenSheetMusicDisplay {
             }
             let trimmedStr: string = str;
             if (/^\s/.test(trimmedStr)) { // only trim if we need to. (end of string is irrelevant)
-                trimmedStr = trimmedStr.trim(); // trim away empty lines at beginning etc
+                trimmedStr = trimmedStr.trim(); // trim away empty lines at beginning etc., also a byte order mark (U+FEFF)
             }
-            if (trimmedStr.startsWith("<?xml")) { // first character is sometimes null, making first five characters '<?xm'.
+            // XML, with or without the XML declaration (<?xml ...?>), which is optional: e.g. a MusicXML string from jsdom's
+            //   XMLSerializer starts with <!DOCTYPE, one from Python's ElementTree with <score-partwise>. A URL can't start with "<".
+            if (trimmedStr.startsWith("<")) {
                 const modifiedXml: string = this.OnXMLRead(trimmedStr); // by default just returns trimmedStr unless a function options.OnXMLRead was set.
                 log.debug("[OSMD] Finally parsing XML content, length: " + modifiedXml.length);
                 // Parse the string representing an xml file
@@ -173,7 +176,7 @@ export class OpenSheetMusicDisplay {
                     (exc: Error) => { throw exc; }
                 );
             } else {
-                console.error("[OSMD] osmd.load(string): Could not process string. Did not find <?xml at beginning.");
+                console.error("[OSMD] osmd.load(string): Could not process string. It doesn't start with \"<\" (XML) and is too long for a URL.");
             }
         }
 
