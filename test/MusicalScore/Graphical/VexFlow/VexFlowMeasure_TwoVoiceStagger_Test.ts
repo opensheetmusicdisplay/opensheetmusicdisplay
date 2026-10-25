@@ -116,8 +116,8 @@ describe("VexFlow Measure - Two-Voice Stagger", () => {
       for (const timestamp of [0, 0.5]) {
          const gves: VexFlowVoiceEntry[] = voiceEntriesAt(measure, timestamp);
          expect(gves.length).to.equal(2, `the beat at ${timestamp} should have two voices`);
-         expect(noteX(gves, 2) - noteX(gves, 1)).to.be.greaterThan(1,
-            `at ${timestamp}, the stem-down A4 must be staggered, clear of the G4`);
+         expect(noteX(gves, 1) - noteX(gves, 2)).to.be.greaterThan(1,
+            `at ${timestamp}, the stem-up G4 must be staggered right of the stem-down A4`);
       }
       done();
    });
