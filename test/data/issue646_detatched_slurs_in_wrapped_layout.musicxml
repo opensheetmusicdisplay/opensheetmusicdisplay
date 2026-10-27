@@ -1,0 +1,2006 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE score-partwise PUBLIC
+  "-//Recordare//DTD MusicXML 3.1 Partwise//EN"
+  "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <!--=======================================================-->
+    <measure number="45">
+      <attributes>
+        <staves>2</staves>
+        <divisions>24</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>3</beats>
+          <beat-type>8</beat-type>
+        </time>
+        <clef number="1">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+        <clef number="2">
+          <sign>F</sign>
+          <line>4</line>
+        </clef>
+      </attributes>
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <beat-unit>quarter</beat-unit>
+            <per-minute>100</per-minute>
+          </metronome>
+        </direction-type>
+        <sound tempo="100"/>
+      </direction>
+      <direction>
+        <direction-type>
+          <dynamics>
+            <f/>
+          </dynamics>
+        </direction-type>
+        <staff>2</staff>
+      </direction>
+      <note default-x="12.5" default-y="-25" id="p0n45_0-1" color="#000000">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>12</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <staff>1</staff>
+        <sound dynamics="81.89"/>
+      </note>
+      <note default-x="53.05" default-y="-20" id="p0r45_0">
+        <rest/>
+        <duration>6</duration>
+        <voice>1</voice>
+        <type>16th</type>
+        <staff>1</staff>
+      </note>
+      <note default-x="73.32" default-y="-50" id="p0n45_4-1" color="#000000">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur number="1" type="start" orientation="under" placement="below" bezier-x="-15.462063" bezier-y="-17.105871"/>
+        </notations>
+        <sound dynamics="81.89"/>
+      </note>
+      <note default-x="93.59" default-y="-40" id="p0n45_5-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="81.89"/>
+      </note>
+      <note default-x="113.86" default-y="-25" id="p0n45_6-1" color="#000000">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <sound dynamics="81.89"/>
+      </note>
+      <backup>
+        <duration>36</duration>
+      </backup>
+      <note default-x="12.5" default-y="-134.15" id="p0n45_1-1" color="#000000">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur number="2" type="start" orientation="over" placement="above" bezier-x="-17.697852" bezier-y="0.009537"/>
+        </notations>
+        <sound dynamics="81.89"/>
+      </note>
+      <note default-x="32.77" default-y="-114.15" id="p0n45_2-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="81.89"/>
+      </note>
+      <note default-x="53.05" default-y="-99.15" id="p0n45_3-1" color="#000000">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur number="2" type="stop" orientation="over" placement="above" bezier-x="-17.697852" bezier-y="0.009537"/>
+        </notations>
+        <sound dynamics="81.89"/>
+      </note>
+      <note default-x="73.32" default-y="-119.15" id="p0r45_1">
+        <rest/>
+        <duration>6</duration>
+        <voice>5</voice>
+        <type>16th</type>
+        <staff>2</staff>
+      </note>
+      <note default-x="93.59" default-y="-119.15" id="p0r45_2">
+        <rest/>
+        <duration>12</duration>
+        <voice>5</voice>
+        <type>eighth</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="46">
+      <attributes>
+        <staves>2</staves>
+        <divisions>24</divisions>
+      </attributes>
+      <sound tempo="100"/>
+      <note default-x="12.5" default-y="-20" id="p0n46_0-1" color="#000000">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>12</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <staff>1</staff>
+        <notations>
+          <slur number="1" type="stop" orientation="under" placement="below" bezier-x="-15.462063" bezier-y="-17.105871"/>
+        </notations>
+        <sound dynamics="81.89"/>
+      </note>
+      <note default-x="61.53" default-y="-20" id="p0r46_0">
+        <rest/>
+        <duration>6</duration>
+        <voice>1</voice>
+        <type>16th</type>
+        <staff>1</staff>
+      </note>
+      <note default-x="81.8" default-y="-40" id="p0n46_4-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <sound dynamics="81.89"/>
+      </note>
+      <note default-x="102.07" default-y="-15" id="p0n46_5-1" color="#000000">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="81.89"/>
+      </note>
+      <note default-x="122.35" default-y="-20" id="p0n46_6-1" color="#000000">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <sound dynamics="81.89"/>
+      </note>
+      <backup>
+        <duration>36</duration>
+      </backup>
+      <note default-x="12.5" default-y="-149.15" id="p0n46_1-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur number="1" type="start" orientation="under" placement="below" bezier-x="-3.535352" bezier-y="-20.752777"/>
+        </notations>
+        <sound dynamics="81.89"/>
+      </note>
+      <note default-x="32.77" default-y="-114.15" id="p0n46_2-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="81.89"/>
+      </note>
+      <note default-x="61.53" default-y="-104.15" id="p0n46_3-1" color="#000000">
+        <pitch>
+          <step>G</step>
+          <alter>1</alter>
+          <octave>3</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur number="1" type="stop" orientation="under" placement="below" bezier-x="-3.535352" bezier-y="-20.752777"/>
+        </notations>
+        <sound dynamics="81.89"/>
+      </note>
+      <note default-x="81.8" default-y="-119.15" id="p0r46_1">
+        <rest/>
+        <duration>6</duration>
+        <voice>5</voice>
+        <type>16th</type>
+        <staff>2</staff>
+      </note>
+      <note default-x="102.07" default-y="-119.15" id="p0r46_2">
+        <rest/>
+        <duration>12</duration>
+        <voice>5</voice>
+        <type>eighth</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="47">
+      <attributes>
+        <staves>2</staves>
+        <divisions>24</divisions>
+      </attributes>
+      <sound tempo="100"/>
+      <note default-x="12.5" default-y="-25" id="p0n47_0-1" color="#000000">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>12</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <staff>1</staff>
+        <sound dynamics="81.89"/>
+      </note>
+      <note default-x="53.05" default-y="-20" id="p0r47_0">
+        <rest/>
+        <duration>6</duration>
+        <voice>1</voice>
+        <type>16th</type>
+        <staff>1</staff>
+      </note>
+      <direction>
+        <direction-type>
+          <wedge number="1" type="crescendo"/>
+        </direction-type>
+      </direction>
+      <note default-x="73.32" default-y="-20" id="p0n47_4-1" color="#000000">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur number="1" type="start" orientation="over" placement="above" bezier-x="-22.732311" bezier-y="11.395012"/>
+        </notations>
+        <sound dynamics="81.89"/>
+      </note>
+      <note default-x="93.59" default-y="-15" id="p0n47_5-1" color="#000000">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="77.95"/>
+      </note>
+      <note default-x="113.86" default-y="-10" id="p0n47_6-1" color="#000000">
+        <pitch>
+          <step>D</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <sound dynamics="72.44"/>
+      </note>
+      <direction>
+        <direction-type>
+          <wedge number="1" type="stop"/>
+        </direction-type>
+      </direction>
+      <backup>
+        <duration>36</duration>
+      </backup>
+      <note default-x="12.5" default-y="-134.15" id="p0n47_1-1" color="#000000">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur number="2" type="start" orientation="over" placement="above" bezier-x="-17.697852" bezier-y="0.009537"/>
+        </notations>
+        <sound dynamics="81.89"/>
+      </note>
+      <note default-x="32.77" default-y="-114.15" id="p0n47_2-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="81.89"/>
+      </note>
+      <note default-x="53.05" default-y="-99.15" id="p0n47_3-1" color="#000000">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur number="2" type="stop" orientation="over" placement="above" bezier-x="-17.697852" bezier-y="0.009537"/>
+        </notations>
+        <sound dynamics="81.89"/>
+      </note>
+      <note default-x="73.32" default-y="-119.15" id="p0r47_1">
+        <rest/>
+        <duration>6</duration>
+        <voice>5</voice>
+        <type>16th</type>
+        <staff>2</staff>
+      </note>
+      <note default-x="93.59" default-y="-119.15" id="p0r47_2">
+        <rest/>
+        <duration>12</duration>
+        <voice>5</voice>
+        <type>eighth</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="48">
+      <attributes>
+        <staves>2</staves>
+        <divisions>24</divisions>
+      </attributes>
+      <direction>
+        <direction-type>
+          <dynamics>
+            <mf/>
+          </dynamics>
+        </direction-type>
+        <staff>2</staff>
+      </direction>
+      <sound tempo="100"/>
+      <note default-x="12.5" default-y="-5" id="p0n48_0-1" color="#d92100">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>18</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <dot/>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <notations>
+          <slur number="1" type="stop" orientation="over" placement="above" bezier-x="-22.732311" bezier-y="11.395012"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="73.32" default-y="-30" id="p0n48_4-1" color="#000000">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur number="1" type="start" orientation="over" placement="above" bezier-x="-24.015411" bezier-y="25.533755"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="93.59" default-y="0" id="p0n48_5-1" color="#000000">
+        <pitch>
+          <step>F</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="113.86" default-y="-5" id="p0n48_6-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <sound dynamics="69.29"/>
+      </note>
+      <backup>
+        <duration>36</duration>
+      </backup>
+      <note default-x="12.5" default-y="-124.15" id="p0n48_1-1" color="#000000">
+        <pitch>
+          <step>C</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur number="2" type="start" orientation="over" placement="above" bezier-x="-17.697852" bezier-y="0.009537"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="32.77" default-y="-104.15" id="p0n48_2-1" color="#000000">
+        <pitch>
+          <step>G</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="53.05" default-y="-89.15" id="p0n48_3-1" color="#000000">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur number="2" type="stop" orientation="over" placement="above" bezier-x="-17.697852" bezier-y="0.009537"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="73.32" default-y="-119.15" id="p0r48_0">
+        <rest/>
+        <duration>6</duration>
+        <voice>5</voice>
+        <type>16th</type>
+        <staff>2</staff>
+      </note>
+      <note default-x="93.59" default-y="-119.15" id="p0r48_1">
+        <rest/>
+        <duration>12</duration>
+        <voice>5</voice>
+        <type>eighth</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="49">
+      <attributes>
+        <staves>2</staves>
+        <divisions>24</divisions>
+      </attributes>
+      <sound tempo="100"/>
+      <note default-x="12.5" default-y="-10" id="p0n49_0-1" color="#000000">
+        <pitch>
+          <step>D</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>18</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <dot/>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <notations>
+          <slur number="1" type="stop" orientation="over" placement="above" bezier-x="-24.015411" bezier-y="25.533755"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="73.32" default-y="-35" id="p0n49_4-1" color="#000000">
+        <pitch>
+          <step>F</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur number="1" type="start" orientation="over" placement="above" bezier-x="-23.034936" bezier-y="24.407572"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="93.59" default-y="-5" id="p0n49_5-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="113.86" default-y="-10" id="p0n49_6-1" color="#000000">
+        <pitch>
+          <step>D</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <sound dynamics="69.29"/>
+      </note>
+      <backup>
+        <duration>36</duration>
+      </backup>
+      <note default-x="12.5" default-y="-139.15" id="p0n49_1-1" color="#000000">
+        <pitch>
+          <step>G</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur number="2" type="start" orientation="over" placement="above" bezier-x="-22.671247" bezier-y="4.472768"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="32.77" default-y="-104.15" id="p0n49_2-1" color="#000000">
+        <pitch>
+          <step>G</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="53.05" default-y="-94.15" id="p0n49_3-1" color="#000000">
+        <pitch>
+          <step>B</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur number="2" type="stop" orientation="over" placement="above" bezier-x="-22.671247" bezier-y="4.472768"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="73.32" default-y="-119.15" id="p0r49_0">
+        <rest/>
+        <duration>6</duration>
+        <voice>5</voice>
+        <type>16th</type>
+        <staff>2</staff>
+      </note>
+      <note default-x="93.59" default-y="-119.15" id="p0r49_1">
+        <rest/>
+        <duration>12</duration>
+        <voice>5</voice>
+        <type>eighth</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="50">
+      <attributes>
+        <staves>2</staves>
+        <divisions>24</divisions>
+      </attributes>
+      <sound tempo="100"/>
+      <note default-x="12.5" default-y="-15" id="p0n50_0-1" color="#000000">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>18</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <notations>
+          <slur number="1" type="stop" orientation="over" placement="above" bezier-x="-23.034936" bezier-y="24.407572"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="73.32" default-y="-40" id="p0n50_4-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur number="1" type="start" orientation="under" placement="below" bezier-x="-5.374222" bezier-y="-7.330911"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="93.59" default-y="-10" id="p0n50_5-1" color="#000000">
+        <pitch>
+          <step>D</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="113.86" default-y="-15" id="p0n50_6-1" color="#000000">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <sound dynamics="69.29"/>
+      </note>
+      <backup>
+        <duration>36</duration>
+      </backup>
+      <note default-x="12.5" default-y="-134.15" id="p0n50_1-1" color="#000000">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur number="2" type="start" orientation="over" placement="above" bezier-x="-17.697852" bezier-y="0.009537"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="32.77" default-y="-114.15" id="p0n50_2-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="53.05" default-y="-99.15" id="p0n50_3-1" color="#000000">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur number="2" type="stop" orientation="over" placement="above" bezier-x="-17.697852" bezier-y="0.009537"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="73.32" default-y="-119.15" id="p0r50_0">
+        <rest/>
+        <duration>6</duration>
+        <voice>5</voice>
+        <type>16th</type>
+        <staff>2</staff>
+      </note>
+      <note default-x="93.59" default-y="-119.15" id="p0r50_1">
+        <rest/>
+        <duration>12</duration>
+        <voice>5</voice>
+        <type>eighth</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="51">
+      <attributes>
+        <staves>2</staves>
+        <divisions>24</divisions>
+      </attributes>
+      <sound tempo="100"/>
+      <note default-x="60.86" default-y="-20" id="p0n51_0-1" color="#d92100">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>18</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <dot/>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <notations>
+          <slur number="1" type="stop" orientation="under" placement="below" bezier-x="-5.374222" bezier-y="-7.330911"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="131.04" default-y="-40" id="p0n51_4-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur number="1" type="start" orientation="under" placement="below" bezier-x="0.0" bezier-y="-14.450953"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="154.43" default-y="-5" id="p0n51_5-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur number="1" type="stop" orientation="under" placement="below" bezier-x="0.0" bezier-y="-14.450953"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <attributes>
+        <clef number="2">
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <note default-x="203.06" default-y="-20" id="p0r51_2">
+        <rest/>
+        <duration>6</duration>
+        <voice>1</voice>
+        <type>16th</type>
+        <staff>1</staff>
+      </note>
+      <backup>
+        <duration>36</duration>
+      </backup>
+      <note default-x="60.86" default-y="-135.49" id="p0n51_1-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="84.25" default-y="-100.49" id="p0n51_2-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <notations>
+          <slur number="1" type="start" orientation="over" placement="above" bezier-x="-14.37771" bezier-y="-3.049058"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="107.64" default-y="-65.49" id="p0n51_3-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur number="1" type="stop" orientation="over" placement="above" bezier-x="-14.37771" bezier-y="-3.049058"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="131.04" default-y="-105.49" id="p0r51_0">
+        <rest/>
+        <duration>6</duration>
+        <voice>5</voice>
+        <type>16th</type>
+        <staff>2</staff>
+      </note>
+      <note default-x="154.43" default-y="-105.49" id="p0r51_1">
+        <rest/>
+        <duration>6</duration>
+        <voice>5</voice>
+        <type>16th</type>
+        <staff>2</staff>
+      </note>
+      <note default-x="203.06" default-y="-125.49" id="p0n51_6-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <notations>
+          <slur number="1" type="start" orientation="under" placement="below" bezier-x="-4.657408" bezier-y="-18.521467"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="52">
+      <attributes>
+        <staves>2</staves>
+        <divisions>24</divisions>
+      </attributes>
+      <sound tempo="100"/>
+      <note default-x="12.5" default-y="-20" id="p0r52_0">
+        <rest/>
+        <duration>6</duration>
+        <voice>1</voice>
+        <type>16th</type>
+        <staff>1</staff>
+      </note>
+      <note default-x="35.89" default-y="-5" id="p0n52_1-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur number="2" type="start" orientation="over" placement="above" bezier-x="-14.37771" bezier-y="-3.049058"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="59.29" default-y="30" id="p0n52_2-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>6</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur number="2" type="stop" orientation="over" placement="above" bezier-x="-14.37771" bezier-y="-3.049058"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="89.8" default-y="-20" id="p0r52_3">
+        <rest/>
+        <duration>6</duration>
+        <voice>1</voice>
+        <type>16th</type>
+        <staff>1</staff>
+      </note>
+      <note default-x="113.2" default-y="-20" id="p0r52_4">
+        <rest/>
+        <duration>6</duration>
+        <voice>1</voice>
+        <type>16th</type>
+        <staff>1</staff>
+      </note>
+      <note default-x="143.71" default-y="-10" id="p0n52_5-1" color="#000000">
+        <pitch>
+          <step>D</step>
+          <alter>1</alter>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <notations>
+          <slur number="2" type="start" orientation="over" placement="above" bezier-x="-11.541608" bezier-y="10.125345"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <backup>
+        <duration>36</duration>
+      </backup>
+      <note default-x="12.5" default-y="-90.49" id="p0n52_0-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <notations>
+          <slur number="1" type="stop" orientation="under" placement="below" bezier-x="-4.657408" bezier-y="-18.521467"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="35.89" default-y="-105.49" id="p0r52_1">
+        <rest/>
+        <duration>6</duration>
+        <voice>5</voice>
+        <type>16th</type>
+        <staff>2</staff>
+      </note>
+      <note default-x="59.29" default-y="-105.49" id="p0r52_2">
+        <rest/>
+        <duration>6</duration>
+        <voice>5</voice>
+        <type>16th</type>
+        <staff>2</staff>
+      </note>
+      <note default-x="89.8" default-y="-95.49" id="p0n52_3-1" color="#000000">
+        <pitch>
+          <step>D</step>
+          <alter>1</alter>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur number="1" type="start" orientation="over" placement="above" bezier-x="-6.403587" bezier-y="7.212546"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="113.2" default-y="-90.49" id="p0n52_4-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur number="1" type="stop" orientation="over" placement="above" bezier-x="-6.403587" bezier-y="7.212546"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="143.71" default-y="-105.49" id="p0r52_5">
+        <rest/>
+        <duration>6</duration>
+        <voice>5</voice>
+        <type>16th</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="53">
+      <attributes>
+        <staves>2</staves>
+        <divisions>24</divisions>
+      </attributes>
+      <sound tempo="100"/>
+      <note default-x="12.5" default-y="-5" id="p0n53_0-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <notations>
+          <slur number="2" type="stop" orientation="over" placement="above" bezier-x="-11.541608" bezier-y="10.125345"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="43.01" default-y="-20" id="p0r53_1">
+        <rest/>
+        <duration>12</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        <staff>1</staff>
+      </note>
+      <direction>
+        <direction-type>
+          <wedge number="1" type="crescendo"/>
+        </direction-type>
+      </direction>
+      <note default-x="89.8" default-y="-10" id="p0n53_3-1" color="#000000">
+        <pitch>
+          <step>D</step>
+          <alter>1</alter>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur number="1" type="start" orientation="over" placement="above" bezier-x="-37.585445" bezier-y="26.844948"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="113.2" default-y="-5" id="p0n53_4-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="70.87"/>
+      </note>
+      <note default-x="136.59" default-y="-10" id="p0n53_5-1" color="#000000">
+        <pitch>
+          <step>D</step>
+          <alter>1</alter>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <sound dynamics="73.23"/>
+      </note>
+      <direction>
+        <direction-type>
+          <wedge number="1" type="stop"/>
+        </direction-type>
+      </direction>
+      <backup>
+        <duration>36</duration>
+      </backup>
+      <note default-x="12.5" default-y="-105.49" id="p0r53_0">
+        <rest/>
+        <duration>6</duration>
+        <voice>5</voice>
+        <type>16th</type>
+        <staff>2</staff>
+      </note>
+      <note default-x="43.01" default-y="-95.49" id="p0n53_1-1" color="#000000">
+        <pitch>
+          <step>D</step>
+          <alter>1</alter>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur number="2" type="start" orientation="over" placement="above" bezier-x="-6.403587" bezier-y="7.212546"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="66.41" default-y="-90.49" id="p0n53_2-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur number="2" type="stop" orientation="over" placement="above" bezier-x="-6.403587" bezier-y="7.212546"/>
+        </notations>
+        <sound dynamics="69.29"/>
+      </note>
+      <note default-x="89.8" default-y="-105.49" id="p0r53_2">
+        <rest/>
+        <duration>6</duration>
+        <voice>5</voice>
+        <type>16th</type>
+        <staff>2</staff>
+      </note>
+      <note default-x="113.2" default-y="-105.49" id="p0r53_3">
+        <rest/>
+        <duration>12</duration>
+        <voice>5</voice>
+        <type>eighth</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="54">
+      <attributes>
+        <staves>2</staves>
+        <divisions>24</divisions>
+      </attributes>
+      <sound tempo="100"/>
+      <note default-x="12.5" default-y="-5" id="p0n54_0-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <sound dynamics="75.59"/>
+      </note>
+      <note default-x="41.25" default-y="-10" id="p0n54_1-1" color="#000000">
+        <pitch>
+          <step>D</step>
+          <alter>1</alter>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="75.59"/>
+      </note>
+      <note default-x="64.64" default-y="-5" id="p0n54_2-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="75.59"/>
+      </note>
+      <direction>
+        <direction-type>
+          <wedge number="2" type="diminuendo"/>
+        </direction-type>
+      </direction>
+      <note default-x="88.04" default-y="-20" id="p0n54_3-1" color="#000000">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="75.59"/>
+      </note>
+      <note default-x="114.87" default-y="-10" id="p0n54_4-1" color="#000000">
+        <pitch>
+          <step>D</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="65.35"/>
+      </note>
+      <note default-x="138.26" default-y="-15" id="p0n54_5-1" color="#000000">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <sound dynamics="47.24"/>
+      </note>
+      <attributes>
+        <clef number="2">
+          <sign>F</sign>
+          <line>4</line>
+        </clef>
+      </attributes>
+      <direction>
+        <direction-type>
+          <dashes number="1" type="stop"/>
+        </direction-type>
+      </direction>
+      <direction>
+        <direction-type>
+          <wedge number="2" type="stop"/>
+        </direction-type>
+      </direction>
+      <backup>
+        <duration>36</duration>
+      </backup>
+      <note default-x="76.63" default-y="-95.49" id="p0r54_0">
+        <rest/>
+        <duration>36</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="55">
+      <attributes>
+        <staves>2</staves>
+        <divisions>24</divisions>
+        <clef number="2">
+          <sign>F</sign>
+          <line>4</line>
+        </clef>
+      </attributes>
+      <direction>
+        <direction-type>
+          <dynamics>
+            <pp/>
+          </dynamics>
+        </direction-type>
+      </direction>
+      <sound tempo="100"/>
+      <note default-x="12.5" default-y="-25" id="p0n55_0-1" color="#000000">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>12</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>eighth</type>
+        <staff>1</staff>
+        <notations>
+          <slur number="1" type="stop" orientation="over" placement="above" bezier-x="-37.585445" bezier-y="26.844948"/>
+        </notations>
+        <sound dynamics="37.80"/>
+      </note>
+      <note default-x="59.29" default-y="-20" id="p0r55_0">
+        <rest/>
+        <duration>6</duration>
+        <voice>1</voice>
+        <type>16th</type>
+        <staff>1</staff>
+      </note>
+      <note default-x="82.68" default-y="-50" id="p0n55_4-1" color="#000000">
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur number="1" type="start" orientation="under" placement="below" bezier-x="-17.129586" bezier-y="-17.687968"/>
+        </notations>
+        <sound dynamics="37.80"/>
+      </note>
+      <note default-x="106.08" default-y="-40" id="p0n55_5-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="37.80"/>
+      </note>
+      <note default-x="129.47" default-y="-25" id="p0n55_6-1" color="#000000">
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <sound dynamics="37.80"/>
+      </note>
+      <backup>
+        <duration>36</duration>
+      </backup>
+      <note default-x="12.5" default-y="-120.49" id="p0n55_1-1" color="#000000">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur number="2" type="start" orientation="over" placement="above" bezier-x="-18.936812" bezier-y="0.928079"/>
+        </notations>
+        <sound dynamics="37.80"/>
+      </note>
+      <note default-x="35.89" default-y="-100.49" id="p0n55_2-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="37.80"/>
+      </note>
+      <note default-x="59.29" default-y="-85.49" id="p0n55_3-1" color="#000000">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur number="2" type="stop" orientation="over" placement="above" bezier-x="-18.936812" bezier-y="0.928079"/>
+        </notations>
+        <sound dynamics="37.80"/>
+      </note>
+      <note default-x="82.68" default-y="-105.49" id="p0r55_1">
+        <rest/>
+        <duration>6</duration>
+        <voice>5</voice>
+        <type>16th</type>
+        <staff>2</staff>
+      </note>
+      <note default-x="106.08" default-y="-105.49" id="p0r55_2">
+        <rest/>
+        <duration>12</duration>
+        <voice>5</voice>
+        <type>eighth</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="56">
+      <attributes>
+        <staves>2</staves>
+        <divisions>24</divisions>
+      </attributes>
+      <sound tempo="100"/>
+      <note default-x="12.5" default-y="-20" id="p0n56_0-1" color="#000000">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>12</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <staff>1</staff>
+        <notations>
+          <slur number="1" type="stop" orientation="under" placement="below" bezier-x="-17.129586" bezier-y="-17.687968"/>
+        </notations>
+        <sound dynamics="37.80"/>
+      </note>
+      <note default-x="64.65" default-y="-20" id="p0r56_0">
+        <rest/>
+        <duration>6</duration>
+        <voice>1</voice>
+        <type>16th</type>
+        <staff>1</staff>
+      </note>
+      <note default-x="88.04" default-y="-40" id="p0n56_4-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur number="1" type="start" orientation="under" placement="below" bezier-x="-1.270968" bezier-y="-5.919359"/>
+        </notations>
+        <sound dynamics="37.80"/>
+      </note>
+      <note default-x="116.8" default-y="-30" id="p0n56_5-1" color="#000000">
+        <pitch>
+          <step>G</step>
+          <alter>1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="37.80"/>
+      </note>
+      <note default-x="140.2" default-y="-20" id="p0n56_6-1" color="#000000">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <sound dynamics="37.80"/>
+      </note>
+      <backup>
+        <duration>36</duration>
+      </backup>
+      <note default-x="12.5" default-y="-135.49" id="p0n56_1-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur number="2" type="start" orientation="under" placement="below" bezier-x="-4.464692" bezier-y="-21.185231"/>
+        </notations>
+        <sound dynamics="37.80"/>
+      </note>
+      <note default-x="35.89" default-y="-100.49" id="p0n56_2-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="37.80"/>
+      </note>
+      <note default-x="64.65" default-y="-90.49" id="p0n56_3-1" color="#000000">
+        <pitch>
+          <step>G</step>
+          <alter>1</alter>
+          <octave>3</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur number="2" type="stop" orientation="under" placement="below" bezier-x="-4.464692" bezier-y="-21.185231"/>
+        </notations>
+        <sound dynamics="37.80"/>
+      </note>
+      <note default-x="88.04" default-y="-105.49" id="p0r56_1">
+        <rest/>
+        <duration>6</duration>
+        <voice>5</voice>
+        <type>16th</type>
+        <staff>2</staff>
+      </note>
+      <note default-x="116.8" default-y="-105.49" id="p0r56_2">
+        <rest/>
+        <duration>12</duration>
+        <voice>5</voice>
+        <type>eighth</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="57">
+      <attributes>
+        <staves>2</staves>
+        <divisions>24</divisions>
+      </attributes>
+      <sound tempo="100"/>
+      <note default-x="60.86" default-y="-15" id="p0n57_0-1" color="#000000">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>12</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>eighth</type>
+        <staff>1</staff>
+        <notations>
+          <slur number="1" type="stop" orientation="under" placement="below" bezier-x="-1.270968" bezier-y="-5.919359"/>
+        </notations>
+        <sound dynamics="37.80"/>
+      </note>
+      <note default-x="99.76" default-y="-20" id="p0r57_0">
+        <rest/>
+        <duration>6</duration>
+        <voice>1</voice>
+        <type>16th</type>
+        <staff>1</staff>
+      </note>
+      <direction>
+        <direction-type>
+          <wedge number="2" type="crescendo"/>
+        </direction-type>
+      </direction>
+      <note default-x="119.22" default-y="-40" id="p0n57_4-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <sound dynamics="37.80"/>
+      </note>
+      <note default-x="138.67" default-y="-5" id="p0n57_5-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="39.37"/>
+      </note>
+      <note default-x="167.43" default-y="-10" id="p0n57_6-1" color="#000000">
+        <pitch>
+          <step>D</step>
+          <alter>1</alter>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>up</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <sound dynamics="41.73"/>
+      </note>
+      <direction>
+        <direction-type>
+          <wedge number="2" type="stop"/>
+        </direction-type>
+      </direction>
+      <backup>
+        <duration>36</duration>
+      </backup>
+      <note default-x="60.86" default-y="-120.49" id="p0n57_1-1" color="#000000">
+        <pitch>
+          <step>A</step>
+          <octave>2</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <notations>
+          <slur number="1" type="start" orientation="over" placement="above" bezier-x="-17.376769" bezier-y="-0.246097"/>
+        </notations>
+        <sound dynamics="37.80"/>
+      </note>
+      <note default-x="80.31" default-y="-100.49" id="p0n57_2-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="37.80"/>
+      </note>
+      <note default-x="99.76" default-y="-85.49" id="p0n57_3-1" color="#000000">
+        <pitch>
+          <step>A</step>
+          <octave>3</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>5</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>2</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <notations>
+          <slur number="1" type="stop" orientation="over" placement="above" bezier-x="-17.376769" bezier-y="-0.246097"/>
+        </notations>
+        <sound dynamics="37.80"/>
+      </note>
+      <note default-x="119.22" default-y="-105.49" id="p0r57_1">
+        <rest/>
+        <duration>6</duration>
+        <voice>5</voice>
+        <type>16th</type>
+        <staff>2</staff>
+      </note>
+      <note default-x="138.67" default-y="-105.49" id="p0r57_2">
+        <rest/>
+        <duration>12</duration>
+        <voice>5</voice>
+        <type>eighth</type>
+        <staff>2</staff>
+      </note>
+    </measure>
+    <!--=======================================================-->
+    <measure number="58">
+      <attributes>
+        <staves>2</staves>
+        <divisions>24</divisions>
+      </attributes>
+      <sound tempo="100"/>
+      <note default-x="12.5" default-y="-5" id="p0n58_0-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        <sound dynamics="44.09"/>
+      </note>
+      <note default-x="41.25" default-y="-10" id="p0n58_1-1" color="#000000">
+        <pitch>
+          <step>D</step>
+          <alter>1</alter>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="44.09"/>
+      </note>
+      <note default-x="60.7" default-y="-5" id="p0n58_2-1" color="#000000">
+        <pitch>
+          <step>E</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="44.09"/>
+      </note>
+      <direction>
+        <direction-type>
+          <wedge number="2" type="diminuendo"/>
+        </direction-type>
+      </direction>
+      <note default-x="80.16" default-y="-20" id="p0n58_3-1" color="#000000">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="44.09"/>
+      </note>
+      <note default-x="106.99" default-y="-10" id="p0n58_4-1" color="#000000">
+        <pitch>
+          <step>D</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">continue</beam>
+        <beam number="2">continue</beam>
+        <sound dynamics="41.73"/>
+      </note>
+      <note default-x="126.44" default-y="-15" id="p0n58_5-1" color="#000000">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>6</duration>
+        <voice>1</voice>
+        <stem>down</stem>
+        <type>16th</type>
+        <staff>1</staff>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        <sound dynamics="39.37"/>
+      </note>
+      <direction>
+        <direction-type>
+          <wedge number="2" type="stop"/>
+        </direction-type>
+      </direction>
+      <backup>
+        <duration>36</duration>
+      </backup>
+      <note default-x="70.72" default-y="-95.49" id="p0r58_0">
+        <rest/>
+        <duration>36</duration>
+        <voice>5</voice>
+        <staff>2</staff>
+      </note>
+    </measure>
+  </part>
+</score-partwise>
