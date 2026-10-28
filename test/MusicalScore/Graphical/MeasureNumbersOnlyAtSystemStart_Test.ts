@@ -80,8 +80,8 @@ describe("Measure numbers only at system start", () => {
         expect(systems.map(measureNumberTexts)).to.deep.equal([[], ["4"], ["7"]]);
     });
 
-    it("does not number a courtesy time signature after a pickup measure", async () => {
-        const systems: MusicSystem[] = await renderSystems("test_measure_number_pickup_courtesy_time_signature.musicxml",
+    it("does not number a courtesy key signature after a pickup measure", async () => {
+        const systems: MusicSystem[] = await renderSystems("test_measure_numbers_only_at_system_start_pickup_courtesy_key.musicxml",
             { newSystemFromXML: true }, undefined, 2);
         const firstSystem: MusicSystem = systems[0];
         expect(firstSystem.StaffLines[0].Measures.last().parentSourceMeasure, "courtesy measure has no source measure")
