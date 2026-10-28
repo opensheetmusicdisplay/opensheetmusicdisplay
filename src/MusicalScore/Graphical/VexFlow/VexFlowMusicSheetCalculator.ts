@@ -1315,7 +1315,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     return vfTie;
   }
 
-  protected calculateDynamicExpressionsForMultiExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
+  protected calculateDynamicExpressionsForMultiExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number,
+                                                        instantaneousOnly: boolean = false): void {
     if (measureIndex < this.rules.MinMeasureToDrawIndex || measureIndex > this.rules.MaxMeasureToDrawIndex) {
       return;
       // we do already use the min/max in MusicSheetCalculator.calculateDynamicsExpressions,
@@ -1343,16 +1344,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       dynamicStartPosition.x = startMeasure.beginInstructionsWidth + this.rules.RhythmRightMargin;
     }
 
-    if (multiExpression.InstantaneousDynamic) {
+    if (instantaneousOnly && multiExpression.InstantaneousDynamic) {
       const graphicalInstantaneousDynamic: VexFlowInstantaneousDynamicExpression = new VexFlowInstantaneousDynamicExpression(
         multiExpression.InstantaneousDynamic,
         staffLine,
         startMeasure);
       // compare with multiExpression.InstantaneousDynamic.InMeasureTimestamp or add a relative timestamp? if we ever need a separate timestamp
       this.calculateGraphicalInstantaneousDynamicExpression(graphicalInstantaneousDynamic, dynamicStartPosition, absoluteTimestamp);
-      this.dynamicExpressionMap.set(absoluteTimestamp.RealValue, graphicalInstantaneousDynamic.PositionAndShape);
+      this.dynamicExpressionMap.set(this.dynamicExpressionKey(staffIndex, graphicalInstantaneousDynamic.Placement, absoluteTimestamp),
+                                    graphicalInstantaneousDynamic.PositionAndShape);
     }
-    if (continuousDynamic) {
+    if (!instantaneousOnly && continuousDynamic) {
       const graphicalContinuousDynamic: VexFlowContinuousDynamicExpression = new VexFlowContinuousDynamicExpression(
         continuousDynamic,
         staffLine,
