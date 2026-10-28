@@ -495,9 +495,10 @@ export abstract class MusicSheetCalculator {
         for (let i: number = 0; i < staffLine.Measures.length; i++) {
             const measure: GraphicalMeasure = staffLine.Measures[i];
             let skip: boolean = this.rules.RenderMeasureNumbersOnlyAtSystemStart && i >= 1;
-            if (i === 1 && staffLine.Measures[0].parentSourceMeasure.ImplicitMeasure && !labelCreated) {
+            if (i === 1 && measure.parentSourceMeasure && staffLine.Measures[0].parentSourceMeasure.ImplicitMeasure && !labelCreated) {
                 // the first measure (i=0) is implicit and has no number: a pickup measure, or e.g. the second part of a measure split by a repeat.
                 //   Then we shouldn't skip the number of this measure (i=1), e.g. measure number 1 after a pickup measure.
+                //   Not if this measure is only a courtesy key or time signature at the system end: that extra measure has no source measure and no number.
                 skip = false;
                 if (this.rules.RenderMeasureNumbersOnlyAtSystemStart) {
                     // it's the only number of the system, so draw it regardless of the measure number interval (MeasureNumberLabelOffset)

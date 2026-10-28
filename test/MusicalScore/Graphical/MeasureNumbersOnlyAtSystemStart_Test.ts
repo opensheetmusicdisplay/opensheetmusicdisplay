@@ -27,7 +27,8 @@ describe("Measure numbers only at system start", () => {
     const splitMeasureSample: string = "test_measure_numbers_only_at_system_start_split_measure.musicxml";
 
     async function renderSystems(sampleFilename: string, options: IOSMDOptions = {},
-                                 configure?: (osmd: OpenSheetMusicDisplay) => void): Promise<MusicSystem[]> {
+                                 configure?: (osmd: OpenSheetMusicDisplay) => void,
+                                 minimumSystemCount: number = 3): Promise<MusicSystem[]> {
         const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
         // interval 1: without drawMeasureNumbersOnlyAtSystemStart, every measure would get a number
         osmd.setOptions({ drawMeasureNumbersOnlyAtSystemStart: true, measureNumberInterval: 1, ...options });
@@ -35,7 +36,7 @@ describe("Measure numbers only at system start", () => {
         await osmd.load(TestUtils.getScore(sampleFilename));
         osmd.render();
         const systems: MusicSystem[] = osmd.GraphicSheet.MusicPages.flatMap(page => page.MusicSystems);
-        expect(systems.length, "the sample needs several systems").to.be.greaterThan(2);
+        expect(systems.length, "the sample needs enough systems").to.be.at.least(minimumSystemCount);
         return systems;
     }
 
@@ -77,6 +78,15 @@ describe("Measure numbers only at system start", () => {
                 osmd.EngravingRules.RenderMeasureNumbersForImplicitMeasures = true;
             });
         expect(systems.map(measureNumberTexts)).to.deep.equal([[], ["4"], ["7"]]);
+    });
+
+    it("does not number a courtesy key signature after a pickup measure", async () => {
+        const systems: MusicSystem[] = await renderSystems("test_measure_numbers_only_at_system_start_pickup_courtesy_key.musicxml",
+            { newSystemFromXML: true }, undefined, 2);
+        const firstSystem: MusicSystem = systems[0];
+        expect(firstSystem.StaffLines[0].Measures.last().parentSourceMeasure, "courtesy measure has no source measure")
+            .to.equal(undefined);
+        expect(measureNumberTexts(firstSystem), "the pickup system has no measure number").to.deep.equal([]);
     });
 
     it("can be turned off again with setOptions()", () => {
