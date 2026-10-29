@@ -269,6 +269,7 @@ export class InstrumentReader {
                   this.currentMultirestStartMeasure = currentMeasure;
                   this.followingMultirestMeasures = multipleRestNumber + 1; // will be decremented at the start of the loop
                 }
+                currentMeasure.multipleRestMeasuresXml = currentMeasure.multipleRestMeasures; // the layout changes multipleRestMeasures
               } catch (e) {
                 console.log("multirest parse error: " + e);
               }

@@ -65,4 +65,63 @@ describe("Multiple rest measures", () => {
         expect(graphic.findGraphicalMeasure(-1, 0)).to.equal(undefined);
         expect(graphic.findGraphicalMeasure(22, staffCount)).to.equal(undefined);
     });
+
+    /** Per measure: how many measures the multiple rest measure it begins has (0 for none). */
+    function multipleRestMeasureCounts(): number[] {
+        return osmd.Sheet.SourceMeasures.map(measure => measure.multipleRestMeasures ?? 0);
+    }
+
+    it("draws the measures of generated multiple rest measures again when updateGraphic() follows turning off " +
+        "RenderMultipleRestMeasures or the generation", async () => {
+        await osmd.load(TestUtils.getScore("test_multiple_rest_measures_auto_key_time_change.musicxml"));
+        osmd.render();
+        /** The numbers of the measures drawn, a multiple rest measure counting as its first measure (a measure's group has its number as id). */
+        const drawnMeasures: () => string[] = () => Array.from(container.querySelectorAll(".vf-measure")).map(measure => measure.id);
+        expect(drawnMeasures(), "measures 3-4 and 5-6 as multiple rest measures").to.deep.equal(["1", "2", "3", "5", "7"]);
+        // The source measures still had the multiple rest measures of the previous calculation: measures 4 and 6 got no graphical
+        //   measures, and updateGraphic() threw a TypeError.
+        osmd.EngravingRules.RenderMultipleRestMeasures = false;
+        osmd.updateGraphic();
+        osmd.render();
+        expect(multipleRestMeasureCounts(), "RenderMultipleRestMeasures false").to.deep.equal([0, 0, 0, 0, 0, 0, 0]);
+        expect(drawnMeasures(), "RenderMultipleRestMeasures false").to.deep.equal(["1", "2", "3", "4", "5", "6", "7"]);
+        osmd.EngravingRules.RenderMultipleRestMeasures = true;
+        osmd.updateGraphic();
+        osmd.render();
+        expect(multipleRestMeasureCounts(), "RenderMultipleRestMeasures true again").to.deep.equal([0, 0, 2, 0, 2, 0, 0]);
+        // The generated multiple rest measures were kept, drawn like ones given in the MusicXML.
+        osmd.setOptions({ autoGenerateMultipleRestMeasuresFromRestMeasures: false });
+        osmd.updateGraphic();
+        osmd.render();
+        expect(multipleRestMeasureCounts(), "autoGenerateMultipleRestMeasuresFromRestMeasures false").to.deep.equal([0, 0, 0, 0, 0, 0, 0]);
+        expect(drawnMeasures(), "autoGenerateMultipleRestMeasuresFromRestMeasures false").to.deep.equal(["1", "2", "3", "4", "5", "6", "7"]);
+    });
+
+    it("generates the multiple rest measures again when updateGraphic() follows hiding or showing an instrument", async () => {
+        const note: string = "<note><pitch><step>D</step><octave>5</octave></pitch><duration>4</duration><type>whole</type></note>";
+        const rest: string = "<note><rest/><duration>4</duration></note>";
+        const attributes: string = "<attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>" +
+            "<clef><sign>G</sign><line>2</line></clef></attributes>";
+        /** A part with one measure of 4/4 per content. */
+        function part(id: string, contents: string[]): string {
+            return `<part id="${id}">` + contents.map((content, index) =>
+                `<measure number="${index + 1}">${index === 0 ? attributes : ""}${content}</measure>`).join("") + "</part>";
+        }
+        // the flute plays in measures 1-5, the violin rests in measures 2-4
+        await osmd.load(`<?xml version="1.0"?><score-partwise version="4.0"><part-list>
+            <score-part id="P1"><part-name>Flute</part-name></score-part><score-part id="P2"><part-name>Violin</part-name></score-part>
+            </part-list>${part("P1", [note, note, note, note, note])}${part("P2", [note, rest, rest, rest, note])}</score-partwise>`);
+        osmd.render();
+        expect(multipleRestMeasureCounts(), "both instruments shown").to.deep.equal([0, 0, 0, 0, 0]);
+        osmd.Sheet.Instruments[0].Visible = false;
+        osmd.updateGraphic();
+        osmd.render();
+        expect(multipleRestMeasureCounts(), "flute hidden: the violin's measures 2-4 as a multiple rest measure").to.deep.equal([0, 3, 0, 0, 0]);
+        osmd.Sheet.Instruments[0].Visible = true;
+        osmd.updateGraphic();
+        osmd.render();
+        // The multiple rest measure was kept, so the flute's notes in measures 2-4 were missing.
+        expect(multipleRestMeasureCounts(), "flute shown again").to.deep.equal([0, 0, 0, 0, 0]);
+        expect(container.querySelectorAll(".vf-multirest").length, "multiple rest measures drawn").to.equal(0);
+    });
 });
