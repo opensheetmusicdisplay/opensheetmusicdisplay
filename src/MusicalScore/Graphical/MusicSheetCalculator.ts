@@ -184,6 +184,12 @@ export abstract class MusicSheetCalculator {
             sourceMeasure.isReducedToMultiRest = false;
             sourceMeasure.multipleRestMeasureNumber = 0;
         }
+        // A staff becomes a tablature staff at its first measure with a TAB clef (see createGraphicalMeasure()): start from
+        //   the clefs again. With the previous calculation's Staff.isTab, all measures of the staff became tablature
+        //   measures, also the ones before the TAB clef.
+        for (const staff of musicSheet.Staves) {
+            staff.isTab = false;
+        }
 
         // go through all SourceMeasures (taking into account normal SourceMusicParts and Repetitions)
         for (let idx: number = 0, len: number = musicSheet.SourceMeasures.length; idx < len; ++idx) {

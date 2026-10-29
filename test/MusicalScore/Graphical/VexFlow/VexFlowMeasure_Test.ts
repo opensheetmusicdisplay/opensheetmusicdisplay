@@ -1431,6 +1431,41 @@ describe("VexFlow Measure", () => {
    });
 
 
+   // A staff becomes a tablature staff at its TAB clef (Staff.isTab), and stays one for the rest of the score (#1592). Before
+   // fix, a new calculation started with the previous one's Staff.isTab: after updateGraphic(), the measures before the TAB
+   // clef were tablature measures too.
+   it("Keeps the measures before a TAB clef standard measures after updateGraphic()", (done: Mocha.Done) => {
+      const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+      <score-partwise version="4.0">
+         <part-list><score-part id="P1"><part-name>Guitar</part-name></score-part></part-list>
+         <part id="P1">
+            <measure number="1">
+               <attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>
+                  <clef><sign>G</sign><line>2</line></clef></attributes>
+               <note><pitch><step>C</step><octave>5</octave></pitch><duration>4</duration><type>whole</type></note>
+            </measure>
+            <measure number="2">
+               <attributes><clef><sign>TAB</sign><line>5</line></clef><staff-details><staff-lines>6</staff-lines></staff-details></attributes>
+               <note><pitch><step>C</step><octave>5</octave></pitch><duration>4</duration><type>whole</type>
+                  <notations><technical><string>1</string><fret>8</fret></technical></notations></note>
+            </measure>
+         </part>
+      </score-partwise>`;
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      osmd.load(xml).then(() => {
+         osmd.render();
+         for (const layout of ["first layout", "after updateGraphic()"]) {
+            if (layout !== "first layout") {
+               osmd.updateGraphic();
+               osmd.render();
+            }
+            expect(osmd.GraphicSheet.findGraphicalMeasure(0, 0).isTabMeasure, `${layout}: measure 1 is a standard measure`).to.equal(false);
+            expect(osmd.GraphicSheet.findGraphicalMeasure(1, 0).isTabMeasure, `${layout}: measure 2 is a tablature measure`).to.equal(true);
+         }
+         done();
+      }).catch(done);
+   });
+
    // Non-regression test for grace notes in tablature staves (#1721). A tab measure converted its grace notes to
    // Vexflow TabNotes, but then dropped them: like in classical measures they are no tickables of the Vexflow voice,
    // but unlike there they were never attached to their main note either, so they were not drawn at all. Now each
