@@ -34,7 +34,9 @@ export interface IOSMDOptions {
     autoBeam?: boolean;
     /** Options for autoBeaming like whether to beam over rests. See AutoBeamOptions interface. */
     autoBeamOptions?: AutoBeamOptions;
-    /** Automatically resize score with canvas size. Default is true. */
+    /** Automatically resize score with canvas size. Default is true.
+     *  Listens to the window's resize events, which keeps the instance in memory: call osmd.dispose() when you don't need it anymore.
+     */
     autoResize?: boolean;
     /** Render Backend, will be SVG if given undefined, "SVG" or "svg", otherwise Canvas. */
     backend?: string;

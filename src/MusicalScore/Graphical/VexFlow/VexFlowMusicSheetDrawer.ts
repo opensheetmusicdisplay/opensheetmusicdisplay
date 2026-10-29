@@ -102,10 +102,16 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         this.pageIdx += 1;
     }
 
+    /** Clears what was drawn (the backends), and releases the drawn sheet and its pages, which the drawer only needs while drawing:
+     *  their graphical objects reference the drawn SVG elements, so they would keep the whole rendering in memory.
+     *  drawSheet() sets them again.
+     */
     public clear(): void {
         for (const backend of this.backends) {
             backend.clear();
+            backend.graphicalMusicPage = undefined;
         }
+        this.graphicalMusicSheet = undefined;
     }
 
     public setZoom(zoom: number): void {
