@@ -15,6 +15,8 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
 
     /** Defines the note where the octave shift starts */
     public startNote: VF.StemmableNote;
+    /** Source staff, independent of a cross-staff horizontal start anchor. */
+    public startStave: VF.Stave;
     /** Defines the note where the octave shift ends */
     public endNote: VF.StemmableNote;
     /** Top or bottom of the staffline */
@@ -105,6 +107,15 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
      * Get the actual vexflow text bracket used for drawing
      */
     public getTextBracket(): VF.TextBracket {
+        let start: VF.StemmableNote = this.startNote;
+        if (this.startStave && this.startStave !== this.startNote.getStave()) {
+            // TextBracket only reads these two methods from its start anchor.
+            start = {
+                // Another staff's stave may not have been positioned by the drawer yet.
+                getAbsoluteX: (): number => this.startNote.getAbsoluteX() - this.startNote.getStave().getX() + this.startStave.getX(),
+                getStave: (): VF.Stave => this.startStave
+            } as any;
+        }
         let stop: VF.Note = this.endNote;
         let stopObject: object;
         const self: VexFlowOctaveShift = this;
@@ -131,7 +142,7 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
         }
         const vfBracket: VF.TextBracket = new VF.TextBracket({
             position: this.position,
-            start: this.startNote,
+            start: start,
             stop: stop,
             superscript: this.supscript,
             text: this.text,
