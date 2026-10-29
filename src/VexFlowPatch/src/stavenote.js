@@ -271,7 +271,9 @@ export class StaveNote extends StemmableNote {
             //   them. So when only the upper note is dotted, stem up over a stem down, move it instead, as MuseScore does.
             //   If both are dotted, also move an upper note in a space: Dot.format() then puts the lower note's dot in
             //   the space below it, clear of the moved note. On a line, the moved note would cover the lower dot.
-            //   We also move the upper note, in case the stems would cross otherwise.
+            //   Where the voices cross, the stem-down note a second above the stem-up note (noteU), also move noteU: with
+            //   the stem-down note moved, both stems ran in one line, as if through both heads. Behind Bars puts the
+            //   down-stemmed part on the left for overlapping adjacent notes (p. 54).
             const dottedUpper = noteU.note.dots > 0 && (noteL.note.dots === 0 || Math.abs(noteU.line % 1) === 0.5) &&
               noteU.stemDirection === 1 && noteL.stemDirection === -1;
             (dottedUpper || crossedStemsCollide(noteL, noteU) ? noteU : noteL).note.setXShift(xShift);
@@ -298,8 +300,13 @@ export class StaveNote extends StemmableNote {
                   noteL.note.setStemDirection(-1);
                 }
               }
-            } else if (crossedStemsCollide(noteL, noteU)) {
-              // VexFlowPatch: stem-up note (noteU) is below stem-down note (noteL)
+            } else if (gap >= 1 && crossedStemsCollide(noteL, noteU)) {
+              // VexFlowPatch: crossed voices, the stem-down note (noteL) a third or more above the stem-up note (noteU):
+              //   on the beat, a stem runs along the other note's head, as if both were one chord. Behind Bars puts the
+              //   down-stemmed part of overlapping parts on the left and the parts slightly apart, so that the stems
+              //   don't appear to include both notes (p. 53): move the stem-up note a little to the right. Not where the
+              //   notes share or interleave keys (gap <= 0): only 4 px apart, the two heads of a key both have, or of a
+              //   second, would overlap.
               noteU.note.setXShift(4);
             }
           }
@@ -403,7 +410,6 @@ export class StaveNote extends StemmableNote {
     //   stem ran up the upper note's stem as if they were a chord. Behind Bars moves the lower of two parts stemmed the
     //   same way to the right (p. 313). A stem hidden with <stem>none</stem> (drawn transparent) runs nowhere, so that
     //   lower note stays.
-    //   After we move the note to the side, we also need to check the remaining notes, if their stems are crossed.
     const secondBelow = gapBelow >= 0 && gapBelow <= 0.5 && noteM.stemDirection !== noteU.stemDirection &&
       noteM.note.dots === 0;
     const lowerStemStyle = noteL.note.getStemStyle();
@@ -411,15 +417,12 @@ export class StaveNote extends StemmableNote {
       lowerStemStyle?.strokeStyle !== "#00000000";
     const moveLower = intersectsLower && !intersectsUpper && !noteU.isrest && (secondBelow || crossedStems);
     if (!isUnisonWithNeighbour && moveLower) {
-      let noteLShift = Math.max(voiceXShift, noteM.note.getGlyphWidth()); // clear of the middle note's head
-      if (crossedStemsCollide(noteU, noteM)) { // if the remaining stems are crossing
-        noteM.note.setXShift(4);
-        noteLShift += 3;
-      }
-      noteL.note.setXShift(noteLShift);
+      noteL.note.setXShift(Math.max(voiceXShift, noteM.note.getGlyphWidth())); // clear of the middle note's head
     } else if (!isUnisonWithNeighbour && (intersectsUpper || intersectsLower)) {
       let noteMShift = voiceXShift + 3;      // shift middle note right
-      if (crossedStemsCollide(noteU, noteL)) { // if the remaining stems are crossing
+      // VexFlowPatch: the upper and the lower note, left on the beat, can be crossed voices too: then move the lower
+      //   one a little to the right, as in the two-voice path, and the middle note further.
+      if (crossedStemsCollide(noteU, noteL)) {
         noteL.note.setXShift(4);
         noteMShift += 3;
       }
