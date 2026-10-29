@@ -2061,8 +2061,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             let currentCount: number = 1;
             for (let i: number = startStaffLine.ParentMusicSystem.Id; i < endStaffLine.ParentMusicSystem.Id; i++) {
               const nextPedalMusicSystem: MusicSystem = this.musicSystems[i + 1];
-              const nextPedalStaffline: StaffLine = nextPedalMusicSystem.StaffLines[staffIndex];
-              const nextPedalFirstMeasure: GraphicalMeasure = nextPedalStaffline.Measures[0];
+              let nextPedalStaffline: StaffLine; // not always = nextPedalMusicSystem.StaffLines[staffIndex], e.g. when first instrument invisible
+              for (const staffline of nextPedalMusicSystem.StaffLines) {
+                if (staffline.ParentStaff.idInMusicSheet === staffIndex) {
+                  nextPedalStaffline = staffline;
+                  break;
+                }
+              }
               let nextOpenEnd: boolean = false;
               let nextChangeEndFromParent: boolean = false;
               if (currentCount < systemsInBetweenCount) {
@@ -2071,6 +2076,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                 nextChangeEndFromParent = true;
               }
               currentCount++;
+              if (!nextPedalStaffline) { // shouldn't happen
+                continue;
+              }
+              const nextPedalFirstMeasure: GraphicalMeasure = nextPedalStaffline.Measures[0];
               // pedal starts on the first measure
               const nextPedal: VexFlowPedal = new VexFlowPedal(pedal, nextPedalFirstMeasure.PositionAndShape, true, nextOpenEnd);
               graphicalPedal.setEndsStave(endMeasure, endTimeStamp);

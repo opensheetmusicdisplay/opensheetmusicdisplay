@@ -676,6 +676,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestTupletBracketTupletNumber = sampleFilename.includes("test_tuplet_bracket_tuplet_number");
     const isTestCajon2NoteSystem = sampleFilename.includes("test_cajon_2-note-system");
     const isTestOctaveShiftInvisibleInstrument = sampleFilename.includes("test_octaveshift_first_instrument_invisible");
+    const isTestPedalInvisibleInstrument = sampleFilename.includes("test_pedal_systembreak_first_instrument_invisible");
     const isTextOctaveShiftExtraGraphicalMeasure = sampleFilename.includes("test_octaveshift_extragraphicalmeasure");
     const isTestWedgeMultilineCrescendo = sampleFilename.includes("test_wedge_multiline_crescendo");
     const isTestWedgeMultilineDecrescendo = sampleFilename.includes("test_wedge_multiline_decrescendo");
@@ -773,6 +774,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     }
     if (isTextOctaveShiftExtraGraphicalMeasure ||
         isTestOctaveShiftInvisibleInstrument ||
+        isTestPedalInvisibleInstrument ||
         isTestWedgeMultilineCrescendo ||
         isTestWedgeMultilineDecrescendo ||
         isTestWavyLineMultilineExtraGraphicalMeasure ||
@@ -831,6 +833,7 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
     }
 
     const isTestOctaveShiftInvisibleInstrument = sampleFilename.includes("test_octaveshift_first_instrument_invisible");
+    const isTestPedalInvisibleInstrument = sampleFilename.includes("test_pedal_systembreak_first_instrument_invisible");
     const isTestInvisibleMeasureNotAffectingLayout = sampleFilename.includes("test_invisible_measure_not_affecting_layout");
     const isTestWordsDirectionLostWhenFirstInstrumentInvisible = sampleFilename.includes("test_words_direction_lost_when_first_instrument_invisible");
     const isTestTransposeEnharmonic9 = sampleFilename.includes("test_transpose_enharmonic_9");
@@ -845,6 +848,7 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
         new OSMD.IntervalTransposeCalculator() : new OSMD.TransposeCalculator();
 
     if (isTestOctaveShiftInvisibleInstrument ||
+        isTestPedalInvisibleInstrument ||
         isTestWordsDirectionLostWhenFirstInstrumentInvisible
     ) {
         osmdInstance.Sheet.Instruments[0].Visible = false;
