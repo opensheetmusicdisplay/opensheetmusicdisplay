@@ -23,7 +23,7 @@ import { BoundingBox } from "../../../../src/MusicalScore/Graphical/BoundingBox"
 import { OctaveEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { Tuplet } from "../../../../src/MusicalScore/VoiceData/Tuplet";
 import { Note } from "../../../../src/MusicalScore/VoiceData/Note";
-import { VoiceEntry } from "../../../../src/MusicalScore/VoiceData/VoiceEntry";
+import { ArticulationEnum, VoiceEntry } from "../../../../src/MusicalScore/VoiceData/VoiceEntry";
 import { TabNote } from "../../../../src/MusicalScore/VoiceData/TabNote";
 import { PointF2D } from "../../../../src/Common/DataObjects/PointF2D";
 import { GraphicalTie } from "../../../../src/MusicalScore/Graphical/GraphicalTie";
@@ -1003,6 +1003,32 @@ describe("VexFlow Measure", () => {
          const c5Fermata: Box = markBox(noteOnBeat1(3, 2));
          expect(c5Fermata.bottom, "m4: the bottom of the fermata of the C5 above the top of the fermata of the D5")
             .to.be.at.most(d5Fermata.top);
+         done();
+      }).catch(done);
+   });
+
+   // The inverted fermata of the stem-up A2 (voice 5) in the lower staff is drawn below the stem-down D2 of voice 6, the
+   // last voice entry of the staff entry, so that it doesn't overlap that note (#1278). Before fix, it was moved there in
+   // the model: added to the articulations of voice 6 (and kept in those of voice 5), so every updateGraphic() drew one
+   // more fermata there.
+   it("Draws an inverted fermata below the last voice once, also after updateGraphic()", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_fermata_inverted_placement.musicxml");
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      osmd.load(score).then(() => {
+         osmd.render();
+         // the lower staff at the first beat: voice 5 (A2 with the fermata), voice 6 (D2)
+         const voiceEntries: VoiceEntry[] = osmd.Sheet.SourceMeasures[0].VerticalSourceStaffEntryContainers[0].StaffEntries[1].VoiceEntries;
+         /** The articulations of each voice entry, by name. */
+         const articulations: () => string[][] = () => voiceEntries.map((voiceEntry: VoiceEntry) =>
+            voiceEntry.Articulations.map((articulation) => ArticulationEnum[articulation.articulationEnum]));
+         /** The lowest point of the lower staff's bottom line, in units (y points down): one fermata lower per fermata drawn. */
+         const lowestPoint: () => number = () => Math.max(...osmd.GraphicSheet.MusicPages[0].MusicSystems[0].StaffLines[1].BottomLine);
+         expect(articulations(), "first layout").to.deep.equal([["invertedfermata"], []]);
+         const firstLowestPoint: number = lowestPoint();
+         osmd.updateGraphic();
+         osmd.render();
+         expect(articulations(), "after updateGraphic()").to.deep.equal([["invertedfermata"], []]);
+         expect(lowestPoint(), "the lowest point of the bottom line after updateGraphic()").to.equal(firstLowestPoint);
          done();
       }).catch(done);
    });
