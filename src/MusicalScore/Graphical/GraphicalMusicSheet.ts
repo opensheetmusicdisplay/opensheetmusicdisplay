@@ -228,6 +228,11 @@ export class GraphicalMusicSheet {
         return undefined;
     }
 
+    /**
+     * Find a measure by its zero-based source index and staff index.
+     * Collapsed multiple-rest members resolve to their representative measure (the multiple rest measure),
+     * and an index beyond the score's end (e.g. from the cursor) resolves to the last measure.
+     */
     public findGraphicalMeasure(measureIndex: number, staffIndex: number): GraphicalMeasure {
         // note the cursor calls this with measureIndex 1 (measure 2) when advancing beyond the end of a 1-measure piece
         for (let i: number = measureIndex; i >= 0; i--) {
