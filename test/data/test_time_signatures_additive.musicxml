@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list>
+    <score-part id="P1"><part-name>Flute</part-name></score-part>
+    <score-part id="P2"><part-name>Oboe</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <clef><sign>G</sign><line>2</line></clef>
+        <time><beats>2+2+3</beats><beat-type>8</beat-type></time>
+      </attributes>
+      <note><rest measure="yes"/><duration>7</duration><type>whole</type></note>
+    </measure>
+    <measure number="2">
+      <attributes>
+        <time><beats>3+2+2</beats><beat-type>8</beat-type></time>
+      </attributes>
+      <note><rest measure="yes"/><duration>7</duration><type>whole</type></note>
+    </measure>
+    <measure number="3">
+      <attributes>
+        <time><beats>1+1</beats><beat-type>4</beat-type><beats>3</beats><beat-type>8</beat-type></time>
+      </attributes>
+      <note><rest measure="yes"/><duration>7</duration><type>whole</type></note>
+    </measure>
+  </part>
+  <part id="P2">
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note><rest measure="yes"/><duration>7</duration><type>whole</type></note>
+    </measure>
+    <measure number="2">
+      <attributes>
+        <time><beats>7</beats><beat-type>8</beat-type></time>
+      </attributes>
+      <note><rest measure="yes"/><duration>7</duration><type>whole</type></note>
+    </measure>
+    <measure number="3">
+      <note><rest measure="yes"/><duration>7</duration><type>whole</type></note>
+    </measure>
+  </part>
+</score-partwise>

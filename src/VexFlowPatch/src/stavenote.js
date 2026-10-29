@@ -200,6 +200,18 @@ export class StaveNote extends StemmableNote {
     const voiceXShift = Math.max(noteU.voice_shift, noteL.voice_shift);
     let xShift = 0;
     let stemDelta;
+    // VexFlowPatch: Add helper functions to help decide if lower note with upwards stem collides with
+    // higher note with downwards stem.
+    const topLine = n => n.note.getKeyProps().slice(-1)[0].line;
+    const hasStem = n => !n.isrest && n.note.hasStem() && n.note.getStemStyle()?.strokeStyle !== "#00000000";
+    // Whether a higher stem-down note and a lower stem-up note have a stem that reaches the other notehead.
+    const crossedStemsCollide = (noteDown, noteUp) =>
+      !noteDown.isrest && !noteUp.isrest &&
+      noteDown.stemDirection === -1 && noteUp.stemDirection === 1 &&
+      noteUp.line < topLine(noteDown) &&
+      ((hasStem(noteDown) && noteDown.minLine <= topLine(noteUp)) ||
+       (hasStem(noteUp) && noteUp.maxLine >= noteDown.line));
+
     // Test for two voice note intersection
     if (voices === 2) {
       const lineSpacing = noteU.stemDirection === noteL.stemDirection ? 0.0 : 0.5;
@@ -235,7 +247,6 @@ export class StaveNote extends StemmableNote {
           // VexFlowPatch: line is a note's lowest key. Next to a chord, the keys facing each other are the lowest
           //   of the note above and the highest of the note below: E4+G4 under an A4 are a second apart, not a fourth.
           //   gap is the distance between those two keys, or <= 0 if the notes share or interleave keys.
-          const topLine = n => n.note.getKeyProps().slice(-1)[0].line;
           const gap = Math.max(noteU.line - topLine(noteL), noteL.line - topLine(noteU));
           // Stagger (x-shift) only if the two notes share a line but can't overlap as a
           // unison - i.e. their notehead shapes or dots differ (see mergeableUnison).
@@ -260,9 +271,12 @@ export class StaveNote extends StemmableNote {
             //   them. So when only the upper note is dotted, stem up over a stem down, move it instead, as MuseScore does.
             //   If both are dotted, also move an upper note in a space: Dot.format() then puts the lower note's dot in
             //   the space below it, clear of the moved note. On a line, the moved note would cover the lower dot.
+            //   Where the voices cross, the stem-down note a second above the stem-up note (noteU), also move noteU: with
+            //   the stem-down note moved, both stems ran in one line, as if through both heads. Behind Bars puts the
+            //   down-stemmed part on the left for overlapping adjacent notes (p. 54).
             const dottedUpper = noteU.note.dots > 0 && (noteL.note.dots === 0 || Math.abs(noteU.line % 1) === 0.5) &&
               noteU.stemDirection === 1 && noteL.stemDirection === -1;
-            (dottedUpper ? noteU : noteL).note.setXShift(xShift);
+            (dottedUpper || crossedStemsCollide(noteL, noteU) ? noteU : noteL).note.setXShift(xShift);
           } else if (noteU.note.voice !== noteL.note.voice) {//If we are not in the same voice
             if (noteU.stemDirection === noteL.stemDirection) {
               if (noteU.line > noteL.line) {
@@ -286,6 +300,14 @@ export class StaveNote extends StemmableNote {
                   noteL.note.setStemDirection(-1);
                 }
               }
+            } else if (gap >= 1 && crossedStemsCollide(noteL, noteU)) {
+              // VexFlowPatch: crossed voices, the stem-down note (noteL) a third or more above the stem-up note (noteU):
+              //   on the beat, a stem runs along the other note's head, as if both were one chord. Behind Bars puts the
+              //   down-stemmed part of overlapping parts on the left and the parts slightly apart, so that the stems
+              //   don't appear to include both notes (p. 53): move the stem-up note a little to the right. Not where the
+              //   notes share or interleave keys (gap <= 0): only 4 px apart, the two heads of a key both have, or of a
+              //   second, would overlap.
+              noteU.note.setXShift(4);
             }
           }
           //Very close whole notes
@@ -397,8 +419,14 @@ export class StaveNote extends StemmableNote {
     if (!isUnisonWithNeighbour && moveLower) {
       noteL.note.setXShift(Math.max(voiceXShift, noteM.note.getGlyphWidth())); // clear of the middle note's head
     } else if (!isUnisonWithNeighbour && (intersectsUpper || intersectsLower)) {
-      xShift = voiceXShift + 3;      // shift middle note right
-      noteM.note.setXShift(xShift);
+      let noteMShift = voiceXShift + 3;      // shift middle note right
+      // VexFlowPatch: the upper and the lower note, left on the beat, can be crossed voices too: then move the lower
+      //   one a little to the right, as in the two-voice path, and the middle note further.
+      if (crossedStemsCollide(noteU, noteL)) {
+        noteL.note.setXShift(4);
+        noteMShift += 3;
+      }
+      noteM.note.setXShift(noteMShift);
     }
 
     return true;
