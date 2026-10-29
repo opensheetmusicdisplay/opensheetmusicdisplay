@@ -285,6 +285,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
         if (this.parentSourceMeasure?.isReducedToMultiRest && !this.rules.MultipleRestMeasureAddKeySignature) {
             return;
         }
+        if (currentClef) {
+            // VexFlow places the accidentals by the stave's clef. Without a clef at its begin, the stave keeps VexFlow's default
+            //   treble clef (e.g. the courtesy key in an extra measure at a system end), or the clef resetLayout() took from
+            //   InitiallyActiveClef, which may predate a clef change at the end of the previous measure.
+            (this.stave as any).clef = VexFlowConverter.Clef(currentClef).type;
+        }
         this.stave.setKeySignature(
             VexFlowConverter.keySignature(currentKey),
             VexFlowConverter.keySignature(previousKey),
