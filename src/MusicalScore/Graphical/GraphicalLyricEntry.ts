@@ -7,7 +7,6 @@ import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {TextAlignment, TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
 import { EngravingRules } from "./EngravingRules";
 import { BoundingBox } from "./BoundingBox";
-import { MusicSheetCalculator } from "./MusicSheetCalculator";
 import { SourceStaffEntry } from "../VoiceData/SourceStaffEntry";
 import { Staff } from "../VoiceData/Staff";
 import { VoiceEntry } from "../VoiceData/VoiceEntry";
@@ -88,7 +87,7 @@ export class GraphicalLyricEntry {
             return 0;
         }
         return label.fontHeight *
-            MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(leadingNumber, label.font, label.fontStyle, label.fontFamily);
+            rules.TextMeasurer.computeTextWidthToHeightRatio(leadingNumber, label.font, label.fontStyle, label.fontFamily);
     }
 
     /**

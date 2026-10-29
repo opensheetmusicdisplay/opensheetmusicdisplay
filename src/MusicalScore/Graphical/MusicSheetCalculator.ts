@@ -80,8 +80,14 @@ import { TabNote } from "../VoiceData/TabNote";
 export abstract class MusicSheetCalculator {
     public static symbolFactory: IGraphicalSymbolFactory;
     public static transposeCalculator: ITransposeCalculator;
+    /** @deprecated Not set anymore: each calculator has its own (the protected stafflineNoteCalculator), with its rules and the
+     *  notes it tracks. A static one was shared by all OSMD instances, and kept the rules of the most recently created one,
+     *  and through them its rendering, in memory.
+     */
     public static stafflineNoteCalculator: IStafflineNoteCalculator;
     protected static textMeasurer: ITextMeasurer;
+    /** Tracks the pitches on each percussion staff, to put them on one line if there are few of them (PercussionOneLineCutoff). */
+    protected stafflineNoteCalculator: IStafflineNoteCalculator;
 
     protected staffEntriesWithGraphicalTies: GraphicalStaffEntry[] = [];
     protected staffEntriesWithOrnaments: GraphicalStaffEntry[] = [];
@@ -101,6 +107,9 @@ export abstract class MusicSheetCalculator {
 
     private abstractNotImplementedErrorMessage: string = "abstract, not implemented";
 
+    /** @deprecated OSMD measures texts with each instance's own measurer, EngravingRules.TextMeasurer (osmd.EngravingRules.TextMeasurer).
+     *  This static one measures with default rules (e.g. DefaultFontFamily), and is only used for labels without rules.
+     */
     public static get TextMeasurer(): ITextMeasurer {
         return MusicSheetCalculator.textMeasurer;
     }
@@ -2366,7 +2375,7 @@ export abstract class MusicSheetCalculator {
                 graphicalNote = MusicSheetCalculator.symbolFactory.createGraceNote(note, gve, activeClef, this.rules, octaveShiftValue);
             } else {
                 graphicalNote = MusicSheetCalculator.symbolFactory.createNote(note, gve, activeClef, octaveShiftValue, this.rules, undefined);
-                MusicSheetCalculator.stafflineNoteCalculator.trackNote(graphicalNote);
+                this.stafflineNoteCalculator.trackNote(graphicalNote);
             }
             if (note.Pitch) {
                 this.checkNoteForAccidental(graphicalNote, accidentalCalculator, activeClef, octaveShiftValue);
@@ -2561,7 +2570,7 @@ export abstract class MusicSheetCalculator {
 
     private wrapFirstPageCreditWords(credit: Label, availableWidth: number): string {
         const fits: (text: string) => boolean = (text: string): boolean => this.rules.SheetSubtitleHeight *
-            MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(
+            this.rules.TextMeasurer.computeTextWidthToHeightRatio(
                 text, credit.font, credit.fontStyle, credit.fontFamily) <= availableWidth;
         const lines: string[] = [];
         for (const original of credit.text.split(/\r?\n/)) {
@@ -3393,7 +3402,7 @@ export abstract class MusicSheetCalculator {
                     new ClefInstruction(),
                     OctaveEnum.NONE,
                     this.rules);
-                MusicSheetCalculator.stafflineNoteCalculator.trackNote(graphicalNote);
+                this.stafflineNoteCalculator.trackNote(graphicalNote);
                 gve.notes.push(graphicalNote);
             }
         }
@@ -3457,7 +3466,7 @@ export abstract class MusicSheetCalculator {
                     if (staffIsPercussionArray[idx2]) {
                         const keepsXmlLines: boolean = staff.xmlStafflineCount !== undefined && this.rules.PercussionKeepXMLStafflineCount;
                         if (!keepsXmlLines &&
-                            MusicSheetCalculator.stafflineNoteCalculator.getStafflineUniquePositionCount(idx2) < this.rules.PercussionOneLineCutoff) {
+                            this.stafflineNoteCalculator.getStafflineUniquePositionCount(idx2) < this.rules.PercussionOneLineCutoff) {
                             staff.StafflineCount = 1;
                         }
                     }

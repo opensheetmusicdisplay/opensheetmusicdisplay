@@ -1164,9 +1164,10 @@ export class OpenSheetMusicDisplay {
      * Clears what OSMD has drawn on its canvas, and releases the loaded sheet, so that its memory can be freed while you keep
      * this instance: the sheet's data, its graphical objects and the SVG elements they drew.
      * To show a sheet again, call load() and render(). Until then, the cursors stay hidden, and moving them does nothing.
-     * When you don't need the instance anymore, call dispose() instead, which also removes OSMD's listeners on the window.
+     * When you don't need the instance anymore, call dispose(), which removes OSMD's listeners on the window.
      */
     public clear(): void {
+        const sheet: MusicSheet = this.sheet;
         this.drawer?.clear(); // also releases the drawn sheet
         this.reset(); // without this, resize will draw loaded sheet again
         // reset() only removes this instance's own references to the sheet. The other ones kept the whole rendering in memory,
@@ -1175,13 +1176,18 @@ export class OpenSheetMusicDisplay {
             cursor.releaseSheet();
         });
         this.rules.clearMusicSheetObjects(); // the graphical notes of the notes (see EngravingRules.GNote())
+        // the sheet's links to its graphical measures: an app that keeps the sheet (osmd.Sheet) would keep the rendering, too
+        for (const sourceMeasure of sheet?.SourceMeasures ?? []) {
+            sourceMeasure.VerticalMeasureList = undefined;
+        }
     }
 
     /**
-     * Removes the listeners OSMD added to the window, and clears the sheet like clear(), releasing its memory.
+     * Removes the listeners OSMD added to the window, and ends incremental rendering (see renderNext()).
      * Call it when you don't need this instance anymore, e.g. before you remove its container from the page:
      * the window's resize listener (option autoResize, on by default) keeps the instance in memory as long as the page is open,
      * also after its container was removed, with its loaded and rendered sheet.
+     * The drawing stays in the container. To remove it and free the sheet's memory while you keep the instance, call clear().
      * @example
      * osmd.dispose();
      * container.remove(); // the instance can be garbage collected now, once your code doesn't reference it anymore
@@ -1191,7 +1197,7 @@ export class OpenSheetMusicDisplay {
             this.disposeResizeListener();
         }
         this.disableIncrementalRenderingOnScroll(); // the scroll listener of enableIncrementalRenderingOnScroll(), if on
-        this.clear();
+        this.resetIncrementalRendering(); // so that a batch it scheduled (requestAnimationFrame) doesn't render anymore
     }
 
     /** Set OSMD rendering options using an IOSMDOptions object.
