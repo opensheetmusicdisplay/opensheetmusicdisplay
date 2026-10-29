@@ -300,7 +300,8 @@ async function init () {
                 // generate one more testing image in dark mode
                 await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
                     darkMode: true, fileNameAddition: "darkmode_"}, DEBUG);
-            } else if (sampleFilename.startsWith("JohannSebastianBach_PraeludiumInCDur")) {
+            } else if (sampleFilename.startsWith("JohannSebastianBach_PraeludiumInCDur") ||
+                sampleFilename.startsWith("test_hidden_staff_clef_key_time")) {
                 // generate two more testing images, left hand only and right hand only
                 await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
                     staffVisibility: { 0: true, 1: false}, fileNameAddition: "right_hand_only_"}, DEBUG);
@@ -702,6 +703,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestLyricsDashContinuedInNextSystem = sampleFilename.startsWith("test_lyrics_dash_continued_in_next_system");
     // tab ties across system breaks, see test_tab_hammer-on_pull-off_tie_across_system_breaks: systems as in the file
     const isTestTabTiesAcrossSystemBreaks = sampleFilename.startsWith("test_tab_hammer-on_pull-off_tie_across_system_breaks");
+    // a key and time change at a system break (courtesy signatures), see test_hidden_staff_clef_key_time: systems as in the file
+    const isTestHiddenStaffClefKeyTime = sampleFilename.startsWith("test_hidden_staff_clef_key_time");
     const isTestCopyrightBelowLastSystem = sampleFilename.includes("copyright_below_last_system");
     const isTestFirstPageCreditWords = sampleFilename.startsWith("test_first_page_credit_words");
     const isTestOptimizeExtremeLedgerBeams = sampleFilename.includes("test_beam_intersecting_ledger_lines") && !process.argv.includes("--native-vexflow");
@@ -730,7 +733,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         drawUpToMeasureNumber: drawUpToMeasureNumber,
         drawMeasureNumbersOnlyAtSystemStart: isTestMeasureNumbersOnlyAtSystemStart,
         newSystemFromXML: isFunctionTestSystemAndPageBreaks || isTestMeasureNumbersOnlyAtSystemStart || isTestGraceNotesOnlyMeasure ||
-            isTestLyricsDashContinuedInNextSystem || isTestTabTiesAcrossSystemBreaks,
+            isTestLyricsDashContinuedInNextSystem || isTestTabTiesAcrossSystemBreaks || isTestHiddenStaffClefKeyTime,
         newSystemFromNewPageInXML: isTestPageBreakImpliesSystemBreak,
         newPageFromXML: isFunctionTestSystemAndPageBreaks,
         pageBackgroundColor: "#FFFFFF", // reset by drawingparameters default
