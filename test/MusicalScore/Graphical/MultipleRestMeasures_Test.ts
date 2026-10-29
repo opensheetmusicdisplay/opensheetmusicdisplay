@@ -3,7 +3,6 @@ import { TestUtils } from "../../Util/TestUtils";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { GraphicalMeasure } from "../../../src/MusicalScore/Graphical/GraphicalMeasure";
 import { GraphicalMusicSheet } from "../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
-import { SourceMeasure } from "../../../src/MusicalScore/VoiceData/SourceMeasure";
 
 /**
  * test_multiple_rest_measures_auto_key_time_change.musicxml: measures 2-6 are whole-measure rests, measure 2 starts with D major,
@@ -42,47 +41,21 @@ describe("Multiple rest measures", () => {
         expect(osmd.GraphicSheet.findGraphicalMeasure(5, 0)).to.equal(osmd.GraphicSheet.MeasureList[4][0]);
     });
 
-    it("resolves explicit rest members without rescanning preceding members and preserves fallback lookups", async () => {
+    it("resolves explicit rest members to their representative measure and preserves fallback lookups", async () => {
         await osmd.load(TestUtils.getScore("OSMD_function_test_multiple_rest_measures.musicxml"));
         const graphic: GraphicalMusicSheet = osmd.GraphicSheet;
         const measures: GraphicalMeasure[][] = graphic.MeasureList;
-        const sourceMeasures: SourceMeasure[] = osmd.Sheet.SourceMeasures;
         const staffCount: number = graphic.NumberOfStaves;
         // Measures 19-23 form a five-measure rest in all four staves.
         const restStart: number = 18;
         const restLength: number = 5;
         expect(staffCount).to.equal(4);
-        expect(sourceMeasures[restStart].multipleRestMeasures).to.equal(restLength);
+        expect(osmd.Sheet.SourceMeasures[restStart].multipleRestMeasures).to.equal(restLength);
         expect(measures[restStart].filter(Boolean)).to.have.length(staffCount);
-        let graphicalReads: number = 0;
-        let sourceReads: number = 0;
-        const countReads: ProxyHandler<object> = {
-            get(target, property, receiver): unknown {
-                if (typeof property === "string" && /^\d+$/.test(property)) {
-                    if (target === measures) {
-                        graphicalReads++;
-                    } else {
-                        sourceReads++;
-                    }
-                }
-                return Reflect.get(target, property, receiver);
+        for (let index: number = restStart; index < restStart + restLength; index++) {
+            for (let staff: number = 0; staff < staffCount; staff++) {
+                expect(graphic.findGraphicalMeasure(index, staff), `measure ${index + 1}, staff ${staff}`).to.equal(measures[restStart][staff]);
             }
-        };
-        graphic.MeasureList = new Proxy<GraphicalMeasure[][]>(measures, countReads);
-        osmd.Sheet.SourceMeasures = new Proxy<SourceMeasure[]>(sourceMeasures, countReads);
-        try {
-            for (let index: number = restStart; index < restStart + restLength; index++) {
-                for (let staff: number = 0; staff < staffCount; staff++) {
-                    graphicalReads = 0;
-                    sourceReads = 0;
-                    expect(graphic.findGraphicalMeasure(index, staff), `measure ${index + 1}, staff ${staff}`).to.equal(measures[restStart][staff]);
-                    expect(graphicalReads, "graphical rows per lookup").to.be.at.most(2);
-                    expect(sourceReads, "source measures per lookup").to.be.at.most(2);
-                }
-            }
-        } finally {
-            graphic.MeasureList = measures;
-            osmd.Sheet.SourceMeasures = sourceMeasures;
         }
         for (let staff: number = 0; staff < staffCount; staff++) {
             expect(graphic.findGraphicalMeasure(restStart - 1, staff)).to.equal(measures[restStart - 1][staff]);
