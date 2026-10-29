@@ -132,7 +132,7 @@ export class MusicSystemBuilder {
                 }
             }
             let totalMeasureWidth: number = currentMeasureBeginInstructionsWidth + currentMeasureEndInstructionsWidth + currentMeasureVarWidth;
-            if (graphicalMeasures[0]?.parentSourceMeasure?.multipleRestMeasures) {
+            if (this.rules.RenderMultipleRestMeasures && graphicalMeasures[0]?.parentSourceMeasure?.multipleRestMeasures) {
                 currentMeasureVarWidth = this.rules.MultipleRestMeasureDefaultWidth;
                 totalMeasureWidth = currentMeasureBeginInstructionsWidth + currentMeasureEndInstructionsWidth + currentMeasureVarWidth;
                 // Set minimumStaffEntriesWidth so stretchMusicSystem uses a correct value (not -1 from constructor)
@@ -554,11 +554,26 @@ export class MusicSystemBuilder {
         for (let idx: number = 0; idx < measureCount; idx++) {
             const measure: GraphicalMeasure = measures[idx];
             const staffIndex: number = this.visibleStaffIndices[idx];
-            const endInstructionsStaffEntry: SourceStaffEntry = sourceMeasure.LastInstructionsStaffEntries[staffIndex];
+            const endInstructionsStaffEntry: SourceStaffEntry = this.getEndInstructionsStaffEntry(sourceMeasure, staffIndex);
             const endInstructionLengthX: number = this.addInstructionsAtMeasureEnd(endInstructionsStaffEntry, measure, measures);
             totalEndInstructionLengthX = Math.max(totalEndInstructionLengthX, endInstructionLengthX);
         }
         return totalEndInstructionLengthX;
+    }
+
+    /**
+     * Returns the instructions drawn at the end of the measure in the staff (a clef change for the next measure), if any.
+     * A multiple rest measure has those of the last of its measures that has some, usually the clef change after it.
+     */
+    protected getEndInstructionsStaffEntry(sourceMeasure: SourceMeasure, staffIndex: number): SourceStaffEntry {
+        const sourceMeasures: SourceMeasure[] = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures;
+        for (let index: number = this.getLastMeasureOfMultiRest(sourceMeasure).measureListIndex; index > sourceMeasure.measureListIndex; index--) {
+            const endInstructionsStaffEntry: SourceStaffEntry = sourceMeasures[index].LastInstructionsStaffEntries[staffIndex];
+            if (endInstructionsStaffEntry?.Instructions.length > 0) {
+                return endInstructionsStaffEntry;
+            }
+        }
+        return sourceMeasure.LastInstructionsStaffEntries[staffIndex];
     }
 
     protected AddInstructionsAtMeasureBegin(firstEntry: SourceStaffEntry, measure: GraphicalMeasure,
@@ -694,7 +709,7 @@ export class MusicSystemBuilder {
                     }
                 }
             }
-            const lastEntry: SourceStaffEntry = measure.LastInstructionsStaffEntries[staffIndex];
+            const lastEntry: SourceStaffEntry = this.getEndInstructionsStaffEntry(measure, staffIndex);
             if (lastEntry) {
                 const instructions: AbstractNotationInstruction[] = lastEntry.Instructions;
                 for (let idx: number = 0, len3: number = instructions.length; idx < len3; ++idx) {
@@ -819,23 +834,21 @@ export class MusicSystemBuilder {
         return SystemLinesEnum.None;
     }
 
-    protected getMeasureEndLine(): SystemLinesEnum {
-        let sourceMeasure: SourceMeasure = undefined;
-        try {
-            sourceMeasure = this.measureList[this.measureListIndex][0].parentSourceMeasure;
-            if (this.rules.RenderMultipleRestMeasures && sourceMeasure.multipleRestMeasures > 1) {
-                const newIndex: number = Math.min(
-                    this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length - 1, // safety check
-                    sourceMeasure.measureListIndex + sourceMeasure.multipleRestMeasures - 1
-                    // check the bar line of the last sourcemeasure in the multiple measure rest sequence
-                );
-                sourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[newIndex];
-                // sourceMeasure = this.measureList[this.measureListIndex + sourceMeasure.multipleRestMeasures - 1][0].parentSourceMeasure;
-                //    this will be possible when the other GraphicalMeasures in the measureList aren't undefined anymore
-            }
-        } finally {
-            // do nothing
+    /**
+     * Returns the last measure of the multiple rest measure that the given measure begins, which has its barline,
+     * or the given measure if it doesn't begin one.
+     */
+    protected getLastMeasureOfMultiRest(sourceMeasure: SourceMeasure): SourceMeasure {
+        if (!this.rules.RenderMultipleRestMeasures || !(sourceMeasure?.multipleRestMeasures > 1)) {
+            return sourceMeasure;
         }
+        const sourceMeasures: SourceMeasure[] = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures;
+        // (the other GraphicalMeasures of a multiple rest measure in the measureList are undefined)
+        return sourceMeasures[Math.min(sourceMeasures.length - 1, sourceMeasure.measureListIndex + sourceMeasure.multipleRestMeasures - 1)];
+    }
+
+    protected getMeasureEndLine(): SystemLinesEnum {
+        const sourceMeasure: SourceMeasure = this.getLastMeasureOfMultiRest(this.measureList[this.measureListIndex][0]?.parentSourceMeasure);
 
         if (this.nextMeasureBeginsLineRepetition() && this.thisMeasureEndsLineRepetition()) {
             return SystemLinesEnum.DotsBoldBoldDots;
