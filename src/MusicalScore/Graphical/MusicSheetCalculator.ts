@@ -217,6 +217,10 @@ export abstract class MusicSheetCalculator {
                     measureList.push([undefined]);
                     // TODO we could push an object here or push nothing entirely,
                     //   but then the index doesn't correspond to measure numbers anymore.
+                    // the measure gets no graphical measures, but a clef change at its end applies to the measures after it
+                    for (let staffIndex: number = 0; staffIndex < nextSourceMeasure.CompleteNumberOfStaves; staffIndex++) {
+                        this.updateActiveClefAtMeasureEnd(nextSourceMeasure, staffIndex, activeClefs);
+                    }
                 }
             }
         }
@@ -3351,16 +3355,7 @@ export abstract class MusicSheetCalculator {
         }
 
         accidentalCalculator.doCalculationsAtEndOfMeasure();
-        // update activeClef given at end of measure if needed
-        if (sourceMeasure.LastInstructionsStaffEntries[staffIndex]) {
-            const lastStaffEntry: SourceStaffEntry = sourceMeasure.LastInstructionsStaffEntries[staffIndex];
-            for (let idx: number = 0, len: number = lastStaffEntry.Instructions.length; idx < len; ++idx) {
-                const abstractNotationInstruction: AbstractNotationInstruction = lastStaffEntry.Instructions[idx];
-                if (abstractNotationInstruction instanceof ClefInstruction && activeClefs[staffIndex]?.ClefType !== ClefEnum.TAB) {
-                    activeClefs[staffIndex] = <ClefInstruction>abstractNotationInstruction;
-                }
-            }
-        }
+        this.updateActiveClefAtMeasureEnd(sourceMeasure, staffIndex, activeClefs);
         for (let idx: number = 0, len: number = sourceMeasure.StaffLinkedExpressions[staffIndex].length; idx < len; ++idx) {
             const multiExpression: MultiExpression = sourceMeasure.StaffLinkedExpressions[staffIndex][idx];
             if (multiExpression.OctaveShiftEnd !== undefined && openOctaveShifts[staffIndex] !== undefined &&
@@ -3426,6 +3421,20 @@ export abstract class MusicSheetCalculator {
         }
 
         return measure;
+    }
+
+    /** Makes a clef change at the end of the measure (for the next measure) the staff's active clef. */
+    private updateActiveClefAtMeasureEnd(sourceMeasure: SourceMeasure, staffIndex: number, activeClefs: ClefInstruction[]): void {
+        const lastStaffEntry: SourceStaffEntry = sourceMeasure.LastInstructionsStaffEntries[staffIndex];
+        if (!lastStaffEntry) {
+            return;
+        }
+        for (const instruction of lastStaffEntry.Instructions) {
+            // a TAB staff keeps its clef, see #1592
+            if (instruction instanceof ClefInstruction && activeClefs[staffIndex]?.ClefType !== ClefEnum.TAB) {
+                activeClefs[staffIndex] = instruction;
+            }
+        }
     }
 
     private checkNoteForAccidental(graphicalNote: GraphicalNote, accidentalCalculator: AccidentalCalculator, activeClef: ClefInstruction,

@@ -3,6 +3,8 @@ import { TestUtils } from "../../Util/TestUtils";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { GraphicalMeasure } from "../../../src/MusicalScore/Graphical/GraphicalMeasure";
 import { GraphicalMusicSheet } from "../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
+import { VexFlowGraphicalNote } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
+import { ClefEnum } from "../../../src/MusicalScore/VoiceData/Instructions/ClefInstruction";
 
 /**
  * test_multiple_rest_measures_auto_key_time_change.musicxml: measures 2-6 are whole-measure rests, measure 2 starts with D major,
@@ -123,5 +125,42 @@ describe("Multiple rest measures", () => {
         // The multiple rest measure was kept, so the flute's notes in measures 2-4 were missing.
         expect(multipleRestMeasureCounts(), "flute shown again").to.deep.equal([0, 0, 0, 0, 0]);
         expect(container.querySelectorAll(".vf-multirest").length, "multiple rest measures drawn").to.equal(0);
+    });
+
+    it("draws the clef change after a multiple rest measure at its end, or at the end of its last measure without " +
+        "RenderMultipleRestMeasures, also when updateGraphic() follows changing the rule, and the notes after it in that clef", async () => {
+        /** [measure number, number of clefs drawn] per drawn measure, a multiple rest measure counting as its first measure */
+        const clefsPerMeasure: () => [string, number][] = () => Array.from(container.querySelectorAll(".vf-measure"))
+            .map((measure): [string, number] => [measure.id, measure.querySelectorAll(".vf-clef").length]);
+        /** the clef that measure 3 begins with, and the clef its note is drawn in */
+        function measure3Clefs(): ClefEnum[] {
+            const measure: GraphicalMeasure = osmd.GraphicSheet.MeasureList[2][0];
+            const note: VexFlowGraphicalNote = measure.staffEntries[0].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote;
+            return [measure.InitiallyActiveClef.ClefType, note.Clef().ClefType];
+        }
+        const multipleRest: [string, number][] = [["1", 2], ["3", 0]]; // the treble clef at its start, the bass clef at its end
+        const singleMeasures: [string, number][] = [["1", 1], ["2", 1], ["3", 0]]; // the bass clef at the end of measure 2
+        // Measures 1-2: <multiple-rest>2</multiple-rest> in the treble clef, measure 3 begins with the bass clef.
+        //   The reader put the clef change at the end of measure 1 if RenderMultipleRestMeasures was true when loading,
+        //   else at the end of measure 2, and the drawing kept it there after a change of the rule.
+        const score: Document = TestUtils.getScore("test_multiple_rest_measures_end_instruction_clef_margin.musicxml");
+        await osmd.load(score);
+        osmd.render();
+        expect(clefsPerMeasure(), "multiple rest measure").to.deep.equal(multipleRest);
+        expect(measure3Clefs(), "multiple rest measure").to.deep.equal([ClefEnum.F, ClefEnum.F]);
+        osmd.EngravingRules.RenderMultipleRestMeasures = false;
+        osmd.updateGraphic();
+        osmd.render();
+        // the bass clef was drawn at the end of measure 1, so that measure 2 began with it
+        expect(clefsPerMeasure(), "RenderMultipleRestMeasures true -> false").to.deep.equal(singleMeasures);
+        await osmd.load(score); // RenderMultipleRestMeasures still false
+        osmd.render();
+        expect(clefsPerMeasure(), "RenderMultipleRestMeasures false").to.deep.equal(singleMeasures);
+        osmd.EngravingRules.RenderMultipleRestMeasures = true;
+        osmd.updateGraphic();
+        osmd.render();
+        // the bass clef wasn't drawn, and measure 3 began with the treble clef, its note drawn in it (below the staff)
+        expect(clefsPerMeasure(), "RenderMultipleRestMeasures false -> true").to.deep.equal(multipleRest);
+        expect(measure3Clefs(), "RenderMultipleRestMeasures false -> true").to.deep.equal([ClefEnum.F, ClefEnum.F]);
     });
 });
