@@ -1187,11 +1187,10 @@ export class InstrumentReader {
                 for (let idx: number = 0, len: number = numbers.length; idx < len; ++idx) {
                   n += parseInt(numbers[idx], 10);
                 }
-                if (length === 1 && numbers.every(value => /^\s*\d+\s*$/.test(value))) {
-                  const groups: number[] = numbers.map(Number);
-                  if (groups.every(value => Number.isSafeInteger(value) && value > 0)) {
-                    numeratorGroups = groups;
-                  }
+                // drawn as given, e.g. 2+2+3/8 instead of 7/8. Several beats/beat-type pairs are still drawn as their sum.
+                const groups: number[] = numbers.map((value: string) => parseInt(value, 10));
+                if (length === 1 && groups.every((group: number) => group > 0)) {
+                  numeratorGroups = groups;
                 }
               } else {
                 n = parseInt(s, 10);
