@@ -1162,6 +1162,7 @@ export class InstrumentReader {
 
       let num: number = 0;
       let denom: number = 0;
+      let numeratorGroups: number[];
       const senzaMisura: boolean = (timeNode && timeNode.element("senza-misura") !== undefined);
       const timeList: IXmlElement[] = attrNode.elements("time");
       const beatsList: IXmlElement[] = [];
@@ -1185,6 +1186,12 @@ export class InstrumentReader {
                 const numbers: string[] = s.split("+");
                 for (let idx: number = 0, len: number = numbers.length; idx < len; ++idx) {
                   n += parseInt(numbers[idx], 10);
+                }
+                if (length === 1 && numbers.every(value => /^\s*\d+\s*$/.test(value))) {
+                  const groups: number[] = numbers.map(Number);
+                  if (groups.every(value => Number.isSafeInteger(value) && value > 0)) {
+                    numeratorGroups = groups;
+                  }
                 }
               } else {
                 n = parseInt(s, 10);
@@ -1210,11 +1217,12 @@ export class InstrumentReader {
           this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
           num = 4;
           denom = 4;
+          numeratorGroups = undefined;
           log.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
         }
 
         const newRhythmInstruction: RhythmInstruction = new RhythmInstruction(
-          new Fraction(num, denom, 0, false), symbolEnum
+          new Fraction(num, denom, 0, false), symbolEnum, numeratorGroups
         );
         newRhythmInstruction.PrintObject = timePrintObject;
         this.abstractInstructions.push([1, newRhythmInstruction, currentFraction]);
