@@ -228,14 +228,33 @@ export class GraphicalMusicSheet {
         return undefined;
     }
 
+    /**
+     * Find a measure by its zero-based source index and staff index.
+     * Collapsed multiple-rest members resolve to their representative measure.
+     * Other missing entries retain the backward lookup used by the cursor beyond the score's end.
+     */
     public findGraphicalMeasure(measureIndex: number, staffIndex: number): GraphicalMeasure {
+        const directMeasure: GraphicalMeasure = this.measureList[measureIndex]?.[staffIndex];
+        if (directMeasure) {
+            return directMeasure;
+        }
+        const sourceMeasure: SourceMeasure = this.musicSheet.SourceMeasures[measureIndex];
+        const restPosition: number = sourceMeasure?.multipleRestMeasureNumber;
+        if (sourceMeasure?.isReducedToMultiRest && Number.isInteger(restPosition) && restPosition > 1) {
+            const firstIndex: number = measureIndex - restPosition + 1;
+            const firstSource: SourceMeasure = this.musicSheet.SourceMeasures[firstIndex];
+            const representative: GraphicalMeasure = this.measureList[firstIndex]?.[staffIndex];
+            if (firstSource?.isReducedToMultiRest && firstSource.multipleRestMeasureNumber === 1 &&
+                firstSource.multipleRestMeasures >= restPosition && representative?.parentSourceMeasure === firstSource) {
+                return representative;
+            }
+        }
         // note the cursor calls this with measureIndex 1 (measure 2) when advancing beyond the end of a 1-measure piece
-        for (let i: number = measureIndex; i >= 0; i--) {
+        for (let i: number = measureIndex - 1; i >= 0; i--) {
             const gMeasure: GraphicalMeasure = this.measureList[i]?.[staffIndex];
             if (gMeasure) {
                 return gMeasure;
             }
-            // else look backwards (previous measures). this is only really valid for MultipleRestMeasures of course.
         }
         return undefined; // shouldn't happen
     }
