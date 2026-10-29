@@ -68,6 +68,25 @@ describe("Multiple rest measures", () => {
         expect(graphic.findGraphicalMeasure(22, staffCount)).to.equal(undefined);
     });
 
+    it("draws the measure that a <multiple-rest> begins as wide as the other rest measures " +
+        "when RenderMultipleRestMeasures is false", async () => {
+        const note: string = "<note><pitch><step>D</step><octave>5</octave></pitch><duration>4</duration><type>whole</type></note>";
+        const rest: string = "<note><rest measure=\"yes\"/><duration>4</duration></note>";
+        const attributes: string = "<attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>" +
+            "<clef><sign>G</sign><line>2</line></clef></attributes>";
+        const multipleRest: string = "<attributes><measure-style><multiple-rest>2</multiple-rest></measure-style></attributes>";
+        // measures 2-3: <multiple-rest>2</multiple-rest>
+        const contents: string[] = [attributes + note, multipleRest + rest, rest, note];
+        osmd.EngravingRules.RenderMultipleRestMeasures = false;
+        await osmd.load(`<?xml version="1.0"?><score-partwise version="4.0"><part-list>
+            <score-part id="P1"><part-name>Flute</part-name></score-part></part-list><part id="P1">` +
+            contents.map((content, index) => `<measure number="${index + 1}">${content}</measure>`).join("") + "</part></score-partwise>");
+        osmd.render();
+        const widths: number[] = osmd.GraphicSheet.MeasureList.map(staves => staves[0].PositionAndShape.Size.width);
+        // measure 2 got the width of a multiple rest measure (MultipleRestMeasureDefaultWidth), less than its rest needs
+        expect(widths[1], "measure 2").to.equal(widths[2]);
+    });
+
     /** Per measure: how many measures the multiple rest measure it begins has (0 for none). */
     function multipleRestMeasureCounts(): number[] {
         return osmd.Sheet.SourceMeasures.map(measure => measure.multipleRestMeasures ?? 0);

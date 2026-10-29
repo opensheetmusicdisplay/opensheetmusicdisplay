@@ -132,7 +132,7 @@ export class MusicSystemBuilder {
                 }
             }
             let totalMeasureWidth: number = currentMeasureBeginInstructionsWidth + currentMeasureEndInstructionsWidth + currentMeasureVarWidth;
-            if (graphicalMeasures[0]?.parentSourceMeasure?.multipleRestMeasures) {
+            if (this.rules.RenderMultipleRestMeasures && graphicalMeasures[0]?.parentSourceMeasure?.multipleRestMeasures) {
                 currentMeasureVarWidth = this.rules.MultipleRestMeasureDefaultWidth;
                 totalMeasureWidth = currentMeasureBeginInstructionsWidth + currentMeasureEndInstructionsWidth + currentMeasureVarWidth;
                 // Set minimumStaffEntriesWidth so stretchMusicSystem uses a correct value (not -1 from constructor)
