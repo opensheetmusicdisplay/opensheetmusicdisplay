@@ -484,6 +484,8 @@ export class GraphicalMusicSheet {
     /**
      * Get a List with the indices of all the visible GraphicalMeasures and calculates their
      * corresponding indices in the first SourceMeasure, taking into account Instruments with multiple Staves.
+     * Hidden staves (Staff.Visible = false) of a visible instrument are left out,
+     * so the list matches the drawn staff lines (see MusicSystemBuilder.layoutSystemStaves()).
      * @param visibleMeasures
      * @returns {number[]}
      */
@@ -501,6 +503,9 @@ export class GraphicalMusicSheet {
             const instrument: Instrument = visibleInstruments[idx];
             const index: number = this.musicSheet.getGlobalStaffIndexOfFirstStaff(instrument);
             for (let j: number = 0; j < instrument.Staves.length; j++) {
+                if (!instrument.Staves[j].Visible) {
+                    continue; // e.g. the right hand of a piano for "left hand only": its measures aren't in visibleMeasures
+                }
                 visibleStavesIndices.push(index + j);
             }
         }
