@@ -168,6 +168,14 @@ export abstract class MusicSheetCalculator {
             openOctaveShifts.push(undefined);
         }
 
+        // Start from the multiple rest measures given in the MusicXML: the source measures still have the ones of the previous
+        //   calculation when updateGraphic() follows e.g. a change of RenderMultipleRestMeasures or of an instrument's visibility.
+        for (const sourceMeasure of musicSheet.SourceMeasures) {
+            sourceMeasure.multipleRestMeasures = sourceMeasure.multipleRestMeasuresXml;
+            sourceMeasure.isReducedToMultiRest = false;
+            sourceMeasure.multipleRestMeasureNumber = 0;
+        }
+
         // go through all SourceMeasures (taking into account normal SourceMusicParts and Repetitions)
         for (let idx: number = 0, len: number = musicSheet.SourceMeasures.length; idx < len; ++idx) {
             const sourceMeasure: SourceMeasure = musicSheet.SourceMeasures[idx];
