@@ -17,6 +17,7 @@ import { ChordSymbolEnum, CustomChord, DegreesInfo } from "../../MusicalScore/Vo
 import { GeometricSkyBottomLineCaches } from "./GeometricSkyBottomLineContext";
 import { GraphicalNote } from "./GraphicalNote";
 import { Note } from "../VoiceData/Note";
+import { ITextMeasurer } from "../Interfaces/ITextMeasurer";
 
 /** Rendering and Engraving options, more fine-grained than [[IOSMDOptions]].
  *  Not all of these options are meant to be modified by users of the library,
@@ -681,6 +682,12 @@ export class EngravingRules {
     public NoteToGraphicalNoteMap: Dictionary<number, GraphicalNote>;
     // this is basically a WeakMap, except we save the id in the Note instead of using a WeakMap.
     public NoteToGraphicalNoteMapObjectCount: number = 0;
+    /** Measures the width of texts like labels in this instance's fonts (e.g. DefaultFontFamily), set by the
+     *  VexFlowMusicSheetCalculator. Owned here (per OSMD instance) instead of statically (MusicSheetCalculator.TextMeasurer):
+     *  a static one measured with the rules of the most recently created instance in all instances,
+     *  and kept those rules, and through NoteToGraphicalNoteMap that instance's rendering, in memory after it was dropped.
+     */
+    public TextMeasurer: ITextMeasurer;
     /** How many times osmd.render() was already called on the currently loaded score.
      * Resets after osmd.load() (via osmd.reset()).
      * Can be relevant for transposition or generally informative.

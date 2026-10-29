@@ -96,6 +96,8 @@ export class OpenSheetMusicDisplay {
     protected rules: EngravingRules;
     protected autoResizeEnabled: boolean;
     protected resizeHandlerAttached: boolean;
+    /** Removes the window's resize listener added for autoResize (see handleResize()), e.g. in dispose(). */
+    private disposeResizeListener: () => void;
     protected followCursor: boolean;
     /** A function that is executed when the XML has been read.
      * The return value will be used as the actual XML OSMD parses,
@@ -1158,10 +1160,44 @@ export class OpenSheetMusicDisplay {
         return this.graphic !== undefined;
     }
 
-    /** Clears what OSMD has drawn on its canvas. */
+    /**
+     * Clears what OSMD has drawn on its canvas, and releases the loaded sheet, so that its memory can be freed while you keep
+     * this instance: the sheet's data, its graphical objects and the SVG elements they drew.
+     * To show a sheet again, call load() and render(). Until then, the cursors stay hidden, and moving them does nothing.
+     * When you don't need the instance anymore, call dispose(), which removes OSMD's listeners on the window.
+     */
     public clear(): void {
-        this.drawer?.clear();
+        const sheet: MusicSheet = this.sheet;
+        this.drawer?.clear(); // also releases the drawn sheet
         this.reset(); // without this, resize will draw loaded sheet again
+        // reset() only removes this instance's own references to the sheet. The other ones kept the whole rendering in memory,
+        //   as the graphical objects reference the SVG elements they drew.
+        this.cursors.forEach(cursor => {
+            cursor.releaseSheet();
+        });
+        this.rules.clearMusicSheetObjects(); // the graphical notes of the notes (see EngravingRules.GNote())
+        // the sheet's links to its graphical measures: an app that keeps the sheet (osmd.Sheet) would keep the rendering, too
+        for (const sourceMeasure of sheet?.SourceMeasures ?? []) {
+            sourceMeasure.VerticalMeasureList = undefined;
+        }
+    }
+
+    /**
+     * Removes the listeners OSMD added to the window, and ends incremental rendering (see renderNext()).
+     * Call it when you don't need this instance anymore, e.g. before you remove its container from the page:
+     * the window's resize listener (option autoResize, on by default) keeps the instance in memory as long as the page is open,
+     * also after its container was removed, with its loaded and rendered sheet.
+     * The drawing stays in the container. To remove it and free the sheet's memory while you keep the instance, call clear().
+     * @example
+     * osmd.dispose();
+     * container.remove(); // the instance can be garbage collected now, once your code doesn't reference it anymore
+     */
+    public dispose(): void {
+        if (this.disposeResizeListener) {
+            this.disposeResizeListener();
+        }
+        this.disableIncrementalRenderingOnScroll(); // the scroll listener of enableIncrementalRenderingOnScroll(), if on
+        this.resetIncrementalRendering(); // so that a batch it scheduled (requestAnimationFrame) doesn't render anymore
     }
 
     /** Set OSMD rendering options using an IOSMDOptions object.
@@ -1395,7 +1431,8 @@ export class OpenSheetMusicDisplay {
             this.autoResizeEnabled = true;
         } else if (options.autoResize === false) { // not undefined
             this.autoResizeEnabled = false;
-            // we could remove the window EventListener here, but not necessary.
+            // the window's resize listener stays, doing nothing while autoResize is off. It keeps this instance in memory:
+            //   dispose() removes it.
         }
         if (options.pageFormat !== undefined) { // only change this option if it was given, see above
             this.setPageFormat(options.pageFormat);
@@ -1621,6 +1658,16 @@ export class OpenSheetMusicDisplay {
         } else {
             window.addEventListener("resize", resizeStart);
         }
+        this.disposeResizeListener = (): void => {
+            if ((<any>window).detachEvent) {
+                // Support IE<9
+                (<any>window).detachEvent("onresize", resizeStart);
+            } else {
+                window.removeEventListener("resize", resizeStart);
+            }
+            this.disposeResizeListener = undefined;
+            this.resizeHandlerAttached = false; // setOptions({autoResize: true}) adds it again
+        };
         this.resizeHandlerAttached = true;
 
         // If the sheet was already rendered when autoResize was enabled, adapt it to the

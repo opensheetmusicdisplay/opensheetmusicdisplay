@@ -5,6 +5,7 @@ import { BoundingBox } from "./BoundingBox";
 import { Clickable } from "./Clickable";
 import { EngravingRules } from "./EngravingRules";
 import { MusicSheetCalculator } from "./MusicSheetCalculator";
+import { ITextMeasurer } from "../Interfaces/ITextMeasurer";
 
 /**
  * The graphical counterpart of a Label
@@ -72,10 +73,12 @@ export class GraphicalLabel extends Clickable {
         const lines: string[] = this.Label.text.split(/[\n\r]+/g);
         const numOfLines: number = lines.length;
         let maxWidth: number = 0;
+        // the instance's measurer (its fonts), the static one for a label without rules
+        const textMeasurer: ITextMeasurer = this.rules?.TextMeasurer ?? MusicSheetCalculator.TextMeasurer;
         for (let i: number = 0; i < numOfLines; i++) {
             const line: string = lines[i].trim();
             const widthToHeightRatio: number =
-            MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(
+            textMeasurer.computeTextWidthToHeightRatio(
                line, this.Label.font, this.Label.fontStyle, this.label.fontFamily);
             const currWidth: number = this.Label.fontHeight * widthToHeightRatio;
             // const currWidth: number = MusicSheetCalculator.TextMeasurer.computeTextWidth(

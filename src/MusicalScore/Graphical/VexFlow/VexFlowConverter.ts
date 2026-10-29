@@ -35,7 +35,6 @@ import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 import { GraphicalMeasure } from "../GraphicalMeasure";
 import { Staff } from "../../VoiceData/Staff";
 import { VexFlowStaffEntry } from "./VexFlowStaffEntry";
-import { MusicSheetCalculator } from "../MusicSheetCalculator";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -1472,11 +1471,11 @@ export class VexFlowConverter {
         }
         const font: string = VexFlowConverter.vexFlowTextCssFont((bend as any).font, rules);
         (bend as any).setFont(font);
-        if (!MusicSheetCalculator.TextMeasurer.computeTextWidthInCssFont) {
+        if (!rules.TextMeasurer.computeTextWidthInCssFont) {
             return;
         }
         for (const part of (bend as any).phrase) {
-            const textWidth: number = MusicSheetCalculator.TextMeasurer.computeTextWidthInCssFont(part.text, font);
+            const textWidth: number = rules.TextMeasurer.computeTextWidthInCssFont(part.text, font);
             part.width = Math.max(part.width, textWidth + 3);
             part.draw_width = part.width / 2;
         }
