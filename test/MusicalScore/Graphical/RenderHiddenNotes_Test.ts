@@ -115,6 +115,29 @@ describe("Drawing hidden notes (EngravingRules.RenderHiddenNotes)", (): void => 
             </score-partwise>`);
     });
 
+    // A tie in a measure with another voice curves on its stem side, away from the other voice (setTieDirections()), and a
+    //   hidden voice counts only while it's drawn. Before the fix, the direction chosen while the hidden notes were drawn was
+    //   kept: the tie stayed above when they were hidden again, instead of curving away from the stem as before.
+    it("chooses the direction of a tie again when the hidden notes of another voice are drawn or hidden", async (): Promise<void> => {
+        /** A half note E4 in voice 1, stem up, with a tie of the given type. */
+        const tiedHalfNoteE4: (tie: string) => string = (tie: string): string =>
+            `<note><pitch><step>E</step><octave>4</octave></pitch><duration>2</duration><tie type="${tie}"/><voice>1</voice>` +
+            `<type>half</type><stem>up</stem><notations><tied type="${tie}"/></notations></note>`;
+        await expectHiddenNotesDrawnLikeVisibleOnes(`<?xml version="1.0" encoding="UTF-8"?>
+            <score-partwise version="3.1">
+              <part-list><score-part id="P1"><part-name>Voices</part-name></score-part></part-list>
+              <part id="P1">
+                <measure number="1">
+                  <attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>
+                    <clef><sign>G</sign><line>2</line></clef></attributes>
+                  ${tiedHalfNoteE4("start")}${tiedHalfNoteE4("stop")}<backup><duration>4</duration></backup>
+                  <note print-object="no"><pitch><step>C</step><octave>4</octave></pitch><duration>4</duration><voice>2</voice>
+                    <type>whole</type></note>
+                </measure>
+              </part>
+            </score-partwise>`);
+    });
+
     // The cymbal tremolo of the Actor Prelude written out for playback as twelve hidden 16ths: a dotted half with tremolo
     //   strokes in voice 1, and the 16ths in voice 2.
     it("lets the cursor stop at the hidden notes it draws", async (): Promise<void> => {

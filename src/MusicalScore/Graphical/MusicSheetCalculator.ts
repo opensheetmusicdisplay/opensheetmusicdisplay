@@ -2941,6 +2941,22 @@ export abstract class MusicSheetCalculator {
     }
 
     protected createGraphicalTies(): void {
+        // Start from the tie directions given in the MusicXML: setTieDirections() keeps a direction it set like one given,
+        //   so the next calculation kept it, also when what it depends on had changed, e.g. the stem side after a transposition
+        //   or a change of SetWantedStemDirectionByXml, or a voice drawn with RenderHiddenNotes that no longer is.
+        for (const sourceMeasure of this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures) {
+            for (const container of sourceMeasure.VerticalSourceStaffEntryContainers) {
+                for (const staffEntry of container.StaffEntries) {
+                    for (const voiceEntry of staffEntry?.VoiceEntries ?? []) {
+                        for (const note of voiceEntry.Notes) {
+                            if (note.NoteTie) {
+                                note.NoteTie.TieDirection = note.NoteTie.TieDirectionXml;
+                            }
+                        }
+                    }
+                }
+            }
+        }
         for (let measureIndex: number = 0; measureIndex < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; measureIndex++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[measureIndex];
             for (let staffIndex: number = 0; staffIndex < sourceMeasure.CompleteNumberOfStaves; staffIndex++) {
