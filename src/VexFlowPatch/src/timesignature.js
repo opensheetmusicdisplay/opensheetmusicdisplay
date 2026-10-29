@@ -19,6 +19,12 @@ const assertIsValidFraction = (timeSpec) => {
     );
   }
 
+  // Same additive-numerator input as VexFlow 4.x; other compound forms stay unsupported.
+  if (/^\d+(?:\+\d+)+\/\d+$/.test(timeSpec) &&
+      timeSpec.split(/[+/]/).every(number => Number.isSafeInteger(Number(number)) && Number(number) > 0)) {
+    return;
+  }
+
   numbers.forEach(number => {
     if (isNaN(Number(number))) {
       throw new Vex.RERR(
@@ -98,7 +104,8 @@ export class TimeSignature extends StaveModifier {
     let topWidth = 0;
     for (let i = 0; i < topDigits.length; ++i) {
       const num = topDigits[i];
-      const topGlyph = new Glyph('v' + num, this.point);
+      // VexFlow 4.x maps timeSigPlusSmall to this existing Gonville glyph.
+      const topGlyph = new Glyph(num === '+' ? 'v8b' : 'v' + num, this.point);
 
       glyph.topGlyphs.push(topGlyph);
       topWidth += topGlyph.getMetrics().width;

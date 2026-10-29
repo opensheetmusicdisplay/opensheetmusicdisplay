@@ -84,6 +84,7 @@ stavenote.js (custom addition):
 Fix stem/flag formatting. Instead of shifting notes by default, update the stem/flag rendering to render different voices aligned.
   Only offset if a note is the same voice, same note.
   (not yet in vexflow 4, PR 1263 open)
+Fix most common cases of crossing voices: when a stem-down note is above a stem-up note. (#1623)
 able to add svg node id+class to stem (merged vexflow 4.x)
 Save and restore noteheads (e.g. slash noteheads) in reset()
 open group for ledger lines (SVG)
