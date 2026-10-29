@@ -184,6 +184,12 @@ export abstract class MusicSheetCalculator {
             sourceMeasure.isReducedToMultiRest = false;
             sourceMeasure.multipleRestMeasureNumber = 0;
         }
+        // A staff becomes a tablature staff at its first measure with a TAB clef (see createGraphicalMeasure()): start from
+        //   the clefs again. With the previous calculation's Staff.isTab, all measures of the staff became tablature
+        //   measures, also the ones before the TAB clef.
+        for (const staff of musicSheet.Staves) {
+            staff.isTab = false;
+        }
 
         // go through all SourceMeasures (taking into account normal SourceMusicParts and Repetitions)
         for (let idx: number = 0, len: number = musicSheet.SourceMeasures.length; idx < len; ++idx) {
@@ -2156,12 +2162,9 @@ export abstract class MusicSheetCalculator {
                                                                         staffLine.isPartOfMultiStaffInstrument(),
                                                                         firstVisibleMeasureX);
 
-            // also placement Above
+            // placed above the staff, see calculateTempoExpressions()
             if (multiTempoExpression.EntriesList.length > 0 &&
                 multiTempoExpression.EntriesList[0].Expression instanceof InstantaneousTempoExpression) {
-                const instantaniousTempo: InstantaneousTempoExpression = (multiTempoExpression.EntriesList[0].Expression as InstantaneousTempoExpression);
-                instantaniousTempo.Placement = PlacementEnum.Above;
-
                 // if an InstantaniousTempoExpression exists at the very beginning then
                 // check if expression is positioned at first ever StaffEntry and
                 // check if MusicSystem is first MusicSystem
@@ -4380,6 +4383,18 @@ export abstract class MusicSheetCalculator {
     private calculateTempoExpressions(): void {
         const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length - 1, this.rules.MaxMeasureToDrawIndex);
         const minIndex: number = this.rules.MinMeasureToDrawIndex;
+        // Tempo text (the first entry of a tempo expression, e.g. "Adagio") goes above the staff. Set before the metronome
+        //   marks are measured: a mark rises over tempo text above the staff at its time (createMetronomeMark()). Set after
+        //   them, the first calculation saw the placement read from the XML, e.g. below without a placement attribute, and
+        //   a later one (the next render(), e.g. on a resize, or after updateGraphic()) this one, and drew such a mark higher.
+        for (const sourceMeasure of this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures) {
+            for (const expression of sourceMeasure.TempoExpressions) {
+                const firstEntry: AbstractTempoExpression = expression.EntriesList[0]?.Expression;
+                if (firstEntry instanceof InstantaneousTempoExpression) {
+                    firstEntry.Placement = PlacementEnum.Above;
+                }
+            }
+        }
         // Measure marks against notation, lay out text, then resolve their actual mutual collisions.
         if (this.rules.MetronomeMarksDrawn) {
             // A direction may be stored outside the drawing range while its display anchor is inside it.

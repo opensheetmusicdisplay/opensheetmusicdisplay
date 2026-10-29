@@ -18,6 +18,7 @@ import {Fonts} from "../../../Common/Enums/Fonts";
 import {OutlineAndFillStyleEnum, OUTLINE_AND_FILL_STYLE_DICT} from "../DrawingEnums";
 import log from "loglevel";
 import { ArticulationEnum, StemDirectionType, VoiceEntry } from "../../VoiceData/VoiceEntry";
+import { Articulation } from "../../VoiceData/Articulation";
 import { SystemLinePosition } from "../SystemLinePosition";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { OrnamentEnum, OrnamentContainer } from "../../VoiceData/OrnamentContainer";
@@ -835,10 +836,11 @@ export class VexFlowConverter {
         //   sounds during any of its notes: not some dots below the heads and some above the beam. A placement from the XML
         //   still wins.
         //   Of a chord, only the first note in the XML is in the beam (not necessarily gNote, the lowest).
+        const articulations: Articulation[] = VexFlowConverter.getDrawnArticulations(gNote.sourceNote.ParentVoiceEntry);
         const beamNotes: Note[] = gNote.sourceNote.ParentVoiceEntry.Notes[0].NoteBeam?.Notes ?? [gNote.sourceNote];
-        const otherVoiceSounding: boolean = gNote.sourceNote.ParentVoiceEntry.Articulations.length > 0 &&
+        const otherVoiceSounding: boolean = articulations.length > 0 &&
             beamNotes.some((note: Note) => VexFlowConverter.otherVoiceSoundsDuring(note.ParentVoiceEntry));
-        for (const articulation of gNote.sourceNote.ParentVoiceEntry.Articulations) {
+        for (const articulation of articulations) {
             let vfArtPosition: number = VF.Modifier.Position.ABOVE;
 
             if (otherVoiceSounding) {
@@ -938,17 +940,7 @@ export class VexFlowConverter {
                     break;
                 }
                 case ArticulationEnum.invertedfermata: {
-                    const pve: VoiceEntry = gNote.sourceNote.ParentVoiceEntry;
-                    const sourceNote: Note = gNote.sourceNote;
-                    // find inverted fermata, push it to last voice entry in staffentry list,
-                    //   so that it doesn't overlap notes (gets displayed right below higher note)
-                    //   TODO this could maybe be moved elsewhere or done more elegantly,
-                    //     but on the other hand here it only gets checked if we have an inverted fermata anyways, seems efficient.
-                    if (pve !== sourceNote.ParentVoiceEntry.ParentSourceStaffEntry.VoiceEntries.last()) {
-                        pve.Articulations = pve.Articulations.slice(pve.Articulations.indexOf(articulation));
-                        pve.ParentSourceStaffEntry.VoiceEntries.last().Articulations.push(articulation);
-                        continue;
-                    }
+                    // drawn at the last voice entry of the staff entry, see getDrawnArticulations()
                     vfArt = new VF.Articulation("a@u");
                     vfArtPosition = VF.Modifier.Position.BELOW;
                     articulation.placement = PlacementEnum.Below;
@@ -999,6 +991,27 @@ export class VexFlowConverter {
                 (vfnote as StaveNote).addModifier(0, vfArt);
             }
         }
+    }
+
+    /** The articulations drawn at the voice entry's note: its own, but the inverted fermatas of its staff entry go to the
+     *  staff entry's last voice entry, so that they don't overlap the notes of the other voices (#1278): the fermata of a
+     *  stem-up note is drawn right below a lower voice's note, not over it.
+     *  The model stays as it is. Before, the fermata was added to the last voice entry's articulations (and stayed in its
+     *  own voice entry's), so every further calculation, e.g. after updateGraphic(), drew it once more. */
+    private static getDrawnArticulations(voiceEntry: VoiceEntry): Articulation[] {
+        const isInvertedFermata: (articulation: Articulation) => boolean =
+            (articulation: Articulation): boolean => articulation.articulationEnum === ArticulationEnum.invertedfermata;
+        const staffVoiceEntries: VoiceEntry[] = voiceEntry.ParentSourceStaffEntry?.VoiceEntries ?? [voiceEntry];
+        if (voiceEntry !== staffVoiceEntries.last()) {
+            return voiceEntry.Articulations.filter((articulation: Articulation): boolean => !isInvertedFermata(articulation));
+        }
+        const articulations: Articulation[] = voiceEntry.Articulations.slice();
+        for (const otherVoiceEntry of staffVoiceEntries) {
+            if (otherVoiceEntry !== voiceEntry) {
+                articulations.push(...otherVoiceEntry.Articulations.filter(isInvertedFermata));
+            }
+        }
+        return articulations;
     }
 
     /** Whether a visible note or rest of another voice in the staff sounds during the voice entry, e.g. a half note of

@@ -23,7 +23,7 @@ import { BoundingBox } from "../../../../src/MusicalScore/Graphical/BoundingBox"
 import { OctaveEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { Tuplet } from "../../../../src/MusicalScore/VoiceData/Tuplet";
 import { Note } from "../../../../src/MusicalScore/VoiceData/Note";
-import { VoiceEntry } from "../../../../src/MusicalScore/VoiceData/VoiceEntry";
+import { ArticulationEnum, VoiceEntry } from "../../../../src/MusicalScore/VoiceData/VoiceEntry";
 import { TabNote } from "../../../../src/MusicalScore/VoiceData/TabNote";
 import { PointF2D } from "../../../../src/Common/DataObjects/PointF2D";
 import { GraphicalTie } from "../../../../src/MusicalScore/Graphical/GraphicalTie";
@@ -1007,6 +1007,32 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
+   // The inverted fermata of the stem-up A2 (voice 5) in the lower staff is drawn below the stem-down D2 of voice 6, the
+   // last voice entry of the staff entry, so that it doesn't overlap that note (#1278). Before fix, it was moved there in
+   // the model: added to the articulations of voice 6 (and kept in those of voice 5), so every updateGraphic() drew one
+   // more fermata there.
+   it("Draws an inverted fermata below the last voice once, also after updateGraphic()", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_fermata_inverted_placement.musicxml");
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      osmd.load(score).then(() => {
+         osmd.render();
+         // the lower staff at the first beat: voice 5 (A2 with the fermata), voice 6 (D2)
+         const voiceEntries: VoiceEntry[] = osmd.Sheet.SourceMeasures[0].VerticalSourceStaffEntryContainers[0].StaffEntries[1].VoiceEntries;
+         /** The articulations of each voice entry, by name. */
+         const articulations: () => string[][] = () => voiceEntries.map((voiceEntry: VoiceEntry) =>
+            voiceEntry.Articulations.map((articulation) => ArticulationEnum[articulation.articulationEnum]));
+         /** The lowest point of the lower staff's bottom line, in units (y points down): one fermata lower per fermata drawn. */
+         const lowestPoint: () => number = () => Math.max(...osmd.GraphicSheet.MusicPages[0].MusicSystems[0].StaffLines[1].BottomLine);
+         expect(articulations(), "first layout").to.deep.equal([["invertedfermata"], []]);
+         const firstLowestPoint: number = lowestPoint();
+         osmd.updateGraphic();
+         osmd.render();
+         expect(articulations(), "after updateGraphic()").to.deep.equal([["invertedfermata"], []]);
+         expect(lowestPoint(), "the lowest point of the bottom line after updateGraphic()").to.equal(firstLowestPoint);
+         done();
+      }).catch(done);
+   });
+
    // A fingering label is stacked in the pitch order of its note, which is not the order the
    // fingerings were read in, so the label's index in FingeringEntries says nothing about which
    // note it belongs to. GraphicalLabel.sourceNote carries that link, letting a consumer find the
@@ -1404,6 +1430,41 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
+
+   // A staff becomes a tablature staff at its TAB clef (Staff.isTab), and stays one for the rest of the score (#1592). Before
+   // fix, a new calculation started with the previous one's Staff.isTab: after updateGraphic(), the measures before the TAB
+   // clef were tablature measures too.
+   it("Keeps the measures before a TAB clef standard measures after updateGraphic()", (done: Mocha.Done) => {
+      const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
+      <score-partwise version="4.0">
+         <part-list><score-part id="P1"><part-name>Guitar</part-name></score-part></part-list>
+         <part id="P1">
+            <measure number="1">
+               <attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>
+                  <clef><sign>G</sign><line>2</line></clef></attributes>
+               <note><pitch><step>C</step><octave>5</octave></pitch><duration>4</duration><type>whole</type></note>
+            </measure>
+            <measure number="2">
+               <attributes><clef><sign>TAB</sign><line>5</line></clef><staff-details><staff-lines>6</staff-lines></staff-details></attributes>
+               <note><pitch><step>C</step><octave>5</octave></pitch><duration>4</duration><type>whole</type>
+                  <notations><technical><string>1</string><fret>8</fret></technical></notations></note>
+            </measure>
+         </part>
+      </score-partwise>`;
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      osmd.load(xml).then(() => {
+         osmd.render();
+         for (const layout of ["first layout", "after updateGraphic()"]) {
+            if (layout !== "first layout") {
+               osmd.updateGraphic();
+               osmd.render();
+            }
+            expect(osmd.GraphicSheet.findGraphicalMeasure(0, 0).isTabMeasure, `${layout}: measure 1 is a standard measure`).to.equal(false);
+            expect(osmd.GraphicSheet.findGraphicalMeasure(1, 0).isTabMeasure, `${layout}: measure 2 is a tablature measure`).to.equal(true);
+         }
+         done();
+      }).catch(done);
+   });
 
    // Non-regression test for grace notes in tablature staves (#1721). A tab measure converted its grace notes to
    // Vexflow TabNotes, but then dropped them: like in classical measures they are no tickables of the Vexflow voice,
