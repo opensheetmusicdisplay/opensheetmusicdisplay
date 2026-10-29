@@ -1349,7 +1349,7 @@ export class VexFlowConverter {
         let timeSpec: string;
         switch (rhythm.SymbolEnum) {
             case RhythmSymbolEnum.NONE:
-                timeSpec = rhythm.Rhythm.Numerator + "/" + rhythm.Rhythm.Denominator;
+                timeSpec = (rhythm.NumeratorGroups?.join("+") ?? rhythm.Rhythm.Numerator) + "/" + rhythm.Rhythm.Denominator;
                 break;
             case RhythmSymbolEnum.COMMON:
                 timeSpec = "C";
