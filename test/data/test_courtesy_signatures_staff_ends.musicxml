@@ -44,12 +44,17 @@
         <key>
           <fifths>2</fifths>
         </key>
+        <time>
+          <beats>3</beats>
+          <beat-type>4</beat-type>
+        </time>
       </attributes>
       <note>
         <pitch><step>F</step><alter>1</alter><octave>5</octave></pitch>
-        <duration>8</duration>
+        <duration>6</duration>
         <voice>1</voice>
-        <type>whole</type>
+        <type>half</type>
+        <dot/>
       </note>
     </measure>
     <measure number="3">
@@ -110,12 +115,17 @@
         <key>
           <fifths>4</fifths>
         </key>
+        <time>
+          <beats>3</beats>
+          <beat-type>4</beat-type>
+        </time>
       </attributes>
       <note>
         <pitch><step>G</step><alter>1</alter><octave>5</octave></pitch>
-        <duration>8</duration>
+        <duration>6</duration>
         <voice>1</voice>
-        <type>whole</type>
+        <type>half</type>
+        <dot/>
       </note>
     </measure>
     <measure number="3">
@@ -172,11 +182,18 @@
     </measure>
     <measure number="2">
       <print new-system="yes"/>
+      <attributes>
+        <time>
+          <beats>3</beats>
+          <beat-type>4</beat-type>
+        </time>
+      </attributes>
       <note>
         <pitch><step>C</step><alter>1</alter><octave>5</octave></pitch>
-        <duration>8</duration>
+        <duration>6</duration>
         <voice>1</voice>
-        <type>whole</type>
+        <type>half</type>
+        <dot/>
         <accidental>sharp</accidental>
       </note>
     </measure>

@@ -724,7 +724,8 @@ export class MusicSystemBuilder {
 
     /**
      * Check if an extra Instruction [[Measure]] is needed: courtesy key or rhythm instructions at the end of the system for a change
-     * at the start of the next system. If so, every staff of the system gets one, so that all staves end at the same x.
+     * at the start of the next system. If so, every staff of the system gets one, so that all staves end at the same x,
+     * and the courtesy time signatures align.
      * @param measures the measures that start the next system
      */
     protected checkAndCreateExtraInstructionMeasure(measures: GraphicalMeasure[]): void {
@@ -773,6 +774,9 @@ export class MusicSystemBuilder {
             for (const measure of extraMeasures) {
                 measure.beginInstructionsWidth = beginInstructionsWidth;
             }
+            // Their time signatures align, like those of a regular measure column (see addBeginInstructions()), e.g. after keys of different widths.
+            const staves: any[] = extraMeasures.map((measure: GraphicalMeasure) => (measure as any).getVFStave()); // VF.Stave, as VexFlowMeasure
+            staves[0].formatBegModifiers(staves);
             this.currentSystemParams.systemMeasures.push({
                 beginLine: SystemLinesEnum.None,
                 endLine: SystemLinesEnum.None,
