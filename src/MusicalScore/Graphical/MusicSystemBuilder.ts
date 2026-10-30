@@ -723,8 +723,9 @@ export class MusicSystemBuilder {
     }
 
     /**
-     * Check if an extra Instruction [[Measure]] is needed.
-     * @param measures
+     * Check if an extra Instruction [[Measure]] is needed: courtesy key or rhythm instructions at the end of the system for a change
+     * at the start of the next system. If so, every staff of the system gets one, so that all staves end at the same x.
+     * @param measures the measures that start the next system
      */
     protected checkAndCreateExtraInstructionMeasure(measures: GraphicalMeasure[]): void {
         const firstStaffEntries: SourceStaffEntry[] = measures[0].parentSourceMeasure.FirstInstructionsStaffEntries;
@@ -757,6 +758,21 @@ export class MusicSystemBuilder {
             }
         }
         if (maxMeasureWidth > 0) {
+            // The extra measures form a measure column at the end of the system, so that all its staves end at the same x:
+            //   a staff without a key or rhythm change gets an empty extra measure, and as in a regular measure column
+            //   (see setMeasureWidth()), all of them get the widest begin instructions width, from which stretchMusicSystem() sets their widths.
+            const staffLines: StaffLine[] = this.currentSystemParams.currentSystem.StaffLines;
+            const extraMeasures: GraphicalMeasure[] = [];
+            for (let visStaffIdx: number = 0, len: number = staffLines.length; visStaffIdx < len; ++visStaffIdx) {
+                if (!CollectionUtil.last(staffLines[visStaffIdx].Measures)?.IsExtraGraphicalMeasure) {
+                    this.addExtraInstructionMeasure(visStaffIdx, undefined, undefined);
+                }
+                extraMeasures.push(CollectionUtil.last(staffLines[visStaffIdx].Measures));
+            }
+            const beginInstructionsWidth: number = Math.max(...extraMeasures.map((measure: GraphicalMeasure) => measure.beginInstructionsWidth));
+            for (const measure of extraMeasures) {
+                measure.beginInstructionsWidth = beginInstructionsWidth;
+            }
             this.currentSystemParams.systemMeasures.push({
                 beginLine: SystemLinesEnum.None,
                 endLine: SystemLinesEnum.None,

@@ -689,6 +689,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestPartGroupNames = sampleFilename.includes("test_group_name");
     // a courtesy key signature at a system break in the alto and bass clef, see test_key_signature_courtesy_clefs: systems as in the file
     const isTestKeySignatureCourtesyClefs = sampleFilename.startsWith("test_key_signature_courtesy_clefs");
+    // courtesy key and time signatures of different widths at system breaks, see test_courtesy_signatures_staff_ends: systems as in the file
+    const isTestCourtesySignaturesStaffEnds = sampleFilename.startsWith("test_courtesy_signatures_staff_ends");
     const isTestTabs4Strings = sampleFilename.includes("test_tabs_4_strings");
     const isTestFingeringLeft = sampleFilename.includes("test_fingering_left");
     const isTestArticulationAboveNote = sampleFilename.includes("test_accent_above_except_piano_left_hand");
@@ -788,7 +790,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         isTestPartAbbreviationsPartlyMissing ||
         isTestPartAbbreviationSingleStaff ||
         isTestPartGroupNames ||
-        isTestKeySignatureCourtesyClefs) {
+        isTestKeySignatureCourtesyClefs ||
+        isTestCourtesySignaturesStaffEnds) {
         osmdInstance.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
     }
     if (isTestPartAbbreviationSingleStaff) {
