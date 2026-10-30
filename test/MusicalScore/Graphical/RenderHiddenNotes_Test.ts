@@ -170,7 +170,8 @@ describe("Drawing hidden notes (EngravingRules.RenderHiddenNotes)", (): void => 
             const visible: Set<string> = new Set<string>();
             const hidden: Set<string> = new Set<string>();
             const add: (colors: Set<string>, color: string) => void = (colors: Set<string>, color: string): void => {
-                colors.add(color === "black" ? "#000000" : color?.toUpperCase()); // "black": an element drawn without a style
+                // "black": an element drawn without a style; null: no fill attribute, the default black isn't written
+                colors.add(color === null || color === "black" ? "#000000" : color.toUpperCase());
             };
             for (const staffEntry of osmd.GraphicSheet.findGraphicalMeasure(0, 0).staffEntries) {
                 for (const gve of staffEntry.graphicalVoiceEntries) {

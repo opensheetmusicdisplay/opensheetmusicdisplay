@@ -30,6 +30,32 @@ const attrNamesToIgnoreMap = {
   Vex.Merge(attrNamesToIgnoreMap.path, fontAttrNamesToIgnore);
 }
 
+// VexFlowPatch: the SVG defaults of the style attributes written on every shape, the values a shape has without them.
+//   An attribute with its default value is left out (see isSvgDefault()), and the root <svg> sets these values as its
+//   style: so the shapes keep them when a page's CSS sets one of these properties for the SVG or a container around it,
+//   e.g. `svg { fill: currentColor }`, which the shapes' own attributes overrode before.
+const svgDefaultStyle = {
+  'fill': '#000000',
+  'stroke': 'none',
+  'stroke-width': '1',
+  'stroke-dasharray': 'none',
+};
+const svgDefaultStyleText = Object.keys(svgDefaultStyle).map(name => name + ': ' + svgDefaultStyle[name]).join('; ');
+
+/**
+ * VexFlowPatch: Whether a style attribute only repeats its SVG default (see svgDefaultStyle), e.g. stroke-dasharray="none"
+ * on every shape, and fill="#000000" and stroke="none" on every glyph: such attributes were about a third of an SVG's
+ * attributes. A shape without the attribute inherits the same value from the root <svg>.
+ *
+ * @param {string} name The attribute's name.
+ * @param {string|number} value The attribute's value.
+ * @returns {boolean} Whether the value is the default, so that the attribute can be left out.
+ */
+function isSvgDefault(name, value) {
+  const defaultValue = svgDefaultStyle[name];
+  return defaultValue !== undefined && String(value) === defaultValue;
+}
+
 // VexFlowPatch: the shortest decimal endings of 0 to 99 hundredths ('', '.05', '.5', '.54', ...), for roundCoordinate()
 const hundredthsTexts = [];
 for (let hundredths = 0; hundredths < 100; hundredths++) {
@@ -65,12 +91,17 @@ export class SVGContext {
     // Create the SVG in the SVG namespace:
     this.svgNS = 'http://www.w3.org/2000/svg';
     const svg = this.create('svg');
+    // VexFlowPatch: the SVG defaults that the shapes' style attributes leave out (see isSvgDefault())
+    svg.setAttribute('style', svgDefaultStyleText);
     // Add it to the canvas:
     this.element.appendChild(svg);
 
     // Point to it:
     this.svg = svg;
     this.groups = [this.svg]; // Create the group stack
+    // VexFlowPatch: for each group of the stack, whether its pointer events are on the bounding box, its own or inherited:
+    //   pointer-events is inherited, so it's only written on the outermost group with attrs.pointerBBox (see openGroup())
+    this.groupsPointerBBox = [false];
     this.parent = this.svg;
     // VexFlowPatch: whether a group opened with attrs.mergeIntoChild is merged into its only element, see openGroup().
     //   Set by OSMD (EngravingRules.SVGMergeSingleChildGroups).
@@ -156,9 +187,12 @@ export class SVGContext {
     if (cls) group.setAttribute('class', Vex.Prefix(cls));
     if (id) group.setAttribute('id', Vex.Prefix(id));
 
-    if (attrs && attrs.pointerBBox) {
+    // VexFlowPatch: not inside a group that has it, e.g. a chord's noteheads in their note's group: inherited
+    const inheritedPointerBBox = this.groupsPointerBBox[this.groupsPointerBBox.length - 1];
+    if (attrs && attrs.pointerBBox && !inheritedPointerBBox) {
       group.setAttribute('pointer-events', 'bounding-box');
     }
+    this.groupsPointerBBox.push(inheritedPointerBBox || Boolean(attrs && attrs.pointerBBox));
     return group;
   }
 
@@ -191,13 +225,14 @@ export class SVGContext {
           // e.g. a beamed note's stem: the path's id ends with -stem0, the group's with -stem (GraphicalNote.getStemSVG())
           child.setAttribute('id', Vex.Prefix(pending.id));
         }
-        if (pending.attrs.pointerBBox) {
-          child.setAttribute('pointer-events', 'bounding-box');
+        if (pending.attrs.pointerBBox && !this.groupsPointerBBox[this.groupsPointerBBox.length - 1]) {
+          child.setAttribute('pointer-events', 'bounding-box'); // unless inherited, e.g. from the note's group
         }
       }
       return;
     }
     this.groups.pop();
+    this.groupsPointerBBox.pop();
     this.parent = this.groups[this.groups.length - 1];
   }
 
@@ -399,14 +434,16 @@ export class SVGContext {
     // Every drawn SVG element passes through here, and setAttributeNS is slower in browsers (it validates the qualified
     // name for a namespace). For these unprefixed names on new SVG elements (no lowercasing outside the HTML namespace)
     // both create the same attributes in the same order, so the SVG output is unchanged.
+    // Leaves out the style attributes that only repeat the SVG default (see isSvgDefault()).
     const attrNamesToIgnore = attrNamesToIgnoreMap[element.nodeName];
     const propertyNames = Object.keys(attributes);
     for (let i = 0; i < propertyNames.length; i++) {
       const propertyName = propertyNames[i];
-      if (attrNamesToIgnore && attrNamesToIgnore[propertyName]) {
+      const value = attributes[propertyName];
+      if ((attrNamesToIgnore && attrNamesToIgnore[propertyName]) || isSvgDefault(propertyName, value)) {
         continue;
       }
-      element.setAttribute(propertyName, attributes[propertyName]);
+      element.setAttribute(propertyName, value);
     }
 
     return element;
@@ -710,7 +747,7 @@ export class SVGContext {
   // path as "d", in the order that copying them into a new object first gave (Vex.Merge() into {}, then assigning the
   // replacements and "d", then applyAttributes()): the for...in order of the context's attributes (like Vex.Merge()),
   // followed by the replaced attributes and "d" that the context's attributes don't have. Skips the attributes that
-  // applyAttributes() ignores for paths.
+  // applyAttributes() ignores for paths, and those with their SVG default value (see isSvgDefault()).
   setPathAttributes(path, name1, value1, name2, value2) {
     const attrNamesToIgnore = attrNamesToIgnoreMap.path;
     const attributes = this.attributes;
@@ -729,14 +766,14 @@ export class SVGContext {
         hasD = true;
         value = this.path;
       }
-      if (!attrNamesToIgnore[name]) {
+      if (!attrNamesToIgnore[name] && !isSvgDefault(name, value)) {
         path.setAttribute(name, value);
       }
     }
-    if (!has1) {
+    if (!has1 && !isSvgDefault(name1, value1)) {
       path.setAttribute(name1, value1);
     }
-    if (name2 !== undefined && !has2) {
+    if (name2 !== undefined && !has2 && !isSvgDefault(name2, value2)) {
       path.setAttribute(name2, value2);
     }
     if (!hasD) {

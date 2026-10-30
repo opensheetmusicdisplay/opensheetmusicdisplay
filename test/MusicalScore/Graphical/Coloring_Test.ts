@@ -58,12 +58,13 @@ describe("Coloring", (): void => {
     }
 
     /**
-     * A color as drawn in the SVG, in upper case: "black" for an element drawn without a style.
+     * A color as drawn in the SVG, in upper case: "black" for an element drawn without a style, and no attribute (null) for
+     * the default fill, black, which isn't written (see the VexFlowPatch's SVGContext). A stem always has a stroke attribute.
      * @param color the fill or stroke attribute
      * @returns the color as "#RRGGBB" or "#RRGGBBAA"
      */
     function drawnColor(color: string): string {
-        return color === "black" ? "#000000" : color?.toUpperCase();
+        return color === null || color === "black" ? "#000000" : color.toUpperCase();
     }
 
     /**

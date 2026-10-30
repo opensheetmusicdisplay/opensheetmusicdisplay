@@ -90,7 +90,7 @@ describe("VexFlow GraphicalNote", () => {
         expect(curves.every(curve => curve.getAttribute("stroke") === "#ff0000"), "curves stroked in the color").to.equal(true);
         expect(bend.filter(shape => shape.getAttribute("fill") !== "none").every(shape => shape.getAttribute("fill") === "#ff0000"),
             "labels and arrows filled with the color").to.equal(true);
-        expect(otherNote.getNoteheadSVGs()[0].getAttribute("fill"), "another note").to.equal("#000000");
+        expect(getComputedStyle(otherNote.getNoteheadSVGs()[0]).fill, "another note").to.equal("rgb(0, 0, 0)");
         div.remove();
     });
 
@@ -127,10 +127,11 @@ describe("VexFlow GraphicalNote", () => {
         div.remove();
     });
 
-    /** The colors of a glissando's shapes: the stroke of each line, then the fill of each label ("sl." in a TAB staff). */
+    /** The colors of a glissando's shapes: the stroke of each line, then the fill of each label ("sl." in a TAB staff),
+     *  which has no fill attribute in the default black. */
     function glissandoColors(glissando: Element): string[] {
         return [...Array.from(glissando.querySelectorAll("path")).map(line => line.getAttribute("stroke")),
-            ...Array.from(glissando.querySelectorAll("text")).map(label => label.getAttribute("fill"))];
+            ...Array.from(glissando.querySelectorAll("text")).map(label => label.getAttribute("fill") ?? "#000000")];
     }
 
     it("Colors the slides starting at a note with setColor() and applyToGlissandi, in a standard and a TAB staff", async () => {
@@ -458,6 +459,45 @@ describe("VexFlow GraphicalNote", () => {
         expect([flagged.getNoteheadSVGs()[0].querySelector("path").getAttribute("fill"), flagged.getFlagSVG().querySelector("path").getAttribute("fill"),
                 beamed.getBeamSVGs()[0].querySelector("path").getAttribute("fill")],
                "colored: the head and flag of the eighth with a flag, and the beam").to.deep.equal(["#FF0000", "#FF0000", "#00FF00"]);
+        div.remove();
+    });
+
+    /** The computed fill, stroke, stroke-width and stroke-dasharray of an element, e.g. ["rgb(0, 0, 0)", "none", "0.3px", "none"] */
+    function strokeAndFill(element: Element): string[] {
+        const style: CSSStyleDeclaration = getComputedStyle(element);
+        return [style.fill, style.stroke, style.strokeWidth, style.strokeDasharray];
+    }
+
+    it("Writes no style attribute with its SVG default: the root svg sets them, also against a page's CSS for the svg", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        div.id = "svgDefaultsTest";
+        const pageCss: HTMLStyleElement = document.createElement("style");
+        pageCss.textContent = "#svgDefaultsTest, #svgDefaultsTest svg { fill: blue; stroke: blue; stroke-width: 5px; stroke-dasharray: 2px; }";
+        document.head.appendChild(pageCss);
+        const osmd: OpenSheetMusicDisplay = await renderNoteParts(div);
+        expect(div.querySelectorAll("[fill='#000000'], [stroke='none'], [stroke-width='1'], [stroke-dasharray='none']").length,
+               "attributes with the SVG default").to.equal(0);
+        expect(div.querySelectorAll("[pointer-events] [pointer-events]").length, "pointer-events inside a group that has it").to.equal(0);
+        const [sharp] = measureNotes(osmd, 0, 0);
+        expect(strokeAndFill(sharp.getNoteheadSVGs()[0]), "a notehead: filled black").to.deep.equal(["rgb(0, 0, 0)", "none", "0.3px", "none"]);
+        expect(strokeAndFill(sharp.getStemSVG()).slice(0, 2), "a stem: a black line").to.deep.equal(["none", "rgb(0, 0, 0)"]);
+        pageCss.remove();
+        div.remove();
+    });
+
+    it("Colors a note without its grace notes, which are drawn in its group", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = await renderMeasures(div, [
+            "<note><grace/><pitch><step>D</step><octave>5</octave></pitch><voice>1</voice><type>eighth</type></note>" +
+            "<note><pitch><step>C</step><octave>5</octave></pitch><duration>4</duration><voice>1</voice><type>whole</type></note>"], false);
+        const notes: VexFlowGraphicalNote[] = osmd.GraphicSheet.MeasureList[0][0].staffEntries[0].graphicalVoiceEntries
+            .map(voiceEntry => voiceEntry.notes[0] as VexFlowGraphicalNote);
+        const mainNote: VexFlowGraphicalNote = notes.find(note => !note.parentVoiceEntry.parentVoiceEntry.IsGrace);
+        const graceNote: VexFlowGraphicalNote = notes.find(note => note.parentVoiceEntry.parentVoiceEntry.IsGrace);
+        expect(mainNote.getSVGGElement().contains(graceNote.getSVGGElement()), "premise: the grace note in the main note's group").to.equal(true);
+        mainNote.setColor("#FF0000");
+        expect(getComputedStyle(mainNote.getNoteheadSVGs()[0]).fill, "the main note").to.equal("rgb(255, 0, 0)");
+        expect(getComputedStyle(graceNote.getNoteheadSVGs()[0]).fill, "its grace note").to.equal("rgb(0, 0, 0)");
         div.remove();
     });
 });
