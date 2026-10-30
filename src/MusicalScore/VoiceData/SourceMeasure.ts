@@ -11,7 +11,6 @@ import {MultiExpression} from "./Expressions/MultiExpression";
 import {MultiTempoExpression} from "./Expressions/MultiTempoExpression";
 import {RehearsalExpression} from "./Expressions/RehearsalExpression";
 import {AbstractNotationInstruction} from "./Instructions/AbstractNotationInstruction";
-import {ClefInstruction} from "./Instructions/ClefInstruction";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {Repetition} from "../MusicSource/Repetition";
 import {SystemLinesEnum} from "../Graphical/SystemLinesEnum";
@@ -685,15 +684,8 @@ export class SourceMeasure {
                 return false;
             }
         }
-        // check for clef instruction for next measure
-        for (const lastStaffEntry of this.lastInstructionsStaffEntries) {
-            for (let idx: number = 0, len: number = lastStaffEntry?.Instructions.length; idx < len; ++idx) {
-                const abstractNotationInstruction: AbstractNotationInstruction = lastStaffEntry.Instructions[idx];
-                if (abstractNotationInstruction instanceof ClefInstruction) {
-                    return false;
-                }
-            }
-        }
+        // a clef change at the end (for the next measure) is no reason against it: the multiple rest measure then ends
+        //   with this measure and draws the clef at its end (see MusicSheetCalculator.prepareGraphicalMusicSheet())
         // don't auto-rest pickup measures that aren't whole measure rests
         return this.Duration?.RealValue === this.ActiveTimeSignature?.RealValue;
         // if adding further checks, replace the above line with this:
