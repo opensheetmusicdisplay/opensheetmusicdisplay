@@ -28,4 +28,9 @@ describe("SVG VexFlow Backend", () => {
         expect(rectangleNode.querySelector("rect").getAttribute("fill-opacity")).to.equal("0.5");
         expect(lineNode.querySelector("path").hasAttribute("fill-opacity"), "line with a fill-opacity").to.equal(false);
     });
+
+    it("writes path coordinates with at most 2 decimals (e.g. 10.12 for 10.123456), which halves the path data", () => {
+        const lineNode: Element = backend.renderLine(new PointF2D(10.123456, 30.987654), new PointF2D(30.5, 30.0049)) as Element;
+        expect(lineNode.querySelector("path").getAttribute("d")).to.equal("M10.12 30.99L30.5 30");
+    });
 });
