@@ -182,4 +182,37 @@ describe("Multiple rest measures", () => {
         expect(clefsPerMeasure(), "RenderMultipleRestMeasures false -> true").to.deep.equal(multipleRest);
         expect(measure3Clefs(), "RenderMultipleRestMeasures false -> true").to.deep.equal([ClefEnum.F, ClefEnum.F]);
     });
+
+    /**
+     * test_multiple_rest_measures_auto_clef_change.musicxml: measures 2-7 are whole-measure rests in both parts, and the violoncello
+     * changes to the tenor clef at measure 6 and to the treble clef at measure 8. A multiple rest measure draws the clef change after
+     * its last measure at its end, before the barline, so measures 2-5 and 6-7 become multiple rest measures.
+     * Before, a rest measure before a clef change stayed a single rest measure: measures 2-4, 5, 6 and 7.
+     */
+    it("ends a generated multiple rest measure with the measure before a clef change, and draws the clef at its end", async () => {
+        await osmd.load(TestUtils.getScore("test_multiple_rest_measures_auto_clef_change.musicxml"));
+        osmd.render();
+        expect(multipleRestMeasureCounts(), "measures per multiple rest measure, for measures 1-8").to.deep.equal([0, 4, 0, 0, 0, 2, 0, 0]);
+
+        // the violoncello alone, so that each measure drawn is one of its measures
+        osmd.Sheet.Instruments[0].Visible = false;
+        osmd.updateGraphic();
+        osmd.render();
+        // [measure number, number of clefs drawn] per drawn measure, a multiple rest measure counting as its first measure
+        const clefsPerMeasure: [string, number][] = Array.from(container.querySelectorAll(".vf-measure"))
+            .map((measure): [string, number] => [measure.id, measure.querySelectorAll(".vf-clef").length]);
+        expect(clefsPerMeasure, "the bass clef at the start, the tenor and the treble clef at the ends of the multiple rest measures")
+            .to.deep.equal([["1", 1], ["2", 1], ["6", 1], ["8", 0]]);
+        // the clef that measure 8 begins with (drawn there at a system start), and the clef its note is drawn in
+        const measure8: GraphicalMeasure = osmd.GraphicSheet.MeasureList[7][1];
+        const note: VexFlowGraphicalNote = measure8.staffEntries[0].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote;
+        expect([measure8.InitiallyActiveClef.ClefType, note.Clef().ClefType], "measure 8").to.deep.equal([ClefEnum.G, ClefEnum.G]);
+
+        // the flute alone: the clef changes of the hidden violoncello aren't drawn, so they don't end its multiple rest measure
+        osmd.Sheet.Instruments[0].Visible = true;
+        osmd.Sheet.Instruments[1].Visible = false;
+        osmd.updateGraphic();
+        osmd.render();
+        expect(multipleRestMeasureCounts(), "flute alone").to.deep.equal([0, 6, 0, 0, 0, 0, 0, 0]);
+    });
 });

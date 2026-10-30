@@ -257,7 +257,10 @@ export abstract class MusicSheetCalculator {
                 const canBeReduced: boolean = !sourceMeasure.isReducedToMultiRest && sourceMeasure.canBeReducedToMultiRest();
                 // A multirest only shows the key and time signature its first measure starts with,
                 //   so a measure that starts with a key or time change ends the sequence before it (and can begin the next one).
-                if (multiRestCount > 0 && (!canBeReduced || sourceMeasure.hasBeginInstructions())) {
+                //   It draws the clef change its last measure ends with (see MusicSystemBuilder.getEndInstructionsStaffEntry()),
+                //   before its barline, so a measure that ends with a clef change ends the sequence after it.
+                if (multiRestCount > 0 && (!canBeReduced || sourceMeasure.hasBeginInstructions() ||
+                    this.endsWithClefChangeInVisibleStaff(musicSheet.SourceMeasures[idx - 1]))) {
                     if (multiRestCount > 1) { //Actual multirest sequence just happened. Process
                         beginMultiRestMeasure.multipleRestMeasures = multiRestCount;
                         //regen graphical measures for this source measure
@@ -315,6 +318,14 @@ export abstract class MusicSheetCalculator {
         this.handleStaffEntries(staffIsPercussionArray);
         this.calculateVerticalContainersList();
         this.setIndicesToVerticalGraphicalContainers();
+    }
+
+    /** Whether the measure ends with a clef change (for the next measure, see InstrumentReader) in a staff that is shown. */
+    private endsWithClefChangeInVisibleStaff(sourceMeasure: SourceMeasure): boolean {
+        const musicSheet: MusicSheet = this.graphicalMusicSheet.ParentMusicSheet;
+        return sourceMeasure.LastInstructionsStaffEntries.some((staffEntry: SourceStaffEntry, staffIndex: number): boolean =>
+            staffEntry?.Instructions.some((instruction: AbstractNotationInstruction): boolean => instruction instanceof ClefInstruction) &&
+            musicSheet.getStaffFromIndex(staffIndex).isVisible());
     }
 
     /**
