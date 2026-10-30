@@ -30,6 +30,34 @@ const attrNamesToIgnoreMap = {
   Vex.Merge(attrNamesToIgnoreMap.path, fontAttrNamesToIgnore);
 }
 
+// VexFlowPatch: the shortest decimal endings of 0 to 99 hundredths ('', '.05', '.5', '.54', ...), for roundCoordinate()
+const hundredthsTexts = [];
+for (let hundredths = 0; hundredths < 100; hundredths++) {
+  hundredthsTexts.push(hundredths === 0 ? '' :
+    hundredths % 10 === 0 ? '.' + hundredths / 10 : '.' + (hundredths < 10 ? '0' + hundredths : hundredths));
+}
+
+/**
+ * VexFlowPatch: Rounds a coordinate of path data to 2 decimals, e.g. 633.5434477499999 to "633.54". VexFlow wrote the
+ * coordinates as JavaScript prints doubles (14 characters on average), so rounded, the path data takes about half the
+ * memory and the file size, and the drawing moves by at most 0.005 px at zoom 1.
+ * The text is the same as String(Math.round(value * 100) / 100), but formatted from integers, the whole part and the
+ * hundredths: converting the rounded double to a string takes about 4 times as long.
+ *
+ * @param {number} value The coordinate.
+ * @returns {string} The coordinate rounded to 2 decimals, without trailing zeros ('NaN' for NaN, 'Infinity' for Infinity).
+ */
+function roundCoordinate(value) {
+  const hundredths = Math.round(value * 100);
+  const negative = hundredths < 0;
+  const absolute = negative ? -hundredths : hundredths;
+  if (!(absolute < 2147483648)) {
+    return '' + hundredths / 100; // NaN, Infinity, and values too big for the integer operations below
+  }
+  const whole = (absolute / 100) | 0;
+  return (negative ? '-' : '') + whole + hundredthsTexts[absolute - whole * 100];
+}
+
 export class SVGContext {
   constructor(element) {
     // element is the parent DOM object
@@ -401,6 +429,20 @@ export class SVGContext {
 
   // ## Paths:
 
+  // VexFlowPatch: the current path is collected in parts (pathParts) and joined when it is read. Appending to one string
+  // (this.path +=) made a chain of small strings (a rope) per path, which jsdom keeps as the attribute value: about 5 times
+  // the memory of the path data itself.
+  get path() {
+    if (this.pathParts.length !== 1) {
+      this.pathParts = [this.pathParts.join('')];
+    }
+    return this.pathParts[0];
+  }
+
+  set path(value) {
+    this.pathParts = [value];
+  }
+
   beginPath() {
     this.path = '';
     this.pen.x = NaN;
@@ -410,38 +452,38 @@ export class SVGContext {
   }
 
   moveTo(x, y) {
-    this.path += 'M' + x + ' ' + y;
+    this.pathParts.push('M' + roundCoordinate(x) + ' ' + roundCoordinate(y));
     this.pen.x = x;
     this.pen.y = y;
     return this;
   }
 
   lineTo(x, y) {
-    this.path += 'L' + x + ' ' + y;
+    this.pathParts.push('L' + roundCoordinate(x) + ' ' + roundCoordinate(y));
     this.pen.x = x;
     this.pen.y = y;
     return this;
   }
 
   bezierCurveTo(x1, y1, x2, y2, x, y) {
-    this.path += 'C' +
-      x1 + ' ' +
-      y1 + ',' +
-      x2 + ' ' +
-      y2 + ',' +
-      x + ' ' +
-      y;
+    this.pathParts.push('C' +
+      roundCoordinate(x1) + ' ' +
+      roundCoordinate(y1) + ',' +
+      roundCoordinate(x2) + ' ' +
+      roundCoordinate(y2) + ',' +
+      roundCoordinate(x) + ' ' +
+      roundCoordinate(y));
     this.pen.x = x;
     this.pen.y = y;
     return this;
   }
 
   quadraticCurveTo(x1, y1, x, y) {
-    this.path += 'Q' +
-      x1 + ' ' +
-      y1 + ',' +
-      x + ' ' +
-      y;
+    this.pathParts.push('Q' +
+      roundCoordinate(x1) + ' ' +
+      roundCoordinate(y1) + ',' +
+      roundCoordinate(x) + ' ' +
+      roundCoordinate(y));
     this.pen.x = x;
     this.pen.y = y;
     return this;
@@ -500,16 +542,16 @@ export class SVGContext {
       largeArcFlag = 1;
     }
 
-    this.path += 'M' + x1 + ' ' + y1 + ' A' +
-      radius + ' ' + radius + ' 0 ' + largeArcFlag + ' ' + sweepFlag + ' ' +
-      x2 + ' ' + y2;
+    this.pathParts.push('M' + roundCoordinate(x1) + ' ' + roundCoordinate(y1) + ' A' +
+      roundCoordinate(radius) + ' ' + roundCoordinate(radius) + ' 0 ' + largeArcFlag + ' ' + sweepFlag + ' ' +
+      roundCoordinate(x2) + ' ' + roundCoordinate(y2));
     if (!isNaN(this.pen.x) && !isNaN(this.pen.y)) {
       this.peth += 'M' + this.pen.x + ' ' + this.pen.y;
     }
   }
 
   closePath() {
-    this.path += 'Z';
+    this.pathParts.push('Z');
 
     return this;
   }
