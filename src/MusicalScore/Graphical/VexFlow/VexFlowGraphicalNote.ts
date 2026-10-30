@@ -394,11 +394,15 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     }
 
     /** Colors the paths of a group, e.g. of the accidentals, or a single shape, e.g. a note head, a beam, a TAB note or a
-     *  glissando: its fill, or its stroke if it's only a line, like the curve of a bend or the line of a slide. */
+     *  glissando: its fill, or its stroke if it's only a line, like the curve of a bend or the line of a slide.
+     *  A group in the group keeps its colors, e.g. a grace note in its main note's modifiers (it has its own setColor()):
+     *  its shapes would take a fill set on the group, as they leave out the default black (see the VexFlowPatch's SVGContext). */
     private static colorShapes(element: Element, color: string): void {
         if (element.children.length > 0) {
             for (const path of element.children) {
-                path.setAttribute("fill", color);
+                if (path.tagName !== "g") {
+                    path.setAttribute("fill", color);
+                }
             }
         } else if (element.getAttribute("fill") === "none") {
             element.setAttribute("stroke", color);
