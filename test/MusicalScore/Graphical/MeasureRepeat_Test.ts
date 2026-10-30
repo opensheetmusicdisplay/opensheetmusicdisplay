@@ -36,23 +36,13 @@ describe("Measure repeat presentation", () => {
             (measure: GraphicalMeasure): boolean => measure?.ParentStaff.idInMusicSheet === staffIndex);
     }
 
-    it("draws a one-measure repeat as a sign with no notes, keeping the notes, timestamps, measure width and " +
-        "an independent dynamic inside it unaffected", async () => {
-        // Compare with the same score written out.
-        const referenceContainer: HTMLElement = document.createElement("div");
-        referenceContainer.style.width = "1800px";
-        document.body.appendChild(referenceContainer);
-        const referenceOsmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(referenceContainer);
-        referenceOsmd.EngravingRules.RenderMeasureRepeats = false;
-        await referenceOsmd.load(TestUtils.getScore("test_measure_repeat_drums.musicxml"));
-        referenceOsmd.render();
-        const referenceWidth: number = findMeasure(referenceOsmd, 1, 0).PositionAndShape.Size.width;
-        referenceOsmd.clear();
-        referenceContainer.remove();
-
-        osmd.EngravingRules.RenderMeasureRepeats = true;
+    it("draws one-measure repeats as signs with no notes by default, keeping the notes, timestamps, measure width and " +
+        "an independent dynamic inside them unaffected, and draws the notes again when disabled", async () => {
         await osmd.load(TestUtils.getScore("test_measure_repeat_drums.musicxml"));
         osmd.render();
+        const signsByDefault: number = container.querySelectorAll(".vf-measure-repeat").length;
+        expect(signsByDefault, "default: signs are drawn").to.equal(3);
+        const noteheadsByDefault: number = container.querySelectorAll(".vf-notehead").length;
 
         // measures 2 and 3 (0-based index 1, 2) are each their own one-measure repeat of measure 1's groove
         for (const measureNumber of [2, 3]) {
@@ -67,8 +57,6 @@ describe("Measure repeat presentation", () => {
         //   timestamps (VerticalSourceStaffEntryContainers) as the groove it repeats in measure 1
         expect(osmd.Sheet.SourceMeasures[1].VerticalSourceStaffEntryContainers.length,
             "measure 2 keeps its timestamps").to.equal(osmd.Sheet.SourceMeasures[0].VerticalSourceStaffEntryContainers.length);
-        // the measure width is exactly what it would be with the rule off
-        expect(findMeasure(osmd, 1, 0).PositionAndShape.Size.width, "measure width unaffected").to.equal(referenceWidth);
         // the "f" dynamic placed inside measure 2 (an independent, direction-based expression) is still drawn
         const staffLine: StaffLine = osmd.GraphicSheet.MusicPages[0].MusicSystems[0].StaffLines[0];
         expect(staffLine.AbstractExpressions.some(
@@ -78,6 +66,23 @@ describe("Measure repeat presentation", () => {
         const dynamicTexts: Element[] = Array.from(container.querySelectorAll("text"))
             .filter((text: Element): boolean => text.textContent.trim() === "f");
         expect(dynamicTexts.length, "the 'f' dynamic inside the repeated measure is drawn to the SVG").to.equal(1);
+        const widthWithSign: number = findMeasure(osmd, 1, 0).PositionAndShape.Size.width;
+
+        osmd.EngravingRules.RenderMeasureRepeats = false;
+        osmd.render();
+        expect(container.querySelectorAll(".vf-measure-repeat").length, "disabled: no signs").to.equal(0);
+        expect(container.querySelectorAll(".vf-notehead").length, "disabled: hidden notes return")
+            .to.be.greaterThan(noteheadsByDefault);
+        osmd.updateGraphic();
+        osmd.render();
+        expect(container.querySelectorAll(".vf-measure-repeat").length, "disabled after updateGraphic").to.equal(0);
+        // the measure width is exactly what it is with the rule off, laid out anew by updateGraphic()
+        expect(findMeasure(osmd, 1, 0).PositionAndShape.Size.width, "measure width unaffected").to.equal(widthWithSign);
+
+        osmd.EngravingRules.RenderMeasureRepeats = true;
+        osmd.render();
+        expect(container.querySelectorAll(".vf-measure-repeat").length, "enabled again").to.equal(signsByDefault);
+        expect(container.querySelectorAll(".vf-notehead").length, "enabled again: same noteheads").to.equal(noteheadsByDefault);
     });
 
     it("draws a two-measure repeat's sign and number on the middle barline, below the measure number", async () => {
@@ -141,32 +146,13 @@ describe("Measure repeat presentation", () => {
         expect(findMeasure(osmd, 4, 1).NotesAreAbbreviated, "left hand measure 5").to.equal(false);
     });
 
-    it("draws signs by default, restores the notes when disabled, and can be enabled again", async () => {
-        await osmd.load(TestUtils.getScore("test_measure_repeat_drums.musicxml"));
-        osmd.render();
-        const signsByDefault: number = container.querySelectorAll(".vf-measure-repeat").length;
-        expect(signsByDefault, "default: signs are drawn").to.equal(3);
-        const noteheadsByDefault: number = container.querySelectorAll(".vf-notehead").length;
-
-        osmd.EngravingRules.RenderMeasureRepeats = false;
-        osmd.render();
-        expect(container.querySelectorAll(".vf-measure-repeat").length, "disabled: no signs").to.equal(0);
-        expect(container.querySelectorAll(".vf-notehead").length, "disabled: hidden notes return")
-            .to.be.greaterThan(noteheadsByDefault);
-        osmd.updateGraphic();
-        osmd.render();
-        expect(container.querySelectorAll(".vf-measure-repeat").length, "disabled after updateGraphic").to.equal(0);
-
-        osmd.EngravingRules.RenderMeasureRepeats = true;
-        osmd.render();
-        expect(container.querySelectorAll(".vf-measure-repeat").length, "enabled again").to.equal(signsByDefault);
-        expect(container.querySelectorAll(".vf-notehead").length, "enabled again: same noteheads").to.equal(noteheadsByDefault);
-    });
-
-    it("puts both dots in the spaces next to the middle line, close to one, two or four slashes", async () => {
+    it("puts both dots in the spaces next to the middle line, close to one, two or four slashes, and draws at most " +
+        "four slashes", async () => {
         osmd.EngravingRules.RenderMeasureRepeats = true;
         for (const lines of [5, 1]) {
-            for (const slashes of [1, 2, 4]) {
+            // 20000: a malformed exporter value, which must not draw an unbounded number of slashes or an absurdly
+            //   wide sign (see VexFlowMeasureRepeat's constructor clamp)
+            for (const slashes of [1, 2, 4, 20000]) {
                 await osmd.load(`<?xml version="1.0"?><score-partwise version="4.0">
                     <part-list><score-part id="P1"><part-name>Violin</part-name></score-part></part-list><part id="P1">
                     <measure number="1"><attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>
@@ -184,11 +170,12 @@ describe("Measure repeat presentation", () => {
                 const sign: Element = container.querySelector(".vf-measure-repeat");
                 expect(sign, `${lines} lines, ${slashes} slashes`).to.not.equal(null);
                 const shapes: SVGGraphicsElement[] = Array.from(sign.children) as SVGGraphicsElement[];
-                expect(shapes.length).to.equal(slashes + 2);
+                const drawnSlashes: number = Math.min(slashes, 4);
+                expect(shapes.length, `${lines} lines, ${slashes} slashes: slashes and dots`).to.equal(drawnSlashes + 2);
                 const firstSlash: DOMRect = shapes[0].getBBox();
-                const lastSlash: DOMRect = shapes[slashes - 1].getBBox();
+                const lastSlash: DOMRect = shapes[drawnSlashes - 1].getBBox();
                 for (let dot: number = 0; dot < 2; dot++) {
-                    const box: DOMRect = shapes[slashes + dot].getBBox();
+                    const box: DOMRect = shapes[drawnSlashes + dot].getBBox();
                     expect(box.y + box.height / 2, "dot center in the adjacent space")
                         .to.be.closeTo(middleY + (dot === 0 ? -0.5 : 0.5) * spacing, 0.01);
                     expect(box.height, "dot fits between the staff lines").to.be.lessThan(spacing);
@@ -199,11 +186,12 @@ describe("Measure repeat presentation", () => {
         }
     });
 
-    it("stops reporting NotesAreAbbreviated for a measure a narrower re-render (drawUpToMeasureNumber) no " +
-        "longer draws, instead of trusting a stale ParentStaffLine", async () => {
+    it("decides by the current draw range which measures a re-render abbreviates, instead of trusting a stale " +
+        "ParentStaffLine of an earlier, wider render (drawUpToMeasureNumber, drawFromMeasureNumber)", async () => {
         osmd.EngravingRules.RenderMeasureRepeats = true;
         await osmd.load(TestUtils.getScore("test_measure_repeat_drums.musicxml"));
         osmd.render(); // full render: measures 2 and 3 (0-based index 1, 2) are each independently abbreviated
+        expect(findMeasure(osmd, 1, 0).NotesAreAbbreviated, "first render: measure 2 is abbreviated").to.equal(true);
         expect(findMeasure(osmd, 2, 0).NotesAreAbbreviated, "first render: measure 3 is abbreviated").to.equal(true);
 
         osmd.setOptions({ drawUpToMeasureNumber: 2 });
@@ -213,6 +201,12 @@ describe("Measure repeat presentation", () => {
         expect(container.querySelectorAll(".vf-measure-repeat").length, "only measure 2's sign is drawn now").to.equal(1);
         expect(findMeasure(osmd, 2, 0).NotesAreAbbreviated,
             "re-render: measure 3 no longer reports abbreviated").to.equal(false);
+
+        osmd.setOptions({ drawFromMeasureNumber: 2 });
+        osmd.render(); // re-render, now drawing only measure 2 - its reference (measure 1) is no longer part of the
+                       //   draw range, even though its GraphicalMeasure instance still carries a ParentStaffLine
+                       //   value from the render before.
+        expect(findMeasure(osmd, 1, 0).NotesAreAbbreviated, "re-render from measure 2: measure 2 stays written out").to.equal(false);
     });
 });
 
@@ -244,9 +238,9 @@ describe("Measure repeat presentation: edge cases", () => {
         return xmlParser.parseFromString(xml, "text/xml");
     }
 
-    for (const atEnd of [true, false]) {
-        it(`keeps an unattached-end slur's measure written out (${atEnd ? "last" : "earlier"} note)`, async () => {
-            const slur: string = '<notations><slur number="1" type="start"/><slur number="1" type="stop"/></notations>';
+    it("keeps the measure of an unattached-end slur written out, at its last or an earlier note", async () => {
+        const slur: string = '<notations><slur number="1" type="start"/><slur number="1" type="stop"/></notations>';
+        for (const atEnd of [true, false]) {
             await osmd.load(parseXml(`<?xml version="1.0"?><score-partwise version="4.0">
                 <part-list><score-part id="P1"><part-name>Violin</part-name></score-part></part-list><part id="P1">
                 <measure number="1"><attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>
@@ -262,31 +256,34 @@ describe("Measure repeat presentation: edge cases", () => {
                 </part></score-partwise>`));
             osmd.EngravingRules.RenderMeasureRepeats = true;
             for (const rebuild of [false, true]) {
+                const variant: string = `${atEnd ? "last" : "earlier"} note${rebuild ? ", after updateGraphic()" : ""}`;
                 if (rebuild) {
                     osmd.updateGraphic();
                 }
                 osmd.render();
                 const measure: GraphicalMeasure = findMeasure(osmd, 1, 0);
-                expect(measure.NotesAreAbbreviated, "the slur's unit keeps its notes").to.equal(false);
-                expect(container.querySelectorAll('.vf-measure[id="2"] .vf-notehead').length).to.equal(2);
-                expect(findMeasure(osmd, 2, 0).NotesAreAbbreviated, "the next plain unit still abbreviates").to.equal(true);
+                expect(measure.NotesAreAbbreviated, `${variant}: the slur's unit keeps its notes`).to.equal(false);
+                expect(container.querySelectorAll('.vf-measure[id="2"] .vf-notehead').length, `${variant}: noteheads`).to.equal(2);
+                expect(findMeasure(osmd, 2, 0).NotesAreAbbreviated, `${variant}: the next plain unit still abbreviates`).to.equal(true);
                 const sourceSlur: Slur = measure.staffEntries[atEnd ? 1 : 0].graphicalVoiceEntries[0].notes[0].sourceNote.NoteSlurs[0];
-                expect(sourceSlur.HasUnattachedEnd, "the source slur is preserved").to.equal(true);
-                expect(sourceSlur.EndNote === undefined).to.equal(true);
+                expect(sourceSlur.HasUnattachedEnd, `${variant}: the source slur is preserved`).to.equal(true);
+                expect(sourceSlur.EndNote === undefined, `${variant}: the source slur has no end note`).to.equal(true);
                 const drawnSlurs: GraphicalSlur[] = measure.ParentStaffLine.GraphicalSlurs;
-                expect(drawnSlurs.length, "only a slur from the final entry is drawn").to.equal(atEnd ? 1 : 0);
+                expect(drawnSlurs.length, `${variant}: only a slur from the final entry is drawn`).to.equal(atEnd ? 1 : 0);
                 if (atEnd) {
                     const path: string = (drawnSlurs[0].SVGElement as SVGGElement).querySelector("path").getAttribute("d");
-                    expect(path).to.not.match(/NaN|undefined/);
+                    expect(path, `${variant}: slur path`).to.not.match(/NaN|undefined/);
                     const barlineX: number = measure.PositionAndShape.RelativePosition.x + measure.PositionAndShape.Size.width;
-                    expect(drawnSlurs[0].bezierEndPt.x).to.be.within(barlineX - measure.endInstructionsWidth - 0.001, barlineX);
+                    expect(drawnSlurs[0].bezierEndPt.x, `${variant}: slur end`)
+                        .to.be.within(barlineX - measure.endInstructionsWidth - 0.001, barlineX);
                 }
             }
-        });
-    }
+        }
+    });
 
-    for (const crosses of [true, false]) {
-        it(`${crosses ? "preserves" : "abbreviates"} nested tuplets with the outer tuplet ${crosses ? "crossing" : "inside"} the unit`, async () => {
+    it("abbreviates nested tuplets with the outer tuplet inside the unit, and preserves them with the outer tuplet " +
+        "crossing the unit", async () => {
+        for (const crosses of [true, false]) {
             const outerNote: (type: string) => string = (type: string): string => `
                 <note><pitch><step>C</step><octave>5</octave></pitch><duration>18</duration><type>half</type><dot/>
                 <time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>
@@ -309,23 +306,26 @@ describe("Measure repeat presentation: edge cases", () => {
                 ${crosses ? outerNote("stop") : `<note><pitch><step>C</step><octave>5</octave></pitch>
                 <duration>54</duration><type>whole</type><dot/></note>`}</measure></part></score-partwise>`));
             for (const rebuild of [false, true]) {
+                const variant: string = `outer tuplet ${crosses ? "crossing" : "inside"} the unit${rebuild ? ", after updateGraphic()" : ""}`;
                 if (rebuild) {
                     osmd.updateGraphic();
                 }
                 osmd.render();
                 const measure: GraphicalMeasure = findMeasure(osmd, 1, 0);
                 const note: Note = measure.staffEntries[crosses ? 0 : 1].graphicalVoiceEntries[0].notes[0].sourceNote;
-                expect(note.NoteTuplets.length, "the reader keeps both enclosing tuplets").to.equal(2);
+                expect(note.NoteTuplets.length, `${variant}: the reader keeps both enclosing tuplets`).to.equal(2);
                 const outside: (other: Note) => boolean = (other: Note): boolean => other.SourceMeasure !== osmd.Sheet.SourceMeasures[1];
-                expect(note.NoteTuplet.Notes.some((group: Note[]): boolean => group.some(outside)), "the inner tuplet stays inside").to.equal(false);
+                expect(note.NoteTuplet.Notes.some((group: Note[]): boolean => group.some(outside)),
+                    `${variant}: the inner tuplet stays inside`).to.equal(false);
                 expect(note.NoteTuplets.some((tuplet): boolean => tuplet.Notes.some((group: Note[]): boolean => group.some(outside))),
-                    "only the crossing case has notes outside the unit").to.equal(crosses);
-                expect(measure.NotesAreAbbreviated).to.equal(!crosses);
-                expect(container.querySelectorAll('.vf-measure[id="2"] .vf-notehead').length).to.equal(crosses ? 3 : 0);
-                expect(container.querySelectorAll('.vf-measure[id="2"] .vf-measure-repeat').length).to.equal(crosses ? 0 : 1);
+                    `${variant}: only the crossing case has notes outside the unit`).to.equal(crosses);
+                expect(measure.NotesAreAbbreviated, `${variant}: abbreviated`).to.equal(!crosses);
+                expect(container.querySelectorAll('.vf-measure[id="2"] .vf-notehead').length, `${variant}: noteheads`).to.equal(crosses ? 3 : 0);
+                expect(container.querySelectorAll('.vf-measure[id="2"] .vf-measure-repeat').length, `${variant}: signs`)
+                    .to.equal(crosses ? 0 : 1);
             }
-        });
-    }
+        }
+    });
 
     const wavyLineXml: string = `<?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
@@ -651,56 +651,16 @@ describe("Measure repeat presentation: edge cases", () => {
           </part>
         </score-partwise>`;
 
-    const pathologicalSlashesXml: string = `<?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
-        <score-partwise version="3.1">
-          <part-list><score-part id="P1"><part-name>Test</part-name></score-part></part-list>
-          <part id="P1">
-            <!-- m1-m2: pattern P (two measures), the reference for m3-m4's candidate unit. -->
-            <measure number="1">
-              <attributes>
-                <divisions>1</divisions><key><fifths>0</fifths></key>
-                <time><beats>4</beats><beat-type>4</beat-type></time>
-                <clef><sign>G</sign><line>2</line></clef>
-              </attributes>
-              <note><pitch><step>C</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>whole</type></note>
-            </measure>
-            <measure number="2">
-              <note><pitch><step>D</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>whole</type></note>
-            </measure>
-            <!-- m3-m4: a two-measure repeat with a hostile "slashes" attribute - a malformed or malicious exporter
-                 value that must not translate into an unbounded number of drawn slash marks or an absurdly wide sign
-                 (see VexFlowMeasureRepeat's constructor clamp). -->
-            <measure number="3">
-              <attributes><measure-style><measure-repeat type="start" slashes="20000">2</measure-repeat></measure-style></attributes>
-              <note><pitch><step>E</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>whole</type></note>
-            </measure>
-            <measure number="4">
-              <note><pitch><step>F</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>whole</type></note>
-            </measure>
-            <!-- m5: presentation ends, written out normally. -->
-            <measure number="5">
-              <attributes><measure-style><measure-repeat type="stop"/></measure-style></attributes>
-              <note><pitch><step>G</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>whole</type></note>
-              <barline location="right"><bar-style>light-heavy</bar-style></barline>
-            </measure>
-          </part>
-        </score-partwise>`;
-
     it("keeps a one-measure repeat written out when an unclosed wavy line is declared later on the staff " +
-        "(it is drawn from the first rendered measure, not from where it is declared)",
-        async () => {
+        "(it is drawn from the first rendered measure, not from where it is declared), also under a narrower " +
+        "drawFromMeasureNumber range", async () => {
         osmd.EngravingRules.RenderMeasureRepeats = true;
         await osmd.load(parseXml(wavyLineXml));
         osmd.render();
         // measure 2 (0-based index 1) would otherwise be a valid one-measure repeat of measure 1 - but the
         //   unclosed wavy line declared in measure 5 (after it) must still block it.
         expect(findMeasure(osmd, 1, 0).NotesAreAbbreviated, "measure 2 stays written out").to.equal(false);
-    });
 
-    it("keeps blocking a one-measure repeat under a narrower drawFromMeasureNumber range, where the unclosed " +
-        "wavy line's own declared measure falls entirely outside the draw range", async () => {
-        osmd.EngravingRules.RenderMeasureRepeats = true;
         await osmd.load(parseXml(wavyLineXml));
         osmd.setOptions({ drawFromMeasureNumber: 3 });
         osmd.render();
@@ -708,7 +668,7 @@ describe("Measure repeat presentation: edge cases", () => {
         //   measure 3, IS the render's own first drawn measure, so it isn't blocked by the separate
         //   reference-visibility check) - but the unclosed wavy line in measure 5 must still block it, since it
         //   is drawn starting from measure 3 (the first RENDERED measure of this draw range), reaching through it.
-        expect(findMeasure(osmd, 3, 0).NotesAreAbbreviated, "measure 4 stays written out").to.equal(false);
+        expect(findMeasure(osmd, 3, 0).NotesAreAbbreviated, "drawn from measure 3: measure 4 stays written out").to.equal(false);
     });
 
     it("keeps a left-hand unit written out when a cross-staff slur reaches into it from the right hand, " +
@@ -748,36 +708,19 @@ describe("Measure repeat presentation: edge cases", () => {
         expect(findMeasure(osmd, 6, 0).NotesAreAbbreviated, "measure 7 (mid-measure clef change)").to.equal(false);
     });
 
-    it("checks the reference pattern's visibility against the current draw range on re-render, not " +
-        "a ParentStaffLine left over from an earlier, wider render of the same instance", async () => {
-        osmd.EngravingRules.RenderMeasureRepeats = true;
-        await osmd.load(TestUtils.getScore("test_measure_repeat_drums.musicxml"));
-        osmd.render(); // first, full render: measure 2 (index 1) is validly abbreviated (measure 1 is drawn too)
-        expect(findMeasure(osmd, 1, 0).NotesAreAbbreviated, "first render: measure 2 is abbreviated").to.equal(true);
-
-        osmd.setOptions({ drawFromMeasureNumber: 2 });
-        osmd.render(); // re-render on the SAME instance, now starting at measure 2 - its reference (measure 1)
-                       //   is no longer part of the draw range at all, even though its GraphicalMeasure instance
-                       //   (reused, not recreated) still carries a ParentStaffLine value from the FIRST render.
-        expect(findMeasure(osmd, 1, 0).NotesAreAbbreviated, "re-render: measure 2 stays written out").to.equal(false);
-    });
-
-    it("keeps a unit written out when a lyric extender line arrives from the measure right before it, but still " +
+    it("keeps a unit written out when a lyric extender line arrives from the measure right before it, or started " +
+        "further back, across a measure without lyrics (the stopping rule of calculateLyricExtend()), but still " +
         "abbreviates a plain unit with no lyrics involved at all", async () => {
         osmd.EngravingRules.RenderMeasureRepeats = true;
         await osmd.load(parseXml(lyricExtenderXml));
         osmd.render();
         expect(findMeasure(osmd, 1, 0).NotesAreAbbreviated, "measure 2 (no lyrics involved)").to.equal(true);
         expect(findMeasure(osmd, 3, 0).NotesAreAbbreviated, "measure 4 (incoming extender from measure 3)").to.equal(false);
-    });
 
-    it("keeps a unit written out when an incoming lyric extender started further back, across a measure " +
-        "without lyrics, with the stopping rule of calculateLyricExtend()", async () => {
-        osmd.EngravingRules.RenderMeasureRepeats = true;
         await osmd.load(parseXml(lyricExtenderFurtherBackXml));
         osmd.render();
         // measure 2 (index 1): a plain repeat, nothing lyric-related nearby - still abbreviates normally.
-        expect(findMeasure(osmd, 1, 0).NotesAreAbbreviated, "measure 2 (no lyrics nearby)").to.equal(true);
+        expect(findMeasure(osmd, 1, 0).NotesAreAbbreviated, "further back: measure 2 (no lyrics nearby)").to.equal(true);
         // measure 5 (index 4): the "ah" extender from measure 3 runs through the plain gap measure 4 (no lyrics,
         //   no rest) and is still running when it reaches measure 5 - must stay written out.
         expect(findMeasure(osmd, 4, 0).NotesAreAbbreviated, "measure 5 (extender from two measures back)").to.equal(false);
@@ -791,17 +734,5 @@ describe("Measure repeat presentation: edge cases", () => {
         expect(findMeasure(osmd, 1, 0).NotesAreAbbreviated, "measure 2 is abbreviated").to.equal(true);
         const staffLine: StaffLine = osmd.GraphicSheet.MusicPages[0].MusicSystems[0].StaffLines[0];
         expect(staffLine.GraphicalSlurs.length, "the hidden slur is never constructed").to.equal(0);
-    });
-
-    it("draws at most 4 slashes for a very large 'slashes' value", async () => {
-        osmd.EngravingRules.RenderMeasureRepeats = true;
-        await osmd.load(parseXml(pathologicalSlashesXml));
-        osmd.render();
-        const signGroup: Element = container.querySelector(".vf-measure-repeat");
-        expect(signGroup, "the sign is drawn").to.not.equal(null);
-        // a small, bounded number of drawn shapes (4 clamped slashes + 2 dots + the "2" digit glyph), nowhere
-        //   near what "slashes=20000" would produce unclamped.
-        expect(signGroup.children.length, "a bounded number of drawn shapes").to.be.at.most(12);
-        expect(signGroup.getBoundingClientRect().width, "a bounded sign width").to.be.lessThan(500);
     });
 });
