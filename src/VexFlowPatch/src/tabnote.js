@@ -504,7 +504,7 @@ export class TabNote extends StemmableNote {
     this.stem.setNoteHeadXBounds(stem_x, stem_x);
 
     if (render_stem) {
-      this.context.openGroup('stem', null, { pointerBBox: true });
+      this.context.openGroup('stem', null, { pointerBBox: true, mergeIntoChild: true }); // VexFlowPatch: mergeIntoChild
       this.stem.setContext(this.context).draw();
       this.context.closeGroup();
     }

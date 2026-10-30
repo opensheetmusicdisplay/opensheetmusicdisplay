@@ -321,7 +321,7 @@ describe("OpenSheetMusicDisplay incremental rendering of the endless page in bat
         //   stems only when drawn, at the systems' final position instead of where the skyline calculation draws them, as in
         //   render(): a few stems and beams ended a few trillionths of a pixel off. The comparison isn't rounded here.
         await osmd.load(TestUtils.getScore("Dichterliebe01.xml"));
-        const stemsAndBeams: () => string[] = (): string[] => Array.from(container.querySelectorAll("path.vf-stem, g.vf-beam path"))
+        const stemsAndBeams: () => string[] = (): string[] => Array.from(container.querySelectorAll("path.vf-stem, path.vf-beam"))
             .map((path: Element): string => path.getAttribute("d")).sort();
         renderNextInOneBatch();
         const stemsAndBeamsInOneBatch: string[] = stemsAndBeams();
