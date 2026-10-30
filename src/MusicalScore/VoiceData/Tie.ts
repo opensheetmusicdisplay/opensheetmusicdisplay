@@ -18,7 +18,13 @@ export class Tie {
     private notes: Note[] = [];
     private type: TieTypes;
     public TieNumber: number = 1;
+    /** The direction of the tie: the one given in the MusicXML (TieDirectionXml), else the one the calculation chose
+     *  (MusicSheetCalculator.setTieDirections()), or PlacementEnum.NotYetDefined to let Vexflow choose. */
     public TieDirection: PlacementEnum = PlacementEnum.NotYetDefined;
+    /** The direction given in the MusicXML (placement or orientation of `<tied>`), PlacementEnum.NotYetDefined if none.
+     *  Each calculation starts from it (see MusicSheetCalculator.createGraphicalTies()): to give a tie a direction
+     *  yourself, set this one. */
+    public TieDirectionXml: PlacementEnum = PlacementEnum.NotYetDefined;
     /** Can contain tie directions at certain note indices.
      *  For example, if it contains {2: PlacementEnum.Below}, then
      *  the tie should go downwards from Tie.Notes[2] onwards,

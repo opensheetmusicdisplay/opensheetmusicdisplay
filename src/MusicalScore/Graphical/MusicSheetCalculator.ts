@@ -177,6 +177,21 @@ export abstract class MusicSheetCalculator {
             openOctaveShifts.push(undefined);
         }
 
+        // Start without wanted stem directions, like the first calculation after loading: calculateStemDirectionFromVoices()
+        //   leaves the direction unset where it forces none (pitch-based stems), so updateGraphic() kept the previous
+        //   calculation's there, e.g. the stems down of a secondary voice alone in its measure after
+        //   AutoStemSecondaryVoicesWhenAloneInMeasure was turned on, or the MusicXML's stems after SetWantedStemDirectionByXml
+        //   was turned off.
+        for (const sourceMeasure of musicSheet.SourceMeasures) {
+            for (const container of sourceMeasure.VerticalSourceStaffEntryContainers) {
+                for (const staffEntry of container.StaffEntries) {
+                    for (const voiceEntry of staffEntry?.VoiceEntries ?? []) {
+                        voiceEntry.WantedStemDirection = StemDirectionType.Undefined;
+                    }
+                }
+            }
+        }
+
         // Start from the multiple rest measures given in the MusicXML: the source measures still have the ones of the previous
         //   calculation when updateGraphic() follows e.g. a change of RenderMultipleRestMeasures or of an instrument's visibility.
         for (const sourceMeasure of musicSheet.SourceMeasures) {
@@ -2926,6 +2941,22 @@ export abstract class MusicSheetCalculator {
     }
 
     protected createGraphicalTies(): void {
+        // Start from the tie directions given in the MusicXML: setTieDirections() keeps a direction it set like one given,
+        //   so the next calculation kept it, also when what it depends on had changed, e.g. the stem side after a transposition
+        //   or a change of SetWantedStemDirectionByXml, or a voice drawn with RenderHiddenNotes that no longer is.
+        for (const sourceMeasure of this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures) {
+            for (const container of sourceMeasure.VerticalSourceStaffEntryContainers) {
+                for (const staffEntry of container.StaffEntries) {
+                    for (const voiceEntry of staffEntry?.VoiceEntries ?? []) {
+                        for (const note of voiceEntry.Notes) {
+                            if (note.NoteTie) {
+                                note.NoteTie.TieDirection = note.NoteTie.TieDirectionXml;
+                            }
+                        }
+                    }
+                }
+            }
+        }
         for (let measureIndex: number = 0; measureIndex < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; measureIndex++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[measureIndex];
             for (let staffIndex: number = 0; staffIndex < sourceMeasure.CompleteNumberOfStaves; staffIndex++) {
