@@ -30,11 +30,32 @@ const attrNamesToIgnoreMap = {
   Vex.Merge(attrNamesToIgnoreMap.path, fontAttrNamesToIgnore);
 }
 
-// VexFlowPatch: the coordinates in path data are rounded to 2 decimals. VexFlow wrote them as JavaScript prints doubles
-// (e.g. "633.5434477499999", 14 characters on average), so rounded, the path data takes about half the memory and the
-// file size, and the drawing moves by at most 0.005 px at zoom 1.
+// VexFlowPatch: the shortest decimal endings of 0 to 99 hundredths ('', '.05', '.5', '.54', ...), for roundCoordinate()
+const hundredthsTexts = [];
+for (let hundredths = 0; hundredths < 100; hundredths++) {
+  hundredthsTexts.push(hundredths === 0 ? '' :
+    hundredths % 10 === 0 ? '.' + hundredths / 10 : '.' + (hundredths < 10 ? '0' + hundredths : hundredths));
+}
+
+/**
+ * VexFlowPatch: Rounds a coordinate of path data to 2 decimals, e.g. 633.5434477499999 to "633.54". VexFlow wrote the
+ * coordinates as JavaScript prints doubles (14 characters on average), so rounded, the path data takes about half the
+ * memory and the file size, and the drawing moves by at most 0.005 px at zoom 1.
+ * The text is the same as String(Math.round(value * 100) / 100), but formatted from integers, the whole part and the
+ * hundredths: converting the rounded double to a string takes about 4 times as long.
+ *
+ * @param {number} value The coordinate.
+ * @returns {string} The coordinate rounded to 2 decimals, without trailing zeros ('NaN' for NaN, 'Infinity' for Infinity).
+ */
 function roundCoordinate(value) {
-  return Math.round(value * 100) / 100;
+  const hundredths = Math.round(value * 100);
+  const negative = hundredths < 0;
+  const absolute = negative ? -hundredths : hundredths;
+  if (!(absolute < 2147483648)) {
+    return '' + hundredths / 100; // NaN, Infinity, and values too big for the integer operations below
+  }
+  const whole = (absolute / 100) | 0;
+  return (negative ? '-' : '') + whole + hundredthsTexts[absolute - whole * 100];
 }
 
 export class SVGContext {
