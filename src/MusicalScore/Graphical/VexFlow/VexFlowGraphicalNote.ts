@@ -224,7 +224,8 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     /** Gets the SVG path element of the note's stem. */
     public getStemSVG(): HTMLElement {
         const groupOrPath: HTMLElement = document.getElementById("vf-" + this.getSVGId() + "-stem");
-        // whether we get the group node or path node depends on whether the note has a beam, for some reason (TODO)
+        // the group node with EngravingRules.SVGMergeSingleChildGroups false and a beam (which draws the stems in groups
+        //   with this id), otherwise the path node
         if (groupOrPath?.children.length > 0) {
             return groupOrPath.children[0] as HTMLElement;
             // We want to return the same type of node every time, not a path node if no beam and a group node if it has a beam.
@@ -234,7 +235,8 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         //return document.getElementById((Vex as any).Prefix(this.getSVGId() + "-stem"));
     }
 
-    /** Gets the SVG path elements of the beams starting on this note. */
+    /** Gets the SVG elements of the beams starting on this note: each beam's path, or with
+     *  EngravingRules.SVGMergeSingleChildGroups false, each beam's group (with the path). */
     public getBeamSVGs(): HTMLElement[] {
         const beamSVGs: HTMLElement[] = [];
         for (let i: number = 0;; i++) {
@@ -300,7 +302,8 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         return glissandoSVGs;
     }
 
-    /** Gets the SVG elements of the note heads, e.g. the paths of a chord's heads, or the fret numbers of a TAB note (and its chord). */
+    /** Gets the SVG elements of the note heads, e.g. the paths of a chord's heads (with EngravingRules.SVGMergeSingleChildGroups
+     *  false: each head's group), or the fret numbers of a TAB note (and its chord). */
     public getNoteheadSVGs(): HTMLElement[] {
         if (this.isTabNote) {
             return this.getTabNoteSVGs().frets;
@@ -317,6 +320,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         return noteheads;
     }
 
+    /** Gets the SVG element of the note's flag: its path, or with EngravingRules.SVGMergeSingleChildGroups false, its group. */
     public getFlagSVG(): HTMLElement {
         const vfNote: HTMLElement = this.getVFNoteSVG();
         if (vfNote?.children?.length) {
@@ -345,8 +349,8 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         return undefined;
     }
 
-    /** Gets the SVG elements of the note's modifiers: the groups of a stave note's modifiers (e.g. accidentals),
-     *  or the shapes of a TAB note's modifiers (e.g. a bend's curve, arrow and label). */
+    /** Gets the SVG elements of the note's modifiers: the groups of a stave note's modifiers (e.g. accidentals; none if the
+     *  note has no modifiers), or the shapes of a TAB note's modifiers (e.g. a bend's curve, arrow and label). */
     public getModifierSVGs(): HTMLElement[] {
         if (this.isTabNote) {
             return this.getTabNoteSVGs().modifiers;
@@ -389,8 +393,8 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         return { frets, modifiers };
     }
 
-    /** Colors the paths of a group, e.g. of a note head, or a single shape, e.g. of a TAB note or a glissando: its fill,
-     *  or its stroke if it's only a line, like the curve of a bend or the line of a slide. */
+    /** Colors the paths of a group, e.g. of the accidentals, or a single shape, e.g. a note head, a beam, a TAB note or a
+     *  glissando: its fill, or its stroke if it's only a line, like the curve of a bend or the line of a slide. */
     private static colorShapes(element: Element, color: string): void {
         if (element.children.length > 0) {
             for (const path of element.children) {
@@ -425,18 +429,14 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         if (applyToBeams) {
             const beams: HTMLElement[] = this.getBeamSVGs();
             for (const beam of beams) {
-                for (const beamPath of beam.children) {
-                    beamPath.setAttribute("fill", color);
-                }
+                VexFlowGraphicalNote.colorShapes(beam, color); // the path, or its group (EngravingRules.SVGMergeSingleChildGroups)
             }
         }
 
         if (applyToFlag) {
             const flag: HTMLElement = this.getFlagSVG();
             if (flag) {
-                for (const flagPath of flag.children) {
-                    flagPath.setAttribute("fill", color);
-                }
+                VexFlowGraphicalNote.colorShapes(flag, color);
             }
         }
 

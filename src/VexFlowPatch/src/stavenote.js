@@ -1280,7 +1280,7 @@ export class StaveNote extends StemmableNote {
     }
 
     const ctx = this.context;
-    ctx.openGroup('modifiers');
+    ctx.openGroup('modifiers', null, { omitIfEmpty: true }); // VexFlowPatch: omitIfEmpty, see SVGContext.openGroup()
     for (let i = 0; i < this.modifiers.length; i++) {
       const modifier = this.modifiers[i];
       const notehead = this.note_heads[modifier.getIndex()];
@@ -1316,7 +1316,7 @@ export class StaveNote extends StemmableNote {
         : y_bottom - noteStemHeight - 2;
 
       // Draw the Flag
-      ctx.openGroup('flag', null, { pointerBBox: true });
+      ctx.openGroup('flag', null, { pointerBBox: true, mergeIntoChild: true }); // VexFlowPatch: mergeIntoChild, see SVGContext.openGroup()
       this.applyStyle(ctx, this.getFlagStyle() || false);
       this.flag.render(ctx, flagX, flagY);
       this.restoreStyle(ctx, this.getFlagStyle() || false);
@@ -1327,7 +1327,7 @@ export class StaveNote extends StemmableNote {
   // Draw the NoteHeads
   drawNoteHeads() {
     this.note_heads.forEach(notehead => {
-      this.context.openGroup('notehead', null, { pointerBBox: true });
+      this.context.openGroup('notehead', null, { pointerBBox: true, mergeIntoChild: true }); // VexFlowPatch: mergeIntoChild
       notehead.setContext(this.context).draw();
       this.context.closeGroup();
     });
@@ -1348,7 +1348,7 @@ export class StaveNote extends StemmableNote {
     this.stem.id = Vex.Prefix(`${this.getAttribute("id")}-stem`);
 
     if (this.stem) {
-      this.context.openGroup('stem', null, { pointerBBox: true });
+      this.context.openGroup('stem', null, { pointerBBox: true, mergeIntoChild: true }); // VexFlowPatch: mergeIntoChild
       this.stem.setContext(this.context).draw();
       this.context.closeGroup();
     }

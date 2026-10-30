@@ -659,6 +659,15 @@ export class EngravingRules {
     public RenderXMeasuresPerLineAkaSystem: number;
     public PageFormat: PageFormat;
     public PageBackgroundColor: string; // vexflow-color-string (#FFFFFF). Default undefined/transparent.
+    /** Whether to leave out the SVG group (`<g>`) around a note's head, stem and flag and around a beam when it would hold
+     *  only one element, which then gets the group's class, id and pointer-events: e.g. a notehead is drawn as
+     *  `<path class="vf-notehead" ...>` instead of `<g class="vf-notehead" ...><path ...></g>`.
+     *  Default true: these groups were about a fifth of the elements, and the SVG's elements take most of a rendered score's memory.
+     *  Set it to false for the previous structure, e.g. if your code selects `.vf-notehead path` or adds elements to these groups.
+     *  VexFlowGraphicalNote's getters like getNoteheadSVGs() and its setColor() work either way.
+     *  Only for the SVG backend, read in render().
+     */
+    public SVGMergeSingleChildGroups: boolean;
     /** Whether dark mode is enabled. This is read-only, to set this, please use osmd.setOptions({darkMode: true}). */
     public DarkModeEnabled: boolean;
     public UsePageBackgroundColorForTabNotes: boolean;
@@ -1179,6 +1188,7 @@ export class EngravingRules {
 
         this.PageFormat = PageFormat.UndefinedPageFormat; // default: undefined / 'infinite' height page, using the canvas'/container's width and height
         this.PageBackgroundColor = undefined; // default: transparent. half-transparent white: #FFFFFF88"
+        this.SVGMergeSingleChildGroups = true;
         this.DarkModeEnabled = false;
         this.UsePageBackgroundColorForTabNotes = true;
         this.RenderSingleHorizontalStaffline = false;

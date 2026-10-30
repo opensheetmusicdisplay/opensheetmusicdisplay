@@ -402,4 +402,62 @@ describe("VexFlow GraphicalNote", () => {
         }
         div.remove();
     });
+
+    /** Renders a measure of a C#5 quarter, a D5 eighth with a flag, two beamed eighths, a D5-F5 quarter chord and a G5 eighth. */
+    async function renderNoteParts(div: HTMLElement): Promise<OpenSheetMusicDisplay> {
+        const xmlNote: (pitch: string, eighths: number, extra?: string) => string = (pitch: string, eighths: number, extra: string = "") =>
+            `<note>${extra.includes("<chord/>") ? "<chord/>" : ""}<pitch><step>${pitch[0]}</step>${pitch.includes("#") ? "<alter>1</alter>" : ""}` +
+            `<octave>${pitch[pitch.length - 1]}</octave></pitch><duration>${eighths}</duration><voice>1</voice>` +
+            `<type>${eighths === 1 ? "eighth" : "quarter"}</type>${extra.replace("<chord/>", "")}</note>`;
+        return renderMeasures(div, [xmlNote("C#5", 2, "<accidental>sharp</accidental>") + xmlNote("D5", 1) +
+            xmlNote("E5", 1, "<beam number='1'>begin</beam>") + xmlNote("F5", 1, "<beam number='1'>end</beam>") +
+            xmlNote("D5", 2) + xmlNote("F5", 2, "<chord/>") + xmlNote("G5", 1)], false, 2);
+    }
+
+    /** The classes of the groups without children in the SVG, e.g. "vf-modifiers" (none expected). */
+    function emptyGroups(div: HTMLElement): string[] {
+        return Array.from(div.querySelectorAll("g")).filter(group => group.childElementCount === 0).map(group => group.getAttribute("class"));
+    }
+
+    it("Draws a note's head, stem and flag and a beam as paths without a group each (SVGMergeSingleChildGroups), and no empty groups", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = await renderNoteParts(div);
+        expect(div.querySelectorAll("g.vf-notehead, g.vf-stem, g.vf-flag, g.vf-beam").length, "groups of note parts").to.equal(0);
+        expect(div.querySelectorAll("path.vf-notehead").length, "noteheads").to.equal(7);
+        expect(emptyGroups(div), "empty groups, e.g. the modifiers of a note without accidentals").to.deep.equal([]);
+        const [sharp, flagged, beamed, , chord, lastFlagged] = measureNotes(osmd, 0, 0);
+        expect(chord.getNoteheadSVGs().map(head => `${head.tagName}.${head.getAttribute("class")}`), "the chord's heads")
+            .to.deep.equal(["path.vf-notehead", "path.vf-notehead"]);
+        expect([sharp.getStemSVG(), flagged.getFlagSVG(), lastFlagged.getFlagSVG(), ...beamed.getBeamSVGs()].map(element => element.tagName),
+               "a stem, the flags, the beam").to.deep.equal(["path", "path", "path", "path"]);
+        expect(beamed.getStemSVG().id, "a beamed note's stem, with the id of its former group").to.equal(`vf-${beamed.getSVGId()}-stem`);
+        expect(measureNotes(osmd, 0, 0).map(note => note.getModifierSVGs().length), "the notes' modifier groups").to.deep.equal([1, 0, 0, 0, 0, 0]);
+
+        flagged.setColor("#FF0000");
+        beamed.setColor("#00FF00", { applyToBeams: true });
+        expect([flagged.getNoteheadSVGs()[0].getAttribute("fill"), flagged.getFlagSVG().getAttribute("fill"),
+                flagged.getStemSVG().getAttribute("stroke"), beamed.getBeamSVGs()[0].getAttribute("fill")],
+               "colored: the head, flag and stem of the eighth with a flag, and the beam").to.deep.equal(["#FF0000", "#FF0000", "#FF0000", "#00FF00"]);
+        div.remove();
+    });
+
+    it("Draws a group around each note head, stem, flag and beam with SVGMergeSingleChildGroups false, and no empty groups", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = await renderNoteParts(div);
+        osmd.EngravingRules.SVGMergeSingleChildGroups = false;
+        osmd.render();
+        expect(div.querySelectorAll("g.vf-notehead > path").length, "noteheads, each in a group").to.equal(7);
+        expect(emptyGroups(div), "empty groups").to.deep.equal([]);
+        const [sharp, flagged, beamed] = measureNotes(osmd, 0, 0);
+        expect([sharp.getStemSVG().parentElement, flagged.getFlagSVG(), ...beamed.getBeamSVGs()].map(element => element.getAttribute("class")),
+               "the groups of a stem, a flag and a beam").to.deep.equal(["vf-stem", "vf-flag", "vf-beam"]);
+        expect(measureNotes(osmd, 0, 0).map(note => note.getModifierSVGs().length), "the notes' modifier groups").to.deep.equal([1, 0, 0, 0, 0, 0]);
+
+        flagged.setColor("#FF0000");
+        beamed.setColor("#00FF00", { applyToBeams: true });
+        expect([flagged.getNoteheadSVGs()[0].querySelector("path").getAttribute("fill"), flagged.getFlagSVG().querySelector("path").getAttribute("fill"),
+                beamed.getBeamSVGs()[0].querySelector("path").getAttribute("fill")],
+               "colored: the head and flag of the eighth with a flag, and the beam").to.deep.equal(["#FF0000", "#FF0000", "#00FF00"]);
+        div.remove();
+    });
 });

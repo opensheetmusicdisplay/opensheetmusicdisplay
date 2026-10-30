@@ -92,10 +92,15 @@ describe("Slur at a note with an articulation", () => {
         };
     }
 
-    /** The boxes of the marks drawn at the slur's start or end note, each (or all in one box), from the note outward. */
+    /** The boxes of the marks drawn at the slur's start or end note, each (none if it has no marks), or all in one box,
+     *  from the note outward. */
     function drawnMarks(slur: GraphicalSlur, end: "start" | "end", each: boolean = false): Box[] {
         const staffLine: StaffLine = slur.staffEntries[0].parentMeasure.ParentStaffLine;
-        const group: SVGGraphicsElement = marksGroup(endNote(slur, end));
+        const note: GraphicalNote = endNote(slur, end);
+        if (each && (note as VexFlowGraphicalNote).getModifierSVGs().length === 0) {
+            return []; // a note without modifiers has no group for them
+        }
+        const group: SVGGraphicsElement = marksGroup(note);
         if (!each) {
             return [toStaffLine(group, staffLine)];
         }

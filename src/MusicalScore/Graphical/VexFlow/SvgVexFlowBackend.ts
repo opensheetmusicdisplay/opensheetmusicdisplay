@@ -46,6 +46,8 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.renderer = new VF.Renderer(this.canvas, this.getVexflowBackendType());
         this.ctx = <VF.SVGContext>this.renderer.getContext();
         this.ctx.svg.id = "osmdSvgPage" + this.graphicalMusicPage.PageNumber;
+        // the groups of a note's head, stem and flag and of a beam, see the VexFlowPatch's SVGContext.openGroup()
+        (this.ctx as any).mergeSingleChildGroups = this.rules.SVGMergeSingleChildGroups;
     }
 
     public getContext(): VF.SVGContext {

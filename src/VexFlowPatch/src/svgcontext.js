@@ -72,6 +72,12 @@ export class SVGContext {
     this.svg = svg;
     this.groups = [this.svg]; // Create the group stack
     this.parent = this.svg;
+    // VexFlowPatch: whether a group opened with attrs.mergeIntoChild is merged into its only element, see openGroup().
+    //   Set by OSMD (EngravingRules.SVGMergeSingleChildGroups).
+    this.mergeSingleChildGroups = false;
+    // VexFlowPatch: the innermost open group while it has no element of its own: { cls, id, attrs, merge, child }
+    //   (see openGroup())
+    this.pendingGroup = undefined;
 
     this.path = '';
     this.pen = { x: NaN, y: NaN };
@@ -120,8 +126,29 @@ export class SVGContext {
     return document.createElementNS(this.svgNS, svgElementType);
   }
 
-  // Allow grouping elements in containers for interactivity.
+  /**
+   * Opens a group: the elements drawn until closeGroup() go into it (allows grouping elements in containers for interactivity).
+   * VexFlowPatch: a group opened with attrs.omitIfEmpty (a note's modifiers) is only written once something is drawn into it,
+   * so a note without accidentals, dots etc. has no empty group for them. With attrs.mergeIntoChild (a note's head, stem and
+   * flag, a beam) and mergeSingleChildGroups set, the group is only written if it gets more than one element: an only element
+   * gets the group's class, id and pointer-events instead, e.g. `<path class="vf-notehead">` instead of
+   * `<g class="vf-notehead"><path>`. These groups were about a quarter of the elements, which take most of a score's memory.
+   *
+   * @param {string} cls The group's class, prefixed with "vf-".
+   * @param {string} id The group's id, prefixed with "vf-".
+   * @param {{pointerBBox: boolean, omitIfEmpty: boolean, mergeIntoChild: boolean}} attrs pointerBBox: pointer events on the
+   *   group's bounding box.
+   * @returns {SVGGElement} The group, or undefined for a group with omitIfEmpty or mergeIntoChild (written when needed).
+   */
   openGroup(cls, id, attrs) {
+    if (this.pendingGroup) {
+      this.createPendingGroup(); // VexFlowPatch: a group inside it, so the pending group needs its own element
+    }
+    const merge = Boolean(attrs && attrs.mergeIntoChild && this.mergeSingleChildGroups);
+    if (merge || (attrs && attrs.omitIfEmpty)) {
+      this.pendingGroup = { cls, id, attrs, merge, child: undefined };
+      return undefined;
+    }
     const group = this.create('g');
     this.groups.push(group);
     this.parent.appendChild(group);
@@ -135,12 +162,54 @@ export class SVGContext {
     return group;
   }
 
+  // VexFlowPatch: writes the element of the pending group (see openGroup()), around its first element if it has one
+  createPendingGroup() {
+    const { cls, id, attrs, child } = this.pendingGroup;
+    this.pendingGroup = undefined;
+    const group = this.openGroup(cls, id, { pointerBBox: attrs.pointerBBox });
+    if (child) {
+      group.appendChild(child); // the child was the parent's last element, right before the group
+    }
+  }
+
   closeGroup() {
+    const pending = this.pendingGroup;
+    if (pending) {
+      // VexFlowPatch: a group without an element of its own (see openGroup()): nothing was drawn into it, or one element
+      //   to merge it into, which gets the group's class, id and pointer-events
+      this.pendingGroup = undefined;
+      const child = pending.child;
+      if (child) {
+        if (pending.cls) {
+          const cls = Vex.Prefix(pending.cls);
+          const childClass = child.getAttribute('class');
+          if (childClass !== cls) {
+            child.setAttribute('class', childClass ? cls + ' ' + childClass : cls);
+          }
+        }
+        if (pending.id) {
+          // e.g. a beamed note's stem: the path's id ends with -stem0, the group's with -stem (GraphicalNote.getStemSVG())
+          child.setAttribute('id', Vex.Prefix(pending.id));
+        }
+        if (pending.attrs.pointerBBox) {
+          child.setAttribute('pointer-events', 'bounding-box');
+        }
+      }
+      return;
+    }
     this.groups.pop();
     this.parent = this.groups[this.groups.length - 1];
   }
 
   add(elem) {
+    const pending = this.pendingGroup;
+    if (pending) { // VexFlowPatch: see openGroup()
+      if (pending.merge && !pending.child) {
+        pending.child = elem; // stays without the group if it remains the only element
+      } else {
+        this.createPendingGroup(); // the group is written after all, around the first element if one was kept
+      }
+    }
     this.parent.appendChild(elem);
   }
 

@@ -177,12 +177,12 @@ describe("Drawing hidden notes (EngravingRules.RenderHiddenNotes)", (): void => 
                     const note: VexFlowGraphicalNote = gve.notes[0] as VexFlowGraphicalNote;
                     const colors: Set<string> = note.sourceNote.PrintObject ? visible : hidden;
                     for (const notehead of note.getNoteheadSVGs()) {
-                        add(colors, notehead.querySelector("path").getAttribute("fill"));
+                        add(colors, notehead.getAttribute("fill"));
                     }
                     if (!note.sourceNote.PrintObject) {
                         add(colors, note.getStemSVG().getAttribute("stroke"));
-                        for (const beam of note.getBeamSVGs()) { // the group of each beam line
-                            add(colors, beam.querySelector("path").getAttribute("fill"));
+                        for (const beam of note.getBeamSVGs()) { // the path of each beam line
+                            add(colors, beam.getAttribute("fill"));
                         }
                     }
                 }
