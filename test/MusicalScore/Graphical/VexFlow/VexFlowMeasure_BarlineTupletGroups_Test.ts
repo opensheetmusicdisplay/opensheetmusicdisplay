@@ -58,7 +58,7 @@ describe("Barline and tuplet SVG groups", (): void => {
         return Array.from(div.querySelectorAll(`g.${cls}`)).filter((group: Element): boolean => group.childElementCount === 0).length;
     }
 
-    it("draws each barline in a g.vf-stavebarline, a single barline as rect.vf-stavebarline, no group for a barline without shapes", async (): Promise<void> => {
+    it("draws barlines in g.vf-stavebarline, a single one as rect.vf-stavebarline, no group for one without shapes", async (): Promise<void> => {
         const forwardRepeat: string = "<barline location=\"left\"><bar-style>heavy-light</bar-style><repeat direction=\"forward\"/></barline>";
         const backwardRepeat: string = "<barline location=\"right\"><bar-style>light-heavy</bar-style><repeat direction=\"backward\"/></barline>";
         const finalBarline: string = "<barline location=\"right\"><bar-style>light-heavy</bar-style></barline>";
@@ -80,7 +80,7 @@ describe("Barline and tuplet SVG groups", (): void => {
         expect(emptyGroups("vf-stavebarline"), "empty groups, e.g. of the measures' begin barlines").to.equal(0);
     });
 
-    it("draws a tuplet's bracket and number in a g.vf-tuplet, a beamed triplet's number as path.vf-tuplet, no group for one without shapes", async (): Promise<void> => {
+    it("draws tuplets in g.vf-tuplet, a beamed triplet's number as path.vf-tuplet, no group for one without shapes", async (): Promise<void> => {
         await osmd.load(score([
             triplet(2, "eighth", "bracket=\"no\"") + triplet(4, "quarter", "bracket=\"yes\"") + note(6, "quarter"),
             triplet(2, "eighth", "bracket=\"no\" show-number=\"none\"") + note(12, "half") + note(6, "quarter"),
