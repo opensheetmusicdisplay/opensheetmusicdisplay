@@ -12,7 +12,8 @@ import { GraphicalObject } from "../../../src/MusicalScore/Graphical/GraphicalOb
  * graphical objects, and the SVG elements they drew (1.7 GB for a score of 23,000 notes in jsdom). Before, the drawer, the cursors,
  * EngravingRules.NoteToGraphicalNoteMap and the sheet's links to its graphical measures kept the whole rendering.
  * A dropped instance is freed: no static field keeps an instance's rules or rendering (the static MusicSheetCalculator.TextMeasurer
- * did), and dispose() removes OSMD's listeners on the window (the resize listener of autoResize kept every instance).
+ * did), and dispose() removes OSMD's listeners on the window (the resize listener of autoResize kept every instance). Turning
+ * autoResize off removes the resize listener too.
  */
 describe("OSMD clear() and dispose()", () => {
     const sampleName: string = "MuzioClementi_SonatinaOpus36No1_Part1.xml";
@@ -191,6 +192,57 @@ describe("OSMD clear() and dispose()", () => {
             expect(container.querySelectorAll("svg *").length, "SVG elements after dispose()").to.equal(drawnElements);
         } finally {
             windowListeners.restore();
+            container.remove();
+        }
+    });
+
+    it("turning autoResize off removes the window's resize listener, turning it on adds it again", () => {
+        const container: HTMLElement = TestUtils.getDivElement(document);
+        const windowListeners: IListenerRecord = recordListeners(window);
+        try {
+            const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(container); // autoResize is on by default
+            expect(windowListeners.count("resize"), "with autoResize").to.equal(1);
+            osmd.setOptions({ autoResize: false });
+            expect(windowListeners.count("resize"), "after setOptions({autoResize: false})").to.equal(0);
+            osmd.setOptions({ autoResize: true });
+            osmd.setOptions({ autoResize: true });
+            expect(windowListeners.count("resize"), "after setOptions({autoResize: true}), twice").to.equal(1);
+            osmd.AutoResizeEnabled = false;
+            expect(windowListeners.count("resize"), "after AutoResizeEnabled = false").to.equal(0);
+            expect(osmd.AutoResizeEnabled, "AutoResizeEnabled after it was set to false").to.equal(false);
+            osmd.AutoResizeEnabled = true;
+            expect(windowListeners.count("resize"), "after AutoResizeEnabled = true").to.equal(1);
+            osmd.dispose();
+            expect(windowListeners.count("resize"), "after dispose()").to.equal(0);
+            new OpenSheetMusicDisplay(container, { autoResize: false }).dispose();
+            expect(windowListeners.count("resize"), "created with autoResize false").to.equal(0);
+        } finally {
+            windowListeners.restore();
+            container.remove();
+        }
+    });
+
+    it("turning autoResize on again re-renders a rendered sheet only if the container's width changed meanwhile", async () => {
+        const container: HTMLElement = TestUtils.getDivElement(document);
+        container.style.width = "800px";
+        /** Waits for the re-render that turning autoResize on schedules (timers of 0 and 1 ms), if any. */
+        const timers: () => Promise<void> = (): Promise<void> => new Promise((resolve: () => void) => setTimeout(resolve, 100));
+        try {
+            const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(container); // autoResize is on by default
+            await osmd.load(TestUtils.getScore(sampleName));
+            osmd.render();
+            const rendered: number = osmd.EngravingRules.RenderCount;
+            osmd.setOptions({ autoResize: false });
+            osmd.setOptions({ autoResize: true });
+            await timers();
+            expect(osmd.EngravingRules.RenderCount, "renders after off and on, same width").to.equal(rendered);
+            osmd.AutoResizeEnabled = false;
+            container.style.width = "600px";
+            osmd.AutoResizeEnabled = true;
+            await timers();
+            expect(osmd.EngravingRules.RenderCount, "renders after off, a narrower container, and on").to.equal(rendered + 1);
+            osmd.dispose();
+        } finally {
             container.remove();
         }
     });

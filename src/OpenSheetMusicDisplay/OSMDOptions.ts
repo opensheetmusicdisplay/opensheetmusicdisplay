@@ -36,6 +36,7 @@ export interface IOSMDOptions {
     autoBeamOptions?: AutoBeamOptions;
     /** Automatically resize score with canvas size. Default is true.
      *  Listens to the window's resize events, which keeps the instance in memory: call osmd.dispose() when you don't need it anymore.
+     *  Setting this to false (also during runtime) removes the listener as well.
      */
     autoResize?: boolean;
     /** Render Backend, will be SVG if given undefined, "SVG" or "svg", otherwise Canvas. */
