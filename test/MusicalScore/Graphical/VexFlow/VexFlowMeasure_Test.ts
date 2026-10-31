@@ -1176,13 +1176,13 @@ describe("VexFlow Measure", () => {
          expect(drawnNotes(triplets[0], upperMeasure).length, "notes of the first triplet drawn on the upper staff").to.equal(1);
 
          // The indices of the triplets with a number drawn in the measure. The numbers are the glyphs (filled paths) in the
-         //   measure's SVG group that belong to no note, beam, clef, key or time signature, which have groups of their own
-         //   (the staff lines are stroked, with fill="none"). A number is centered over the triplet's notes in the staff.
+         //   measure's SVG group that belong to no staff lines, note, beam, clef, key or time signature, which have groups of
+         //   their own. A number is centered over the triplet's notes in the staff.
          const numberedTriplets: (measure: GraphicalMeasure) => number[] = (measure: GraphicalMeasure): number[] => {
             const measureGroup: Element = (measure.staffEntries[0].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote)
                .getSVGGElement().closest("g.vf-measure");
             const numbers: Element[] = Array.from(measureGroup.querySelectorAll("path:not([fill='none'])")).filter((path: Element) =>
-               !path.closest(".vf-stavenote, .vf-beam, .vf-clef, .vf-keysignature, .vf-timesignature")); // a beam is a path.vf-beam
+               !path.closest(".vf-stavelines, .vf-stavenote, .vf-beam, .vf-clef, .vf-keysignature, .vf-timesignature")); // a beam is a path.vf-beam
             return numbers.map((tupletNumber: Element) => {
                const numberBox: DOMRect = (tupletNumber as SVGGraphicsElement).getBBox();
                const centerX: number = numberBox.x + numberBox.width / 2;
