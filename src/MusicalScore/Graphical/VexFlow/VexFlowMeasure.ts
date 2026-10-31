@@ -397,38 +397,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
             case SystemLinePosition.MeasureBegin:
                 switch (lineType) {
                     case SystemLinesEnum.BoldThinDots:
-                        //customize the barline draw function if repeat is beginning of system
-                        if (!renderInitialLine) {
-                            (this.stave as any).modifiers[0].draw = function(stave: VF.Stave): void {
-                                (stave as any).checkContext();
-                                this.setRendered();
-                                switch (this.type) {
-                                    case VF.Barline.type.SINGLE:
-                                    this.drawVerticalBar(stave, this.x, false);
-                                    break;
-                                    case VF.Barline.type.DOUBLE:
-                                    this.drawVerticalBar(stave, this.x, true);
-                                    break;
-                                    case VF.Barline.type.END:
-                                    this.drawVerticalEndBar(stave, this.x);
-                                    break;
-                                    case VF.Barline.type.REPEAT_BEGIN:
-                                    //removed the vertical line rendering that exists in VF codebase
-                                    this.drawRepeatBar(stave, this.x, true);
-                                    break;
-                                    case VF.Barline.type.REPEAT_END:
-                                    this.drawRepeatBar(stave, this.x, false);
-                                    break;
-                                    case VF.Barline.type.REPEAT_BOTH:
-                                    this.drawRepeatBar(stave, this.x, false);
-                                    this.drawRepeatBar(stave, this.x, true);
-                                    break;
-                                    default:
-                                    // Default is NONE, so nothing to draw
-                                    break;
-                                }
-                            };
-                        }
+                        // the begin barline: the line at the staff's start only with renderInitialLine (VexFlowPatch's Barline.draw())
+                        (this.stave as any).modifiers[0].renderInitialLine = renderInitialLine;
                         this.stave.setBegBarType(VF.Barline.type.REPEAT_BEGIN);
                         break;
                     default:
