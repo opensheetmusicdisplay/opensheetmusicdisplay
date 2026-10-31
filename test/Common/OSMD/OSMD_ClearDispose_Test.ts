@@ -12,8 +12,9 @@ import { GraphicalObject } from "../../../src/MusicalScore/Graphical/GraphicalOb
  * graphical objects, and the SVG elements they drew (1.7 GB for a score of 23,000 notes in jsdom). Before, the drawer, the cursors,
  * EngravingRules.NoteToGraphicalNoteMap and the sheet's links to its graphical measures kept the whole rendering.
  * A dropped instance is freed: no static field keeps an instance's rules or rendering (the static MusicSheetCalculator.TextMeasurer
- * did), and dispose() removes OSMD's listeners on the window (the resize listener of autoResize kept every instance). Turning
- * autoResize off removes the resize listener too.
+ * did), and the window's resize listener of autoResize, which kept every instance until dispose(), reaches the instance only
+ * through a WeakRef. The container keeps the instance instead, so that it's freed together with its container. dispose() and
+ * turning autoResize off remove the listener.
  */
 describe("OSMD clear() and dispose()", () => {
     const sampleName: string = "MuzioClementi_SonatinaOpus36No1_Part1.xml";
@@ -145,6 +146,8 @@ describe("OSMD clear() and dispose()", () => {
     interface IListenerRecord {
         /** The number of listeners of an event type that were added while recording and not removed. */
         count: (type: string) => number;
+        /** The listeners of an event type that were added while recording and not removed, in the order they were added. */
+        listeners: (type: string) => EventListener[];
         restore: () => void;
     }
 
@@ -166,6 +169,7 @@ describe("OSMD clear() and dispose()", () => {
         };
         return {
             count: (type: string): number => listeners.get(type)?.size ?? 0,
+            listeners: (type: string): EventListener[] => Array.from(listeners.get(type) ?? []) as EventListener[],
             restore: (): void => {
                 // the patched methods are own properties: deleting them restores the prototype's methods
                 delete (target as any).addEventListener;
@@ -242,6 +246,97 @@ describe("OSMD clear() and dispose()", () => {
             await timers();
             expect(osmd.EngravingRules.RenderCount, "renders after off, a narrower container, and on").to.equal(rendered + 1);
             osmd.dispose();
+        } finally {
+            container.remove();
+        }
+    });
+
+    it("the window's resize listener reaches the instance only through a WeakRef, re-renders it, and removes itself once it's freed",
+       async () => {
+        const weakRefs: ReleasableWeakRef[] = [];
+        /** A WeakRef whose target the test can release, as the garbage collector frees an object that only WeakRefs reach. */
+        class ReleasableWeakRef {
+            private target: object;
+            constructor(target: object) {
+                this.target = target;
+                weakRefs.push(this);
+            }
+            public deref(): object {
+                return this.target;
+            }
+            public release(): void {
+                this.target = undefined;
+            }
+        }
+        const global: any = globalThis;
+        const weakRefClass: unknown = global.WeakRef;
+        const windowListeners: IListenerRecord = recordListeners(window);
+        const containers: HTMLElement[] = [TestUtils.getDivElement(document), TestUtils.getDivElement(document)];
+        const instances: OpenSheetMusicDisplay[] = [];
+        try {
+            global.WeakRef = ReleasableWeakRef;
+            instances.push(new OpenSheetMusicDisplay(containers[0])); // autoResize is on by default
+            global.WeakRef = undefined; // like browsers before 2021: then the listener keeps the instance
+            instances.push(new OpenSheetMusicDisplay(containers[1]));
+            global.WeakRef = weakRefClass;
+            const [osmd, osmdWithoutWeakRef] = instances;
+            expect(weakRefs.length, "WeakRefs made").to.equal(1);
+            expect(weakRefs[0].deref() === osmd, "the WeakRef's target is the instance").to.equal(true);
+            const [listener, listenerWithoutWeakRef] = windowListeners.listeners("resize");
+
+            // a resize re-renders the instance, once no resize event came for 200 ms
+            for (const instance of instances) {
+                await instance.load(TestUtils.getScore("HelloWorld.xml"));
+                instance.render();
+            }
+            const rendered: number = osmd.EngravingRules.RenderCount;
+            listener(new Event("resize"));
+            listenerWithoutWeakRef(new Event("resize"));
+            for (let waited: number = 0; waited < 2000; waited += 20) {
+                if (instances.every((instance: OpenSheetMusicDisplay) => instance.EngravingRules.RenderCount > rendered)) {
+                    break;
+                }
+                await new Promise<void>((resolve: () => void) => setTimeout(resolve, 20));
+            }
+            expect(osmd.EngravingRules.RenderCount, "renders after a resize").to.equal(rendered + 1);
+            expect(osmdWithoutWeakRef.EngravingRules.RenderCount, "renders after a resize, without WeakRef").to.equal(rendered + 1);
+
+            weakRefs[0].release(); // as if the instance had been freed
+            listener(new Event("resize"));
+            expect(windowListeners.count("resize"), "resize listeners after a resize event, once the instance was freed").to.equal(1);
+            expect(windowListeners.listeners("resize")[0] === listenerWithoutWeakRef, "the one without WeakRef stays").to.equal(true);
+        } finally {
+            global.WeakRef = weakRefClass;
+            instances.forEach((instance: OpenSheetMusicDisplay) => instance.dispose());
+            windowListeners.restore();
+            containers.forEach((container: HTMLElement) => container.remove());
+        }
+    });
+
+    /** Whether an own property of the element has the object as its value, also a non-enumerable one or one keyed by a symbol. */
+    function keeps(element: HTMLElement, object: object): boolean {
+        return Reflect.ownKeys(element).some((key: PropertyKey) => Object.getOwnPropertyDescriptor(element, key).value === object);
+    }
+
+    it("with autoResize, the container keeps the instance until autoResize is turned off or dispose(), a newer instance replaces it", () => {
+        const container: HTMLElement = TestUtils.getDivElement(document);
+        try {
+            const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(container); // autoResize is on by default
+            expect(keeps(container, osmd), "with autoResize").to.equal(true);
+            osmd.setOptions({ autoResize: false });
+            expect(keeps(container, osmd), "after setOptions({autoResize: false})").to.equal(false);
+            osmd.AutoResizeEnabled = true;
+            expect(keeps(container, osmd), "after AutoResizeEnabled = true").to.equal(true);
+            // e.g. an app that makes an instance for each score it shows in the container, and doesn't call dispose()
+            const newer: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(container);
+            expect(keeps(container, osmd), "the older instance, after a newer one was made for the container").to.equal(false);
+            expect(keeps(container, newer), "the newer instance").to.equal(true);
+            osmd.dispose();
+            expect(keeps(container, newer), "the newer instance, after the older one's dispose()").to.equal(true);
+            newer.dispose();
+            expect(keeps(container, newer), "after dispose()").to.equal(false);
+            const withoutAutoResize: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(container, { autoResize: false });
+            expect(keeps(container, withoutAutoResize), "created with autoResize false").to.equal(false);
         } finally {
             container.remove();
         }

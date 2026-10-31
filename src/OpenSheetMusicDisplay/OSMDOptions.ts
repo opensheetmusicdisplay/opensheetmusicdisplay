@@ -35,7 +35,8 @@ export interface IOSMDOptions {
     /** Options for autoBeaming like whether to beam over rests. See AutoBeamOptions interface. */
     autoBeamOptions?: AutoBeamOptions;
     /** Automatically resize score with canvas size. Default is true.
-     *  Listens to the window's resize events, which keeps the instance in memory: call osmd.dispose() when you don't need it anymore.
+     *  Listens to the window's resize events. Meanwhile, the container keeps the instance in memory: it's freed together with its
+     *  container, or call osmd.dispose() when you don't need it anymore but keep the container.
      *  Setting this to false (also during runtime) removes the listener as well.
      */
     autoResize?: boolean;
