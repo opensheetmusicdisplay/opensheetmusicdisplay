@@ -79,6 +79,8 @@ export abstract class GraphicalMeasure extends GraphicalObject {
     public isTabMeasure: boolean = false;
     /** Only exists on multiple rest measure (VexFlowMultiRestMeasure). See isMultiRestMeasure() function. */
     public multiRestElement: any;
+    /** The SVG group the measure was drawn into, see getSVGGElement(). Set by the backend's measure (VexFlowMeasure.draw()). */
+    protected svgGElement: SVGGElement = undefined;
 
     /** Whether a backend replaces this measure's note content with a repeat sign. */
     public get NotesAreAbbreviated(): boolean {
@@ -126,6 +128,20 @@ export abstract class GraphicalMeasure extends GraphicalObject {
         if (this.parentStaffLine) {
             this.PositionAndShape.Parent = this.parentStaffLine.PositionAndShape;
         }
+    }
+
+    /**
+     * Gets the SVG group (g.vf-measure) this measure was drawn into, with the SVG backend: its staff lines (g.vf-stave),
+     * barlines, clef, key and time signature, notes, and the ties that end in it.
+     * The id of these groups is the measure number, the same in every staff (and in every OSMD instance on the page),
+     * so this is the way to get the group of one staff's measure.
+     * @returns The group, or undefined with the canvas backend and for a measure that isn't drawn.
+     * @example
+     * // the staff lines of the second staff's first measure in red
+     * osmd.GraphicSheet.MeasureList[0][1].getSVGGElement()?.querySelector(".vf-stave")?.setAttribute("stroke", "#FF0000");
+     */
+    public getSVGGElement(): SVGGElement {
+        return this.svgGElement;
     }
 
     /**

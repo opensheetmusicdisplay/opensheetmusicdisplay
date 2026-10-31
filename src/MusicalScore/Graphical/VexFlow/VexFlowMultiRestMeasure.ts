@@ -62,6 +62,7 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
             measureNode.classList?.add("multi");
             measureNode.id = `${this.MeasureNumber}`;
         }
+        this.svgGElement = measureNode; // undefined with the canvas backend
 
         // Draw stave lines
         this.stave.setContext(ctx).draw();
