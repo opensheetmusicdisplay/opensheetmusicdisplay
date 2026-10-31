@@ -26,11 +26,6 @@ module.exports = {
                 loader: 'ts-loader',
                 // loader: 'awesome-typescript-loader',
                 exclude: /(node_modules|bower_components)/
-            },
-            {
-                test: /\.glsl$/,
-                type: "asset/source",
-                exclude: /(node_modules|bower_components)/
             }
         ]
     },

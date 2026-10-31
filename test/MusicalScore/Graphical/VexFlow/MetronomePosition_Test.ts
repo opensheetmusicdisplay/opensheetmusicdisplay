@@ -153,7 +153,6 @@ describe("Metronome position rendering", (): void => {
 
     it("separates nearby marks with the geometric skyline", async (): Promise<void> => {
         osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = true;
-        osmd.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false;
         await osmd.load(TestUtils.getScore("test_metronome_close_positions.musicxml"));
         osmd.render();
         expect(marks().length).to.equal(2);

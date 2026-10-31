@@ -706,31 +706,41 @@ export class EngravingRules {
     /** Whether to calculate the skyline and bottom-line geometrically, from the extents of the VexFlow draw calls,
      *  instead of drawing each measure on a hidden canvas and reading back its pixels (getImageData), which is much slower (see #937).
      *  Default true. If set to false, the previous pixel-based calculation is used,
-     *  see PreferredSkyBottomLineBatchCalculatorBackend etc.
+     *  see SkyBottomLineBatchMinMeasures.
      */
     public UseGeometricSkyBottomLineCalculation: boolean;
     /** Caches for the geometric skyline calculation (text measurements, flattened glyph outlines).
      *  Owned here (per OSMD instance, like NoteToGraphicalNoteMap) instead of statically,
      *  so that multiple OSMD instances stay independent. */
     public GeometricSkyBottomLineCaches: GeometricSkyBottomLineCaches;
-    /** The skyline and bottom-line batch calculation algorithm to use, if UseGeometricSkyBottomLineCalculation is false.
-     *  Note that this can be overridden if AlwaysSetPreferredSkyBottomLineBackendAutomatically is true (which is the default).
+    /** Not used anymore: the pixel-based batch calculation (UseGeometricSkyBottomLineCalculation false) always reads the pixels
+     *  with getImageData (SkyBottomLineBatchCalculatorBackendType.Plain). Its WebGL backend was removed,
+     *  as the geometric calculation (the default) is faster.
+     * @deprecated
      */
     public PreferredSkyBottomLineBatchCalculatorBackend: SkyBottomLineBatchCalculatorBackendType;
-    /** Whether to consider using WebGL in Firefox in EngravingRules.setPreferredSkyBottomLineBackendAutomatically() */
+    /** Not used anymore: the WebGL backend was removed, see PreferredSkyBottomLineBatchCalculatorBackend.
+     * @deprecated
+     */
     public DisableWebGLInFirefox: boolean;
-    /** Whether to consider using WebGL in Safari/iOS in EngravingRules.setPreferredSkyBottomLineBackendAutomatically() */
+    /** Not used anymore: the WebGL backend was removed, see PreferredSkyBottomLineBatchCalculatorBackend.
+     * @deprecated
+     */
     public DisableWebGLInSafariAndIOS: boolean;
 
-    /** The minimum number of measures in the sheet where the skyline and bottom-line batch calculation is enabled.
+    /** The minimum number of measures in the sheet where the skyline and bottom-line batch calculation is enabled,
+     *  if UseGeometricSkyBottomLineCalculation is false.
      *  Batch is faster for medium to large size scores, but slower for very short scores.
      */
     public SkyBottomLineBatchMinMeasures: number;
-    /** The minimum number of measures in the sheet where WebGL will be used. WebGL is slower for short scores, but much faster for large ones.
-     * Note that WebGL is currently never used in Safari and Firefox, because it's always slower there.
+    /** Not used anymore: the WebGL backend was removed, see PreferredSkyBottomLineBatchCalculatorBackend.
+     * @deprecated
      */
     public SkyBottomLineWebGLMinMeasures: number;
-    /** Whether to always set preferred backend (WebGL or Plain) automatically, depending on browser and number of measures. */
+    /** Not used anymore: the WebGL backend was removed, so there is no backend to choose,
+     *  see PreferredSkyBottomLineBatchCalculatorBackend.
+     * @deprecated
+     */
     public AlwaysSetPreferredSkyBottomLineBackendAutomatically: boolean;
 
     // Playback settings
@@ -1204,7 +1214,7 @@ export class EngravingRules {
         this.AlwaysSetPreferredSkyBottomLineBackendAutomatically = true;
         this.DisableWebGLInFirefox = true;
         this.DisableWebGLInSafariAndIOS = true;
-        this.setPreferredSkyBottomLineBackendAutomatically();
+        this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.Plain;
 
         // Playback
         this.UseInterpolatedTempoForAccelerandoEtc = false; // wait for rit support etc. can also make
@@ -1224,27 +1234,12 @@ export class EngravingRules {
         }
     }
 
+    /** Not used anymore: sets PreferredSkyBottomLineBatchCalculatorBackend to Plain, the only backend since the WebGL backend
+     *  was removed (it chose WebGL for large scores in Chromium browsers).
+     * @deprecated
+     */
     public setPreferredSkyBottomLineBackendAutomatically(numberOfGraphicalMeasures: number = -1): void {
-        let vendor: string = "";
-        let userAgent: string = "";
-        if (typeof globalThis === "object") { // it looks like globalThis can be undefined and cause build issues in es2017 (e.g. Android API 28), see #1299
-            vendor = globalThis.navigator?.vendor ?? "";
-            userAgent = globalThis.navigator?.userAgent ?? "";
-        }
-        let alwaysUsePlain: boolean = false;
-        if (this.DisableWebGLInSafariAndIOS && (/apple/i).test(vendor)) { // doesn't apply to Chrome on MacOS
-            alwaysUsePlain = true;
-        } else if (this.DisableWebGLInFirefox && userAgent.includes("Firefox")) {
-            alwaysUsePlain = true;
-        }
-        // In Safari (/iOS) and Firefox, the plain version is always faster (currently, Safari 15).
-        //   WebGL is faster for large scores in Chrome and Edge (both Chromium based). See #1158
         this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.Plain;
-        if (!alwaysUsePlain) {
-            if (numberOfGraphicalMeasures >= this.SkyBottomLineWebGLMinMeasures) {
-                this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.WebGL;
-            }
-        }
     }
 
     /** Makes it so that all musical elements (including key/time signature)

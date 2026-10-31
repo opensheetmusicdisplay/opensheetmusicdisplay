@@ -9,8 +9,8 @@ All node tools must be run **from the repository root** and need a current build
 
 ## Benchmarks
 
-- `skylineBenchBrowser.html` — measures `osmd.render()` and the skyline phase for all four
-  calculation methods (geometric, per-staffline raster, batch Plain, batch WebGL) in a real browser.
+- `skylineBenchBrowser.html` — measures `osmd.render()` and the skyline phase for all three
+  calculation methods (geometric, per-staffline raster, batch Plain) in a real browser.
   Serve the repo root, e.g. `npx http-server -p 8081 .`, then open
   `http://localhost:8081/test/performance/skylineBenchBrowser.html`.
 - `skylineBench.mjs` — the same comparison in node (jsdom + node-canvas). Note that node-canvas

@@ -76,14 +76,11 @@ const MODES = {
     },
     single: (r) => { // per-staffline raster path (what the geometric code mirrors)
         r.UseGeometricSkyBottomLineCalculation = false;
-        r.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false;
         r.SkyBottomLineBatchMinMeasures = 9999999;
     },
     batch: (r) => { // batched Plain raster path (the production default for >= 5 measures)
         r.UseGeometricSkyBottomLineCalculation = false;
-        r.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false;
         r.SkyBottomLineBatchMinMeasures = 2;
-        r.PreferredSkyBottomLineBatchCalculatorBackend = 0; // Plain
     },
 };
 const modeNames = withBatch ? ["geo", "single", "batch"] : ["geo", "single"];
@@ -102,7 +99,6 @@ async function capturedModeRender(modeName, loadParameter, sampleName) {
     capture = null;
     // restore defaults
     osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = true;
-    osmd.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = true;
     osmd.EngravingRules.SkyBottomLineBatchMinMeasures = 5;
     return result;
 }

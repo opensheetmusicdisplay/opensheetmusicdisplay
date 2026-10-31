@@ -32,7 +32,6 @@
     "generatePNG:paged:single": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./export png 0 0 ^Beethoven",
     "generate:current": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/current png 0 0 all --osmdtesting",
     "generate:current:batch": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/current png 0 0 all --osmdtesting 0 --batch",
-    "generate:current:webgl": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/current png 0 0 all --osmdtesting 0 --webgl",
     "generate:current:debug": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/current png 0 0 all --debugosmdtesting",
     "generate:current:singletest": "node test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/current png 0 0 ^Beethoven --osmdtestingsingle",
     "generate:blessed": "node ./test/Util/generateImages_browserless.mjs ../../build ./test/data ./visual_regression/blessed png 0 0 all --osmdtesting",
@@ -42,7 +41,6 @@
     "test:visual:build": "npm run prebuild && npm run build:webpack && npm run generate:current && npm run test:visual",
     "test:visual:build:old": "npm run prebuild && npm run build:webpack && npm run generate:current && npm run test:visual:old",
     "test:visual:build:batch": "npm run prebuild && npm run build:webpack && npm run generate:current:batch && npm run test:visual",
-    "test:visual:build:webgl": "npm run prebuild && npm run build:webpack && npm run generate:current:webgl && npm run test:visual",
     "test:visual:singletest": "node ./test/Util/visualRegression.mjs ./visual_regression Beethoven",
     "test:visual:singletest:old": "sh ./test/Util/visual_regression.sh ./visual_regression Beethoven"
   },
@@ -117,8 +115,5 @@
     "webpack-dev-server": "^5.2.3",
     "webpack-merge": "^5.8.0",
     "webpack-visualizer-plugin2": "^1.0.0"
-  },
-  "optionalDependencies": {
-    "gl": "^9.0.0-rc.10"
   }
 }
