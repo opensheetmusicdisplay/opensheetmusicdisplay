@@ -609,6 +609,7 @@ export abstract class MusicSheetCalculator {
         // maybe give rules as argument instead of just setting fontStyle and maybe other settings manually afterwards
         const graphicalLabel: GraphicalLabel = new GraphicalLabel(label, this.rules.MeasureNumberLabelHeight,
                                                                   TextAlignmentEnum.LeftBottom, this.rules);
+        graphicalLabel.SVGClass = "measure-number";
 
         const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
 
@@ -917,6 +918,7 @@ export abstract class MusicSheetCalculator {
                                                                 multiExpression.getFontstyleOfFirstEntry(),
                                                                 placement,
                                                                 fontHeight);
+        graphLabel.SVGClass = "words";
         const colorXML: string = multiExpression.getColorXMLOfFirstEntry();
         if (this.rules.ExpressionsUseXMLColor && colorXML) {
             graphLabel.ColorXML = colorXML;
@@ -2241,6 +2243,7 @@ export abstract class MusicSheetCalculator {
                                                                        this.rules.UnknownTextHeight,
                                                                        textAlignment,
                                                                        this.rules.TempoYSpacing);
+                graphLabel.SVGClass = "tempo";
                 if (entry.Expression.ColorXML && this.rules.ExpressionsUseXMLColor) {
                     graphLabel.ColorXML = entry.Expression.ColorXML;
                 }
@@ -2529,6 +2532,7 @@ export abstract class MusicSheetCalculator {
             const title: GraphicalLabel = new GraphicalLabel(musicSheet.Title, this.rules.SheetTitleHeight, TextAlignmentEnum.CenterBottom, this.rules);
             title.Label.IsCreditLabel = true;
             title.Label.colorDefault = defaultColorTitle;
+            title.SVGClass = "title";
             this.graphicalMusicSheet.Title = title;
             title.setLabelPositionAndShapeBorders();
         } else if (!this.rules.RenderTitle) {
@@ -2539,6 +2543,7 @@ export abstract class MusicSheetCalculator {
                 musicSheet.Subtitle, this.rules.SheetSubtitleHeight, TextAlignmentEnum.CenterCenter, this.rules);
             subtitle.Label.IsCreditLabel = true;
             subtitle.Label.colorDefault = defaultColorTitle;
+            subtitle.SVGClass = "subtitle";
             this.graphicalMusicSheet.Subtitle = subtitle;
             subtitle.setLabelPositionAndShapeBorders();
         } else if (!this.rules.RenderSubtitle) {
@@ -2549,6 +2554,7 @@ export abstract class MusicSheetCalculator {
                 musicSheet.Composer, this.rules.SheetComposerHeight, TextAlignmentEnum.RightCenter, this.rules);
             composer.Label.IsCreditLabel = true;
             composer.Label.colorDefault = defaultColorTitle;
+            composer.SVGClass = "composer";
             this.graphicalMusicSheet.Composer = composer;
             composer.setLabelPositionAndShapeBorders();
         } else if (!this.rules.RenderComposer) {
@@ -2559,6 +2565,7 @@ export abstract class MusicSheetCalculator {
                 musicSheet.Lyricist, this.rules.SheetAuthorHeight, TextAlignmentEnum.LeftCenter, this.rules);
             lyricist.Label.IsCreditLabel = true;
             lyricist.Label.colorDefault = defaultColorTitle;
+            lyricist.SVGClass = "lyricist";
             this.graphicalMusicSheet.Lyricist = lyricist;
             lyricist.setLabelPositionAndShapeBorders();
         } else if (!this.rules.RenderLyricist) {
@@ -2569,6 +2576,7 @@ export abstract class MusicSheetCalculator {
                 musicSheet.Copyright, this.rules.SheetCopyrightHeight, TextAlignmentEnum.CenterBottom, this.rules);
                 copyright.Label.IsCreditLabel = true;
                 copyright.Label.colorDefault = defaultColorTitle;
+            copyright.SVGClass = "copyright";
             this.graphicalMusicSheet.Copyright = copyright;
             copyright.setLabelPositionAndShapeBorders();
         } else if (!this.rules.RenderCopyright) {
@@ -2602,6 +2610,7 @@ export abstract class MusicSheetCalculator {
                 wrapped, this.rules.SheetSubtitleHeight, credit.textAlignment, this.rules);
             label.Label.IsCreditLabel = true;
             label.Label.colorDefault = this.rules.DefaultColorTitle;
+            label.SVGClass = "credit";
             label.setLabelPositionAndShapeBorders();
             label.PositionAndShape.RelativePosition = new PointF2D(0, nextY);
             this.graphicalMusicSheet.FirstPageCreditWords.push(label);
@@ -3725,6 +3734,7 @@ export abstract class MusicSheetCalculator {
                             const label: Label = new Label(fingering.value, alignment);
                             const gLabel: GraphicalLabel = new GraphicalLabel(
                                 label, this.rules.FingeringTextSize, label.textAlignment, this.rules, line.PositionAndShape);
+                            gLabel.SVGClass = "fingering";
                             if (fingering.fontFamily) {
                                 label.fontFamily = fingering.fontFamily;
                             }
@@ -4034,6 +4044,7 @@ export abstract class MusicSheetCalculator {
         }
         const dash: GraphicalLabel = new GraphicalLabel(
             label, textHeight, TextAlignmentEnum.CenterBottom, this.rules);
+        dash.SVGClass = "dash";
         dash.setLabelPositionAndShapeBorders();
         staffLine.LyricsDashes.push(dash);
         if (this.staffLinesWithLyricWords.indexOf(staffLine) === -1) {
@@ -4226,6 +4237,7 @@ export abstract class MusicSheetCalculator {
         leftLabel.colorDefault = this.rules.DefaultColorLyrics; // if undefined, no change. saves an if check
         const leftDash: GraphicalLabel = new GraphicalLabel(
             leftLabel, this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom, this.rules);
+        leftDash.SVGClass = "dash";
         leftDash.setLabelPositionAndShapeBorders();
         staffLine.LyricsDashes.push(leftDash);
         if (this.staffLinesWithLyricWords.indexOf(staffLine) === -1) {
@@ -4238,6 +4250,7 @@ export abstract class MusicSheetCalculator {
         const rightLabel: Label = new Label("-");
         const rightDash: GraphicalLabel = new GraphicalLabel(
             rightLabel, this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom, this.rules);
+        rightDash.SVGClass = "dash";
         rightDash.setLabelPositionAndShapeBorders();
         staffLine.LyricsDashes.push(rightDash);
         rightDash.PositionAndShape.Parent = staffLine.PositionAndShape;

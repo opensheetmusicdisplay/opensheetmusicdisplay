@@ -17,6 +17,7 @@ export class VexFlowInstantaneousDynamicExpression extends GraphicalInstantaneou
                                         TextAlignmentEnum.CenterCenter,
                                         this.rules,
                                         this.PositionAndShape);
+        this.label.SVGClass = "dynamic";
 
         this.label.Label.fontStyle = FontStyles.BoldItalic;
         this.label.setLabelPositionAndShapeBorders();

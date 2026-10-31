@@ -34,6 +34,16 @@ export class GraphicalLabel extends Clickable {
      *  grows the page, the last system moves down with every batch, so such a label is drawn only with the final
      *  batch, once its position is final (#1710). */
     public AnchoredToPageBottom: boolean = false;
+    /** The class naming what the label shows, which MusicSheetDrawer.drawLabel() adds to the SVG group the label is drawn
+     *  into, next to vf-text, so that CSS and code can find e.g. all chord symbols (`.chord-symbol`):
+     *  title, subtitle, composer, lyricist, copyright, credit (other text of the first page, see
+     *  EngravingRules.ReadFirstPageCreditWords), part-name (first system), part-abbreviation (later systems),
+     *  part-group-name, part-group-abbreviation, measure-number, chord-symbol, fingering, lyrics,
+     *  dash (between the syllables of a lyric word), dynamic (also cresc. and dim. written as words),
+     *  tempo (also rit. and accel.), words (other text directions, e.g. dolce).
+     *  Undefined for a label without one. The drawer names lines and curves itself (see MusicSheetDrawer.addSVGClass()).
+     */
+    public SVGClass: string;
 
     /**
      * Creates a new GraphicalLabel from a Label

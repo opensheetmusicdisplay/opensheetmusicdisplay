@@ -54,6 +54,7 @@ export class GraphicalLyricEntry {
             rules,
             graphicalStaffEntry.PositionAndShape,
         );
+        this.graphicalLabel.SVGClass = "lyrics";
         this.graphicalLabel.Label.colorDefault = rules.DefaultColorLyrics; // if undefined, no change. saves an if check
         this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0, staffHeight);
         this.graphicalLabel.setLabelPositionAndShapeBorders(); // needed to have Size.width
