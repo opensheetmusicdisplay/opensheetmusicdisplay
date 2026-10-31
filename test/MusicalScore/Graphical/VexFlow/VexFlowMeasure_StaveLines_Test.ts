@@ -3,7 +3,8 @@ import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/Ope
 import { TestUtils } from "../../../Util/TestUtils";
 
 /**
- * A measure's staff lines are drawn in a group of their own, g.vf-stavelines, the first element of the measure's group.
+ * A measure's staff lines are drawn in a group of their own, g.vf-stave (as VexFlow 4 and 5 draw them), the first element of
+ * the measure's group.
  * The group has the lines' style, e.g. stroke="#000000", which the lines inherit (see the VexFlowPatch's Stave.draw() and
  * SVGContext.openGroup()), so that the group's stroke colors them, e.g. its stroke attribute or a CSS rule for its class.
  */
@@ -40,7 +41,7 @@ describe("Stave lines", (): void => {
         await osmd.load(scoreWithStaffLines([5]));
         osmd.render();
         const group: Element = div.querySelector(".vf-measure").firstElementChild;
-        expect(group.getAttribute("class"), "the measure's first element").to.equal("vf-stavelines");
+        expect(group.getAttribute("class"), "the measure's first element").to.equal("vf-stave");
         const lines: Element[] = Array.from(group.children);
         expect(lines.map((line: Element): string => line.tagName), "the group's elements").to.deep.equal(Array(5).fill("path"));
         expect([group.getAttribute("fill"), group.getAttribute("stroke")], "the group's fill and stroke").to.deep.equal(["none", "#000000"]);
@@ -57,9 +58,9 @@ describe("Stave lines", (): void => {
         osmd.EngravingRules.StaffLineColor = "#0000FF";
         osmd.render();
         const measures: Element[] = Array.from(div.querySelectorAll(".vf-measure"));
-        expect(measures.map((measure: Element): number => measure.querySelectorAll(".vf-stavelines").length), "groups per staff")
+        expect(measures.map((measure: Element): number => measure.querySelectorAll(".vf-stave").length), "groups per staff")
             .to.deep.equal([1, 1, 0]);
-        const groups: Element[] = measures.slice(0, 2).map((measure: Element): Element => measure.querySelector(".vf-stavelines"));
+        const groups: Element[] = measures.slice(0, 2).map((measure: Element): Element => measure.querySelector(".vf-stave"));
         expect(groups.map((group: Element): number => group.childElementCount), "lines per staff").to.deep.equal([5, 1]);
         expect(groups.map((group: Element): string => group.getAttribute("stroke")), "the groups' stroke").to.deep.equal(["#0000FF", "#0000FF"]);
         expect(fillAndStroke(groups.map((group: Element): Element => group.lastElementChild)), "a line of each staff")

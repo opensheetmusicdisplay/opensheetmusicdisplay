@@ -1182,7 +1182,7 @@ describe("VexFlow Measure", () => {
             const measureGroup: Element = (measure.staffEntries[0].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote)
                .getSVGGElement().closest("g.vf-measure");
             const numbers: Element[] = Array.from(measureGroup.querySelectorAll("path:not([fill='none'])")).filter((path: Element) =>
-               !path.closest(".vf-stavelines, .vf-stavenote, .vf-beam, .vf-clef, .vf-keysignature, .vf-timesignature")); // a beam is a path.vf-beam
+               !path.closest(".vf-stave, .vf-stavenote, .vf-beam, .vf-clef, .vf-keysignature, .vf-timesignature")); // a beam is a path.vf-beam
             return numbers.map((tupletNumber: Element) => {
                const numberBox: DOMRect = (tupletNumber as SVGGraphicsElement).getBBox();
                const centerX: number = numberBox.x + numberBox.width / 2;

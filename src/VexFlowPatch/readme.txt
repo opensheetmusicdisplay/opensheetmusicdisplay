@@ -75,8 +75,8 @@ stave.js (merged/fixed vexflow 4):
 prevent a bug where a modifier width is NaN, leading to a VexFlow error (fixed vexflow 4)
 stave.setSection(section, y, xOffset = 0, fontSize = 12):
 add xOffset, fontSize arguments (see stavesection.js) (merged vexflow 4.x)
-draw(): draw the lines in a group of their own, class vf-stavelines, which has their style (e.g. stroke="#000000"),
-  so that its stroke colors them (custom addition, see svgcontext.js)
+draw(): draw the lines in a group of their own, class vf-stave (merged vexflow 4), which has their style
+  (e.g. stroke="#000000"), so that its stroke colors them (custom addition, see svgcontext.js)
 
 stavebarline.js (custom addition):
 support double_heavy barline (heavy-heavy in MusicXML)
