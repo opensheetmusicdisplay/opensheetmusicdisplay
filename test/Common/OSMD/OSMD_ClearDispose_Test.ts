@@ -12,7 +12,8 @@ import { GraphicalObject } from "../../../src/MusicalScore/Graphical/GraphicalOb
  * graphical objects, and the SVG elements they drew (1.7 GB for a score of 23,000 notes in jsdom). Before, the drawer, the cursors,
  * EngravingRules.NoteToGraphicalNoteMap and the sheet's links to its graphical measures kept the whole rendering.
  * A dropped instance is freed: no static field keeps an instance's rules or rendering (the static MusicSheetCalculator.TextMeasurer
- * did), and dispose() removes OSMD's listeners on the window (the resize listener of autoResize kept every instance).
+ * did), and dispose() removes OSMD's listeners on the window (the resize listener of autoResize kept every instance). Turning
+ * autoResize off removes the resize listener too.
  */
 describe("OSMD clear() and dispose()", () => {
     const sampleName: string = "MuzioClementi_SonatinaOpus36No1_Part1.xml";
@@ -189,6 +190,32 @@ describe("OSMD clear() and dispose()", () => {
             expect(windowListeners.count("scroll"), "scroll listeners after dispose()").to.equal(0);
             expect(osmd.IncrementalRenderingActive, "incremental rendering after dispose()").to.equal(false);
             expect(container.querySelectorAll("svg *").length, "SVG elements after dispose()").to.equal(drawnElements);
+        } finally {
+            windowListeners.restore();
+            container.remove();
+        }
+    });
+
+    it("turning autoResize off removes the window's resize listener, turning it on adds it again", () => {
+        const container: HTMLElement = TestUtils.getDivElement(document);
+        const windowListeners: IListenerRecord = recordListeners(window);
+        try {
+            const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(container); // autoResize is on by default
+            expect(windowListeners.count("resize"), "with autoResize").to.equal(1);
+            osmd.setOptions({ autoResize: false });
+            expect(windowListeners.count("resize"), "after setOptions({autoResize: false})").to.equal(0);
+            osmd.setOptions({ autoResize: true });
+            osmd.setOptions({ autoResize: true });
+            expect(windowListeners.count("resize"), "after setOptions({autoResize: true}), twice").to.equal(1);
+            osmd.AutoResizeEnabled = false;
+            expect(windowListeners.count("resize"), "after AutoResizeEnabled = false").to.equal(0);
+            expect(osmd.AutoResizeEnabled, "AutoResizeEnabled after it was set to false").to.equal(false);
+            osmd.AutoResizeEnabled = true;
+            expect(windowListeners.count("resize"), "after AutoResizeEnabled = true").to.equal(1);
+            osmd.dispose();
+            expect(windowListeners.count("resize"), "after dispose()").to.equal(0);
+            new OpenSheetMusicDisplay(container, { autoResize: false }).dispose();
+            expect(windowListeners.count("resize"), "created with autoResize false").to.equal(0);
         } finally {
             windowListeners.restore();
             container.remove();

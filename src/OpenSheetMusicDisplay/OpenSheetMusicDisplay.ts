@@ -1425,14 +1425,9 @@ export class OpenSheetMusicDisplay {
             this.rules.TripletsBracketed = options.tripletsBracketed;
         }
         if (options.autoResize) {
-            if (!this.resizeHandlerAttached) {
-                this.autoResize();
-            }
-            this.autoResizeEnabled = true;
+            this.AutoResizeEnabled = true;
         } else if (options.autoResize === false) { // not undefined
-            this.autoResizeEnabled = false;
-            // the window's resize listener stays, doing nothing while autoResize is off. It keeps this instance in memory:
-            //   dispose() removes it.
+            this.AutoResizeEnabled = false; // also removes the window's resize listener, see there
         }
         if (options.pageFormat !== undefined) { // only change this option if it was given, see above
             this.setPageFormat(options.pageFormat);
@@ -1842,7 +1837,15 @@ export class OpenSheetMusicDisplay {
     public get AutoResizeEnabled(): boolean {
         return this.autoResizeEnabled;
     }
+    /** Turns autoResize on or off, also during runtime, like setOptions({autoResize}).
+     *  Off removes the window's resize listener, which would keep this instance in memory, see dispose(); on adds it again.
+     */
     public set AutoResizeEnabled(value: boolean) {
+        if (value && !this.resizeHandlerAttached) {
+            this.autoResize();
+        } else if (!value && this.disposeResizeListener) {
+            this.disposeResizeListener();
+        }
         this.autoResizeEnabled = value;
     }
 
