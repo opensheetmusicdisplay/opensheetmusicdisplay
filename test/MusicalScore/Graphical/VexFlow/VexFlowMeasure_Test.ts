@@ -1257,7 +1257,10 @@ describe("VexFlow Measure", () => {
    // Non-regression test for the WIDTH-DRIVEN case of SlurFlattenToObstacle (issue #1466): a wide slur over a
    // (near-)flat passage must not balloon. The minimum-arc floor grows with sqrt(width) rather than linearly, so
    // wide slurs stay proportionally flat. Chopin Étude Op. 10 No. 4 has several system-spanning slurs that would
-   // otherwise arc very high; this checks the widest slur on the sheet is flattened substantially.
+   // otherwise arc very high; this checks the widest slur of measures 61-68 is flattened substantially. That is the
+   // widest slur of the whole sheet in Firefox (measures 66-68), and as wide and flattened as the widest in Chrome, whose
+   // narrower window breaks the systems elsewhere: the same check as for all 83 measures, which take 6 to 8 times as long
+   // to render.
    it("Keeps a wide slur over a flat passage from ballooning (SlurFlattenToObstacle, width-driven)", (done: Mocha.Done) => {
       const score: Document = TestUtils.getScore("test_dynamics_attribute_Chopin_Etudes_op_10_4_Duepree02.musicxml");
       if (!score) {
@@ -1302,6 +1305,9 @@ describe("VexFlow Measure", () => {
 
       const osmdOff: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
       const osmdOn: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      for (const osmd of [osmdOff, osmdOn]) {
+         osmd.setOptions({ drawFromMeasureNumber: 61, drawUpToMeasureNumber: 68 });
+      }
 
       osmdOff.load(xml).then(() => {
          osmdOff.EngravingRules.SlurFlattenToObstacle = false;

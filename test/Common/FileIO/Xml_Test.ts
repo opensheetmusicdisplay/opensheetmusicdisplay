@@ -17,19 +17,12 @@ describe("XML interface", () => {
     const documentElement: IXmlElement = new IXmlElement(doc.documentElement);
 
 
-    // Test all the following xml files:
+    // Test all the following xml files. The samples other tests load, and fail on if they don't load, aren't listed
+    //   again, e.g. Dichterliebe01.xml (the renderNext tests).
     const xmlTestset: string[] = [
         "ActorPreludeSample.xml",
-        "Beethoven_AnDieFerneGeliebte.xml",
-        "CharlesGounod_Meditation.xml",
-        "Debussy_Mandoline.xml",
-        "Dichterliebe01.xml",
         "JohannSebastianBach_Air.xml",
         "JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml",
-        "JosephHaydn_ConcertanteCello.xml",
-        "Mozart_AnChloe.xml",
-        "Mozart_DasVeilchen.xml",
-        "MuzioClementi_SonatinaOpus36No1_Part1.xml",
         "MuzioClementi_SonatinaOpus36No1_Part2.xml",
         "MuzioClementi_SonatinaOpus36No3_Part1.xml",
         "MuzioClementi_SonatinaOpus36No3_Part2.xml",
@@ -37,7 +30,6 @@ describe("XML interface", () => {
         "ScottJoplin_EliteSyncopations.xml",
         "ScottJoplin_The_Entertainer.xml",
         "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
-        "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
         "VariousChordTests.musicxml",
     ];
     for (const score of xmlTestset) {
