@@ -2822,12 +2822,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
       }
     }
-    if (this.rules.AlwaysSetPreferredSkyBottomLineBackendAutomatically) {
-      this.rules.setPreferredSkyBottomLineBackendAutomatically(numMeasures);
-    }
     if (numMeasures >= this.rules.SkyBottomLineBatchMinMeasures) {
-      const calculator: SkyBottomLineBatchCalculator = new SkyBottomLineBatchCalculator(
-        staffLines, this.rules.PreferredSkyBottomLineBatchCalculatorBackend);
+      const calculator: SkyBottomLineBatchCalculator = new SkyBottomLineBatchCalculator(staffLines);
       calculator.calculateLines();
     } else {
       for (const staffLine of staffLines) {

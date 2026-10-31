@@ -4,13 +4,23 @@ Tools for benchmarking and validating the skyline/bottom-line calculation
 (see `GeometricSkyBottomLineContext`, `EngravingRules.UseGeometricSkyBottomLineCalculation`, #937),
 plus generic render comparison helpers.
 
+OSMD calculates the skylines in one of two ways, which these tools compare:
+- **geometric**, the default since 2.0.0 (`UseGeometricSkyBottomLineCalculation` true) and the fastest: from the extents
+  of the VexFlow draw calls in a virtual context (`GeometricSkyBottomLineContext`), without drawing anything.
+- **pixel-based**, also called **raster** (`UseGeometricSkyBottomLineCalculation` false, OSMD's method before 2.0.0):
+  draws the measures on a canvas and scans its pixels, read with `getImageData`. Per staffline (a canvas per measure),
+  or from `SkyBottomLineBatchMinMeasures` measures on in batches (`SkyBottomLineBatchCalculator`, the measures in table
+  canvases), with the batch backend Plain (`SkyBottomLineBatchCalculatorBackendType`; "Plain" as in without WebGL: the
+  WebGL backend was removed, as it was even slower).
+
 All node tools must be run **from the repository root** and need a current build
 (`npx webpack --config webpack.dev.js && cp build/opensheetmusicdisplay.js build/opensheetmusicdisplay.min.js`).
 
 ## Benchmarks
 
-- `skylineBenchBrowser.html` — measures `osmd.render()` and the skyline phase for all four
-  calculation methods (geometric, per-staffline raster, batch Plain, batch WebGL) in a real browser.
+- `skylineBenchBrowser.html` — measures `osmd.render()` and the skyline phase for the geometric
+  calculation (`geo`) and the pixel-based one, per staffline (`rasterSingle`) and in batches
+  (`rasterBatchPlain`), in a real browser.
   Serve the repo root, e.g. `npx http-server -p 8081 .`, then open
   `http://localhost:8081/test/performance/skylineBenchBrowser.html`.
 - `skylineBench.mjs` — the same comparison in node (jsdom + node-canvas). Note that node-canvas

@@ -11,7 +11,8 @@ import {
 
 /**
  * This class calculates the skylines and the bottom lines by iterating over pixels retrieved via
- * CanvasRenderingContext2D.getImageData().
+ * CanvasRenderingContext2D.getImageData(), for the pixel-based batch calculation (SkyBottomLineBatchCalculator),
+ * which OSMD only uses if EngravingRules.UseGeometricSkyBottomLineCalculation is false: the geometric calculation is faster.
  */
 export class PlainSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatchCalculatorBackend {
     constructor(rules: EngravingRules, measures: VexFlowMeasure[]) {
