@@ -75,6 +75,8 @@ stave.js (merged/fixed vexflow 4):
 prevent a bug where a modifier width is NaN, leading to a VexFlow error (fixed vexflow 4)
 stave.setSection(section, y, xOffset = 0, fontSize = 12):
 add xOffset, fontSize arguments (see stavesection.js) (merged vexflow 4.x)
+draw(): draw the lines in a group of their own, class vf-stave (merged vexflow 4), which has their style
+  (e.g. stroke="#000000"), so that its stroke colors them (custom addition, see svgcontext.js)
 
 stavebarline.js (custom addition):
 support double_heavy barline (heavy-heavy in MusicXML)
@@ -133,6 +135,8 @@ able to add extra attributes (like svg node id) to a stroke (e.g. stem)
 fix rect() always using black color, ignoring attributes.stroke (ctx strokeStlye) -> fix defaultColorMusic ignored
 measureText(text, true) returns the text advance (getComputedTextLength()) as the width, like canvas measureText(), instead of the bounding box
 setRawFont(): use the whole family after the size (e.g. "Times New Roman" in "10pt Times New Roman"), not only its first word
+openGroup(cls, id, { strokeStyle: true }): the group gets the style of the lines drawn into it (e.g. fill="none" stroke="#000000"),
+  which they inherit and leave out, like the SVG defaults that the root svg sets (see stave.js)
 
 tables.js (custom addition):
 add inverted triangle notehead ('TI')
