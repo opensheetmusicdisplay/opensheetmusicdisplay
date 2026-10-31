@@ -96,6 +96,9 @@ export class OpenSheetMusicDisplay {
     protected rules: EngravingRules;
     protected autoResizeEnabled: boolean;
     protected resizeHandlerAttached: boolean;
+    /** The container's content width (getContainerContentWidth()) the last layout was made for: by render(), or at the start
+     *  of incremental rendering. Turning autoResize on re-renders a rendered sheet only if the width differs from it. */
+    protected layoutContainerWidth: number;
     /** Removes the window's resize listener added for autoResize (see handleResize()), e.g. in dispose(). */
     private disposeResizeListener: () => void;
     protected followCursor: boolean;
@@ -295,6 +298,7 @@ export class OpenSheetMusicDisplay {
 
         // Set page width
         let width: number = this.getContainerContentWidth();
+        this.layoutContainerWidth = width;
         if (this.rules.RenderSingleHorizontalStaffline) {
             width = this.rules.SheetMaximumWidth; // set safe maximum (browser limit), will be reduced later
             // reduced later in MusicSheetCalculator.calculatePageLabels (sets sheet.pageWidth to page.PositionAndShape.Size.width before labels)
@@ -677,6 +681,7 @@ export class OpenSheetMusicDisplay {
             this.lazyDrawnSystemPositions = [];
             this.graphic.GetCalculator?.clearSkyBottomLineCache(); // fresh lazy session: drop reused sky/bottom lines
             this.lazyLayoutWidth = this.getContainerContentWidth();
+            this.layoutContainerWidth = this.lazyLayoutWidth;
         }
         const lastSheetMeasureIndex: number = this.sheet.SourceMeasures.length - 1;
 
@@ -1669,8 +1674,10 @@ export class OpenSheetMusicDisplay {
         // current width right away. (Only in that case: otherwise - e.g. with the default
         // autoResize on creation - these initial timers would re-render the first sheet the
         // application loads and renders a second time, once the timers fire.)
+        // And only if the container's width changed since the layout, e.g. while autoResize was off: turning it off and on
+        // again doesn't re-render a sheet that already fits.
         const renderedBeforeAttach: boolean = this.rules.RenderCount > 0;
-        if (renderedBeforeAttach) {
+        if (renderedBeforeAttach && this.getContainerContentWidth() !== this.layoutContainerWidth) {
             window.setTimeout(startCallback, 0);
             window.setTimeout(endCallback, 1);
         }
