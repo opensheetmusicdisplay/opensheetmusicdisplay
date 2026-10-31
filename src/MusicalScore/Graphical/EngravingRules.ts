@@ -1234,8 +1234,10 @@ export class EngravingRules {
         }
     }
 
-    /** Not used anymore: sets PreferredSkyBottomLineBatchCalculatorBackend to Plain, the only backend since the WebGL backend
-     *  was removed (it chose WebGL for large scores in Chromium browsers).
+    /** Not used anymore, without effect: OSMD calculates the skylines geometrically (UseGeometricSkyBottomLineCalculation, default
+     *  true), which is faster than the pixel-based calculation with either of its backends, WebGL or Plain. This only sets
+     *  PreferredSkyBottomLineBatchCalculatorBackend, which isn't read anymore, to Plain, the only backend left.
+     *  It chose WebGL for large scores in Chromium browsers before the WebGL backend was removed.
      * @deprecated
      */
     public setPreferredSkyBottomLineBackendAutomatically(numberOfGraphicalMeasures: number = -1): void {
