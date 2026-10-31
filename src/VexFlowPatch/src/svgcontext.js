@@ -164,11 +164,12 @@ export class SVGContext {
 
   /**
    * Opens a group: the elements drawn until closeGroup() go into it (allows grouping elements in containers for interactivity).
-   * VexFlowPatch: a group opened with attrs.omitIfEmpty (a note's modifiers) is only written once something is drawn into it,
-   * so a note without accidentals, dots etc. has no empty group for them. With attrs.mergeIntoChild (a note's head, stem and
-   * flag, a beam) and mergeSingleChildGroups set, the group is only written if it gets more than one element: an only element
-   * gets the group's class, id and pointer-events instead, e.g. `<path class="vf-notehead">` instead of
-   * `<g class="vf-notehead"><path>`. These groups were about a quarter of the elements, which take most of a score's memory.
+   * VexFlowPatch: a group opened with attrs.omitIfEmpty (a note's modifiers, a barline, a tuplet) is only written once something
+   * is drawn into it, so a note without accidentals, dots etc. has no empty group for them. With attrs.mergeIntoChild (a note's
+   * head, stem and flag, a beam, a barline, a tuplet) and mergeSingleChildGroups set, the group is only written if it gets more
+   * than one element: an only element gets the group's class, id and pointer-events instead, e.g. `<path class="vf-notehead">`
+   * instead of `<g class="vf-notehead"><path>`. These groups were about a quarter of the elements, which take most of a score's
+   * memory.
    * A group opened with attrs.strokeStyle (a stave's lines, see stave.js) gets the style that stroke() would give each line
    * drawn into it, e.g. fill="none" stroke="#000000", which the lines inherit and leave out: so the group's style colors them,
    * e.g. its stroke attribute or a CSS rule for its class.

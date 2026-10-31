@@ -81,6 +81,10 @@ draw(): draw the lines in a group of their own, class vf-stave (merged vexflow 4
 stavebarline.js (custom addition):
 support double_heavy barline (heavy-heavy in MusicXML)
 change padding for end barlines for multimeasurerest element (#1329)
+draw(): draw the barline in a group, class vf-stavebarline (merged vexflow 4), which a barline of one shape is merged into
+  and a barline without shapes doesn't get (see svgcontext.js)
+renderInitialLine false: a begin repeat barline without the line at the stave's start (custom addition, for OSMD's repeat
+  at the start of a one-staff system, which replaced the barline's draw() before)
 
 stavenote.js (custom addition):
 Fix stem/flag formatting. Instead of shifting notes by default, update the stem/flag rendering to render different voices aligned.
@@ -167,6 +171,8 @@ add the note's x_shift, so that the strokes cross the stem of a note moved aside
 
 tuplet.js (vexflow 4: need to check if this option available):
 Add option tuplet.RenderTupletNumber
+draw(): draw the bracket and the number in a group, class vf-tuplet (merged vexflow 5), which a tuplet of one shape is
+  merged into and a tuplet without shapes doesn't get (see svgcontext.js)
 
 vexflow_font.js: (custom fix):
 downstem flag glyph (v9a): rotate and shift the flag so that it suits the stem better, as 1px steps don't align here)

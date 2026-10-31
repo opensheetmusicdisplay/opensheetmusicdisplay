@@ -132,6 +132,10 @@ export class Barline extends StaveModifier {
     stave.checkContext();
     this.setRendered();
 
+    // VexFlowPatch: in a group (class vf-stavebarline, like VexFlow 4 and 5 draw them). A barline of one shape, e.g. a single
+    //   barline's rect, gets the group's class instead (<rect class="vf-stavebarline">), and a barline without shapes (NONE)
+    //   gets no group (see SVGContext.openGroup() with attrs.mergeIntoChild and omitIfEmpty).
+    stave.context.openGroup('stavebarline', undefined, { mergeIntoChild: true, omitIfEmpty: true });
     switch (this.type) {
       case Barline.type.SINGLE:
         this.drawVerticalBar(stave, this.x, false);
@@ -149,7 +153,8 @@ export class Barline extends StaveModifier {
         // If the barline is shifted over (in front of clef/time/key)
         // Draw vertical bar at the beginning.
         this.drawRepeatBar(stave, this.x, true);
-        if (stave.getX() !== this.x) {
+        // VexFlowPatch: not with renderInitialLine false (OSMD: a repeat at the start of a one-staff system, #834)
+        if (stave.getX() !== this.x && this.renderInitialLine !== false) {
           this.drawVerticalBar(stave, stave.getX());
         }
 
@@ -165,6 +170,7 @@ export class Barline extends StaveModifier {
         // Default is NONE, so nothing to draw
         break;
     }
+    stave.context.closeGroup();
   }
 
   drawVerticalBar(stave, x, double_bar, double_heavy) {
