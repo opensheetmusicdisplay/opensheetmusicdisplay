@@ -93,13 +93,14 @@ export class SkyBottomLineCalculator {
         // range - Array.slice truncates its float bounds toward zero, which Math.trunc reproduces - so the
         // subsampled values are unchanged (min/max are order- and duplicate-independent).
         const arrayChunkSize: number = concatLength / arrayLength;
-        const subSampledSkyLine: number[] = [];
-        const subSampledBottomLine: number[] = [];
-        for (let chunkIndex: number = 0; chunkIndex < concatLength; chunkIndex += arrayChunkSize) {
-            if (subSampledSkyLine.length === arrayLength) {
-                break; // TODO find out why skyline.length becomes arrayLength + 1. see log.debug below
-            }
-
+        // Preallocated and index-filled like the concatenated lines: the staffline keeps these arrays (remapped in place below),
+        // and pushing would leave the room an array grows by unused, up to about a third of its memory.
+        const subSampledSkyLine: number[] = new Array(arrayLength);
+        const subSampledBottomLine: number[] = new Array(arrayLength);
+        let sampleCount: number = 0;
+        // The sample count also ends the loop: chunkIndex adds up arrayChunkSize, and the rounding can leave it just below
+        // concatLength after the last chunk, which would add a sample.
+        for (let chunkIndex: number = 0; chunkIndex < concatLength && sampleCount < arrayLength; chunkIndex += arrayChunkSize) {
             const endIndex: number = Math.min(concatLength, chunkIndex + arrayChunkSize);
             const startColumn: number = Math.trunc(chunkIndex); // slice(chunkIndex, ...) truncates the start toward zero
             let endColumn: number = Math.trunc(endIndex + 1); // slice's end is exclusive; "+ 1" mirrors the old endIndex + 1
@@ -117,15 +118,18 @@ export class SkyBottomLineCalculator {
                     bottomLineMax = bottomLineConcat[column];
                 }
             }
-            subSampledSkyLine.push(skyLineMin);
-            subSampledBottomLine.push(bottomLineMax);
+            subSampledSkyLine[sampleCount] = skyLineMin;
+            subSampledBottomLine[sampleCount] = bottomLineMax;
+            sampleCount++;
+        }
+        if (sampleCount !== arrayLength) { // only without columns (a staffline without measures)
+            log.debug(`SkyLine calculation was not correct (${sampleCount} instead of ${arrayLength})`);
+            subSampledSkyLine.length = sampleCount;
+            subSampledBottomLine.length = sampleCount;
         }
 
         this.mSkyLine = subSampledSkyLine;
         this.mBottomLine = subSampledBottomLine;
-        if (this.mSkyLine.length !== arrayLength) { // bottomline will always be same length as well
-            log.debug(`SkyLine calculation was not correct (${this.mSkyLine.length} instead of ${arrayLength})`);
-        }
 
         // Remap the values from 0 to +/- height in units. The extremes are found with a scan instead of
         // Math.max(...array) (which spreads the whole array into a call), and the remap is done in place.
