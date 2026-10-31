@@ -26,26 +26,26 @@ describe("XML interface", () => {
         "MuzioClementi_SonatinaOpus36No1_Part2.xml",
         "MuzioClementi_SonatinaOpus36No3_Part1.xml",
         "MuzioClementi_SonatinaOpus36No3_Part2.xml",
+        "OSMD_function_test_chord_tests_various.musicxml",
         "Saltarello.xml",
         "ScottJoplin_EliteSyncopations.xml",
         "ScottJoplin_The_Entertainer.xml",
         "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
-        "VariousChordTests.musicxml",
     ];
     for (const score of xmlTestset) {
         testFile(score);
     }
 
-    // Generates a test for a mxl file name
+    // Generates a test that loads an xml file
     function testFile(scoreName: string): void {
-        it(scoreName, (done: Mocha.Done) => {
+        it(scoreName, async () => {
             // Load the xml file content
             const score: Document = TestUtils.getScore(scoreName);
             const div: HTMLElement = document.createElement("div");
             const openSheetMusicDisplay: OpenSheetMusicDisplay =
                 TestUtils.createOpenSheetMusicDisplay(div);
-            openSheetMusicDisplay.load(score);
-            done();
+            // load() reports a sample it can't read by rejecting its promise, which fails the test only when awaited
+            await openSheetMusicDisplay.load(score);
         });
     }
 
