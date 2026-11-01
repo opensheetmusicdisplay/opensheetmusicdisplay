@@ -22,6 +22,8 @@ import { MusicSystem } from "./MusicSystem";
 import { GraphicalTie } from "./GraphicalTie";
 import { RepetitionInstruction, RepetitionInstructionEnum, AlignmentType } from "../VoiceData/Instructions/RepetitionInstruction";
 import { MultiExpression, MultiExpressionEntry } from "../VoiceData/Expressions/MultiExpression";
+import { MoodExpression } from "../VoiceData/Expressions/MoodExpression";
+import { UnknownExpression } from "../VoiceData/Expressions/UnknownExpression";
 import { StaffEntryLink } from "../VoiceData/StaffEntryLink";
 import { MusicSystemBuilder } from "./MusicSystemBuilder";
 import { MultiTempoExpression } from "../VoiceData/Expressions/MultiTempoExpression";
@@ -56,7 +58,7 @@ import { Label } from "../Label";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { VerticalSourceStaffEntryContainer } from "../VoiceData/VerticalSourceStaffEntryContainer";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
-import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
+import { AbstractExpression, PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { AbstractGraphicalInstruction } from "./AbstractGraphicalInstruction";
 import { GraphicalInstantaneousTempoExpression } from "./GraphicalInstantaneousTempoExpression";
 import { InstantaneousTempoExpression, MetronomeNote, MetronomeNoteGroup } from "../VoiceData/Expressions/InstantaneousTempoExpression";
@@ -871,7 +873,9 @@ export abstract class MusicSheetCalculator {
     }
 
     /**
-     * Calculate all the Mood and Unknown Expressions for a single [[MultiExpression]].
+     * Calculate all the Mood and Unknown Expressions for a single [[MultiExpression]]: its words, drawn together in one label.
+     * A verbal crescendo or diminuendo at the same position (e.g. "cresc.") is not part of the label: it's drawn as a dynamic
+     * of its own (see calculateDynamicExpressions()).
      * @param multiExpression
      * @param measureIndex
      * @param staffIndex
@@ -883,10 +887,11 @@ export abstract class MusicSheetCalculator {
         let relative: PointF2D = new PointF2D();
 
         const defaultYXml: number = multiExpression.UnknownList[0]?.defaultYXml;
-        if ((multiExpression.MoodList.length > 0) || (multiExpression.UnknownList.length > 0)) {
+        const wordsEntries: MultiExpressionEntry[] = multiExpression.EntriesList.filter((entry: MultiExpressionEntry): boolean =>
+            entry.expression instanceof MoodExpression || entry.expression instanceof UnknownExpression);
+        if (wordsEntries.length > 0) {
         let combinedExprString: string  = "";
-        for (let idx: number = 0, len: number = multiExpression.EntriesList.length; idx < len; ++idx) {
-            const entry: MultiExpressionEntry = multiExpression.EntriesList[idx];
+        for (const entry of wordsEntries) {
             if (entry.prefix !== "") {
                 if (combinedExprString === "") {
                     combinedExprString += entry.prefix;
@@ -912,18 +917,22 @@ export abstract class MusicSheetCalculator {
         }
 
         const fontHeight: number = this.rules.UnknownTextHeight;
-        const placement: PlacementEnum = multiExpression.getPlacementOfFirstEntry();
+        // Placement, font, color and language of the first words: the first entry (getPlacementOfFirstEntry() etc.) can be a
+        //   "cresc." with a placement and font of its own.
+        const firstWords: AbstractExpression = wordsEntries[0].expression;
+        const placement: PlacementEnum = firstWords.Placement;
+        const fontStyle: FontStyles = firstWords instanceof UnknownExpression ? firstWords.fontStyle ?? FontStyles.Regular : FontStyles.Italic;
         const graphLabel: GraphicalLabel  = this.calculateLabel(staffLine,
                                                                 relative, combinedExprString,
-                                                                multiExpression.getFontstyleOfFirstEntry(),
+                                                                fontStyle,
                                                                 placement,
                                                                 fontHeight);
         graphLabel.SVGClass = "osmd-words";
-        const colorXML: string = multiExpression.getColorXMLOfFirstEntry();
+        const colorXML: string = firstWords.ColorXML;
         if (this.rules.ExpressionsUseXMLColor && colorXML) {
             graphLabel.ColorXML = colorXML;
         }
-        graphLabel.Label.language = multiExpression.EntriesList[0]?.expression.language;
+        graphLabel.Label.language = firstWords.language;
         if (this.rules.PlaceWordsInsideStafflineFromXml) {
             if (defaultYXml < 0 && defaultYXml > -50) { // within staffline
                 let newY: number = defaultYXml / 10; // OSMD units
@@ -4276,10 +4285,12 @@ export abstract class MusicSheetCalculator {
 
                 if (this.graphicalMusicSheet.MeasureList[i][j].ParentStaff.isVisible()) {
                     for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {
+                        // also a verbal crescendo or diminuendo next to words: the words label doesn't include it
+                        //   (see calculateMoodAndUnknownExpression())
                         if (sourceMeasure.StaffLinkedExpressions[j][k].InstantaneousDynamic !== undefined ||
                             (sourceMeasure.StaffLinkedExpressions[j][k].StartingContinuousDynamic !== undefined &&
                                 sourceMeasure.StaffLinkedExpressions[j][k].StartingContinuousDynamic.StartMultiExpression ===
-                                sourceMeasure.StaffLinkedExpressions[j][k] && sourceMeasure.StaffLinkedExpressions[j][k].UnknownList.length === 0)
+                                sourceMeasure.StaffLinkedExpressions[j][k])
                         ) {
                             this.calculateDynamicExpressionsForMultiExpression(sourceMeasure.StaffLinkedExpressions[j][k], i, j);
                         }
