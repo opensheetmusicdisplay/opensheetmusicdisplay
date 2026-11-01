@@ -254,10 +254,10 @@ export abstract class MusicSheetDrawer {
     }
 
     /**
-     * Adds a class naming what a drawn element shows (e.g. "slur") to the SVG group it was drawn into, next to the class
-     * naming its shape (e.g. vf-curve), so that CSS and code can find e.g. all slurs. Labels get theirs from
-     * GraphicalLabel.SVGClass (see drawLabel()); the drawer names slurs (slur), the lines of wedges (wedge), lyric
-     * extender lines (extender) and the strokes of tremolos between notes and buzz rolls (tremolo).
+     * Adds a class naming what a drawn element shows (e.g. "osmd-slur") to the SVG group it was drawn into, next to the
+     * class naming its shape (e.g. vf-curve), so that CSS and code can find e.g. all slurs. Labels get theirs from
+     * GraphicalLabel.SVGClass (see drawLabel()); the drawer names slurs (osmd-slur), the lines of wedges (osmd-wedge),
+     * lyric extender lines (osmd-extender) and the strokes of tremolos between notes and buzz rolls (osmd-tremolo).
      * @param node the group, undefined if nothing was drawn, e.g. with the canvas backend
      * @param className the class
      */
@@ -489,7 +489,7 @@ export abstract class MusicSheetDrawer {
                 continue; // lazy horizontal: drawn once, with the batch that draws its end (like the lyric dashes)
             }
             const node: Node = this.drawGraphicalLine(new GraphicalLine(start, end, lyricLine.Width), this.rules.LyricUnderscoreLineWidth, lyricLine.colorHex);
-            this.addSVGClass(node, "extender");
+            this.addSVGClass(node, "osmd-extender");
         }
     }
 

@@ -72,7 +72,7 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
         const textAlignment: TextAlignmentEnum = placement === PlacementEnum.Above ?
             this.rules.ChordSymbolTextAlignmentTop : this.rules.ChordSymbolTextAlignmentBottom;
         this.graphicalLabel = new GraphicalLabel(new Label(text), textHeight, textAlignment, this.rules, this.boundingBox);
-        this.graphicalLabel.SVGClass = "chord-symbol";
+        this.graphicalLabel.SVGClass = "osmd-chord-symbol";
         this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(this.rules.ChordSymbolRelativeXOffset, 0.0);
         this.graphicalLabel.Label.colorDefault = this.rules.DefaultColorChordSymbol;
     }

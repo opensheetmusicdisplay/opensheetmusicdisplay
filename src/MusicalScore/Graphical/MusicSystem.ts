@@ -331,7 +331,7 @@ export abstract class MusicSystem extends GraphicalObject {
                 const graphicalLabel: GraphicalLabel = new GraphicalLabel(
                     instrNameLabel, instrumentLabelTextHeight, TextAlignmentEnum.LeftCenter, this.rules, this.boundingBox
                 );
-                graphicalLabel.SVGClass = isFirstSystem ? "part-name" : "part-abbreviation";
+                graphicalLabel.SVGClass = isFirstSystem ? "osmd-part-name" : "osmd-part-abbreviation";
                 graphicalLabel.setLabelPositionAndShapeBorders();
                 this.labels.setValue(instrument, graphicalLabel);
                 // X is set after all group and part label widths are known; Y is set after staff spacing.
@@ -395,7 +395,7 @@ export abstract class MusicSystem extends GraphicalObject {
                 const label: GraphicalLabel = new GraphicalLabel(
                     new Label(text), textHeight, TextAlignmentEnum.LeftCenter, this.rules, this.boundingBox
                 );
-                label.SVGClass = isFirstSystem ? "part-group-name" : "part-group-abbreviation";
+                label.SVGClass = isFirstSystem ? "osmd-part-group-name" : "osmd-part-group-abbreviation";
                 label.setLabelPositionAndShapeBorders();
                 this.groupLabels.set(group, label);
                 if (!byDepth[depth]) {

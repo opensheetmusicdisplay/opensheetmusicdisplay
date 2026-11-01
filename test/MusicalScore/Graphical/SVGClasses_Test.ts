@@ -4,8 +4,9 @@ import { TestUtils } from "../../Util/TestUtils";
 
 /**
  * The SVG groups of OSMD's labels, slurs, wedges, lyric extender lines and tremolo strokes get a class naming what they show,
- * next to the one naming their shape, e.g. g.vf-text.title or g.vf-curve.slur (GraphicalLabel.SVGClass,
- * MusicSheetDrawer.addSVGClass()).
+ * next to the one naming their shape, e.g. g.vf-text.osmd-title or g.vf-curve.osmd-slur (GraphicalLabel.SVGClass,
+ * MusicSheetDrawer.addSVGClass()). OSMD's own classes are prefixed osmd-, so that a page's classes (e.g. a heading's .title)
+ * don't reach them: also the staff lines' groups (osmd-staffline) and multiple rest measures (osmd-multi).
  */
 describe("SVG classes naming what labels and lines show", (): void => {
     let div: HTMLElement;
@@ -76,13 +77,18 @@ describe("SVG classes naming what labels and lines show", (): void => {
             `<part id="P1">${violin}</part><part id="P2">${viola}</part></score-partwise>`;
     }
 
+    /** OSMD's classes without their prefix: none of them may be in the SVG, a page's CSS for them would reach OSMD's elements. */
+    const plainClasses: string[] = ["title", "subtitle", "composer", "lyricist", "copyright", "credit", "part-name",
+        "part-abbreviation", "part-group-name", "part-group-abbreviation", "measure-number", "chord-symbol", "fingering", "lyrics",
+        "dash", "dynamic", "tempo", "words", "slur", "wedge", "extender", "tremolo", "staffline", "multi"];
+
     /** The texts of the groups with the class, in the order they were drawn. */
     function texts(cls: string): string[] {
         return Array.from(div.querySelectorAll(`g.${cls}`)).map((group: Element): string => group.textContent);
     }
 
     it("names the groups of labels, slurs, wedges, lyric extenders and tremolo strokes by what they show", async (): Promise<void> => {
-        osmd.EngravingRules.ReadFirstPageCreditWords = true; // the untyped credit becomes a label of its own (credit)
+        osmd.EngravingRules.ReadFirstPageCreditWords = true; // the untyped credit becomes a label of its own (osmd-credit)
         osmd.EngravingRules.RenderCopyright = true;
         osmd.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
         await osmd.load(score());
@@ -93,7 +99,7 @@ describe("SVG classes naming what labels and lines show", (): void => {
         for (const cls of ["title", "subtitle", "composer", "lyricist", "copyright", "credit", "part-name", "part-abbreviation",
             "part-group-name", "part-group-abbreviation", "measure-number", "chord-symbol", "fingering", "lyrics", "dash", "dynamic",
             "tempo", "words"]) {
-            labels[cls] = texts(`vf-text.${cls}`);
+            labels[cls] = texts(`vf-text.osmd-${cls}`);
         }
         expect(labels).to.deep.equal({
             "title": ["Title"], "subtitle": ["Subtitle"], "composer": ["Composer"], "lyricist": ["Lyricist"],
@@ -103,15 +109,30 @@ describe("SVG classes naming what labels and lines show", (): void => {
             "measure-number": ["2"], "chord-symbol": ["C"], "fingering": ["1"],
             "lyrics": ["Hel", "lo", "la", "da"], "dash": ["-"], "dynamic": ["f", "cresc."], "tempo": ["Allegro"], "words": ["dolce"],
         });
-        expect(div.querySelectorAll("g.vf-curve.slur").length, "slurs").to.equal(1);
-        expect(div.querySelectorAll("g.vf-line.wedge").length, "the two lines of the wedge").to.equal(2);
-        expect(div.querySelectorAll("g.vf-line.extender").length, "lyric extender lines").to.equal(1);
-        expect(div.querySelectorAll("g.vf-path.tremolo").length, "the 3 strokes of the two-note tremolo and the buzz roll").to.equal(4);
+        expect(div.querySelectorAll("g.vf-curve.osmd-slur").length, "slurs").to.equal(1);
+        expect(div.querySelectorAll("g.vf-line.osmd-wedge").length, "the two lines of the wedge").to.equal(2);
+        expect(div.querySelectorAll("g.vf-line.osmd-extender").length, "lyric extender lines").to.equal(1);
+        expect(div.querySelectorAll("g.vf-path.osmd-tremolo").length, "the 3 strokes of the two-note tremolo and the buzz roll").to.equal(4);
+        expect(div.querySelectorAll("g.osmd-staffline").length, "the staff lines' groups, 2 parts in 2 systems").to.equal(4);
+        expect(div.querySelectorAll(plainClasses.map((cls: string): string => `.${cls}`).join(", ")).length, "classes without osmd-")
+            .to.equal(0);
 
         // every other label, line, curve and path has a class too (the following lines of a label are groups in its group)
         const unnamed: string[] = Array.from(div.querySelectorAll("g.vf-text, g.vf-line, g.vf-curve, g.vf-path"))
             .filter((group: Element): boolean => group.classList.length === 1 && !group.parentElement.closest(".vf-text"))
             .map((group: Element): string => group.outerHTML);
         expect(unnamed, "groups with only the class of their shape").to.deep.equal([]);
+    });
+
+    it("names the measure group of a multiple rest measure osmd-multi", async (): Promise<void> => {
+        const rest: string = "<note><rest measure=\"yes\"/><duration>8</duration></note>";
+        const measures: string = [note("C", 5, 8, "whole"), rest, rest, rest].map((content: string, index: number): string =>
+            `<measure number="${index + 1}">${index === 0 ? "<attributes><divisions>2</divisions><time><beats>4</beats>" +
+                "<beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>" : ""}${content}</measure>`).join("");
+        await osmd.load("<?xml version=\"1.0\" encoding=\"UTF-8\"?><score-partwise version=\"4.0\"><part-list>" +
+            `<score-part id="P1"><part-name></part-name></score-part></part-list><part id="P1">${measures}</part></score-partwise>`);
+        osmd.render();
+        expect(div.querySelectorAll("g.vf-measure.osmd-multi").length, "the multiple rest measure of measures 2 to 4").to.equal(1);
+        expect(div.querySelectorAll(".multi").length, "the class without osmd-").to.equal(0);
     });
 });
