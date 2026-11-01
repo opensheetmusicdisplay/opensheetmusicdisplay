@@ -6,14 +6,15 @@ import { VexFlowGraphicalNote } from "../../../../src/MusicalScore/Graphical/Vex
 import { TestUtils } from "../../../Util/TestUtils";
 
 /**
- * Voltas, repetitions (D.C., Fine, coda, segno), rehearsal marks, octave brackets, pedals and wavy lines are drawn in groups
- * named after the VexFlow class that draws them: g.vf-volta, g.vf-repetition, g.vf-stavesection, g.vf-textbracket,
- * g.vf-pedalmarking, g.vf-vibratobracket (see the VexFlowPatch's Volta.draw() etc.). One of a single shape, e.g. the line of
- * a volta's middle measure or a wavy line, gets the class instead (EngravingRules.SVGMergeSingleChildGroups). A multi-rest
- * measure's connectors are drawn in g.vf-connector like the other measures' connectors, and a grace note's slash in the
- * grace note's group. So no shape is left without a class in a measure's or staffline's group.
+ * Voltas, repetitions (D.C., Fine, coda, segno), rehearsal marks, octave brackets, pedals, wavy lines and ornaments are drawn
+ * in groups named after the VexFlow class that draws them: g.vf-volta, g.vf-repetition, g.vf-stavesection, g.vf-textbracket,
+ * g.vf-pedalmarking, g.vf-vibratobracket, g.vf-ornament (see the VexFlowPatch's Volta.draw() etc.). One of a single shape,
+ * e.g. the line of a volta's middle measure, a wavy line or a trill without accidental marks, gets the class instead
+ * (EngravingRules.SVGMergeSingleChildGroups). A multi-rest measure's connectors are drawn in g.vf-connector like the other
+ * measures' connectors, and a grace note's slash in the grace note's group. So no shape is left without a class in a
+ * measure's or staffline's group, and an ornament's shapes have one in their note's g.vf-modifiers.
  */
-describe("SVG groups of voltas, repetitions, rehearsal marks, octave brackets, pedals, wavy lines and grace-note slashes", (): void => {
+describe("SVG groups of voltas, repetitions, rehearsal marks, octave brackets, pedals, wavy lines, ornaments and grace-note slashes", (): void => {
     let div: HTMLElement;
     let osmd: OpenSheetMusicDisplay;
     beforeEach((): void => {
@@ -154,5 +155,38 @@ describe("SVG groups of voltas, repetitions, rehearsal marks, octave brackets, p
 
         graceNote.setVisible(false);
         expect(window.getComputedStyle(slash).visibility, "the slash after setVisible(false)").to.equal("hidden");
+    });
+
+    it("draws an ornament with its accidental marks in g.vf-ornament, a lone glyph as path.vf-ornament, colored by setColor()", async (): Promise<void> => {
+        await osmd.load(score([[
+            "<trill-mark/>",
+            "<inverted-mordent/><accidental-mark placement=\"above\">sharp</accidental-mark>",
+            "<turn/><accidental-mark placement=\"above\">flat</accidental-mark><accidental-mark placement=\"below\">sharp</accidental-mark>",
+            "<mordent/><accidental-mark placement=\"below\">sharp-sharp</accidental-mark>",
+        ].map((ornament: string): string => note("B", 4, 1, "quarter", `<notations><ornaments>${ornament}</ornaments></notations>`)).join("")]));
+        osmd.render();
+        /** The notes of the measure, read again after each render(). */
+        const notes: () => VexFlowGraphicalNote[] = (): VexFlowGraphicalNote[] => osmd.GraphicSheet.MeasureList[0][0].staffEntries
+            .map(entry => entry.graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
+        const ornamentsPerNote: () => string[][] = (): string[][] =>
+            notes().map((graphicalNote: VexFlowGraphicalNote): string[] => shapes(graphicalNote.getSVGGElement(), "vf-ornament"));
+        // the trill alone; the mordent and its sharp above; the turn with its sharp below and flat above; the mordent with its
+        //   sharp-sharp below, two sharps
+        expect(ornamentsPerNote(), "ornaments per note")
+            .to.deep.equal([["path"], ["g: path path"], ["g: path path path"], ["g: path path path"]]);
+        expect(div.querySelectorAll(".vf-modifiers > .vf-ornament").length, "ornaments in their note's modifiers group").to.equal(4);
+        expect(div.querySelectorAll(".vf-modifiers > path:not([class])").length, "shapes without a class in the modifiers").to.equal(0);
+
+        const turn: VexFlowGraphicalNote = notes()[2];
+        turn.setColor("#FF0000");
+        expect(Array.from(turn.getSVGGElement().querySelectorAll(".vf-ornament > path"))
+            .map((path: Element): string => window.getComputedStyle(path).fill), "the turn and its accidental marks after setColor()")
+            .to.deep.equal(["rgb(255, 0, 0)", "rgb(255, 0, 0)", "rgb(255, 0, 0)"]);
+
+        osmd.EngravingRules.SVGMergeSingleChildGroups = false;
+        osmd.render();
+        expect(ornamentsPerNote(), "ornaments per note, SVGMergeSingleChildGroups false")
+            .to.deep.equal([["g: path"], ["g: path path"], ["g: path path path"], ["g: path path path"]]);
+        expect(emptyGroups(["vf-ornament"]), "empty groups").to.equal(0);
     });
 });

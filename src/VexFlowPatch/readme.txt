@@ -67,6 +67,8 @@ count the text line of an ornament from the outermost of the notes at its time w
 format(): an ornament's accidental marks take text lines too, so that the ornament stacked on it isn't drawn beside them
 getExtent(): the box of the ornament with its accidental marks as draw() renders it (its position now from getRenderXY()), so
   that OSMD's slurs can keep clear of the ornaments of their start and end notes before drawing
+draw(): draw the glyph and its accidental marks in a group, class vf-ornament (merged vexflow 4), which an ornament of one
+  shape (a glyph without accidental marks) is merged into (see svgcontext.js)
 
 pedalmarking.js (custom addition):
 Add rendering options for pedals that break across systems.

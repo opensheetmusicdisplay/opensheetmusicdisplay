@@ -314,9 +314,10 @@ describe("VexFlow Measure", () => {
          osmd.render();
          expect(drawnOrnamentAccidentals(osmd), "[above, below] of each measure's turn").to.deep.equal(
             [[[], ["##"]], [[], ["#", "#"]], [[], ["n", "#"]], [["#", "#"], []]]);
-         // the two sharps of measure 2 are drawn side by side with a space between them, before the turn itself
+         // the two sharps of measure 2 are drawn side by side with a space between them, before the turn itself (in the
+         //   ornament's group, g.vf-ornament)
          const ornamentPaths: Element[] = Array.from((osmd.GraphicSheet.MeasureList[1][0].staffEntries[0].graphicalVoiceEntries[0]
-            .notes[0] as VexFlowGraphicalNote).getModifierSVGs()[0].children);
+            .notes[0] as VexFlowGraphicalNote).getModifierSVGs()[0].querySelector("g.vf-ornament").children);
          const [first, second] = ornamentPaths.map((path: Element): DOMRect => (path as SVGGraphicsElement).getBBox());
          // the accidentalSpacing (3) is scaled by 1/1.3, like the ornament's accidentals themselves
          expect(second.x - (first.x + first.width), "the space between the two sharps").to.be.closeTo(3 / 1.3, 1.5);
@@ -333,9 +334,10 @@ describe("VexFlow Measure", () => {
          osmd.render();
          expect(drawnOrnamentAccidentals(osmd), "[above, below] of each measure's ornament").to.deep.equal(
             [[["#", "##"], []], [[], ["b", "bb"]], [[], ["n", "b"]], [["bs"], []]]);
-         // the sharp and the double sharp of the triple sharp share one line, like the accidentals of a note
+         // the sharp and the double sharp of the triple sharp share one line, like the accidentals of a note (in the
+         //   ornament's group, g.vf-ornament, after the trill)
          const ornamentPaths: Element[] = Array.from((osmd.GraphicSheet.MeasureList[0][0].staffEntries[0].graphicalVoiceEntries[0]
-            .notes[0] as VexFlowGraphicalNote).getModifierSVGs()[0].children);
+            .notes[0] as VexFlowGraphicalNote).getModifierSVGs()[0].querySelector("g.vf-ornament").children);
          const [sharp, doubleSharp] = ornamentPaths.slice(1).map((path: Element): DOMRect => (path as SVGGraphicsElement).getBBox());
          expect(sharp.y + sharp.height / 2, "the centers of the sharp and the double sharp")
             .to.be.closeTo(doubleSharp.y + doubleSharp.height / 2, 1);
