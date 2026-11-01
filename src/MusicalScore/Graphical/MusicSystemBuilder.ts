@@ -85,7 +85,8 @@ export class MusicSystemBuilder {
                 graphicalMeasures[idx].resetLayout();
             }
             const sourceMeasure: SourceMeasure = graphicalMeasures[0].parentSourceMeasure;
-            const sourceMeasureEndsPart: boolean = sourceMeasure.HasEndLine;
+            // a multiple rest measure ends a part where its last measure does, with a final barline
+            const sourceMeasureEndsPart: boolean = this.getLastMeasureOfMultiRest(sourceMeasure).HasEndLine;
             const sourceMeasureBreaksSystem: boolean = sourceMeasureEndsPart && this.rules.NewPartAndSystemAfterFinalBarline;
             const isSystemStartMeasure: boolean = this.currentSystemParams.IsSystemStartMeasure();
             sourceMeasure.IsSystemStartMeasure = isSystemStartMeasure;

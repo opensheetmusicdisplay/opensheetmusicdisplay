@@ -5,12 +5,9 @@ import { GraphicalMeasure } from "../../../src/MusicalScore/Graphical/GraphicalM
 import { GraphicalMusicSheet } from "../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import { VexFlowGraphicalNote } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
 import { ClefEnum } from "../../../src/MusicalScore/VoiceData/Instructions/ClefInstruction";
+import { SystemLinePosition } from "../../../src/MusicalScore/Graphical/SystemLinePosition";
+import { SystemLinesEnum } from "../../../src/MusicalScore/Graphical/SystemLinesEnum";
 
-/**
- * test_multiple_rest_measures_auto_key_time_change.musicxml: measures 2-6 are whole-measure rests, measure 2 starts with D major,
- * measure 3 with E major and measure 5 with 3/4. A multiple rest measure only shows the key and time signature of its first measure,
- * so measure 2 stays a single rest measure, and measures 3-4 and 5-6 become multiple rest measures (instead of one for measures 2-6).
- */
 describe("Multiple rest measures", () => {
     let container: HTMLElement;
     let osmd: OpenSheetMusicDisplay;
@@ -25,10 +22,25 @@ describe("Multiple rest measures", () => {
         container.remove();
     });
 
-    it("begins a new multiple rest measure at a key or time change, and draws the key and time signature there", async () => {
-        await osmd.load(TestUtils.getScore("test_multiple_rest_measures_auto_key_time_change.musicxml"));
+    /** Per measure: how many measures the multiple rest measure it begins has (0 for none). */
+    function multipleRestMeasureCounts(): number[] {
+        return osmd.Sheet.SourceMeasures.map(measure => measure.multipleRestMeasures ?? 0);
+    }
+
+    /** Loads and renders the sample, and returns per measure how many measures the multiple rest measure it begins has (0 for none). */
+    async function renderSample(sampleName: string): Promise<number[]> {
+        await osmd.load(TestUtils.getScore(sampleName));
         osmd.render();
-        const restMeasureCounts: number[] = osmd.Sheet.SourceMeasures.map(measure => measure.multipleRestMeasures ?? 0);
+        return multipleRestMeasureCounts();
+    }
+
+    /**
+     * test_multiple_rest_measures_auto_key_time_change.musicxml: measures 2-6 are whole-measure rests, measure 2 starts with D major,
+     * measure 3 with E major and measure 5 with 3/4. A multiple rest measure only shows the key and time signature of its first measure,
+     * so measure 2 stays a single rest measure, and measures 3-4 and 5-6 become multiple rest measures (instead of one for measures 2-6).
+     */
+    it("begins a new multiple rest measure at a key or time change, and draws the key and time signature there", async () => {
+        const restMeasureCounts: number[] = await renderSample("test_multiple_rest_measures_auto_key_time_change.musicxml");
         expect(restMeasureCounts, "measures per multiple rest measure, for measures 1-7").to.deep.equal([0, 0, 2, 0, 2, 0, 0]);
         expect(osmd.GraphicSheet.MusicPages[0].MusicSystems.length, "systems").to.equal(1);
         // [measure group id, number of accidentals] of the key signatures drawn (none for C major); the group of a measure has the id
@@ -87,11 +99,6 @@ describe("Multiple rest measures", () => {
         // measure 2 got the width of a multiple rest measure (MultipleRestMeasureDefaultWidth), less than its rest needs
         expect(widths[1], "measure 2").to.equal(widths[2]);
     });
-
-    /** Per measure: how many measures the multiple rest measure it begins has (0 for none). */
-    function multipleRestMeasureCounts(): number[] {
-        return osmd.Sheet.SourceMeasures.map(measure => measure.multipleRestMeasures ?? 0);
-    }
 
     it("draws the measures of generated multiple rest measures again when updateGraphic() follows turning off " +
         "RenderMultipleRestMeasures or the generation", async () => {
@@ -219,5 +226,74 @@ describe("Multiple rest measures", () => {
         osmd.updateGraphic();
         osmd.render();
         expect(multipleRestMeasureCounts(), "flute alone").to.deep.equal([0, 6, 0, 0, 0, 0, 0, 0]);
+    });
+
+    /**
+     * test_multiple_rest_measures_auto_rehearsal_mark.musicxml: measures 2-5 are whole-measure rests, measure 4 has the rehearsal mark B.
+     * A multiple rest measure only shows the rehearsal mark of its first measure, so measures 2-3 and 4-5 become multiple rest measures.
+     */
+    it("begins a new multiple rest measure at a rehearsal mark, and draws the rehearsal mark there", async () => {
+        const restMeasureCounts: number[] = await renderSample("test_multiple_rest_measures_auto_rehearsal_mark.musicxml");
+        expect(restMeasureCounts, "measures per multiple rest measure, for measures 1-6").to.deep.equal([0, 2, 0, 2, 0, 0]);
+        // [measure group id, text] of the rehearsal marks drawn
+        const rehearsalMarks: [string, string][] = Array.from(container.querySelectorAll(".vf-stavesection"))
+            .map((mark): [string, string] => [mark.closest(".vf-measure").id, mark.textContent]);
+        expect(rehearsalMarks, "A in measure 1, B in measure 4").to.deep.equal([["osmd-m0-0", "A"], ["osmd-m3-0", "B"]]);
+    });
+
+    /**
+     * test_multiple_rest_measures_auto_barlines.musicxml: measures 2-9 are whole-measure rests, measure 3 ends with a double barline,
+     * measure 5 with a heavy-heavy one and measure 7 with a final barline (the end of the first movement).
+     * A multiple rest measure only shows the barline of its last measure, so measures 2-3, 4-5, 6-7 and 8-9 become multiple rest measures.
+     */
+    it("ends a multiple rest measure with a double or final barline, and begins a new part after the final barline", async () => {
+        osmd.EngravingRules.NewPartAndSystemAfterFinalBarline = false; // one system, measure numbers 1-10 (read when loading)
+        const restMeasureCounts: number[] = await renderSample("test_multiple_rest_measures_auto_barlines.musicxml");
+        expect(restMeasureCounts, "measures per multiple rest measure, for measures 1-10").to.deep.equal([0, 2, 0, 2, 0, 2, 0, 2, 0, 0]);
+        // [measure number, barline] of the barlines at the measure ends
+        const endBarlines: [number, SystemLinesEnum][] = osmd.GraphicSheet.MusicPages[0].MusicSystems[0].SystemLines
+            .filter(line => line.linePosition === SystemLinePosition.MeasureEnd)
+            .map((line): [number, SystemLinesEnum] => [line.topMeasure.MeasureNumber, line.lineType]);
+        expect(endBarlines, "barlines after measures 1, 2-3, 4-5, 6-7, 8-9 and 10").to.deep.equal([
+            [1, SystemLinesEnum.SingleThin], [2, SystemLinesEnum.DoubleThin], [4, SystemLinesEnum.DoubleBold],
+            [6, SystemLinesEnum.ThinBold], [8, SystemLinesEnum.SingleThin], [10, SystemLinesEnum.ThinBold]]);
+
+        // the second movement begins a new system when the multiple rest measure 6-7 ends the first one with its final barline
+        osmd.EngravingRules.NewPartAndSystemAfterFinalBarline = true; // (read when loading)
+        await renderSample("test_multiple_rest_measures_auto_barlines.musicxml");
+        const measuresPerSystem: number[] = osmd.GraphicSheet.MusicPages[0].MusicSystems.map(system => system.StaffLines[0].Measures.length);
+        expect(measuresPerSystem, "measures 1, 2-3, 4-5, 6-7 in the first system, 8-9 and 10 in the second").to.deep.equal([4, 2]);
+    });
+
+    /**
+     * test_multiple_rest_measures_auto_xml_breaks.musicxml: measures 2-7 are whole-measure rests, measure 4 begins a new system in the XML,
+     * measure 6 a new page. The layout can't break within a multiple rest measure, so with newSystemFromXML and newPageFromXML,
+     * measures 2-3, 4-5 and 6-7 become multiple rest measures. Without these options, measures 2-7 become one.
+     */
+    it("begins a new multiple rest measure at a system or page break from the XML that the layout follows", async () => {
+        let restMeasureCounts: number[] = await renderSample("test_multiple_rest_measures_auto_xml_breaks.musicxml");
+        expect(restMeasureCounts, "measures per multiple rest measure without the breaks, for measures 1-8").to.deep.equal([0, 6, 0, 0, 0, 0, 0, 0]);
+
+        osmd.setOptions({ newSystemFromXML: true, newPageFromXML: true });
+        restMeasureCounts = await renderSample("test_multiple_rest_measures_auto_xml_breaks.musicxml");
+        expect(restMeasureCounts, "measures per multiple rest measure with the breaks, for measures 1-8").to.deep.equal([0, 2, 0, 2, 0, 2, 0, 0]);
+        // per page, the measure numbers of the first measures of its systems
+        const systemStarts: number[][] = osmd.GraphicSheet.MusicPages.map(page =>
+            page.MusicSystems.map(system => system.StaffLines[0].Measures[0].MeasureNumber));
+        expect(systemStarts, "measures 1 and 4 begin the systems of page 1, measure 6 the one of page 2").to.deep.equal([[1, 4], [6]]);
+    });
+
+    /**
+     * test_multiple_rest_measures_auto_first_measure.musicxml: measures 1-3 are whole-measure rests, and measures 1-4 are repeated.
+     * The start markers of the repetitions in measure 1 aren't drawn, so measures 1-3 become a multiple rest measure.
+     */
+    it("begins a multiple rest measure at the first measure, and draws the clef, key and time signature there", async () => {
+        const restMeasureCounts: number[] = await renderSample("test_multiple_rest_measures_auto_first_measure.musicxml");
+        expect(restMeasureCounts, "measures per multiple rest measure, for measures 1-5").to.deep.equal([3, 0, 0, 0, 0]);
+        // the measure groups of the clefs, key signatures and time signatures drawn, without the number of the multiple rest measure
+        const beginInstructions: string[][] = [".vf-clef", ".vf-keysignature", ".vf-timesignature"].map(selector =>
+            Array.from(container.querySelectorAll(selector)).filter(element => !element.closest(".vf-multirest"))
+                .map(element => element.closest(".vf-measure").id));
+        expect(beginInstructions, "the clef, G major and 4/4 in measure 1").to.deep.equal([["osmd-m0-0"], ["osmd-m0-0"], ["osmd-m0-0"]]);
     });
 });

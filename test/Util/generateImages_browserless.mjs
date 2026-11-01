@@ -674,6 +674,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestTabTiesAcrossSystemBreaks = sampleFilename.startsWith("test_tab_hammer-on_pull-off_tie_across_system_breaks");
     // a key and time change at a system break (courtesy signatures), see test_hidden_staff_clef_key_time: systems as in the file
     const isTestHiddenStaffClefKeyTime = sampleFilename.startsWith("test_hidden_staff_clef_key_time");
+    // multiple rest measures ending at the system and page breaks of the file, see test_multiple_rest_measures_auto_xml_breaks
+    const isTestMultipleRestMeasuresXmlBreaks = sampleFilename.startsWith("test_multiple_rest_measures_auto_xml_breaks");
     const isTestCopyrightBelowLastSystem = sampleFilename.includes("copyright_below_last_system");
     const isTestFirstPageCreditWords = sampleFilename.startsWith("test_first_page_credit_words");
     const isTestOptimizeExtremeLedgerBeams = sampleFilename.includes("test_beam_intersecting_ledger_lines") && !process.argv.includes("--native-vexflow");
@@ -702,9 +704,10 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         drawUpToMeasureNumber: drawUpToMeasureNumber,
         drawMeasureNumbersOnlyAtSystemStart: isTestMeasureNumbersOnlyAtSystemStart,
         newSystemFromXML: isFunctionTestSystemAndPageBreaks || isTestMeasureNumbersOnlyAtSystemStart || isTestGraceNotesOnlyMeasure ||
-            isTestLyricsDashContinuedInNextSystem || isTestTabTiesAcrossSystemBreaks || isTestHiddenStaffClefKeyTime,
+            isTestLyricsDashContinuedInNextSystem || isTestTabTiesAcrossSystemBreaks || isTestHiddenStaffClefKeyTime ||
+            isTestMultipleRestMeasuresXmlBreaks,
         newSystemFromNewPageInXML: isTestPageBreakImpliesSystemBreak,
-        newPageFromXML: isFunctionTestSystemAndPageBreaks,
+        newPageFromXML: isFunctionTestSystemAndPageBreaks || isTestMultipleRestMeasuresXmlBreaks,
         pageBackgroundColor: "#FFFFFF", // reset by drawingparameters default
         pageFormat: pageFormat, // reset by drawingparameters default,
         ...makeSkyBottomLineOptions()

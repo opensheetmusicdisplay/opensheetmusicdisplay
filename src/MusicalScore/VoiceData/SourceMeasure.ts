@@ -639,8 +639,20 @@ export class SourceMeasure {
         }
     }
 
+    /** Whether the repetition instruction is a start marker that isn't drawn (see beginsWithLineRepetition()):
+     *  the start of the repetition of the whole piece, which RepetitionCalculator adds for the iteration (a StartLine from words),
+     *  or the start of a repetition without a start line (None), e.g. at the start of a piece with a backward repeat or a D.C.
+     */
+    private static isUndrawnStartMarker(instruction: RepetitionInstruction): boolean {
+        return instruction.type === RepetitionInstructionEnum.None ||
+            instruction.type === RepetitionInstructionEnum.StartLine &&
+            instruction.parentRepetition !== undefined && instruction.parentRepetition.FromWords;
+    }
+
     public canBeReducedToMultiRest(): boolean {
-        if (this.firstRepetitionInstructions.length > 0 || this.lastRepetitionInstructions.length > 0) {
+        // a multiple rest measure would hide the repetition instructions, except the start markers that aren't drawn anyway
+        if (this.firstRepetitionInstructions.some(instruction => !SourceMeasure.isUndrawnStartMarker(instruction)) ||
+            this.lastRepetitionInstructions.length > 0) {
             return false;
         }
         let allRestsOrInvisible: boolean = true;
