@@ -650,6 +650,41 @@ describe("VexFlow Measure", () => {
       }).catch(done);
    });
 
+   // A hidden unison eighth that shares the open head of a half note in another voice and comes first in the measure
+   // took the flat of that head: its accidental isn't drawn, but VexFlow kept a column for it, so the half note drew no
+   // flat (or, with a flat in the XML, one a head away). Now the half note draws it in front of the shared head.
+   // E.g. Schumann, Myrthen op. 25 no. 1 m. 42 (Breitkopf).
+   it("Lets the visible note draw the accidental of a hidden unison note that shares its head", (done: Mocha.Done) => {
+      const score: Document = TestUtils.getScore("test_unison_hidden_eighth_accidental_myrthen_widmung_measure42.musicxml");
+      if (!score) {
+         done(new Error("Score file not found"));
+         return;
+      }
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+
+      osmd.load(score).then(() => {
+         osmd.render();
+         const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
+         let hidden: any;
+         let visible: any;
+         for (const gve of gm.staffEntries[0].graphicalVoiceEntries) {
+            if (gve.notes[0].sourceNote.PrintObject) {
+               visible = (gve as VexFlowVoiceEntry).vfStaveNote;
+            } else {
+               hidden = (gve as VexFlowVoiceEntry).vfStaveNote;
+            }
+         }
+         const accidentals: (vfStaveNote: any) => number = (vfStaveNote: any) =>
+            vfStaveNote.modifiers.filter((modifier: any) => modifier.getCategory() === "accidentals").length;
+         expect(hidden, "should find the hidden eighth").to.not.be.undefined;
+         expect(visible, "should find the half note").to.not.be.undefined;
+         expect(hidden.note_heads[0].getAbsoluteX(), "the two heads share one column").to.equal(visible.note_heads[0].getAbsoluteX());
+         expect(accidentals(visible), "the half note draws the flat of the shared head").to.equal(1);
+         expect(accidentals(hidden), "the hidden eighth keeps no invisible flat").to.equal(0);
+         done();
+      }).catch(done);
+   });
+
    // A hidden note in unison with a visible one doesn't stagger it: Vexflow shifted one of the two notes aside and lifted
    // the other one's augmentation dot above it, although nothing of the hidden note is drawn there (the tremolo sample
    // of the test above: the dotted half's dot sat a line higher). PrintObject can change between renders, while the

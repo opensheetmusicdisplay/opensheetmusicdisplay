@@ -16,6 +16,10 @@ export class AccidentalCalculator {
     private currentInMeasureNoteAlterationsDict: Dictionary<number, AccidentalEnum> = new Dictionary<number, AccidentalEnum>();
     /** The last note of each pitch in the current measure that got an accidental, except grace notes (see isAccidentalDrawnAtSameTime()) */
     private lastNoteWithAccidentalDict: Dictionary<number, GraphicalNote> = new Dictionary<number, GraphicalNote>();
+    /** The hidden notes (print-object="no") sharing a visible unison note's head that would have got an accidental,
+     * by pitch key: see addAccidental(). */
+    private hiddenNoteWithAccidentalDict: Dictionary<number, { note: GraphicalNote, accidental: AccidentalEnum }> =
+        new Dictionary<number, { note: GraphicalNote, accidental: AccidentalEnum }>();
     private activeKeyInstruction: KeyInstruction;
     public Transpose: number; // set in MusicSheetCalculator
 
@@ -36,6 +40,7 @@ export class AccidentalCalculator {
     public doCalculationsAtEndOfMeasure(): void {
         this.currentInMeasureNoteAlterationsDict.clear();
         this.lastNoteWithAccidentalDict.clear();
+        this.hiddenNoteWithAccidentalDict.clear();
         for (const key of this.keySignatureNoteAlterationsDict.keys()) {
             this.currentInMeasureNoteAlterationsDict.setValue(key, this.keySignatureNoteAlterationsDict.getValue(key));
         }
@@ -79,8 +84,22 @@ export class AccidentalCalculator {
             const sameLetter: boolean = startPitch !== undefined
                 && startPitch.FundamentalNote === pitch.FundamentalNote;
             if (sameLetter) {
-                return; // same written note held across the tie — accidental is implied
+                // Same written note held across the tie — the accidental is implied, unless the file writes it
+                //   (<accidental> on the continued note: the engraver repeats the sign, e.g. after a beat or a system break).
+                if (pitch.AccidentalXml && pitch.Accidental !== AccidentalEnum.NONE && this.Transpose === 0) {
+                    this.addAccidental(graphicalNote, pitch, pitchKey);
+                }
+                return;
             }
+        }
+
+        // A printed sign that disagrees with <alter> is drawn as printed (a historical sharp cancelling the key's flat,
+        //   sounding E natural); the measure keeps the sounding alteration, so the next E natural gets no natural sign.
+        //   VexFlowGraphicalNote.setAccidental() draws the printed glyph.
+        if (this.Transpose === 0 && AccidentalCalculator.printedMismatchGlyph(pitch)) {
+            this.currentInMeasureNoteAlterationsDict.setValue(pitchKey, pitch.AccidentalHalfTones);
+            this.addAccidental(graphicalNote, pitch, pitchKey);
+            return;
         }
 
         if (this.currentInMeasureNoteAlterationsDict.containsKey(pitchKey)) {
@@ -125,8 +144,9 @@ export class AccidentalCalculator {
                     return; // only display accidental if it was given as an accidental in the XML
                 }
                 this.addAccidental(graphicalNote, pitch, pitchKey);
-            } else if (pitch.AccidentalXml && this.Transpose === 0 && !this.isAccidentalDrawnAtSameTime(graphicalNote, pitch, pitchKey)) {
-                // courtesy accidental
+            } else if ((pitch.AccidentalXml && this.Transpose === 0 || this.isAccidentalOfHiddenNoteAtSameTime(graphicalNote, pitch, pitchKey)) &&
+                !this.isAccidentalDrawnAtSameTime(graphicalNote, pitch, pitchKey)) {
+                // courtesy accidental, or the accidental a hidden note at the same time left to this note (see addAccidental())
                 this.addAccidental(graphicalNote, pitch, pitchKey);
                 // if transpose !== 0 (we're transposing), the courtesy accidental might not be appropriate here.
             }
@@ -141,8 +161,34 @@ export class AccidentalCalculator {
         }
     }
 
+    /** The VexFlow glyph of the printed <accidental> of the pitch when it is a plain sign whose alteration differs from
+     *  the sounding one (<alter>), else undefined. Signs drawn as two glyphs (natural-sharp, ...) are left to
+     *  VexFlowGraphicalNote.setAccidental(). A transposed pitch has no AccidentalXml. */
+    public static printedMismatchGlyph(pitch: Pitch): string | undefined {
+        const glyph: [string, number] = pitch?.AccidentalXml ? AccidentalCalculator.printedGlyphs[pitch.AccidentalXml] : undefined;
+        return glyph && glyph[1] !== pitch.AccidentalHalfTones ? glyph[0] : undefined;
+    }
+
+    private static readonly printedGlyphs: { [accidentalXml: string]: [string, number] } = {
+        "double-flat": ["bb", -2],
+        "double-sharp": ["##", 2],
+        "flat": ["b", -1],
+        "flat-flat": ["bb", -2],
+        "natural": ["n", 0],
+        "sharp": ["#", 1],
+    };
+
     /** Adds the accidental of the pitch to the note, and remembers the note for isAccidentalDrawnAtSameTime(). */
     private addAccidental(graphicalNote: GraphicalNote, pitch: Pitch, pitchKey: number): void {
+        // A hidden note (print-object="no") sharing the head of a visible unison note in another voice doesn't draw its
+        //   accidental, but VexFlow kept a column for it, so the visible note's accidental stood a head away (or the
+        //   visible note drew none, its pitch being altered in the measure already). The visible note draws it instead,
+        //   also without an accidental in the XML: e.g. a hidden eighth C flat starting an arpeggio on the open head of
+        //   a half note C flat, first in the measure.
+        if (!graphicalNote.sourceNote.PrintObject && graphicalNote.sourceNote.sharesNoteheadWithVisibleUnisonNote()) {
+            this.hiddenNoteWithAccidentalDict.setValue(pitchKey, { note: graphicalNote, accidental: pitch.Accidental });
+            return;
+        }
         MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
         if (!graphicalNote.parentVoiceEntry.parentVoiceEntry.IsGrace) {
             this.lastNoteWithAccidentalDict.setValue(pitchKey, graphicalNote);
@@ -161,6 +207,16 @@ export class AccidentalCalculator {
             !graphicalNote.parentVoiceEntry.parentVoiceEntry.IsGrace &&
             noteWithAccidental.parentVoiceEntry.parentStaffEntry === graphicalNote.parentVoiceEntry.parentStaffEntry &&
             noteWithAccidental.DrawnAccidental === pitch.Accidental;
+    }
+
+    /** Whether a hidden note of the same pitch at the same time left this accidental to the visible note (see addAccidental()). */
+    private isAccidentalOfHiddenNoteAtSameTime(graphicalNote: GraphicalNote, pitch: Pitch, pitchKey: number): boolean {
+        const hidden: { note: GraphicalNote, accidental: AccidentalEnum } = this.hiddenNoteWithAccidentalDict.getValue(pitchKey);
+        return hidden !== undefined &&
+            graphicalNote.sourceNote.PrintObject &&
+            !graphicalNote.parentVoiceEntry.parentVoiceEntry.IsGrace &&
+            hidden.note.parentVoiceEntry.parentStaffEntry === graphicalNote.parentVoiceEntry.parentStaffEntry &&
+            hidden.accidental === pitch.Accidental;
     }
 
     private isAlterAmbiguousAccidental(accidental: AccidentalEnum): boolean {
