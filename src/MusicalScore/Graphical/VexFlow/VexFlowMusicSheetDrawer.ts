@@ -35,7 +35,6 @@ import { VexFlowPedal } from "./VexFlowPedal";
 import { GraphicalGlissando } from "../GraphicalGlissando";
 import { VexFlowGlissando } from "./VexFlowGlissando";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
-import { SvgVexFlowBackend } from "./SvgVexFlowBackend";
 import { VexFlowConverter } from "./VexFlowConverter";
 import { VexFlowVibratoBracket } from "./VexFlowVibratoBracket";
 import { TremoloBetweenNotes } from "../../VoiceData/Note";
@@ -354,28 +353,16 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                     const baseHeight: number = 0.5;
 
                     const vfNote: VexFlowGraphicalNote = note as VexFlowGraphicalNote;
-                    let stemTip: PointF2D;
-                    let stemHeight: number;
                     const directionSign: number = vfNote.vfnote[0].getStemDirection(); // 1 or -1
-                    let stemElement: HTMLElement;
-                    if (this.backend instanceof SvgVexFlowBackend) {
-                        stemElement = vfNote.getStemSVG();
-                    }
-                    const hasBbox: boolean = (stemElement as any)?.getBbox !== undefined;
-                    if (hasBbox) {
-                        // apparently sometimes the stemElement is null, in that case we need to use the canvas method.
-                        const rect: SVGRect = (stemElement as any).getBBox();
-                        stemTip = new PointF2D(rect.x / 10, rect.y / 10);
-                        stemHeight = rect.height / 10;
-                    } else { // if this.backend instanceof CanvasVexFlowBackend // also seems to work for SVG
-                        stemHeight = vfNote.vfnote[0].getStemLength() / 10;
-                        stemTip = new PointF2D(
-                            (vfNote.vfnote[0].getStem() as any).x_begin / 10,
-                            (vfNote.vfnote[0].getStem() as any).y_top / 10,
-                        );
-                        if (directionSign === 1) {
-                            stemTip.y -= stemHeight;
-                        }
+                    // the stem's top end (an up stem's tip, a down stem's top notehead) and length, from VexFlow's stem data:
+                    //   the same for both backends and in jsdom (browserless export), which has no getBBox() for the stem's SVG element
+                    const stemHeight: number = vfNote.vfnote[0].getStemLength() / 10;
+                    const stemTip: PointF2D = new PointF2D(
+                        (vfNote.vfnote[0].getStem() as any).x_begin / 10,
+                        (vfNote.vfnote[0].getStem() as any).y_top / 10,
+                    );
+                    if (directionSign === 1) {
+                        stemTip.y -= stemHeight;
                     }
                     // this.DrawOverlayLine(stemTip, new PointF2D(stemTip.x + 5, stemTip.y), vfNote.ParentMusicPage); // debug
 
