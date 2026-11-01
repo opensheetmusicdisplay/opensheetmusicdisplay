@@ -296,4 +296,29 @@ describe("Multiple rest measures", () => {
                 .map(element => element.closest(".vf-measure").id));
         expect(beginInstructions, "the clef, G major and 4/4 in measure 1").to.deep.equal([["osmd-m0-0"], ["osmd-m0-0"], ["osmd-m0-0"]]);
     });
+
+    /**
+     * Measures 2-7 are whole-measure rests, the rests of measures 2 and 5 have a fermata (pause bars), the one of measure 5 inverted.
+     * A multiple rest measure doesn't show fermatas, so measures 2 and 5 stay single rest measures, and measures 3-4 and 6-7 become
+     * multiple rest measures (instead of one for measures 2-7).
+     */
+    it("keeps a rest measure with a fermata (a pause bar) out of multiple rest measures, and draws the fermata", async () => {
+        const note: string = "<note><pitch><step>D</step><octave>5</octave></pitch><duration>4</duration><type>whole</type></note>";
+        const rest: string = "<note><rest/><duration>4</duration></note>";
+        /** A whole-measure rest with a fermata of the type upright or inverted. */
+        function fermataRest(type: string): string {
+            return `<note><rest/><duration>4</duration><notations><fermata type="${type}"/></notations></note>`;
+        }
+        const attributes: string = "<attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>" +
+            "<clef><sign>G</sign><line>2</line></clef></attributes>";
+        const contents: string[] = [attributes + note, fermataRest("upright"), rest, rest, fermataRest("inverted"), rest, rest, note];
+        await osmd.load(`<?xml version="1.0"?><score-partwise version="4.0"><part-list>
+            <score-part id="P1"><part-name>Flute</part-name></score-part></part-list><part id="P1">` +
+            contents.map((content, index) => `<measure number="${index + 1}">${content}</measure>`).join("") + "</part></score-partwise>");
+        osmd.render();
+        expect(multipleRestMeasureCounts(), "measures per multiple rest measure, for measures 1-8").to.deep.equal([0, 0, 2, 0, 0, 2, 0, 0]);
+        // the measure groups of the notes drawn with modifiers: the rests with the fermatas
+        const fermataMeasures: string[] = Array.from(container.querySelectorAll(".vf-modifiers")).map(modifiers => modifiers.closest(".vf-measure").id);
+        expect(fermataMeasures, "the fermatas of measures 2 and 5").to.deep.equal(["osmd-m1-0", "osmd-m4-0"]);
+    });
 });
