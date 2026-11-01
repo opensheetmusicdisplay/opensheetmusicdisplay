@@ -658,7 +658,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         const measureNode: SVGGElement = ctx.openGroup() as SVGGElement;
         if (measureNode) {
             measureNode.classList?.add("vf-measure");
-            measureNode.id = `${this.MeasureNumber}`;
+            measureNode.id = this.getSVGGElementId();
         }
         this.svgGElement = measureNode; // undefined with the canvas backend
 
