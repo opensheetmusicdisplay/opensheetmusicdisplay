@@ -161,4 +161,26 @@ describe("MusicPartManagerIterator measure order with repetitions", () => {
     it("takes a jump at the start of a measure at the barline before, where a <sound> in any part states it", async () => {
         expect(await playedMeasures("test_repeat_jumps_at_measure_start.musicxml")).to.deep.equal([0, 1, 0, 2, 0, 3]);
     });
+
+    /**
+     * A repeat with more lyric verses under it than two is played once per verse (Repetition.checkRepetitionForMultipleLyricVerses).
+     * The verses were never counted (LyricsEntries.keys is a method, so keys.length was its arity, 0), so it was played twice.
+     *
+     * Sample: measures 1-2 repeated, with three lyric verses, then measure 3.
+     */
+    it("plays a repeat once per lyric verse under it", async () => {
+        expect(await playedMeasures("test_repeat_three_lyric_verses.musicxml")).to.deep.equal([0, 1, 0, 1, 0, 1, 2]);
+        expect(osmd.Sheet.Repetitions[0].DefaultNumberOfRepetitions).to.equal(3);
+    });
+
+    /**
+     * The times of a backward repeat (<repeat times>) is how many times the repeat is played. It wins over the lyric verses.
+     * It was not read, so a repeat without lyrics was played twice (RepetitionCalculator already used Times when set).
+     *
+     * Sample: measures 1-2 repeated with times="3" and no lyrics, then measure 3;
+     * measures 4-5 repeated with times="2" and three lyric verses, then measure 6.
+     */
+    it("plays a repeat the times written on it", async () => {
+        expect(await playedMeasures("test_repeat_times.musicxml")).to.deep.equal([0, 1, 0, 1, 0, 1, 2, 3, 4, 3, 4, 5]);
+    });
 });

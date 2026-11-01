@@ -34,6 +34,7 @@ export class RepetitionInstructionReader {
       let location: string = "";
       let hasRepeat: boolean = false;
       let direction: string = "";
+      let times: number = undefined;
       let type: string = "";
       let style: string = "";
       const endingIndices: number[] = [];
@@ -58,6 +59,11 @@ export class RepetitionInstructionReader {
         if ("repeat" === childNode.name && childNode.hasAttributes) {
           hasRepeat = true;
           direction = childNode.attribute("direction").value;
+          // <repeat times>: how many times the repeated section is played (default 2). It wins over the number of lyric verses.
+          const timesValue: number = parseInt(childNode.attribute("times")?.value, 10);
+          if (timesValue > 0) {
+            times = timesValue;
+          }
         } else if ( "ending" === childNode.name && childNode.hasAttributes &&
                     childNode.attribute("type") !== undefined && childNode.attribute("number")) {
           if (childNode.attribute("print-object")?.value === "no") {
@@ -126,6 +132,7 @@ export class RepetitionInstructionReader {
           }
           if (direction === "backward") {
             const newInstruction: RepetitionInstruction = new RepetitionInstruction(this.currentMeasureIndex, RepetitionInstructionEnum.BackJumpLine);
+            newInstruction.Times = times;
             this.addInstruction(this.repetitionInstructions, newInstruction);
           }
         }
@@ -452,6 +459,9 @@ export class RepetitionInstructionReader {
       const repetitionInstruction: RepetitionInstruction = currentRepetitionInstructions[idx];
       if (newInstruction.equals(repetitionInstruction)) {
         addInstruction = false;
+        if (!(repetitionInstruction.Times > 0) && newInstruction.Times > 0) {
+          repetitionInstruction.Times = newInstruction.Times; // e.g. only a later part writes the repeat's times
+        }
         break;
       }
     }
