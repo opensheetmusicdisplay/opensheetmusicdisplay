@@ -132,9 +132,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         const stafflineNode: Node = ctx.openGroup();
         if (stafflineNode) {
             (stafflineNode as SVGGElement).classList.add("osmd-staffline");
-            if (staffLine.ParentStaff) {
-                (stafflineNode as SVGGElement).id =
-                    `${staffLine.ParentStaff.ParentInstrument?.Name}${staffLine.ParentStaff.ParentInstrument?.Id}-${staffLine.ParentStaff?.Id}`;
+            // lazy horizontal: each batch draws its part of the staffline into a group of its own, the first one has the id
+            if (staffLine.ParentStaff && this.lazyDrawsLeftEdgeOnce()) {
+                (stafflineNode as SVGGElement).id = this.getStaffLineSVGGElementId(staffLine);
             }
         }
         super.drawStaffLine(staffLine);
@@ -146,6 +146,17 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             this.drawGlissandi(staffLine as VexFlowStaffLine, absolutePos);
         }
         ctx.closeGroup();
+    }
+
+    /**
+     * Gets the id of the SVG group a staffline is drawn into (g.osmd-staffline), unique in the sheet's drawing: "osmd-staffline",
+     * its system's index (MusicSystem.Id, counted from 0 through the pages), "-" and its staff's index in Sheet.Staves (from 0,
+     * as in the measures' ids, see GraphicalMeasure.getSVGGElementId()): "osmd-staffline3-1" is the second staff of the 4th
+     * system. Lazy horizontal rendering (renderNext() with RenderSingleHorizontalStaffline) draws a staffline into a group per
+     * batch: the first one, which starts the staffline, has the id.
+     */
+    protected getStaffLineSVGGElementId(staffLine: StaffLine): string {
+        return `osmd-staffline${staffLine.ParentMusicSystem.Id}-${staffLine.ParentStaff.idInMusicSheet}`;
     }
 
     private drawSlurs(vfstaffLine: VexFlowStaffLine, absolutePos: PointF2D): void {
@@ -400,7 +411,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                         currentPoint = pathPoints.last();
                         pathPoints.push(new PointF2D(currentPoint.x + movement.x, currentPoint.y - movement.y));
                     }
-                    const node: Node = this.DrawPath(pathPoints, vfNote.ParentMusicPage, true, `buzzRoll${newBuzzRollId}`);
+                    const node: Node = this.DrawPath(pathPoints, vfNote.ParentMusicPage, true);
+                    this.setSVGId(node, this.getMeasureElementSVGId("buzz", staffEntry.parentMeasure, newBuzzRollId));
                     this.addSVGClass(node, "osmd-tremolo"); // a buzz roll is an unmeasured tremolo (MusicXML)
                     newBuzzRollId++;
                 }
@@ -574,8 +586,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 new PointF2D(startX, strokeStartTopY + strokeThickness),
                 new PointF2D(startX, strokeStartTopY)
             ];
-            const id: string = `tremoloBetweenNotes-${measure.MeasureNumber}-${measure.ParentStaff.Id}-${strokeId}`;
-            const node: Node = this.DrawPath(strokePoints, stopGNote.ParentMusicPage, true, id, color);
+            const node: Node = this.DrawPath(strokePoints, stopGNote.ParentMusicPage, true, undefined, color);
+            this.setSVGId(node, this.getMeasureElementSVGId("trem", measure, strokeId));
             this.addSVGClass(node, "osmd-tremolo");
             strokeId++;
         }
@@ -591,6 +603,31 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             new PointF2D(startX - staffLineAbsolute.x, startY + totalStrokesHeight / 2 - staffLineAbsolute.y),
             new PointF2D(stopX - staffLineAbsolute.x, stopY + totalStrokesHeight / 2 - staffLineAbsolute.y));
         return strokeId;
+    }
+
+    /**
+     * Gets the id of an SVG element that is drawn for a measure, but outside the measure's group (see
+     * GraphicalMeasure.getSVGGElement()), unique in the sheet's drawing: "osmd-", the kind of element, the measure's index in
+     * Sheet.SourceMeasures, "-", its staff's index in Sheet.Staves and "-" the element's number among those of its kind in the
+     * measure, all counted from 0, the indices as in the measure's own id (see GraphicalMeasure.getSVGGElementId()):
+     * "osmd-trem11-1-0" is the first tremolo stroke drawn with the 12th measure of the second staff.
+     * @param kind "trem" for the strokes of a tremolo between two notes (drawn with the measure of the second note), "buzz" for
+     *   a buzz roll
+     * @param measure the measure the element is drawn with
+     * @param numberInMeasure the element's number among those of its kind in the measure, from 0, in the order they are drawn
+     */
+    protected getMeasureElementSVGId(kind: string, measure: GraphicalMeasure, numberInMeasure: number): string {
+        return `osmd-${kind}${measure.parentSourceMeasure?.measureListIndex}-${measure.ParentStaff.idInMusicSheet}-${numberInMeasure}`;
+    }
+
+    /**
+     * Sets the id of the SVG group a drawn element was drawn into, e.g. "osmd-trem11-1-0" for a tremolo stroke drawn with
+     * DrawPath(), which would add VexFlow's prefix (vf-) to an id given to it.
+     * @param node the group, undefined if nothing was drawn, e.g. with the canvas backend
+     * @param id the id, unique in the sheet's drawing
+     */
+    protected setSVGId(node: Node, id: string): void {
+        (node as SVGGElement)?.setAttribute?.("id", id);
     }
 
     // private drawPixel(coord: PointF2D): void {
