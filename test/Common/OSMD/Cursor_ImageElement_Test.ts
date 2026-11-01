@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { TestUtils } from "../../Util/TestUtils";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { Cursor } from "../../../src/OpenSheetMusicDisplay/Cursor";
-import { CursorType } from "../../../src/OpenSheetMusicDisplay/OSMDOptions";
+import { CursorOptions, CursorType } from "../../../src/OpenSheetMusicDisplay/OSMDOptions";
 
 /**
  * The cursor is an img element (cursor.cursorElement) showing a one pixel high image that is stretched to the cursor's size.
@@ -77,5 +77,22 @@ describe("Cursor image element", () => {
         const cursor: Cursor = await showCursor();
         expect(cursor.cursorElement.getAttribute("alt"), "an empty alt marks the image as decorative").to.equal("");
         expect(cursor.cursorElement.draggable).to.equal(false);
+    });
+
+    it("has an id that no other element has in its shadow root (web component), also with two cursors", async () => {
+        const shadowRoot: ShadowRoot = container.attachShadow({ mode: "open" });
+        const sheetContainer: HTMLElement = document.createElement("div");
+        shadowRoot.appendChild(sheetContainer);
+        const cursorOptions: CursorOptions = { type: CursorType.Standard, color: "#33e02f", alpha: 0.5, follow: true };
+        const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(sheetContainer, {
+            autoResize: false, cursorsOptions: [cursorOptions, { ...cursorOptions, type: CursorType.ThinLeft, follow: false }]
+        });
+        await osmd.load(TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml"));
+        osmd.render();
+        expect(osmd.cursors.length).to.equal(2);
+        for (const cursor of osmd.cursors) {
+            // the free id was looked up with document.getElementById(), which doesn't search shadow roots: both had cursorImg-0
+            expect(shadowRoot.getElementById(cursor.cursorElementId) === cursor.cursorElement, cursor.cursorElementId).to.equal(true);
+        }
     });
 });

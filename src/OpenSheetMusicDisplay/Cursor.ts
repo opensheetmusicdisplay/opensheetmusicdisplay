@@ -29,8 +29,10 @@ export class Cursor {
     // TODO add this for the OSMD object as well and refactor this into a util method?
     let id: number = 0;
     this.cursorElementId = "cursorImg-0";
-    // find unique cursor id in document
-    while (document.getElementById(this.cursorElementId)) {
+    // find an id that no other element has in the container's document, or in its shadow root (e.g. of a web component),
+    //   which has ids of its own: document.getElementById() doesn't find the elements in a shadow root
+    const root: ParentNode = container.getRootNode() as ParentNode; // outside a document: the topmost element
+    while (root.querySelector(`#${this.cursorElementId}`)) {
       id++;
       this.cursorElementId = `cursorImg-${id}`;
     }
@@ -63,9 +65,9 @@ export class Cursor {
 
   private container: HTMLElement;
   public cursorElement: HTMLImageElement;
-  /** a unique id of the cursor's HTMLElement in the document.
+  /** a unique id of the cursor's HTMLElement in its document, or in its shadow root (e.g. of a web component).
    * Should be constant between re-renders and backend changes,
-   * but different between different OSMD objects on the same page.
+   * but different between the cursors in the same document or shadow root, also those of different OSMD objects.
    */
   public cursorElementId: string;
   /** The desired zIndex (layer) of the cursor when no background color is set.
