@@ -56,12 +56,15 @@ export class StaveSection extends StaveModifier {
       }
     }
     let x = this.x + shift_x;
+    // VexFlowPatch: the box and the text in a group (class vf-stavesection)
+    ctx.openGroup('stavesection');
     ctx.beginPath();
     ctx.lineWidth = 2;
     ctx.rect(x, y + text_height/4, width, height);
     ctx.stroke();
     x += (width - text_width) / 2;
     ctx.fillText('' + this.section, x, y + height );
+    ctx.closeGroup();
     ctx.restore();
     return this;
   }

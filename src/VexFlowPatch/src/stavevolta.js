@@ -40,6 +40,10 @@ export class Volta extends StaveModifier {
     let width = stave.width - x; // don't add x offset to width
     const top_y = stave.getYForTopText(stave.options.num_lines) + this.y_shift;
     const vert_height = 1.5 * stave.options.spacing_between_lines_px;
+    // VexFlowPatch: the hooks, the number and the line in a group (class vf-volta). A volta of one shape, the line of a
+    //   volta's middle measure, gets the group's class instead (<rect class="vf-volta">), see SVGContext.openGroup() with
+    //   attrs.mergeIntoChild.
+    ctx.openGroup('volta', undefined, { mergeIntoChild: true });
     switch (this.volta) {
       case Volta.type.BEGIN:
         ctx.fillRect(this.x + x, top_y, 1, vert_height);
@@ -65,6 +69,7 @@ export class Volta extends StaveModifier {
     }
 
     ctx.fillRect(this.x + x, top_y, width, 1);
+    ctx.closeGroup();
     return this;
   }
 }

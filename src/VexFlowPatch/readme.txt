@@ -42,6 +42,10 @@ glyph.js (custom addition):
 cache outline bounding boxes, glyph widths and scaled outline segments, and hand outlines to OSMD's geometric skyline context directly (performance, #1681, #1704, #1712, #1713, #1786)
 start a glyph's path with its outline, without a lone move to the glyph's origin, which Firefox 132 counted in getBBox() (#1833)
 
+gracenote.js (custom fix, vexflow 5 still draws the slash after the note's group):
+draw the slash in the note's group (vf-stavenote) after its modifiers, in drawModifiers(), which StaveNote.draw() calls
+  before it closes the group: drawn after it, the slash wasn't hidden with the note, e.g. by GraphicalNote.setVisible(false)
+
 gracenotegroup.js (custom addition, needs check if necessary in vexflow 4):
 check for gracenotegroup.spacing set, to allow e.g. spacing = 0 by default.
 (with previous default 4, spacing is way too large unnecessarily, in most cases)
@@ -66,6 +70,8 @@ getExtent(): the box of the ornament with its accidental marks as draw() renders
 
 pedalmarking.js (custom addition):
 Add rendering options for pedals that break across systems.
+draw(): draw the marks and brackets in a group, class vf-pedalmarking (custom addition), which a pedal marking of one shape
+  is merged into and one without shapes doesn't get (see svgcontext.js)
 
 renderer.js (vexflow4: need to check if possible):
 CanvasContext: getContext(): use willReadFrequently option for marginal performance potential,
@@ -105,11 +111,14 @@ add TO_CODA enum to type() and draw()
 fix x-positioning for TO_CODA and DS_AL_CODA in drawSymbolText()
 fix y-shift
 don't change x_shift in drawSymbolText(): every further draw of the stave moved the end texts (e.g. D.C.), alternating
+draw(): draw the text and the coda or segno glyph in a group, class vf-repetition (custom addition), which a repetition of
+  one shape is merged into and one without shapes doesn't get (see svgcontext.js)
 
 stavesection.js (half-fixed vexflow 4.x, collision, box not removable):
 stavesection.draw():
 adjust rectangle positioning, make height depend on font size (the measured text height differs per platform, and canvas has none)
 fix rehearsal marks not rendered with canvas backend in browser
+draw the box and the text in a group, class vf-stavesection (custom addition)
 
 stavetempo.js (custom addition):
 open a context group for vf-stavetempo, and one for its subgroup vf-bpm (for just the "= 150" text node)
@@ -127,6 +136,8 @@ renderText(): set the font before measuring the text (e.g. H, P, sl. of tab ties
 stavevolta.js (merged Vexflow 3.x):
 Fix the length of voltas for first measures in a system
 (whose lengths were wrongly extended by the width of the clef, key signature, etc. (beginInstructions) in Vexflow 1.2.93)
+draw(): draw the hooks, the number and the line in a group, class vf-volta (custom addition), which a volta of one shape
+  (the line of a middle measure) is merged into (see svgcontext.js)
 
 stem.js (fixed vexflow 4 (or earlier)):
 able to give an id+class to the stem node in SVG
@@ -156,6 +167,7 @@ set the font of the slide text "sl." with the key family instead of font, so it'
 
 textbracket.js (custom fix):
 make sure text bracket doesn't go backwards+overlap (e.g. short octave bracket)
+draw(): draw the text, the superscript and the bracket in a group, class vf-textbracket (custom addition)
 
 tickcontext.js (custom fix):
 preFormat(): add the x_shift of a note moved right (e.g. staggered beside another voice's note by StaveNote.format()) to
@@ -182,6 +194,7 @@ vibratobracket.js: (custom option):
 add option vibratobracket.toEndOfStopStave: Render to the end of the stop note, instead of before it
 add option vibratobracket.stopBeforeNote: Render up to this note, in front of its modifiers, e.g. to the note after the stop note
 render to the end of the stop note without the width left of it (modifiers like accidentals and grace notes, displaced note heads)
+draw(): draw the wavy line in a group, class vf-vibratobracket (custom addition), which it is merged into (see svgcontext.js)
 
 Currently, we are using a heavily improved and customized version of Vexflow 1.2.93,
 because of some formatter advantages compared to Vexflow 3.x versions, see this issue:
