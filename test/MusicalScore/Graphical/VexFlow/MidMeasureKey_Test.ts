@@ -182,4 +182,25 @@ describe("Mid-measure key rendering", (): void => {
         expect(key.getBBox().x + key.getBBox().width, "the key precedes the entire grace group")
             .to.be.lessThan(graceNotes[0].vfnote[0].getAbsoluteX());
     });
+
+    it("draws a key after the notes of the last measure at its end", async (): Promise<void> => {
+        await loadScore("test_key_signature_final_measure_end.musicxml");
+
+        // The last measure has no following measure to carry the key into, so it stays at the measure end (it was lost).
+        const lastIndex: number = osmd.GraphicSheet.MeasureList.length - 1;
+        for (let staffIndex: number = 0; staffIndex < 2; staffIndex++) {
+            const keyEntries: GraphicalStaffEntry[] = osmd.GraphicSheet.MeasureList[lastIndex][staffIndex].staffEntries.filter(
+                (entry: GraphicalStaffEntry): boolean => entry.sourceStaffEntry.Instructions.length > 0,
+            );
+            expect(keyEntries, "the return key stays in the last measure").to.have.length(1);
+            expect(keyEntries[0].sourceStaffEntry.Timestamp.RealValue, "at the measure end").to.equal(0.25);
+        }
+        const lastKeys: SVGGraphicsElement[] = keys()
+            .sort((a: SVGGraphicsElement, b: SVGGraphicsElement): number => a.getBBox().x - b.getBBox().x)
+            .slice(-2);
+        expect(lastKeys.map((key: SVGGraphicsElement): number => key.querySelectorAll("path").length),
+            "the four-sharp key is drawn on both staves").to.deep.equal([4, 4]);
+        expect(lastKeys[0].getBBox().x, "the key follows the last note")
+            .to.be.greaterThan(notesIn(lastIndex)[0].vfnote[0].getAbsoluteX());
+    });
 });
