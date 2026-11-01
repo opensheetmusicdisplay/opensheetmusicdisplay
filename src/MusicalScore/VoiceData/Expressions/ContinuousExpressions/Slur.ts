@@ -77,7 +77,9 @@ export class Slur {
                 slur !== this
                 && slur.EndNote !== undefined
                 && slur.StartNote !== undefined
-                && Fraction.minus(slur.EndNote.getAbsoluteTimestamp(), slur.StartNote.getAbsoluteTimestamp()).CompareTo(length)
+                // === -1 as for the start note: CompareTo() returns 1 for a longer slur, which is true as well, so a shorter
+                //   slur ending at the end note made this one "longer" too, and both got the second slur's offset at that note
+                && Fraction.minus(slur.EndNote.getAbsoluteTimestamp(), slur.StartNote.getAbsoluteTimestamp()).CompareTo(length) === -1
             ) {
                 return true;
             }
