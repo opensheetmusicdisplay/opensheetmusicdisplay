@@ -4,7 +4,8 @@ import {VerticalSourceStaffEntryContainer} from "./VerticalSourceStaffEntryConta
 import {SourceStaffEntry} from "./SourceStaffEntry";
 import {RepetitionInstruction, RepetitionInstructionEnum, AlignmentType} from "./Instructions/RepetitionInstruction";
 import {Staff} from "./Staff";
-import {VoiceEntry} from "./VoiceEntry";
+import {VoiceEntry, ArticulationEnum} from "./VoiceEntry";
+import {Articulation} from "./Articulation";
 import {Voice} from "./Voice";
 import {MusicSheet} from "../MusicSheet";
 import {MultiExpression} from "./Expressions/MultiExpression";
@@ -675,6 +676,11 @@ export class SourceMeasure {
                     visibleLyrics = true;
                 }
                 for (const voiceEntry of staffEntry.VoiceEntries) {
+                    // a multiple rest measure would hide a fermata on a rest (a pause bar)
+                    if (voiceEntry.Articulations.some((articulation: Articulation): boolean =>
+                        articulation.articulationEnum === ArticulationEnum.fermata || articulation.articulationEnum === ArticulationEnum.invertedfermata)) {
+                        return false;
+                    }
                     for (const note of voiceEntry.Notes) {
                         if (!note.isRest()) {
                             allRestsOrInvisible = false;
