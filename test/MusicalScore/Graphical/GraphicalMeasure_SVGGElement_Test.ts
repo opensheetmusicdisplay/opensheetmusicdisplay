@@ -84,7 +84,7 @@ describe("GraphicalMeasure.getSVGGElement()", (): void => {
     });
 
     it("gives the groups unique ids on all pages: osmd-m<measure index>-<staff index>, " +
-        "osmd-x after the measure for a courtesy key", async (): Promise<void> => {
+        "with an x after the index for a courtesy key after the measure", async (): Promise<void> => {
         div = TestUtils.getDivElement(document);
         osmd = new OpenSheetMusicDisplay(div, { autoResize: false, pageFormat: "A4_P", newSystemFromXML: true, newPageFromXML: true });
         await osmd.load(breaksScore);
@@ -93,7 +93,7 @@ describe("GraphicalMeasure.getSVGGElement()", (): void => {
         // in document order: each system's staves from the top, each staff's measures
         const ids: string[] = Array.from(div.querySelectorAll("g.vf-measure")).map((group: Element): string => group.id);
         expect(ids, "ids").to.deep.equal([
-            "osmd-m0-0", "osmd-m1-0", "osmd-x1-0", "osmd-m0-1", "osmd-m1-1", "osmd-x1-1", "osmd-m0-2", "osmd-m1-2", "osmd-x1-2",
+            "osmd-m0-0", "osmd-m1-0", "osmd-m1x-0", "osmd-m0-1", "osmd-m1-1", "osmd-m1x-1", "osmd-m0-2", "osmd-m1-2", "osmd-m1x-2",
             "osmd-m2-0", "osmd-m3-0", "osmd-m2-1", "osmd-m3-1", "osmd-m2-2", "osmd-m3-2", // the multiple rest measure has measure 4's index
             "osmd-m5-0", "osmd-m5-1", "osmd-m5-2", // page 2
         ]);

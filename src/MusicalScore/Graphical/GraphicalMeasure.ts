@@ -150,13 +150,14 @@ export abstract class GraphicalMeasure extends GraphicalObject {
      * "osmd-m", the measure's index in Sheet.SourceMeasures, "-" and its staff's index in Sheet.Staves, both counted from 0,
      * which are the measure's indices in GraphicSheet.MeasureList: "osmd-m11-1" is MeasureList[11][1], the 12th measure of
      * the second staff. A multiple rest measure has the index of its first measure. An extra instruction measure (the key or
-     * time signature of the next system at the end of a system) has "osmd-x" and the index of the measure it follows.
+     * time signature of the next system at the end of a system) has the index of the measure it follows and an "x":
+     * "osmd-m1x-0" follows "osmd-m1-0".
      * The index, not the measure number, which can repeat (e.g. 0 for a pickup and for an implicit measure after it).
      */
     protected getSVGGElementId(): string {
         const staffIndex: number = this.ParentStaff.idInMusicSheet;
         if (this.IsExtraGraphicalMeasure) {
-            return `osmd-x${this.ExtraGraphicalMeasurePreviousMeasure?.parentSourceMeasure?.measureListIndex}-${staffIndex}`;
+            return `osmd-m${this.ExtraGraphicalMeasurePreviousMeasure?.parentSourceMeasure?.measureListIndex}x-${staffIndex}`;
         }
         return `osmd-m${this.parentSourceMeasure?.measureListIndex}-${staffIndex}`;
     }

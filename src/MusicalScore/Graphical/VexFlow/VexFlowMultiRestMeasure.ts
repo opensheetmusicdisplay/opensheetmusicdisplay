@@ -71,7 +71,6 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
         this.multiRestElement.setStave(this.stave);
         this.multiRestElement.setContext(ctx);
         this.multiRestElement.draw();
-        this.multiRestElement.id = `vf-multi${this.MeasureNumber}`;
         ctx.closeGroup();
 
         ctx.closeGroup();
