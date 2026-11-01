@@ -212,6 +212,16 @@ describe("OpenSheetMusicDisplay incremental rendering of a single horizontal sta
         renderNextUntilDone(1);
         expect(drawnElements()).to.deep.equal(elementsOfRender);
     });
+
+    it("gives a staffline's id (osmd-staffline<system>-<staff>) only to its group of the batch drawing its start", async () => {
+        // each batch draws its part of a staffline into a group of its own: two staves in 3 systems of 2 measures, a measure a batch
+        osmd.setOptions({ newSystemFromXML: true });
+        await osmd.load(TestUtils.getScore("test_wavy_line_multiline_extragraphicalmeasure.musicxml"));
+        expect(renderNextUntilDone(1), "batches").to.equal(6);
+        const ids: string[] = Array.from(container.querySelectorAll("g.osmd-staffline")).map((group: Element): string => group.id);
+        expect(ids).to.deep.equal(["osmd-staffline0-0", "osmd-staffline0-1", "", "", "osmd-staffline1-0", "osmd-staffline1-1", "", "",
+            "osmd-staffline2-0", "osmd-staffline2-1", "", ""]);
+    });
 });
 
 describe("OpenSheetMusicDisplay incremental rendering of the endless page in batches (renderNext)", () => {
