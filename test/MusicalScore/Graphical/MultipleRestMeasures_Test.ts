@@ -31,14 +31,15 @@ describe("Multiple rest measures", () => {
         const restMeasureCounts: number[] = osmd.Sheet.SourceMeasures.map(measure => measure.multipleRestMeasures ?? 0);
         expect(restMeasureCounts, "measures per multiple rest measure, for measures 1-7").to.deep.equal([0, 0, 2, 0, 2, 0, 0]);
         expect(osmd.GraphicSheet.MusicPages[0].MusicSystems.length, "systems").to.equal(1);
-        // [measure number, number of accidentals] of the key signatures drawn (none for C major); the group of a measure has its number as id
+        // [measure group id, number of accidentals] of the key signatures drawn (none for C major); the group of a measure has the id
+        //   osmd-m<measure index>-<staff index>
         const keySignatures: [string, number][] = Array.from(container.querySelectorAll(".vf-keysignature"))
             .map((key): [string, number] => [key.closest(".vf-measure").id, key.querySelectorAll("path").length]);
-        expect(keySignatures, "D major in measure 2, E major in measure 3").to.deep.equal([["2", 2], ["3", 4]]);
-        // the measure numbers of the time signatures drawn, without the numbers of the multiple rest measures, drawn like time signatures
+        expect(keySignatures, "D major in measure 2, E major in measure 3").to.deep.equal([["osmd-m1-0", 2], ["osmd-m2-0", 4]]);
+        // the measure groups of the time signatures drawn, without the numbers of the multiple rest measures, drawn like time signatures
         const timeSignatures: string[] = Array.from(container.querySelectorAll(".vf-timesignature"))
             .filter(time => !time.closest(".vf-multirest")).map(time => time.closest(".vf-measure").id);
-        expect(timeSignatures, "4/4 in measure 1, 3/4 in measure 5").to.deep.equal(["1", "5"]);
+        expect(timeSignatures, "4/4 in measure 1, 3/4 in measure 5").to.deep.equal(["osmd-m0-0", "osmd-m4-0"]);
         expect(osmd.GraphicSheet.findGraphicalMeasure(3, 0)).to.equal(osmd.GraphicSheet.MeasureList[2][0]);
         expect(osmd.GraphicSheet.findGraphicalMeasure(5, 0)).to.equal(osmd.GraphicSheet.MeasureList[4][0]);
     });
@@ -96,16 +97,19 @@ describe("Multiple rest measures", () => {
         "RenderMultipleRestMeasures or the generation", async () => {
         await osmd.load(TestUtils.getScore("test_multiple_rest_measures_auto_key_time_change.musicxml"));
         osmd.render();
-        /** The numbers of the measures drawn, a multiple rest measure counting as its first measure (a measure's group has its number as id). */
+        /** The ids of the measure groups drawn (osmd-m<measure index>-<staff index>), a multiple rest measure has its first measure's. */
         const drawnMeasures: () => string[] = () => Array.from(container.querySelectorAll(".vf-measure")).map(measure => measure.id);
-        expect(drawnMeasures(), "measures 3-4 and 5-6 as multiple rest measures").to.deep.equal(["1", "2", "3", "5", "7"]);
+        /** measures 1-7 */
+        const allMeasures: string[] = ["osmd-m0-0", "osmd-m1-0", "osmd-m2-0", "osmd-m3-0", "osmd-m4-0", "osmd-m5-0", "osmd-m6-0"];
+        expect(drawnMeasures(), "measures 3-4 and 5-6 as multiple rest measures")
+            .to.deep.equal(["osmd-m0-0", "osmd-m1-0", "osmd-m2-0", "osmd-m4-0", "osmd-m6-0"]);
         // The source measures still had the multiple rest measures of the previous calculation: measures 4 and 6 got no graphical
         //   measures, and updateGraphic() threw a TypeError.
         osmd.EngravingRules.RenderMultipleRestMeasures = false;
         osmd.updateGraphic();
         osmd.render();
         expect(multipleRestMeasureCounts(), "RenderMultipleRestMeasures false").to.deep.equal([0, 0, 0, 0, 0, 0, 0]);
-        expect(drawnMeasures(), "RenderMultipleRestMeasures false").to.deep.equal(["1", "2", "3", "4", "5", "6", "7"]);
+        expect(drawnMeasures(), "RenderMultipleRestMeasures false").to.deep.equal(allMeasures);
         osmd.EngravingRules.RenderMultipleRestMeasures = true;
         osmd.updateGraphic();
         osmd.render();
@@ -115,7 +119,7 @@ describe("Multiple rest measures", () => {
         osmd.updateGraphic();
         osmd.render();
         expect(multipleRestMeasureCounts(), "autoGenerateMultipleRestMeasuresFromRestMeasures false").to.deep.equal([0, 0, 0, 0, 0, 0, 0]);
-        expect(drawnMeasures(), "autoGenerateMultipleRestMeasuresFromRestMeasures false").to.deep.equal(["1", "2", "3", "4", "5", "6", "7"]);
+        expect(drawnMeasures(), "autoGenerateMultipleRestMeasuresFromRestMeasures false").to.deep.equal(allMeasures);
     });
 
     it("generates the multiple rest measures again when updateGraphic() follows hiding or showing an instrument", async () => {
@@ -148,7 +152,7 @@ describe("Multiple rest measures", () => {
 
     it("draws the clef change after a multiple rest measure at its end, or at the end of its last measure without " +
         "RenderMultipleRestMeasures, also when updateGraphic() follows changing the rule, and the notes after it in that clef", async () => {
-        /** [measure number, number of clefs drawn] per drawn measure, a multiple rest measure counting as its first measure */
+        /** [measure group id, number of clefs drawn] per drawn measure, a multiple rest measure has its first measure's id */
         const clefsPerMeasure: () => [string, number][] = () => Array.from(container.querySelectorAll(".vf-measure"))
             .map((measure): [string, number] => [measure.id, measure.querySelectorAll(".vf-clef").length]);
         /** the clef that measure 3 begins with, and the clef its note is drawn in */
@@ -157,8 +161,8 @@ describe("Multiple rest measures", () => {
             const note: VexFlowGraphicalNote = measure.staffEntries[0].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote;
             return [measure.InitiallyActiveClef.ClefType, note.Clef().ClefType];
         }
-        const multipleRest: [string, number][] = [["1", 2], ["3", 0]]; // the treble clef at its start, the bass clef at its end
-        const singleMeasures: [string, number][] = [["1", 1], ["2", 1], ["3", 0]]; // the bass clef at the end of measure 2
+        const multipleRest: [string, number][] = [["osmd-m0-0", 2], ["osmd-m2-0", 0]]; // the treble clef at its start, the bass clef at its end
+        const singleMeasures: [string, number][] = [["osmd-m0-0", 1], ["osmd-m1-0", 1], ["osmd-m2-0", 0]]; // the bass clef at the end of measure 2
         // Measures 1-2: <multiple-rest>2</multiple-rest> in the treble clef, measure 3 begins with the bass clef.
         //   The reader put the clef change at the end of measure 1 if RenderMultipleRestMeasures was true when loading,
         //   else at the end of measure 2, and the drawing kept it there after a change of the rule.
@@ -198,11 +202,12 @@ describe("Multiple rest measures", () => {
         osmd.Sheet.Instruments[0].Visible = false;
         osmd.updateGraphic();
         osmd.render();
-        // [measure number, number of clefs drawn] per drawn measure, a multiple rest measure counting as its first measure
+        // [measure group id, number of clefs drawn] per drawn measure, a multiple rest measure has its first measure's id
+        //   (staff index 1: the hidden flute's staff keeps index 0)
         const clefsPerMeasure: [string, number][] = Array.from(container.querySelectorAll(".vf-measure"))
             .map((measure): [string, number] => [measure.id, measure.querySelectorAll(".vf-clef").length]);
         expect(clefsPerMeasure, "the bass clef at the start, the tenor and the treble clef at the ends of the multiple rest measures")
-            .to.deep.equal([["1", 1], ["2", 1], ["6", 1], ["8", 0]]);
+            .to.deep.equal([["osmd-m0-1", 1], ["osmd-m1-1", 1], ["osmd-m5-1", 1], ["osmd-m7-1", 0]]);
         // the clef that measure 8 begins with (drawn there at a system start), and the clef its note is drawn in
         const measure8: GraphicalMeasure = osmd.GraphicSheet.MeasureList[7][1];
         const note: VexFlowGraphicalNote = measure8.staffEntries[0].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote;

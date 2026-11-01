@@ -60,7 +60,7 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
         if (measureNode) {
             measureNode.classList?.add("vf-measure");
             measureNode.classList?.add("osmd-multi");
-            measureNode.id = `${this.MeasureNumber}`;
+            measureNode.id = this.getSVGGElementId();
         }
         this.svgGElement = measureNode; // undefined with the canvas backend
 

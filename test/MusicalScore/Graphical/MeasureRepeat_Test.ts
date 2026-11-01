@@ -48,7 +48,7 @@ describe("Measure repeat presentation", () => {
         for (const measureNumber of [2, 3]) {
             const measure: GraphicalMeasure = findMeasure(osmd, measureNumber - 1, 0);
             expect(measure.NotesAreAbbreviated, `measure ${measureNumber} is abbreviated`).to.equal(true);
-            const group: Element = container.querySelector(`.vf-measure[id="${measureNumber}"]`);
+            const group: Element = container.querySelector(`#osmd-m${measureNumber - 1}-0`);
             expect(group, `measure ${measureNumber} is drawn`).to.not.equal(null);
             expect(group.querySelectorAll(".vf-measure-repeat").length, `measure ${measureNumber} draws one sign`).to.equal(1);
             expect(group.querySelectorAll(".vf-notehead").length, `measure ${measureNumber} draws no noteheads`).to.equal(0);
@@ -93,8 +93,8 @@ describe("Measure repeat presentation", () => {
         // measures 6 and 7 (0-based index 5, 6) form one two-measure unit; the sign is drawn once, on measure 7
         expect(findMeasure(osmd, 5, 0).NotesAreAbbreviated, "measure 6").to.equal(true);
         expect(findMeasure(osmd, 6, 0).NotesAreAbbreviated, "measure 7").to.equal(true);
-        const measure6Group: Element = container.querySelector('.vf-measure[id="6"]');
-        const measure7Group: Element = container.querySelector('.vf-measure[id="7"]');
+        const measure6Group: Element = container.querySelector("#osmd-m5-0");
+        const measure7Group: Element = container.querySelector("#osmd-m6-0");
         expect(measure6Group.querySelectorAll(".vf-measure-repeat").length, "measure 6 draws nothing itself").to.equal(0);
         expect(measure7Group.querySelectorAll(".vf-measure-repeat").length, "measure 7 draws the shared sign").to.equal(1);
         const twoMeasureSign: Element = measure7Group.querySelector(".vf-measure-repeat");
@@ -107,7 +107,7 @@ describe("Measure repeat presentation", () => {
 
         // the "2" is drawn above the staff: the two-measure sign's group reaches higher (smaller top) than a
         //   one-measure sign's group (measure 2's), which has no number and sits within the staff
-        const oneMeasureSign: Element = container.querySelector('.vf-measure[id="2"] .vf-measure-repeat');
+        const oneMeasureSign: Element = container.querySelector("#osmd-m1-0 .vf-measure-repeat");
         expect(twoMeasureSign.getBoundingClientRect().top, "the '2' extends above a plain sign")
             .to.be.lessThan(oneMeasureSign.getBoundingClientRect().top);
 
@@ -263,7 +263,7 @@ describe("Measure repeat presentation: edge cases", () => {
                 osmd.render();
                 const measure: GraphicalMeasure = findMeasure(osmd, 1, 0);
                 expect(measure.NotesAreAbbreviated, `${variant}: the slur's unit keeps its notes`).to.equal(false);
-                expect(container.querySelectorAll('.vf-measure[id="2"] .vf-notehead').length, `${variant}: noteheads`).to.equal(2);
+                expect(container.querySelectorAll("#osmd-m1-0 .vf-notehead").length, `${variant}: noteheads`).to.equal(2);
                 expect(findMeasure(osmd, 2, 0).NotesAreAbbreviated, `${variant}: the next plain unit still abbreviates`).to.equal(true);
                 const sourceSlur: Slur = measure.staffEntries[atEnd ? 1 : 0].graphicalVoiceEntries[0].notes[0].sourceNote.NoteSlurs[0];
                 expect(sourceSlur.HasUnattachedEnd, `${variant}: the source slur is preserved`).to.equal(true);
@@ -320,8 +320,8 @@ describe("Measure repeat presentation: edge cases", () => {
                 expect(note.NoteTuplets.some((tuplet): boolean => tuplet.Notes.some((group: Note[]): boolean => group.some(outside))),
                     `${variant}: only the crossing case has notes outside the unit`).to.equal(crosses);
                 expect(measure.NotesAreAbbreviated, `${variant}: abbreviated`).to.equal(!crosses);
-                expect(container.querySelectorAll('.vf-measure[id="2"] .vf-notehead').length, `${variant}: noteheads`).to.equal(crosses ? 3 : 0);
-                expect(container.querySelectorAll('.vf-measure[id="2"] .vf-measure-repeat').length, `${variant}: signs`)
+                expect(container.querySelectorAll("#osmd-m1-0 .vf-notehead").length, `${variant}: noteheads`).to.equal(crosses ? 3 : 0);
+                expect(container.querySelectorAll("#osmd-m1-0 .vf-measure-repeat").length, `${variant}: signs`)
                     .to.equal(crosses ? 0 : 1);
             }
         }
