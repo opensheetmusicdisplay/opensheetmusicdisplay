@@ -1777,12 +1777,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const graphicalOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, startStaffLine.PositionAndShape);
       let startStaffEntry: GraphicalStaffEntry = startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
       if (!this.hasVexFlowNote(startStaffEntry) && !startIsClipped) {
-        // A cross-staff voice can have its onset on another staff of this instrument.
-        // Borrow its horizontal anchor, while keeping the bracket on its source staff.
+        // No note of its staff at its time, e.g. where its voice continues on the other staff of a piano:
+        //   the staves of a system share the x of a time, so borrow the horizontal anchor of another staff's note there,
+        //   while keeping the bracket on its source staff.
         for (const measure of this.graphicalMusicSheet.MeasureList[measureIndex]) {
-          if (measure.ParentStaff.ParentInstrument !== startMeasure.ParentStaff.ParentInstrument ||
-              measure.ParentStaffLine?.ParentMusicSystem !== startStaffLine.ParentMusicSystem) {
-            continue;
+          if (measure.ParentStaffLine?.ParentMusicSystem !== startStaffLine.ParentMusicSystem) {
+            continue; // not drawn, e.g. a hidden part
           }
           const entry: GraphicalStaffEntry = measure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
           if (this.hasVexFlowNote(entry)) {
