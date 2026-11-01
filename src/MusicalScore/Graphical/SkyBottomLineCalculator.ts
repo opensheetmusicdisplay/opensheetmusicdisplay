@@ -634,7 +634,10 @@ export class SkyBottomLineCalculator {
      * @param value value to be set
      */
     public setSkyLineWithValue(value: number): void {
-        this.SkyLine.forEach(sl => sl = value);
+        // (assigning to the forEach parameter changed nothing)
+        for (let i: number = 0; i < this.SkyLine.length; i++) {
+            this.SkyLine[i] = value;
+        }
     }
 
     /**
@@ -642,7 +645,9 @@ export class SkyBottomLineCalculator {
      * @param value value to be set
      */
     public setBottomLineWithValue(value: number): void {
-        this.BottomLine.forEach(bl => bl = value);
+        for (let i: number = 0; i < this.BottomLine.length; i++) {
+            this.BottomLine[i] = value;
+        }
     }
 
     public getLeftIndexForPointX(x: number, length: number): number {
