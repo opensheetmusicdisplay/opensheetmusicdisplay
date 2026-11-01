@@ -93,6 +93,15 @@ export class AccidentalCalculator {
             }
         }
 
+        // A printed sign that disagrees with <alter> is drawn as printed (a historical sharp cancelling the key's flat,
+        //   sounding E natural); the measure keeps the sounding alteration, so the next E natural gets no natural sign.
+        //   VexFlowGraphicalNote.setAccidental() draws the printed glyph.
+        if (this.Transpose === 0 && AccidentalCalculator.printedMismatchGlyph(pitch)) {
+            this.currentInMeasureNoteAlterationsDict.setValue(pitchKey, pitch.AccidentalHalfTones);
+            this.addAccidental(graphicalNote, pitch, pitchKey);
+            return;
+        }
+
         if (this.currentInMeasureNoteAlterationsDict.containsKey(pitchKey)) {
             if (this.currentInMeasureNoteAlterationsDict.getValue(pitchKey) !== pitch.AccidentalHalfTones) {
                 if (this.keySignatureNoteAlterationsDict.containsKey(pitchKey) &&
@@ -151,6 +160,23 @@ export class AccidentalCalculator {
             }
         }
     }
+
+    /** The VexFlow glyph of the printed <accidental> of the pitch when it is a plain sign whose alteration differs from
+     *  the sounding one (<alter>), else undefined. Signs drawn as two glyphs (natural-sharp, ...) are left to
+     *  VexFlowGraphicalNote.setAccidental(). A transposed pitch has no AccidentalXml. */
+    public static printedMismatchGlyph(pitch: Pitch): string | undefined {
+        const glyph: [string, number] = pitch?.AccidentalXml ? AccidentalCalculator.printedGlyphs[pitch.AccidentalXml] : undefined;
+        return glyph && glyph[1] !== pitch.AccidentalHalfTones ? glyph[0] : undefined;
+    }
+
+    private static readonly printedGlyphs: { [accidentalXml: string]: [string, number] } = {
+        "double-flat": ["bb", -2],
+        "double-sharp": ["##", 2],
+        "flat": ["b", -1],
+        "flat-flat": ["bb", -2],
+        "natural": ["n", 0],
+        "sharp": ["#", 1],
+    };
 
     /** Adds the accidental of the pitch to the note, and remembers the note for isAccidentalDrawnAtSameTime(). */
     private addAccidental(graphicalNote: GraphicalNote, pitch: Pitch, pitchKey: number): void {
