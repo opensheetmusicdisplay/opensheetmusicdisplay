@@ -648,7 +648,9 @@ export abstract class MusicSheetCalculator {
         start -= staffLine.PositionAndShape.RelativePosition.x;
         end -= staffLine.PositionAndShape.RelativePosition.x;
 
-        // correct for hypersensitive collision checks, notes having skyline extend too far to left and right
+        // correct for hypersensitive collision checks, notes having skyline extend too far to left and right.
+        //   getSkyLineMinInRange() also reads the sample after the range: at a system start, the top of the clef under
+        //   the end of the number is only in that sample.
         const startCollisionCheck: number = start + 0.5;
         const endCollisionCheck: number = end - 0.5;
 
@@ -3767,6 +3769,8 @@ export abstract class MusicSheetCalculator {
                             gLabel.setLabelPositionAndShapeBorders();
                             const marginLeft: number = positionX + gLabel.PositionAndShape.BorderMarginLeft;
                             const marginRight: number = positionX + gLabel.PositionAndShape.BorderMarginRight;
+                            // (the read also takes the sample after the margin box, which reaches the stem at the right of
+                            //   a note head with its stem up, see getSkyLineMinInRange())
                             let skybottomFurthest: number = undefined;
                             if (placement === PlacementEnum.Above) {
                                 skybottomFurthest = skybottomcalculator.getSkyLineMinInRange(marginLeft, marginRight);
