@@ -1775,7 +1775,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const startNoteMeasures: GraphicalMeasure[] = startIsClipped ? startStaffLine.Measures : [startMeasure];
       const endNoteMeasures: GraphicalMeasure[] = endIsClipped ? endStaffLine.Measures : [endMeasure];
       const graphicalOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, startStaffLine.PositionAndShape);
-      let startStaffEntry: GraphicalStaffEntry = startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
+      // A clipped start or end lies in a measure that isn't drawn: use the first or last note of the drawn range
+      //   (startNoteMeasures, endNoteMeasures), not the note at its timestamp in the first or last drawn measure.
+      let startStaffEntry: GraphicalStaffEntry = startIsClipped ? undefined : startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
       if (!this.hasVexFlowNote(startStaffEntry) && !startIsClipped) {
         // No note of its staff at its time, e.g. where its voice continues on the other staff of a piano:
         //   the staves of a system share the x of a time, so borrow the horizontal anchor of another staff's note there,
@@ -1811,8 +1813,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
       }
       // calculate RelativePosition and Dashes
-      let endStaffEntry: GraphicalStaffEntry = endMeasure.findGraphicalStaffEntryFromTimestamp(endTimeStamp);
-      if (!this.hasVexFlowNote(endStaffEntry) && endTimeStamp) {
+      let endStaffEntry: GraphicalStaffEntry = endIsClipped ? undefined : endMeasure.findGraphicalStaffEntryFromTimestamp(endTimeStamp);
+      if (!this.hasVexFlowNote(endStaffEntry) && endTimeStamp && !endIsClipped) {
         // endTimeStamp can be undefined for an unterminated octave-shift (start without stop,
         //   e.g. from OMR-generated MusicXML), see #1439 / #1376 for similar cases.
         // No exact match (e.g. pending stop with computed inclusive end).
@@ -1865,8 +1867,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               continue;
             }
 
-            if (i < endStaffLine.ParentMusicSystem.Id - 1) {
-              // "in-between" staffline before the staffline where the octave shift ends: make octave shift go to end of staffline
+            if (i < endStaffLine.ParentMusicSystem.Id - 1 || endIsClipped) {
+              // "in-between" staffline before the staffline where the octave shift ends, or the last one drawn when it goes on after
+              //   the drawn range: make octave shift go to end of staffline
               nextOctaveShift.endsOnDifferentStaffLine = true;
               nextOctaveShift.graphicalEndAtMeasureEnd = true;
               nextOctaveShift.endMeasure = nextShiftLastMeasure;
@@ -1899,7 +1902,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               log.warn(logPrefix + "no lastNote found");
             }
             nextOctaveShift.setStartNote(firstNote);
-            const endIdx: number = endMeasure.ParentStaffLine === nextShiftStaffline && octaveShift.endVoiceEntryIndex > 0
+            const endIdx: number = endMeasure.ParentStaffLine === nextShiftStaffline && octaveShift.endVoiceEntryIndex > 0 && !endIsClipped
               ? octaveShift.endVoiceEntryIndex : -1;
             nextOctaveShift.setEndNote(lastNote, endIdx);
             nextShiftStaffline.OctaveShifts.push(nextOctaveShift);
@@ -1908,6 +1911,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
 
         this.calculateOctaveShiftSkyBottomLine(startStaffEntry, lastNoteOfFirstShift, graphicalOctaveShift, startStaffLine);
+      } else if (endIsClipped) {
+        // it goes on after the drawn range: draw it like a bracket going on in the next system
+        graphicalOctaveShift.setEndNote(endStaffEntry);
+        graphicalOctaveShift.endsOnDifferentStaffLine = true;
+        graphicalOctaveShift.graphicalEndAtMeasureEnd = true;
+        this.calculateOctaveShiftSkyBottomLine(startStaffEntry, endStaffEntry, graphicalOctaveShift, startStaffLine);
       } else {
         graphicalOctaveShift.setEndNote(endStaffEntry, octaveShift.endVoiceEntryIndex > 0 ? octaveShift.endVoiceEntryIndex : -1);
         this.calculateOctaveShiftSkyBottomLine(startStaffEntry, endStaffEntry, graphicalOctaveShift, startStaffLine);
@@ -2006,18 +2015,30 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       let openEnd: boolean = false;
       const startNoteMeasures: GraphicalMeasure[] = startIsClipped ? startStaffLine.Measures : [startMeasure];
       const endNoteMeasures: GraphicalMeasure[] = endIsClipped ? endStaffLine.Measures : [endMeasure];
-      if (startStaffLine !== endStaffLine) {
+      if (startStaffLine !== endStaffLine || endIsClipped) {
         openEnd = true;
       }
       // calculate GraphicalPedal and RelativePositions
       const graphicalPedal: VexFlowPedal = new VexFlowPedal(pedal, startStaffLine.PositionAndShape, false, openEnd);
+      if (startIsClipped) {
+        // pressed at the first note of the drawn range, where playing starts: no change notch, the change is before the range
+        graphicalPedal.ChangeBegin = false;
+      }
+      if (endIsClipped) {
+        // it goes on after the drawn range: draw its end like that of a pedal going on in the next system
+        graphicalPedal.ChangeEnd = false;
+        if (graphicalPedal.pedalSymbol === MusicSymbol.PEDAL_SYMBOL) {
+          graphicalPedal.ReleaseText = " ";
+        }
+      }
       graphicalPedal.setEndsStave(endMeasure, endTimeStamp); // unfortunately this can't already be checked in ExpressionReader
       // calculate RelativePosition
-      let startStaffEntry: GraphicalStaffEntry = startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
+      // (a clipped start or end lies in a measure that isn't drawn: the first or last note of the drawn range)
+      let startStaffEntry: GraphicalStaffEntry = startIsClipped ? undefined : startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
       if (!this.hasVexFlowNote(startStaffEntry)) { // fix for rendering range set
         startStaffEntry = this.findBoundaryNoteEntry(startNoteMeasures);
       }
-      let endStaffEntry: GraphicalStaffEntry = endMeasure.findGraphicalStaffEntryFromTimestamp(endTimeStamp);
+      let endStaffEntry: GraphicalStaffEntry = endIsClipped ? undefined : endMeasure.findGraphicalStaffEntryFromTimestamp(endTimeStamp);
       if (!this.hasVexFlowNote(endStaffEntry)) { // fix for rendering range set
         endStaffEntry = this.findBoundaryNoteEntry(endNoteMeasures, true);
         // TODO can be undefined if no notes in end measure
@@ -2051,6 +2072,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           endStaffLine.Pedals.push(nextPedal);
           nextPedal.CalculateBoundingBox();
           nextPedal.DepressText = " ";
+          if (endIsClipped) {
+            nextPedal.ReleaseText = " ";
+          }
           this.calculatePedalSkyBottomLine(nextPedal.startVfVoiceEntry, nextPedal.endVfVoiceEntry, nextPedal, endStaffLine);
         } else {
           let lastMeasureOfFirstShift: GraphicalMeasure = this.findLastStafflineMeasure(startStaffLine);
@@ -2077,7 +2101,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               }
               let nextOpenEnd: boolean = false;
               let nextChangeEndFromParent: boolean = false;
-              if (currentCount < systemsInBetweenCount) {
+              if (currentCount < systemsInBetweenCount || endIsClipped) {
                 nextOpenEnd = true;
               } else {
                 nextChangeEndFromParent = true;
@@ -2194,11 +2218,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const startNoteMeasures: GraphicalMeasure[] = startIsClipped ? startStaffLine.Measures : [startMeasure];
       const endNoteMeasures: GraphicalMeasure[] = endIsClipped ? endStaffLine.Measures : [endMeasure];
       // calculate RelativePosition
-      let startStaffEntry: GraphicalStaffEntry = startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
+      // (a clipped start or end lies in a measure that isn't drawn: the first or last note of the drawn range. The line goes on
+      //   to the end of the measure from its last note there, like at the end of a system.)
+      let startStaffEntry: GraphicalStaffEntry = startIsClipped ? undefined : startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
       if (!this.hasVexFlowNote(startStaffEntry)) { // fix for rendering range set
         startStaffEntry = this.findBoundaryNoteEntry(startNoteMeasures);
       }
-      let endStaffEntry: GraphicalStaffEntry = endMeasure.findGraphicalStaffEntryFromTimestamp(endTimeStamp);
+      let endStaffEntry: GraphicalStaffEntry = endIsClipped ? undefined : endMeasure.findGraphicalStaffEntryFromTimestamp(endTimeStamp);
       if (!this.hasVexFlowNote(endStaffEntry)) { // fix for rendering range set
         endStaffEntry = this.findBoundaryNoteEntry(endNoteMeasures, true);
       }

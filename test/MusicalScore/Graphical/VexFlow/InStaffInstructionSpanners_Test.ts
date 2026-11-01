@@ -64,4 +64,55 @@ describe("Instruction-only span endpoints", () => {
         osmd.render();
         checkSegments(3);
     });
+
+    /** The x of each vertical stroke of the drawn pedal brackets: the hooks at their ends that aren't open. */
+    function pedalHookXs(): number[] {
+        const xs: number[] = [];
+        // (a pedal marking of a single path has the class on the path, see VexFlowPatch/src/pedalmarking.js)
+        for (const path of Array.from(container.querySelectorAll("g.vf-pedalmarking path, path.vf-pedalmarking"))) {
+            const coordinates: number[] = path.getAttribute("d").match(/-?[\d.]+/g).map(Number); // M x y L x y ...
+            for (let i: number = 2; i + 1 < coordinates.length; i += 2) {
+                if (coordinates[i] === coordinates[i - 2] && coordinates[i + 1] !== coordinates[i - 1]) {
+                    xs.push(coordinates[i]);
+                }
+            }
+        }
+        return xs;
+    }
+
+    /** Checks the lines of test_drawing_range_octaveshift_pedal_trill.musicxml when the drawing range cuts off both ends: they
+     *  start at the first note drawn, not at beat 2 of the first measure drawn, and end open at the last note drawn. */
+    function checkCutLines(systems: number): void {
+        const staffLines: StaffLine[][] = osmd.GraphicSheet.MusicPages[0].MusicSystems.map(system => system.StaffLines);
+        expect(staffLines.length, "systems").to.equal(systems);
+        const noteXs: (line: StaffLine) => number[] = line => line.Measures.flatMap(measure => measure.staffEntries)
+            .map(entry => (entry.graphicalVoiceEntries[0] as VexFlowVoiceEntry).vfStaveNote.getAbsoluteX());
+        // the 8va is on the right hand's staff, the trill line and the pedal on the left hand's
+        const kinds: ["WavyLines" | "Pedals" | "OctaveShifts", number][] = [["OctaveShifts", 0], ["WavyLines", 1], ["Pedals", 1]];
+        for (const [kind, staff] of kinds) {
+            const lines: StaffLine[] = staffLines.map(systemLines => systemLines[staff]);
+            expect(lines.map(line => line[kind].length), `${kind}: one segment per system`).to.deep.equal(Array(systems).fill(1));
+            const first: VexFlowVibratoBracket | VexFlowPedal | VexFlowOctaveShift =
+                lines[0][kind][0] as VexFlowVibratoBracket | VexFlowPedal | VexFlowOctaveShift;
+            const last: VexFlowVibratoBracket | VexFlowPedal | VexFlowOctaveShift =
+                lines[lines.length - 1][kind][0] as VexFlowVibratoBracket | VexFlowPedal | VexFlowOctaveShift;
+            expect(first.startNote.getAbsoluteX(), `${kind}: starts at the first note drawn`).to.equal(noteXs(lines[0])[0]);
+            expect(last.endNote.getAbsoluteX(), `${kind}: ends at the last note drawn`).to.equal(noteXs(lines[lines.length - 1]).pop());
+        }
+        const [rightHand, leftHand] = staffLines[staffLines.length - 1];
+        expect((rightHand.OctaveShifts[0] as VexFlowOctaveShift).endsOnDifferentStaffLine, "8va: no closing hook").to.equal(true);
+        expect((leftHand.WavyLines[0] as VexFlowVibratoBracket).ToEndOfStopStave, "trill line: on to the barline").to.equal(true);
+        expect(pedalHookXs(), "pedal: a hook at its start only").to.have.lengthOf(1);
+    }
+
+    it("starts and ends lines cut off by the drawing range at its first and last notes, open at a cut-off end", async () => {
+        // an 8va, a trill line and a pedal line from beat 2 of measure 1 to beat 3 of measure 4, over quarters in both hands
+        await osmd.load(TestUtils.getScore("test_drawing_range_octaveshift_pedal_trill.musicxml"));
+        osmd.setOptions({drawFromMeasureNumber: 2, drawUpToMeasureNumber: 3});
+        osmd.render();
+        checkCutLines(2); // measure 3 starts a system
+        osmd.setOptions({drawFromMeasureNumber: 3, drawUpToMeasureNumber: 3});
+        osmd.render();
+        checkCutLines(1);
+    });
 });
