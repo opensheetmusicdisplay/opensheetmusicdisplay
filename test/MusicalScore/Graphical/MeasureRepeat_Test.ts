@@ -113,7 +113,7 @@ describe("Measure repeat presentation", () => {
 
         // the measure-number label at that same barline is drawn above the "2" (must not overlap it - this is
         //   the skyline integration in VexFlowMusicSheetCalculator.reserveSkylineForMeasureRepeats())
-        const measureNumberLabel: Element = Array.from(container.querySelectorAll(".measure-number"))
+        const measureNumberLabel: Element = Array.from(container.querySelectorAll(".osmd-measure-number"))
             .find((label: Element): boolean => label.textContent.trim() === "7");
         expect(measureNumberLabel, "measure 7's number label is drawn").to.not.equal(undefined);
         // A plain "bottom <= top" (any gap at all, including a hair's-width one) is too fragile a margin for a

@@ -175,7 +175,7 @@ describe("VexFlow GraphicalNote", () => {
             const slideStart: VexFlowGraphicalNote = measureNotes(osmd, 0, staffIndex)[3];
             const parts: HTMLElement[] = slideStart.getGlissandoSVGs();
             expect(parts.length, `${staff}: a part in each system`).to.equal(2);
-            expect(parts[0].closest(".staffline") === parts[1].closest(".staffline"), `${staff}: parts in the same system`).to.equal(false);
+            expect(parts[0].closest(".osmd-staffline") === parts[1].closest(".osmd-staffline"), `${staff}: parts in the same system`).to.equal(false);
             slideStart.setColor("#ff0000", { applyToGlissandi: true });
             expect(parts.every(part => glissandoColors(part).every(partColor => partColor === "#ff0000")), `${staff}: both parts colored`).to.equal(true);
             slideStart.setVisible(false);
@@ -210,7 +210,7 @@ describe("VexFlow GraphicalNote", () => {
         const tieEnd: VexFlowGraphicalNote = measureNotes(osmd, 1, 0)[0];
         const parts: HTMLElement[] = tieStart.getTieSVGs();
         expect(parts.length, "a part in each system").to.equal(2);
-        expect(parts[0].closest(".staffline") === parts[1].closest(".staffline"), "parts in the same system").to.equal(false);
+        expect(parts[0].closest(".osmd-staffline") === parts[1].closest(".osmd-staffline"), "parts in the same system").to.equal(false);
         expect(tieEnd.getTieSVGs().length, "the tie belongs to its start note").to.equal(0);
 
         tieEnd.setVisible(false);

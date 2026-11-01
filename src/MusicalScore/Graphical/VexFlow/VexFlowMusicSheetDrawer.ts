@@ -131,7 +131,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         const ctx: Vex.IRenderContext = this.backend.getContext();
         const stafflineNode: Node = ctx.openGroup();
         if (stafflineNode) {
-            (stafflineNode as SVGGElement).classList.add("staffline");
+            (stafflineNode as SVGGElement).classList.add("osmd-staffline");
             if (staffLine.ParentStaff) {
                 (stafflineNode as SVGGElement).id =
                     `${staffLine.ParentStaff.ParentInstrument?.Name}${staffLine.ParentStaff.ParentInstrument?.Id}-${staffLine.ParentStaff?.Id}`;
@@ -299,6 +299,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         curvePointsInPixels.push(this.applyScreenTransformation(p4));
         const startNote: VexFlowGraphicalNote = this.rules.GNote(graphicalSlur.slur.StartNote) as VexFlowGraphicalNote;
         graphicalSlur.SVGElement = this.backend.renderCurve(curvePointsInPixels, true, startNote);
+        this.addSVGClass(graphicalSlur.SVGElement, "osmd-slur");
     }
 
     protected drawMeasure(measure: VexFlowMeasure): void {
@@ -399,7 +400,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                         currentPoint = pathPoints.last();
                         pathPoints.push(new PointF2D(currentPoint.x + movement.x, currentPoint.y - movement.y));
                     }
-                    this.DrawPath(pathPoints, vfNote.ParentMusicPage, true, `buzzRoll${newBuzzRollId}`);
+                    const node: Node = this.DrawPath(pathPoints, vfNote.ParentMusicPage, true, `buzzRoll${newBuzzRollId}`);
+                    this.addSVGClass(node, "osmd-tremolo"); // a buzz roll is an unmeasured tremolo (MusicXML)
                     newBuzzRollId++;
                 }
             }
@@ -573,7 +575,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 new PointF2D(startX, strokeStartTopY)
             ];
             const id: string = `tremoloBetweenNotes-${measure.MeasureNumber}-${measure.ParentStaff.Id}-${strokeId}`;
-            this.DrawPath(strokePoints, stopGNote.ParentMusicPage, true, id, color);
+            const node: Node = this.DrawPath(strokePoints, stopGNote.ParentMusicPage, true, id, color);
+            this.addSVGClass(node, "osmd-tremolo");
             strokeId++;
         }
 
@@ -754,7 +757,6 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             const label: GraphicalLabel = lyricsEntry.GraphicalLabel;
             label.Label.colorDefault = this.rules.DefaultColorLyrics;
             label.SVGNode = this.drawLabel(label, layer);
-            (label.SVGNode as SVGGElement)?.classList.add("lyrics");
         });
     }
 
@@ -906,6 +908,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                                                    graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.y + line.End.y);
                 line.SVGElement = this.drawLine(start, end, line.colorHex ?? "#000000", line.Width);
                 // the null check for colorHex is not strictly necessary anymore, but the previous default color was red.
+                this.addSVGClass(line.SVGElement, "osmd-wedge");
             }
         }
     }
