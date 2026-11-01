@@ -1775,15 +1775,28 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const startNoteMeasures: GraphicalMeasure[] = startIsClipped ? startStaffLine.Measures : [startMeasure];
       const endNoteMeasures: GraphicalMeasure[] = endIsClipped ? endStaffLine.Measures : [endMeasure];
       const graphicalOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, startStaffLine.PositionAndShape);
-      if (!graphicalOctaveShift.startNote) { // fix for rendering range set
-        const startGse: GraphicalStaffEntry = this.findBoundaryNoteEntry(startNoteMeasures);
-        if (!startGse) {
-          return; // couldn't find a start staffentry, don't draw the octave shift
+      let startStaffEntry: GraphicalStaffEntry = startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
+      if (!this.hasVexFlowNote(startStaffEntry) && !startIsClipped) {
+        // No note of its staff at its time, e.g. where its voice continues on the other staff of a piano:
+        //   the staves of a system share the x of a time, so borrow the horizontal anchor of another staff's note there,
+        //   while keeping the bracket on its source staff.
+        for (const measure of this.graphicalMusicSheet.MeasureList[measureIndex]) {
+          if (measure.ParentStaffLine?.ParentMusicSystem !== startStaffLine.ParentMusicSystem) {
+            continue; // not drawn, e.g. a hidden part
+          }
+          const entry: GraphicalStaffEntry = measure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
+          if (this.hasVexFlowNote(entry)) {
+            startStaffEntry = entry;
+            graphicalOctaveShift.startStave = (startMeasure as VexFlowMeasure).getVFStave();
+            break;
+          }
         }
-        graphicalOctaveShift.setStartNote(startGse);
-        if (!graphicalOctaveShift.startNote) {
-          return; // couldn't find a start note, don't draw the octave shift
-        }
+      }
+      if (!this.hasVexFlowNote(startStaffEntry)) {
+        startStaffEntry = this.findBoundaryNoteEntry(startNoteMeasures);
+      }
+      if (!startStaffEntry || !graphicalOctaveShift.setStartNote(startStaffEntry)) {
+        return;
       }
       if (!graphicalOctaveShift.endNote) { // fix for rendering range set
         const endGse: GraphicalStaffEntry = this.findBoundaryNoteEntry(endNoteMeasures, true);
@@ -1798,10 +1811,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
       }
       // calculate RelativePosition and Dashes
-      let startStaffEntry: GraphicalStaffEntry = startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
-      if (!this.hasVexFlowNote(startStaffEntry)) { // fix for rendering range set
-        startStaffEntry = this.findBoundaryNoteEntry(startNoteMeasures);
-      }
       let endStaffEntry: GraphicalStaffEntry = endMeasure.findGraphicalStaffEntryFromTimestamp(endTimeStamp);
       if (!this.hasVexFlowNote(endStaffEntry) && endTimeStamp) {
         // endTimeStamp can be undefined for an unterminated octave-shift (start without stop,
@@ -1819,8 +1828,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       if (!this.hasVexFlowNote(endStaffEntry)) { // fix for rendering range set
         endStaffEntry = this.findBoundaryNoteEntry(endNoteMeasures, true);
       }
-      graphicalOctaveShift.setStartNote(startStaffEntry);
-
       if (endStaffLine !== startStaffLine) {
         graphicalOctaveShift.endsOnDifferentStaffLine = true;
         let lastMeasureOfFirstShift: GraphicalMeasure = this.findLastStafflineMeasure(startStaffLine);
