@@ -8,6 +8,7 @@ import { GraphicalMeasure } from "../../../src/MusicalScore/Graphical/GraphicalM
  * The cursor on a page that isn't drawn, e.g. after drawUpToPageNumber: there's no element to show it on, so it's hidden there.
  * It still moves through the whole sheet, e.g. a cursor that is only used to find the notes. Moving onto such a page threw
  * a TypeError (the page's element was null).
+ * With no page drawn at all, e.g. with no instrument visible, there's no cursor until render() draws a page.
  */
 describe("Cursor on a page that isn't drawn", () => {
     let container: HTMLElement;
@@ -48,5 +49,19 @@ describe("Cursor on a page that isn't drawn", () => {
         expect(cursor.Hidden, "Hidden: the cursor is still shown where it can be").to.equal(false);
         cursor.reset(); // back to the first page
         expect(expectShownOnDrawnPage()).to.equal(1);
+    });
+
+    it("render() with no instrument visible draws no page and doesn't throw; the cursor is created on the first page drawn (#1892)", async () => {
+        const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(container, { autoResize: false });
+        await osmd.load(TestUtils.getScore("test_rest_positioning_piano_two_voices.musicxml"));
+        // hiding the instrument's first voice (Voice.Visible) does the same: Instrument.Visible is the Visible of its first voice
+        osmd.Sheet.Instruments[0].Visible = false;
+        osmd.render(); // threw a TypeError when restoring the state of the cursor, which wasn't created without a page
+        expect(osmd.Drawer.Backends.length, "drawn pages, no instrument visible").to.equal(0);
+        osmd.Sheet.Instruments[0].Visible = true;
+        osmd.render();
+        expect(osmd.Drawer.Backends.length, "drawn pages, the instrument visible again").to.equal(1);
+        osmd.cursor.show();
+        expect(osmd.cursor.NotesUnderCursor().length, "notes under the cursor").to.be.greaterThan(0);
     });
 });

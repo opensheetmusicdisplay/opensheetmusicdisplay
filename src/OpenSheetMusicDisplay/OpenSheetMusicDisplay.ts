@@ -1795,8 +1795,9 @@ export class OpenSheetMusicDisplay {
                     this.cursors[i].init(this.sheet.MusicPartManager, this.graphic);
                 }
 
-                // restore old cursor state
-                if (this.rules.RestoreCursorAfterRerender) {
+                // restore old cursor state, if there's a cursor: it's created on a drawn page, and with no instrument visible,
+                //   render() draws none (#1892)
+                if (this.rules.RestoreCursorAfterRerender && this.cursors[i]) {
                     this.cursors[i].hidden = hidden;
                     if (previousIterator) {
                         this.cursors[i].iterator = previousIterator;
