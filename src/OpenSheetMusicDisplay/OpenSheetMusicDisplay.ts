@@ -233,16 +233,27 @@ export class OpenSheetMusicDisplay {
     }
 
     /**
-     * (Re-)creates the graphic sheet from the music sheet
+     * (Re-)creates the graphic sheet from the music sheet, and puts the cursors back to the start.
+     * Needed e.g. after changing a rule that applies when the graphic is created, like EngravingRules.RenderHiddenNotes.
+     * A changed transposition (osmd.Sheet.Transpose, Instrument.Transpose, osmd.TransposeCalculator) doesn't need it:
+     * render() creates the graphic again then, and keeps the cursors where they are.
      */
     public updateGraphic(): void {
-        const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator(this.rules);
-        this.graphic = new GraphicalMusicSheet(this.sheet, calc);
+        this.createGraphic();
         if (this.drawingParameters.drawCursors) {
             this.cursors.forEach(cursor => {
                 cursor.init(this.sheet.MusicPartManager, this.graphic);
             });
         }
+    }
+
+    /** Creates the graphic sheet from the music sheet: its graphical measures, notes and chord symbols, with the notes and chord
+     *  symbols transposed by the current transposition (see GraphicalMusicSheet.TranspositionChanged). Unlike updateGraphic(), it
+     *  leaves the cursors alone: render() and renderNext() create them again on the new graphic, where they were.
+     */
+    private createGraphic(): void {
+        const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator(this.rules);
+        this.graphic = new GraphicalMusicSheet(this.sheet, calc);
         if (this.drawingParameters.DrawingParametersEnum === DrawingParametersEnum.leadsheet) {
             this.graphic.LeadSheet = true;
         }
@@ -280,10 +291,19 @@ export class OpenSheetMusicDisplay {
     private lazyScrollHandler: (() => void) | undefined;
     private lazyScrollTarget: HTMLElement | Window | undefined;
 
-    /** Render the loaded music sheet to the container. */
+    /** Render the loaded music sheet to the container.
+     *  A changed transposition (osmd.Sheet.Transpose, Instrument.Transpose, osmd.TransposeCalculator) is applied without
+     *  updateGraphic(): render() creates the graphic again then, see GraphicalMusicSheet.TranspositionChanged.
+     */
     public render(): void {
         if (!this.graphic) {
             throw new Error("OSMD: load() needs to be called before render()");
+        }
+        // The notes and chord symbols are transposed when the graphic is created, the key signatures in each layout (reCalculate()):
+        //   after a change of the transposition, create the graphic again, otherwise only the key signatures would be transposed.
+        //   Unlike updateGraphic(), this keeps the cursors where they are (enableOrDisableCursors() below creates them on the new graphic).
+        if (this.graphic.TranspositionChanged) {
+            this.createGraphic();
         }
         // A full render() supersedes any incremental render in progress: abandon it and restore the
         // draw-measure range it mutated, so this render isn't limited to the last batch.
@@ -402,6 +422,8 @@ export class OpenSheetMusicDisplay {
      * batch. Returns progress; once `done` is true the whole sheet is rendered and further calls are no-ops.
      * Like render(), a session lays the sheet out at the container's width when it starts: to adapt it to a new
      * width, e.g. after a resize, start a new session.
+     * Like render(), it applies a changed transposition (osmd.Sheet.Transpose, Instrument.Transpose, osmd.TransposeCalculator)
+     * without updateGraphic(): during a session, the next call then starts it over from the first measure.
      * Page labels are drawn with the batch that finalizes their position: the title block (title, subtitle,
      * composer, lyricist) with the first batch, the copyright (below the last system) with the final batch.
      *
@@ -425,9 +447,16 @@ export class OpenSheetMusicDisplay {
         const lastSheetMeasureIndex: number = this.sheet.SourceMeasures.length - 1;
         const totalMeasures: number = this.visualMeasureCount(0, this.sheet.SourceMeasures.length);
 
+        // As in render(): create the graphic again after a change of the transposition.
+        const transpositionChanged: boolean = this.graphic.TranspositionChanged;
+        if (transpositionChanged) {
+            this.createGraphic();
+        }
         const begin: boolean = !this.lazyIncrementalActive;
         if (begin) {
             this.beginIncrementalRendering();
+        } else if (transpositionChanged) {
+            this.lazyNextSourceIndex = 0; // start the session over: the systems drawn show the previous transposition
         }
         if (this.lazyNextSourceIndex > lastSheetMeasureIndex) {
             return {
@@ -442,7 +471,7 @@ export class OpenSheetMusicDisplay {
         const toMeasureIndex: number = targetNewSystems !== undefined
             ? fromMeasureIndex
             : this.visualBatchEndIndex(fromMeasureIndex, batchMeasures);
-        this.lazyNextSourceIndex = this.renderAppend(fromMeasureIndex, toMeasureIndex, begin, targetNewSystems);
+        this.lazyNextSourceIndex = this.renderAppend(fromMeasureIndex, toMeasureIndex, begin || transpositionChanged, targetNewSystems);
 
         const done: boolean = this.lazyNextSourceIndex > lastSheetMeasureIndex;
         const renderedMeasures: number = done ? totalMeasures : this.visualMeasureCount(0, this.lazyNextSourceIndex);

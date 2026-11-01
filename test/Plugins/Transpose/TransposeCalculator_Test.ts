@@ -1,12 +1,13 @@
 import { expect } from "chai";
 import { TestUtils } from "../../Util/TestUtils";
-import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
+import { IRenderNextResult, OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TransposeCalculator } from "../../../src/Plugins/Transpose/TransposeCalculator";
 import { ITransposeCalculator } from "../../../src/MusicalScore/Interfaces/ITransposeCalculator";
 import { KeyEnum, KeyInstruction } from "../../../src/MusicalScore/VoiceData/Instructions/KeyInstruction";
 import { GraphicalStaffEntry } from "../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
 import { GraphicalNote } from "../../../src/MusicalScore/Graphical/GraphicalNote";
 import { GraphicalChordSymbolContainer } from "../../../src/MusicalScore/Graphical/GraphicalChordSymbolContainer";
+import { GraphicalMusicSheet } from "../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import { AccidentalEnum, NoteEnum, Pitch } from "../../../src/Common/DataObjects/Pitch";
 
 describe("TransposeCalculator", (): void => {
@@ -102,6 +103,57 @@ describe("TransposeCalculator", (): void => {
             expect(noteNames(1), "Ab major and Ab minor").to.deep.equal(["D", "F#", "A", "D", "F", "A"]);
             expect(drawnAccidentals(1)[4], "Cb, the third of Ab minor, is F, the third of D minor").to.equal("NATURAL");
             expect(chordTexts()).to.deep.equal(["F#", "E#m7b5", "D", "Dm"]);
+        });
+
+        /** The key signature, notes and chord symbols as drawn, all measures. */
+        function drawnScore(): { key: number, notes: string[], chords: string[] } {
+            return {
+                key: firstKey().Key,
+                notes: Array.from(osmd.GraphicSheet.MeasureList.keys()).flatMap((measureIndex: number): string[] => noteNames(measureIndex)),
+                chords: chordTexts(),
+            };
+        }
+
+        it("applies a changed transposition with render() alone, like updateGraphic(), and keeps the cursor where it is", async (): Promise<void> => {
+            await osmd.load(TestUtils.getScore("test_rehearsal_marks_bolivia.musicxml")); // D major, measure 1: a B and a G7
+            osmd.render();
+            osmd.cursor.show();
+            osmd.cursor.next();
+            osmd.cursor.next();
+            const cursorTimestamp: number = osmd.cursor.Iterator.currentTimeStamp.RealValue;
+
+            osmd.Sheet.Transpose = 1; // render() transposed only the key signature without updateGraphic()
+            osmd.render();
+            const transposed: ReturnType<typeof drawnScore> = drawnScore();
+            expect(transposed.key, "Eb major has 3 flats").to.equal(-3);
+            expect(noteNames(0), "B -> C").to.deep.equal(["C"]);
+            expect(transposed.chords[0], "G7 -> Ab7").to.equal("Ab7");
+            expect(osmd.cursor.Iterator.currentTimeStamp.RealValue, "the cursor stays at its note").to.equal(cursorTimestamp);
+            expect(osmd.cursor.Hidden, "and visible").to.equal(false);
+
+            const graphic: GraphicalMusicSheet = osmd.GraphicSheet;
+            osmd.render();
+            expect(osmd.GraphicSheet === graphic, "an unchanged transposition keeps the graphic").to.equal(true);
+            osmd.TransposeCalculator = new TransposeCalculator();
+            osmd.render();
+            expect(osmd.GraphicSheet === graphic, "another transpose calculator creates the graphic again").to.equal(false);
+
+            osmd.updateGraphic();
+            osmd.render();
+            expect(drawnScore(), "the same as with updateGraphic()").to.deep.equal(transposed);
+        });
+
+        it("starts an incremental render over with a changed transposition (renderNext())", async (): Promise<void> => {
+            await osmd.load(TestUtils.getScore("test_rehearsal_marks_bolivia.musicxml"));
+            const firstBatch: IRenderNextResult = osmd.renderNext({ measures: 4 });
+            expect(firstBatch.done, "a session in progress").to.equal(false);
+
+            osmd.Sheet.Transpose = 1;
+            const restarted: IRenderNextResult = osmd.renderNext({ measures: 4 });
+            expect(restarted.renderedMeasures, "from the first measure again").to.equal(firstBatch.renderedMeasures);
+            expect(firstKey().Key, "Eb major has 3 flats").to.equal(-3);
+            expect(noteNames(0), "B -> C").to.deep.equal(["C"]);
+            expect(chordTexts()[0], "G7 -> Ab7").to.equal("Ab7");
         });
     });
 });

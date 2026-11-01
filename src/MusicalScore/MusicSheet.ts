@@ -534,6 +534,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
      * E.g. +1 halftone will transpose Eb major to E major.
      * also see Instrument.Transpose (e.g. osmd.Sheet.Instruments[0].Transpose will additionally transpose this instrument only)
      * osmd.TransposeCaculator needs to be defined/created for this to take effect. (just set it with new TransposeCalculator())
+     * The next osmd.render() applies it (no need to call osmd.updateGraphic()).
      */
     public set Transpose(value: number) {
         this.transpose = value;
