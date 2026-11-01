@@ -635,14 +635,21 @@ export class VoiceGenerator {
    */
   private createBeam(node: IXmlElement, note: Note): void {
     try {
-      const beamNode: IXmlElement = node.element("beam");
+      // The primary beam (number 1) first, whatever the element order: a note listing <beam number="2"> before
+      //   <beam number="1"> (e.g. a sixteenth triplet inside an eighth beam) was read by its secondary beam, whose
+      //   begin closed the primary one, so the eighths after the triplet were drawn with flags. Stable sort, so the
+      //   usual order is unchanged.
+      const numberOf: (element: IXmlElement) => number = (element: IXmlElement) =>
+        parseInt(element.attribute("number")?.value, 10) || 1;
+      const sortedBeamNodes: IXmlElement[] = node.elements("beam").slice().sort((a, b) => numberOf(a) - numberOf(b));
+      const beamNode: IXmlElement = sortedBeamNodes[0];
       let beamAttr: IXmlAttribute = undefined;
       if (beamNode !== undefined && beamNode.hasAttributes) {
         beamAttr = beamNode.attribute("number");
       }
       if (beamAttr) {
         let beamNumber: number = parseInt(beamAttr.value, 10);
-        const mainBeamNode: IXmlElement[] = node.elements("beam");
+        const mainBeamNode: IXmlElement[] = sortedBeamNodes;
         const currentBeamTag: string = mainBeamNode[0].value;
         if (mainBeamNode) {
           if (currentBeamTag === "begin") {
