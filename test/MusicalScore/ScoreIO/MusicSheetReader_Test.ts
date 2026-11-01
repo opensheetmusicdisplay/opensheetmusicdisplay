@@ -7,6 +7,9 @@ import {NoteHeadShape} from "../../../src/MusicalScore/VoiceData/Notehead";
 import {Note, TremoloInfo} from "../../../src/MusicalScore/VoiceData/Note";
 import {VoiceEntry} from "../../../src/MusicalScore/VoiceData/VoiceEntry";
 import {SourceMeasure} from "../../../src/MusicalScore/VoiceData/SourceMeasure";
+import {Voice} from "../../../src/MusicalScore/VoiceData/Voice";
+import {LyricsEntry} from "../../../src/MusicalScore/VoiceData/Lyrics/LyricsEntry";
+import {EngravingRules} from "../../../src/MusicalScore/Graphical/EngravingRules";
 
 describe("Music Sheet Reader", () => {
     const path: string = "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
@@ -444,6 +447,113 @@ describe("Music Sheet Reader", () => {
             expectDottedWholeNoteTriplet(dottedSheet.SourceMeasures[1], "un-reduced measure 2");
             expect(dottedSheet.SourceMeasures[2].AbsoluteTimestamp.RealValue, "the breve of measure 3 starts after two breves")
                 .to.be.closeTo(4, 1e-8);
+            done();
+        });
+    });
+
+    describe("Lyric words split across voices", () => {
+        // Verse: "The ri-sing glo-ry" — voice 1 holds a whole note on "The" while
+        // voice 2 carries "ri" (begin); "sing" (end) is carried by the next
+        // voice-1 note. "glo-ry" stays within voice 1 as a control word, with "ry"
+        // marked single. The tenor sings the same words in the lower staff.
+        const crossVoicePath: string = "test/data/test_lyrics_syllables_across_voices.musicxml";
+
+        function readCrossVoiceSheet(rules?: EngravingRules): MusicSheet {
+            const doc: Document = getSheet(crossVoicePath);
+            expect(doc).to.not.be.undefined;
+            const crossVoiceScore: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
+            const crossVoiceReader: MusicSheetReader = new MusicSheetReader(undefined, rules);
+            return crossVoiceReader.createMusicSheet(crossVoiceScore, crossVoicePath);
+        }
+
+        function lyricsOfVoice(sourceSheet: MusicSheet, voiceId: number): LyricsEntry[] {
+            return sourceSheet.Instruments[0].Voices
+                .find((voice: Voice): boolean => voice.VoiceId === voiceId).VoiceEntries
+                .map((voiceEntry: VoiceEntry): LyricsEntry => voiceEntry.LyricsEntries.getValue("1"))
+                .filter((entry: LyricsEntry): boolean => entry !== undefined);
+        }
+
+        it("re-links a word whose syllables alternate between voices", (done: Mocha.Done) => {
+            const crossVoiceSheet: MusicSheet = readCrossVoiceSheet();
+            const voice1Lyrics: LyricsEntry[] = lyricsOfVoice(crossVoiceSheet, 1);
+            const voice2Lyrics: LyricsEntry[] = lyricsOfVoice(crossVoiceSheet, 2);
+            expect(voice1Lyrics.map((entry: LyricsEntry): string => entry.Text)).to.deep.equal(["The", "sing", "glo", "ry"]);
+            expect(voice2Lyrics.map((entry: LyricsEntry): string => entry.Text)).to.deep.equal(["ri"]);
+            const riEntry: LyricsEntry = voice2Lyrics[0];
+            const singEntry: LyricsEntry = voice1Lyrics[1];
+            expect(riEntry.Word).to.not.be.undefined;
+            expect(singEntry.Word === riEntry.Word, "sing is in the word of ri").to.be.true;
+            expect(riEntry.Word.Syllables.map((syllable: LyricsEntry): string => syllable.Text)).to.deep.equal(["ri", "sing"]);
+            expect(riEntry.SyllableIndex).to.equal(0);
+            expect(singEntry.SyllableIndex).to.equal(1);
+            expect(voice1Lyrics[0].Word).to.be.undefined; // single syllable stays wordless
+            // the tenor (voice 5) sings the same words in the lower staff: words are only linked within a staff
+            const tenorWords: string[] = lyricsOfVoice(crossVoiceSheet, 5).map((entry: LyricsEntry): string =>
+                entry.Word?.Syllables.map((syllable: LyricsEntry): string => syllable.Text + syllable.Parent.ParentVoice.VoiceId).join("-"));
+            expect(tenorWords, "the word of each syllable, with voice ids").to.deep.equal([undefined, "ri5-sing5", "ri5-sing5", "glo5-ry5", "glo5-ry5"]);
+            done();
+        });
+
+        it("keeps a same-voice word intact after re-linking, also with its last syllable marked single", (done: Mocha.Done) => {
+            const crossVoiceSheet: MusicSheet = readCrossVoiceSheet();
+            const voice1Lyrics: LyricsEntry[] = lyricsOfVoice(crossVoiceSheet, 1);
+            const gloEntry: LyricsEntry = voice1Lyrics[2];
+            const ryEntry: LyricsEntry = voice1Lyrics[3];
+            expect(gloEntry.Word).to.not.be.undefined;
+            expect(ryEntry.Word === gloEntry.Word, "ry is in the word of glo").to.be.true;
+            expect(gloEntry.Word.Syllables.map((syllable: LyricsEntry): string => syllable.Text)).to.deep.equal(["glo", "ry"]);
+            done();
+        });
+
+        it("leaves chains untouched when RelinkLyricWordsAcrossVoices is disabled", (done: Mocha.Done) => {
+            const rules: EngravingRules = new EngravingRules();
+            rules.RelinkLyricWordsAcrossVoices = false;
+            const crossVoiceSheet: MusicSheet = readCrossVoiceSheet(rules);
+            const singEntry: LyricsEntry = lyricsOfVoice(crossVoiceSheet, 1)[1];
+            const riEntry: LyricsEntry = lyricsOfVoice(crossVoiceSheet, 2)[0];
+            expect(singEntry.Word).to.be.undefined; // "end" arrived with no open word in its voice
+            expect(riEntry.Word.Syllables.length).to.equal(1); // dangling "begin"
+            done();
+        });
+
+        // A verse sung by one voice can't have a word split across voices,
+        // so it must come out exactly as LyricsReader linked it.
+        it("leaves a single-voice score untouched, dashes included", (done: Mocha.Done) => {
+            const samplePath: string = "test/data/test_divisions_after_first_note_JingleBellRock_extract.musicxml";
+
+            function wordShapes(rules?: EngravingRules): string[] {
+                const doc: Document = getSheet(samplePath);
+                expect(doc, samplePath + " should be preprocessed by karma").to.not.be.undefined;
+                const sampleScore: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
+                const sampleSheet: MusicSheet = new MusicSheetReader(undefined, rules)
+                    .createMusicSheet(sampleScore, samplePath);
+                const shapes: string[] = [];
+                for (const measure of sampleSheet.SourceMeasures) {
+                    for (const container of measure.VerticalSourceStaffEntryContainers) {
+                        for (const staffEntry of container.StaffEntries) {
+                            if (!staffEntry) {
+                                continue; // sparse slot, same guard the reader uses
+                            }
+                            for (const voiceEntry of staffEntry.VoiceEntries) {
+                                voiceEntry.LyricsEntries.forEach((verse: string, entry: LyricsEntry): void => {
+                                    // The dash lives in the word chain: a syllable that
+                                    // loses its word loses the dash next to it.
+                                    shapes.push(entry.Word
+                                        ? verse + ":" + entry.SyllableIndex + "/" + entry.Word.Syllables.length
+                                        : verse + ":none");
+                                });
+                            }
+                        }
+                    }
+                }
+                return shapes;
+            }
+
+            const disabled: EngravingRules = new EngravingRules();
+            disabled.RelinkLyricWordsAcrossVoices = false;
+            const withFeature: string[] = wordShapes();
+            expect(withFeature.length, "sample should carry lyrics").to.be.greaterThan(0);
+            expect(withFeature).to.deep.equal(wordShapes(disabled));
             done();
         });
     });

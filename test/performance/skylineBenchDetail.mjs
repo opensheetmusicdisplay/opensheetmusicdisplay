@@ -57,7 +57,6 @@ const MODES = {
     geo: (r) => { r.UseGeometricSkyBottomLineCalculation = true; },
     single: (r) => {
         r.UseGeometricSkyBottomLineCalculation = false;
-        r.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false;
         r.SkyBottomLineBatchMinMeasures = 9999999;
     },
 };
@@ -80,7 +79,6 @@ for (const sample of SAMPLES) {
         console.log(`  ${modeName}: total ${total.toFixed(1)}ms | skyline ${skylineMs.toFixed(1)}ms`
             + ` = format ${formatMs.toFixed(1)} + draw ${drawMs.toFixed(1)} + rest ${rest.toFixed(1)}`);
         osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = true;
-        osmd.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = true;
         osmd.EngravingRules.SkyBottomLineBatchMinMeasures = 5;
     }
 }

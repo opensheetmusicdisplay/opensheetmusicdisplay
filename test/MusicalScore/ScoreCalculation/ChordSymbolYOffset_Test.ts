@@ -4,7 +4,6 @@ import { MusicSheetReader } from "../../../src/MusicalScore/ScoreIO/MusicSheetRe
 import { MusicSheet } from "../../../src/MusicalScore/MusicSheet";
 import { MusicSheetCalculator } from "../../../src/MusicalScore/Graphical/MusicSheetCalculator";
 import { VexFlowMusicSheetCalculator } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator";
-import { VexFlowTextMeasurer } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowTextMeasurer";
 import { GraphicalMusicSheet } from "../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import { EngravingRules } from "../../../src/MusicalScore/Graphical/EngravingRules";
 import { MusicSystem } from "../../../src/MusicalScore/Graphical/MusicSystem";
@@ -25,7 +24,6 @@ function buildGraphicalMusicSheet(xml: Document, setRules: (rules: EngravingRule
     const reader: MusicSheetReader = new MusicSheetReader();
     setRules(reader.rules);
     const calculator: MusicSheetCalculator = new VexFlowMusicSheetCalculator(reader.rules);
-    MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer(new EngravingRules());
     const score: IXmlElement = new IXmlElement(TestUtils.getPartWiseElement(xml));
     const sheet: MusicSheet = reader.createMusicSheet(score, "path-of-test-sample");
     const graphicalSheet: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calculator);

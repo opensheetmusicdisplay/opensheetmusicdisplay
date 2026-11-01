@@ -28,6 +28,7 @@ export class ExpressionReader {
     private soundTimestamp: Fraction;
     private explicitSoundTempo: number;
     private soundDynamic: number;
+    private soundDynamicTimestamp: Fraction;
     private divisions: number;
     private offsetDivisions: number;
     private staffNumber: number;
@@ -43,6 +44,16 @@ export class ExpressionReader {
     private WedgeYPosXml: number;
     private openPedal: Pedal;
     private openWavyLine: WavyLine;
+    /** Unicode text for SMuFL note symbols between words, e.g. metNote8thUp in "Fast (Straight ♪)".
+     *  Notes use the text's font or a fallback font. Stem-down variants use the same note value's stem-up character.
+     *  Unsupported names are omitted without removing the surrounding words. */
+    private static readonly noteSymbolTexts: ReadonlyMap<string, string> = new Map([
+        ["metNoteWhole", "\u{1D15D}"], ["metNoteHalfUp", "\u{1D15E}"],
+        ["metNoteQuarterUp", "\u2669"], ["metNote8thUp", "\u266A"],
+        ["metNote16thUp", "\u{1D161}"], ["metNote32ndUp", "\u{1D162}"],
+        ["metNote64thUp", "\u{1D163}"], ["metNote128thUp", "\u{1D164}"],
+        ["metAugmentationDot", "\u00B7"],
+    ]);
     constructor(musicSheet: MusicSheet, instrument: Instrument, staffNumber: number) {
         this.musicSheet = musicSheet;
         this.staffNumber = staffNumber;
@@ -69,19 +80,6 @@ export class ExpressionReader {
             }
         }
         this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
-        let offsetFraction: Fraction = new Fraction(Math.abs(this.offsetDivisions), divisions * 4);
-
-        if (this.offsetDivisions > 0) {
-            if (inSourceMeasureCurrentFraction.RealValue > 0) {
-                offsetFraction = Fraction.multiply(Fraction.minus(inSourceMeasureCurrentFraction, inSourceMeasureFormerFraction), offsetFraction);
-                this.directionTimestamp = Fraction.plus(offsetFraction, inSourceMeasureCurrentFraction);
-            } else { this.directionTimestamp = Fraction.createFromFraction(offsetFraction); }
-        } else if (this.offsetDivisions < 0) {
-            if (inSourceMeasureCurrentFraction.RealValue > 0) {
-                offsetFraction = Fraction.multiply(Fraction.minus(inSourceMeasureCurrentFraction, inSourceMeasureFormerFraction), offsetFraction);
-                this.directionTimestamp = Fraction.minus(inSourceMeasureCurrentFraction, offsetFraction);
-            } else { this.directionTimestamp = Fraction.createFromFraction(offsetFraction); }
-        }
 
         const directionTypeNodes: IXmlElement[] = xmlNode.elements("direction-type");
 
@@ -154,7 +152,8 @@ export class ExpressionReader {
         }
     }
     public read(directionNode: IXmlElement, currentMeasure: SourceMeasure,
-                inSourceMeasureCurrentFraction: Fraction, inSourceMeasurePreviousFraction: Fraction = undefined): void {
+                inSourceMeasureCurrentFraction: Fraction, inSourceMeasurePreviousFraction: Fraction = undefined,
+                dirNodes: IXmlElement[] = directionNode.elements("direction-type")): void {
         let isTempoInstruction: boolean = false;
         let isDynamicInstruction: boolean = false;
 
@@ -164,9 +163,6 @@ export class ExpressionReader {
           const offsetValue: number = Number.parseInt(offsetNode.value, 10);
           timestampFraction.Add(new Fraction(offsetValue, 4 * this.divisions));
         }
-        // this.directionTimestamp = timestampFraction.clone();
-        //   this could be correct, but leads to odd differences with Musescore for elements like dim. and wedges.
-
         const n: IXmlElement = directionNode.element("sound");
         if (n) {
             const tempoAttr: IXmlAttribute = n.attribute("tempo");
@@ -187,21 +183,23 @@ export class ExpressionReader {
                 this.explicitSoundTempo = this.soundTempo;
                 const soundOffset: IXmlElement = n.element("offset") ??
                     (offsetNode?.attribute("sound")?.value === "yes" ? offsetNode : undefined);
-                this.soundTimestamp = this.readTempoTimestamp(soundOffset, inSourceMeasureCurrentFraction);
+                this.soundTimestamp = this.readDirectionTimestamp(soundOffset, inSourceMeasureCurrentFraction);
             }
             if (dynAttr) {
                 const match: string[] = dynAttr.value.match(/\d+/);
                 this.soundDynamic = match !== undefined ? parseInt(match[0], 10) : 100;
+                const soundOffset: IXmlElement = n.element("offset") ??
+                    (offsetNode?.attribute("sound")?.value === "yes" ? offsetNode : undefined);
+                this.soundDynamicTimestamp = this.readDirectionTimestamp(soundOffset, inSourceMeasureCurrentFraction);
                 isDynamicInstruction = true;
             }
         }
-        const dirNodes: IXmlElement[] = directionNode.elements("direction-type");
         const originalDirectionTimestamp: Fraction = this.directionTimestamp;
         for (const dirNode of dirNodes) {
             this.directionTimestamp = originalDirectionTimestamp;
             let dirContentNode: IXmlElement = dirNode.element("metronome");
             if (dirContentNode) {
-                this.directionTimestamp = this.readTempoTimestamp(
+                this.directionTimestamp = this.readDirectionTimestamp(
                     dirContentNode.attribute("default-x") ? undefined : offsetNode, inSourceMeasureCurrentFraction);
                 const metronomeNotes: IXmlElement[] = dirContentNode.elements("metronome-note");
                 const metronomeRelation: IXmlElement = dirContentNode.element("metronome-relation");
@@ -248,6 +246,10 @@ export class ExpressionReader {
 
             dirContentNode = dirNode.element("dynamics");
             if (dirContentNode) {
+                // The offset also applies when the dynamics have a default-x: OSMD places them by their timestamp and doesn't
+                //   read default-x, and exporters write a default-x that matches the offset, e.g. Finale writes dynamics at
+                //   the start of the measure with the offset to their beat.
+                this.directionTimestamp = this.readDirectionTimestamp(offsetNode, inSourceMeasureCurrentFraction);
                 const fromNotation: boolean = directionNode.element("notations") !== undefined;
                 this.interpretInstantaneousDynamics(dirContentNode, currentMeasure, timestampFraction, fromNotation);
                 continue;
@@ -255,10 +257,11 @@ export class ExpressionReader {
 
             dirContentNode = dirNode.element("words");
             if (dirContentNode) {
-                // an exporter may split the words where their formatting changes
-                const text: string = dirNode.elements("words").map((wordsNode: IXmlElement): string => wordsNode.value).join("");
+                // an exporter may split the words where their formatting changes, and put a note symbol between them
+                const text: string = dirNode.elements().map((node: IXmlElement): string => node.name === "words" ? node.value :
+                    node.name === "symbol" ? ExpressionReader.noteSymbolTexts.get(node.value.trim().replace(/Down$/, "Up")) ?? "" : "").join("");
                 if (isTempoInstruction) {
-                    this.directionTimestamp = this.readTempoTimestamp(
+                    this.directionTimestamp = this.readDirectionTimestamp(
                         dirContentNode.attribute("default-x") ? undefined : offsetNode, inSourceMeasureCurrentFraction);
                     this.createNewTempoExpressionIfNeeded(currentMeasure);
                     this.currentMultiTempoExpression.CombinedExpressionsText = text;
@@ -274,13 +277,15 @@ export class ExpressionReader {
 
             dirContentNode = dirNode.element("wedge");
             if (dirContentNode) {
+                this.directionTimestamp = this.readDirectionTimestamp(offsetNode, inSourceMeasureCurrentFraction); // see dynamics
                 this.interpretWedge(directionNode, dirContentNode, currentMeasure, inSourceMeasurePreviousFraction, currentMeasure.MeasureNumber);
                 continue;
             }
 
             dirContentNode = dirNode.element("rehearsal");
             if (dirContentNode) {
-                this.interpretRehearsalMark(dirContentNode, currentMeasure, inSourceMeasureCurrentFraction, currentMeasure.MeasureNumber);
+                const text: string = dirNode.elements("rehearsal").map((rehearsalNode: IXmlElement): string => rehearsalNode.value).join("");
+                this.interpretRehearsalMark(text, currentMeasure, inSourceMeasureCurrentFraction, currentMeasure.MeasureNumber);
                 continue;
             }
         }
@@ -508,6 +513,7 @@ export class ExpressionReader {
         this.soundTimestamp = undefined;
         this.explicitSoundTempo = undefined;
         this.soundDynamic = 0;
+        this.soundDynamicTimestamp = undefined;
         this.offsetDivisions = 0;
     }
     private readPlacement(node: IXmlElement): PlacementEnum {
@@ -685,9 +691,6 @@ export class ExpressionReader {
                                            inSourceMeasureCurrentFraction: Fraction,
                                            fromNotation: boolean): void {
         if (dynamicsNode.hasElements) {
-            if (dynamicsNode.hasAttributes && dynamicsNode.attribute("default-x")) {
-                this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
-            }
             const numberXml: number = this.readNumber(dynamicsNode); // probably never given, just to comply with createExpressionIfNeeded()
             const dynamicsElements: IXmlElement[] = dynamicsNode.elements();
             // A single <dynamics> element may contain multiple symbols, e.g. <sf/><mp/>.
@@ -712,7 +715,7 @@ export class ExpressionReader {
                     }
                 }
                 if (!fromNotation) {
-                    this.createNewMultiExpressionIfNeeded(currentMeasure, numberXml);
+                    this.createNewMultiExpressionIfNeeded(currentMeasure, numberXml, undefined, this.soundDynamicTimestamp);
                 } else {
                     this.createNewMultiExpressionIfNeeded(currentMeasure, numberXml,
                         Fraction.createFromFraction(inSourceMeasureCurrentFraction));
@@ -795,9 +798,8 @@ export class ExpressionReader {
             }
         }
         if (text.length > 0) {
-            if (wordsNode.hasAttributes && wordsNode.attribute("default-x")) {
-                this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
-            }
+            // The caller has already added the divisions offset, also for words without default-x.
+            this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
             if (this.checkIfWordsNodeIsRepetitionInstruction(text)) {
                 return;
             }
@@ -814,9 +816,6 @@ export class ExpressionReader {
     }
     private interpretWedge(directionNode: IXmlElement, wedgeNode: IXmlElement,
         currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction: Fraction, currentMeasureIndex: number): void {
-        if (wedgeNode !== undefined && wedgeNode.hasAttributes && wedgeNode.attribute("default-x")) {
-            this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
-        }
         const wedgeNumberXml: number = this.readNumber(wedgeNode);
 
         const typeAttributeString: string = wedgeNode.attribute("type")?.value?.toLowerCase();
@@ -828,6 +827,8 @@ export class ExpressionReader {
                 this.WedgeYPosXml !== undefined &&
                 this.lastWedge.YPosXml === this.WedgeYPosXml &&
                 this.lastWedge.StartMultiExpression.Timestamp.Equals(this.directionTimestamp) &&
+                (this.lastWedge.StartMultiExpression.PlaybackTimestamp ?? this.lastWedge.StartMultiExpression.Timestamp)
+                    .Equals(this.soundDynamicTimestamp ?? this.directionTimestamp) &&
                 this.lastWedge.DynamicType === ContDynamicEnum[typeAttributeString]
 
         ) {
@@ -840,18 +841,18 @@ export class ExpressionReader {
             this.createNewMultiExpressionIfNeeded(currentMeasure, wedgeNumberXml, inSourceMeasureCurrentFraction);
             this.getMultiExpression.EndOffsetFraction = new Fraction(this.offsetDivisions, this.divisions * 4);
         } else {
-            this.createNewMultiExpressionIfNeeded(currentMeasure, wedgeNumberXml);
+            this.createNewMultiExpressionIfNeeded(currentMeasure, wedgeNumberXml, undefined, this.soundDynamicTimestamp);
         }
         this.addWedge(wedgeNode, currentMeasure, inSourceMeasureCurrentFraction);
     }
     private interpretRehearsalMark(
-        rehearsalNode: IXmlElement, currentMeasure: SourceMeasure,
+        text: string, currentMeasure: SourceMeasure,
         inSourceMeasureCurrentFraction: Fraction, currentMeasureIndex: number): void {
         // TODO create multi expression? for now we just need to have a static rehearsal mark though.
-        currentMeasure.rehearsalExpression = new RehearsalExpression(rehearsalNode.value, this.placement);
+        currentMeasure.rehearsalExpression = new RehearsalExpression(text, this.placement);
     }
     private createNewMultiExpressionIfNeeded(currentMeasure: SourceMeasure, numberXml: number,
-        timestamp: Fraction = undefined): MultiExpression {
+        timestamp: Fraction = undefined, playbackTimestamp: Fraction = undefined): MultiExpression {
         if (!timestamp) {
             timestamp = this.directionTimestamp;
         }
@@ -860,15 +861,17 @@ export class ExpressionReader {
             existingMultiExpression &&
             (existingMultiExpression.SourceMeasureParent !== currentMeasure ||
                 existingMultiExpression.numberXml !== numberXml ||
-                (existingMultiExpression.SourceMeasureParent === currentMeasure && !existingMultiExpression.Timestamp.Equals(timestamp)))) {
+                !existingMultiExpression.Timestamp.Equals(timestamp) ||
+                !(existingMultiExpression.PlaybackTimestamp ?? existingMultiExpression.Timestamp).Equals(playbackTimestamp ?? timestamp))) {
                     this.getMultiExpression = existingMultiExpression = new MultiExpression(currentMeasure, Fraction.createFromFraction(timestamp));
                     this.getMultiExpression.numberXml = numberXml;
+                    this.getMultiExpression.PlaybackTimestamp = playbackTimestamp?.clone();
             currentMeasure.StaffLinkedExpressions[this.globalStaffIndex].push(existingMultiExpression);
         }
         return existingMultiExpression;
     }
 
-    private readTempoTimestamp(offset: IXmlElement, sourceTimestamp: Fraction): Fraction {
+    private readDirectionTimestamp(offset: IXmlElement, sourceTimestamp: Fraction): Fraction {
         const timestamp: Fraction = sourceTimestamp.clone();
         if (offset) {
             const value: string = offset.value.trim();

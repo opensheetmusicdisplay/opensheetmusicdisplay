@@ -212,6 +212,16 @@ describe("OpenSheetMusicDisplay incremental rendering of a single horizontal sta
         renderNextUntilDone(1);
         expect(drawnElements()).to.deep.equal(elementsOfRender);
     });
+
+    it("gives a staffline's id (osmd-staffline<system>-<staff>) only to its group of the batch drawing its start", async () => {
+        // each batch draws its part of a staffline into a group of its own: two staves in 3 systems of 2 measures, a measure a batch
+        osmd.setOptions({ newSystemFromXML: true });
+        await osmd.load(TestUtils.getScore("test_wavy_line_multiline_extragraphicalmeasure.musicxml"));
+        expect(renderNextUntilDone(1), "batches").to.equal(6);
+        const ids: string[] = Array.from(container.querySelectorAll("g.osmd-staffline")).map((group: Element): string => group.id);
+        expect(ids).to.deep.equal(["osmd-staffline0-0", "osmd-staffline0-1", "", "", "osmd-staffline1-0", "osmd-staffline1-1", "", "",
+            "osmd-staffline2-0", "osmd-staffline2-1", "", ""]);
+    });
 });
 
 describe("OpenSheetMusicDisplay incremental rendering of the endless page in batches (renderNext)", () => {
@@ -316,32 +326,26 @@ describe("OpenSheetMusicDisplay incremental rendering of the endless page in bat
         }
     });
 
-    it("draws the stems and beams exactly where one batch draws them", async () => {
-        // A batch's layout reuses the sky and bottom lines of the systems an earlier one calculated. Its beams then extended the
-        //   stems only when drawn, at the systems' final position instead of where the skyline calculation draws them, as in
-        //   render(): a few stems and beams ended a few trillionths of a pixel off. The comparison isn't rounded here.
-        await osmd.load(TestUtils.getScore("Dichterliebe01.xml"));
-        const stemsAndBeams: () => string[] = (): string[] => Array.from(container.querySelectorAll("path.vf-stem, g.vf-beam path"))
-            .map((path: Element): string => path.getAttribute("d")).sort();
-        renderNextInOneBatch();
-        const stemsAndBeamsInOneBatch: string[] = stemsAndBeams();
-        expect(stemsAndBeamsInOneBatch.length, "stems and beams").to.be.greaterThan(100);
-        expect(renderNextUntilDone({ systems: 1 }), "batches").to.be.greaterThan(2);
-        expect(stemsAndBeams()).to.deep.equal(stemsAndBeamsInOneBatch);
-    });
-
-    it("lays out all batches at the width of the first one", async () => {
+    it("lays out all batches at the width of the first one, and draws the stems and beams exactly where one batch draws them", async () => {
         // Each batch used to read the container's width. When the container got narrower after the first batch, e.g. by the
         //   vertical scrollbar of the page the first batch made longer than the window (Chrome on Windows), the later batches laid
         //   out their systems narrower than the ones drawn before, and the batches that draw all systems again because an earlier
         //   one moved (some of this sample's) made the SVG narrower.
+        // A batch's layout reuses the sky and bottom lines of the systems an earlier one calculated. Its beams then extended the
+        //   stems only when drawn, at the systems' final position instead of where the skyline calculation draws them, as in
+        //   render(): a few stems and beams ended a few trillionths of a pixel off. Their comparison isn't rounded.
         await osmd.load(TestUtils.getScore("Dichterliebe01.xml"));
+        const stemsAndBeams: () => string[] = (): string[] => Array.from(container.querySelectorAll("path.vf-stem, path.vf-beam"))
+            .map((path: Element): string => path.getAttribute("d")).sort();
         renderNextInOneBatch();
         const pagesInOneBatch: string[][] = drawnPages();
+        const stemsAndBeamsInOneBatch: string[] = stemsAndBeams();
+        expect(stemsAndBeamsInOneBatch.length, "stems and beams").to.be.greaterThan(100);
         const narrower: () => void = (): void => {
             container.style.width = "1425px"; // 15 pixels narrower, like with a vertical scrollbar
         };
         expect(renderNextUntilDone({ systems: 1 }, narrower), "batches").to.be.greaterThan(2);
-        expect(drawnPages()).to.deep.equal(pagesInOneBatch);
+        expect(drawnPages(), "drawn pages").to.deep.equal(pagesInOneBatch);
+        expect(stemsAndBeams(), "stems and beams, unrounded").to.deep.equal(stemsAndBeamsInOneBatch);
     });
 });

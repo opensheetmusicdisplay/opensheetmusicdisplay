@@ -1,7 +1,9 @@
 //import Blob from "cross-blob"; // unnecessary in Node v18+
+import ChildProcess from "child_process";
 import FS from "fs";
 import jsdom from "jsdom";
-//import headless_gl from "gl"; // this is now imported dynamically in a try catch, in case gl install fails, see #1160
+import Path from "path";
+import { fileURLToPath } from "url";
 import OSMD from "../../build/opensheetmusicdisplay.min.js"; // window needs to be available before we can require OSMD
 // for debugging, use opensheetmusicdisplay.min.js, created by npm run build:webpack-dev
 /*
@@ -14,6 +16,9 @@ import OSMD from "../../build/opensheetmusicdisplay.min.js"; // window needs to 
   It's also used with the visual regression test system (using PNGs) in
   `tools/visual_regression.sh`
   (see package.json, used with npm run generate:blessed and generate:current, then test:visual).
+  It also writes source_commit.txt into the image directory, with the git branch and commit the images were
+  generated from, so that you can tell which state e.g. visual_regression/blessed shows (see writeSourceCommitFile()),
+  and warns if the build is older than the files in src/, as the images may then not show that commit (checkBuildAge()).
 
   Note: this script needs to "fake" quite a few browser elements, like window, document,
   and a Canvas HTMLElement (for PNG) or the DOM (for SVG)   ,
@@ -37,7 +42,7 @@ let [osmdBuildDir, sampleDir, imageDir, imageFormat, pageWidth, pageHeight, filt
 imageFormat = imageFormat?.toLowerCase();
 if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageFormat !== "svg")) {
     console.log("usage: " +
-        "node test/Util/generateImages_browserless.mjs osmdBuildDir sampleDirectory imageDirectory svg|png [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime]");
+        "node test/Util/generateImages_browserless.mjs osmdBuildDir sampleDirectory imageDirectory svg|png [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime] [--batch]");
     console.log("  (use pageWidth and pageHeight 0 to not divide the rendering into pages (endless page))");
     console.log('  (use "all" to skip filterRegex parameter. "allSmall" with --osmdtesting additionally skips the two biggest OSMD samples,' +
         ' ActorPreludeSample and CharlesGounod_Meditation (a few seconds each), e.g. for quick runs on slow machines)');
@@ -45,6 +50,8 @@ if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageF
     console.log("Error: need osmdBuildDir, sampleDir, imageDir and svg|png arguments. Exiting.");
     process.exit(1);
 }
+// the root folder of the OSMD checkout this script is in, whose build it imports (../../build)
+const checkoutDirectory = Path.resolve(Path.dirname(fileURLToPath(import.meta.url)), "../..");
 const useWhiteTabNumberBackground = true;
 // use white instead of transparent background for tab numbers for PNG export.
 //   can fix black rectangles displayed, depending on your image viewer / program.
@@ -102,36 +109,6 @@ async function init () {
     global.Node = window.Node;
     if (imageFormat === "png") {
         global.Canvas = window.Canvas;
-    }
-
-    // For WebGLSkyBottomLineCalculatorBackend: Try to import gl dynamically
-    //   this is so that the script doesn't fail if gl could not be installed,
-    //   which can happen in some linux setups where gcc-11 is installed, see #1160
-    try {
-        const { default: headless_gl } = await import("gl");
-        const oldCreateElement = document.createElement.bind(document);
-        document.createElement = function (tagName, options) {
-            if (tagName.toLowerCase() === "canvas") {
-                const canvas = oldCreateElement(tagName, options);
-                const oldGetContext = canvas.getContext.bind(canvas);
-                canvas.getContext = function (contextType, contextAttributes) {
-                    if (contextType.toLowerCase() === "webgl" || contextType.toLowerCase() === "experimental-webgl") {
-                        const gl = headless_gl(canvas.width, canvas.height, contextAttributes);
-                        gl.canvas = canvas;
-                        return gl;
-                    } else {
-                        return oldGetContext(contextType, contextAttributes);
-                    }
-                };
-                return canvas;
-            } else {
-                return oldCreateElement(tagName, options);
-            }
-        };
-    } catch {
-        if (skyBottomLinePreference === "--webgl") {
-            debug("WebGL image generation was requested but gl is not installed; using non-WebGL generation.");
-        }
     }
 
     if (process.platform === "win32") {
@@ -195,6 +172,11 @@ async function init () {
 
     // Create the image directory if it doesn't exist.
     FS.mkdirSync(imageDir, { recursive: true });
+    const buildAge = checkBuildAge();
+    writeSourceCommitFile(imageDir, buildAge);
+    if (buildAge.warning) {
+        debug(`Warning: ${buildAge.warning}`);
+    }
 
     const sampleDirFilenames = FS.readdirSync(sampleDir);
     let samplesToProcess = []; // samples we want to process/generate pngs of, excluding the filtered out files/filenames
@@ -287,16 +269,24 @@ async function init () {
                 // generate one more testing image in dark mode
                 await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
                     darkMode: true, fileNameAddition: "darkmode_"}, DEBUG);
-            } else if (sampleFilename.startsWith("JohannSebastianBach_PraeludiumInCDur")) {
+            } else if (sampleFilename.startsWith("JohannSebastianBach_PraeludiumInCDur") ||
+                sampleFilename.startsWith("test_hidden_staff_clef_key_time")) {
                 // generate two more testing images, left hand only and right hand only
                 await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
                     staffVisibility: { 0: true, 1: false}, fileNameAddition: "right_hand_only_"}, DEBUG);
                 await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
                     staffVisibility: { 0: false, 1: true}, fileNameAddition: "left_hand_only_"}, DEBUG);
+            } else if (sampleFilename.startsWith("OSMD_function_test_invisible_notes")) {
+                // generate one more testing image with the hidden notes drawn (light gray, see EngravingRules.RenderHiddenNotes)
+                await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
+                    drawHiddenNotes: true, fileNameAddition: "drawHiddenNotes_"}, DEBUG);
             }
         }
     }
 
+    if (buildAge.warning) {
+        debug(`Warning: ${buildAge.warning}`); // again, as the log of the samples may have scrolled it out of view
+    }
     debug("done, exiting.");
 }
 
@@ -351,6 +341,110 @@ async function addFontFallbackOnWindows () {
             fontProperty.set.call(this, addFallback ? `${font}, ${fallbackFonts}` : font);
         }
     });
+}
+
+/**
+ * Checks whether the build the images are rendered with (build/opensheetmusicdisplay.min.js) is older than a file in
+ * src/, e.g. after switching branches, pulling or editing files without building, or after a failed build. The images
+ * then show the code of the last build, which may not be the commit that source_commit.txt names.
+ * @returns {{ built?: Date, warning?: string }} When the build was made, and a warning if it's older than a file in src/.
+ */
+function checkBuildAge () {
+    const result = {};
+    try {
+        const build = FS.statSync(Path.join(checkoutDirectory, "build", "opensheetmusicdisplay.min.js"));
+        result.built = build.mtime;
+        let newerFiles = 0;
+        let newestFile;
+        const checkFolder = (folder) => {
+            for (const entry of FS.readdirSync(folder, { withFileTypes: true })) {
+                const path = Path.join(folder, entry.name);
+                if (entry.isDirectory()) {
+                    checkFolder(path);
+                    continue;
+                }
+                const file = FS.statSync(path);
+                if (file.mtimeMs > build.mtimeMs) {
+                    newerFiles++;
+                    if (!newestFile || file.mtimeMs > newestFile.mtimeMs) {
+                        newestFile = { path, mtimeMs: file.mtimeMs };
+                    }
+                }
+            }
+        };
+        checkFolder(Path.join(checkoutDirectory, "src"));
+        if (newerFiles > 0) {
+            const example = Path.relative(checkoutDirectory, newestFile.path).replaceAll(Path.sep, "/");
+            result.warning = `the build is older than ${newerFiles} file(s) in src/, e.g. ${example}: ` +
+                "the images may not show this commit (build first, e.g. npm run build)";
+        }
+    } catch {
+        // e.g. no src folder next to the build: nothing to compare with
+    }
+    return result;
+}
+
+/**
+ * Formats a date as local time, e.g. "2026-10-07 14:03:12".
+ * @param {Date} date The date.
+ * @returns {string} The formatted date.
+ */
+function formatLocalTime (date) {
+    const twoDigits = (number) => String(number).padStart(2, "0");
+    return `${date.getFullYear()}-${twoDigits(date.getMonth() + 1)}-${twoDigits(date.getDate())} ` +
+        `${twoDigits(date.getHours())}:${twoDigits(date.getMinutes())}:${twoDigits(date.getSeconds())}`;
+}
+
+/**
+ * Writes source_commit.txt into the image directory: the git branch and commit of the OSMD checkout this script is in,
+ * whose build renders the images, the files with uncommitted changes, and when the build was made, with a warning if
+ * it's older than a file in src/. So you can tell which state an image folder shows after generating images on several
+ * branches or renaming the folders, and visualRegression.mjs lists the states of blessed/ and current/ it compared.
+ * @param {string} directory The image directory.
+ * @param {{ built?: Date, warning?: string }} buildAge The age of the build, from checkBuildAge().
+ */
+function writeSourceCommitFile (directory, buildAge) {
+    // git runs in the checkout's root folder, like in a terminal at the root, where e.g. safe.directory "." lets git
+    //   use a checkout on a drive without file owners ("dubious ownership")
+    const git = (...args) => ChildProcess.execFileSync("git", args, {
+        cwd: checkoutDirectory, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]
+    }).trim();
+    let lines;
+    let summary;
+    try {
+        let branch = git("rev-parse", "--abbrev-ref", "HEAD");
+        if (branch === "HEAD") {
+            // detached HEAD, e.g. a checked out tag or commit: described by the latest tag, e.g. "2.2.0-55-g52b16c29"
+            branch = `detached HEAD (${git("describe", "--tags", "--always")})`;
+        }
+        const commit = git("rev-parse", "HEAD");
+        // tracked files only, as untracked ones are mostly unrelated (e.g. notes, test output)
+        const changedFiles = git("diff", "HEAD", "--name-only", "-z").split("\0").filter((file) => file !== "");
+        lines = [
+            `branch: ${branch}`,
+            `commit: ${commit}`,
+            `subject: ${git("log", "-1", "--format=%s")}`,
+            `uncommitted changes: ${changedFiles.length > 0 ? `${changedFiles.length} file(s)` : "none"}`,
+            ...changedFiles.map((file) => `  ${file}`),
+        ];
+        summary = `${branch} ${commit.substring(0, 8)}${changedFiles.length > 0 ? " + uncommitted changes" : ""}`;
+    } catch (error) {
+        // e.g. not a git checkout, git isn't installed, or git doesn't trust the checkout ("dubious ownership")
+        const reason = (error.stderr?.trim() || error.message).split("\n")[0];
+        lines = [`branch: unknown (${reason})`];
+        summary = `an unknown branch and commit (${reason})`;
+    }
+    if (buildAge.built) {
+        lines.push(`built: ${formatLocalTime(buildAge.built)}`);
+    }
+    if (buildAge.warning) {
+        lines.push(`warning: ${buildAge.warning}`);
+    }
+    lines.push(`generated: ${formatLocalTime(new Date())}`);
+    lines.push(`arguments: ${process.argv.slice(2).join(" ")}`);
+    const file = Path.join(directory, "source_commit.txt");
+    FS.writeFileSync(file, lines.join("\n") + "\n");
+    debug(`generating images of ${summary} (see ${file})`);
 }
 
 // let maxRss = 0, maxRssFilename = '' // to log memory usage (debug)
@@ -492,25 +586,21 @@ function debug (msg, debugEnabled = true) {
     }
 }
 
+/**
+ * Returns the OSMD options for the skyline calculation given as the 10th command line argument (skyBottomLinePreference):
+ * with "--batch", the pixel-based batch calculation (drawing the measures on a canvas and reading its pixels),
+ * which OSMD uses if EngravingRules.UseGeometricSkyBottomLineCalculation is false, else the default geometric calculation.
+ * @returns {object} The options for osmd.setOptions().
+ */
 function makeSkyBottomLineOptions() {
     // skyBottomLinePreference assumed to be globally set
-    const preference = skyBottomLinePreference ?? "";
-    if (preference === "--batch") {
+    if (skyBottomLinePreference === "--batch") {
         return {
-            preferredSkyBottomLineBatchCalculatorBackend: 0, // plain
-            skyBottomLineBatchCriteria: 0, // use batch algorithm only
-        };
-    } else if (preference === "--webgl") {
-        return {
-            preferredSkyBottomLineBatchCalculatorBackend: 1, // webgl
-            skyBottomLineBatchCriteria: 0, // use batch algorithm only
-        };
-    } else {
-        return {
-            preferredSkyBottomLineBatchCalculatorBackend: 0, // plain
-            skyBottomLineBatchCriteria: Infinity, // use non-batch algorithm only
+            useGeometricSkyBottomLineCalculation: false,
+            skyBottomLineBatchMinMeasures: 0, // use batch algorithm only
         };
     }
+    return {};
 }
 
 /**
@@ -552,6 +642,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestTupletBracketTupletNumber = sampleFilename.includes("test_tuplet_bracket_tuplet_number");
     const isTestCajon2NoteSystem = sampleFilename.includes("test_cajon_2-note-system");
     const isTestOctaveShiftInvisibleInstrument = sampleFilename.includes("test_octaveshift_first_instrument_invisible");
+    const isTestPedalInvisibleInstrument = sampleFilename.includes("test_pedal_systembreak_first_instrument_invisible");
     const isTextOctaveShiftExtraGraphicalMeasure = sampleFilename.includes("test_octaveshift_extragraphicalmeasure");
     const isTestWedgeMultilineCrescendo = sampleFilename.includes("test_wedge_multiline_crescendo");
     const isTestWedgeMultilineDecrescendo = sampleFilename.includes("test_wedge_multiline_decrescendo");
@@ -561,6 +652,10 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestPartAbbreviationsPartlyMissing = sampleFilename.includes("test_part_abbreviations_partly_missing");
     const isTestPartAbbreviationSingleStaff = sampleFilename.includes("test_part_abbreviation_single_staff");
     const isTestPartGroupNames = sampleFilename.includes("test_group_name");
+    // a courtesy key signature at a system break in the alto and bass clef, see test_key_signature_courtesy_clefs: systems as in the file
+    const isTestKeySignatureCourtesyClefs = sampleFilename.startsWith("test_key_signature_courtesy_clefs");
+    // courtesy key and time signatures of different widths at system breaks, see test_courtesy_signatures_staff_ends: systems as in the file
+    const isTestCourtesySignaturesStaffEnds = sampleFilename.startsWith("test_courtesy_signatures_staff_ends");
     const isTestTabs4Strings = sampleFilename.includes("test_tabs_4_strings");
     const isTestFingeringLeft = sampleFilename.includes("test_fingering_left");
     const isTestArticulationAboveNote = sampleFilename.includes("test_accent_above_except_piano_left_hand");
@@ -577,6 +672,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestLyricsDashContinuedInNextSystem = sampleFilename.startsWith("test_lyrics_dash_continued_in_next_system");
     // tab ties across system breaks, see test_tab_hammer-on_pull-off_tie_across_system_breaks: systems as in the file
     const isTestTabTiesAcrossSystemBreaks = sampleFilename.startsWith("test_tab_hammer-on_pull-off_tie_across_system_breaks");
+    // a key and time change at a system break (courtesy signatures), see test_hidden_staff_clef_key_time: systems as in the file
+    const isTestHiddenStaffClefKeyTime = sampleFilename.startsWith("test_hidden_staff_clef_key_time");
     // multiple rest measures ending at the system and page breaks of the file, see test_multiple_rest_measures_auto_xml_breaks
     const isTestMultipleRestMeasuresXmlBreaks = sampleFilename.startsWith("test_multiple_rest_measures_auto_xml_breaks");
     const isTestCopyrightBelowLastSystem = sampleFilename.includes("copyright_below_last_system");
@@ -607,7 +704,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         drawUpToMeasureNumber: drawUpToMeasureNumber,
         drawMeasureNumbersOnlyAtSystemStart: isTestMeasureNumbersOnlyAtSystemStart,
         newSystemFromXML: isFunctionTestSystemAndPageBreaks || isTestMeasureNumbersOnlyAtSystemStart || isTestGraceNotesOnlyMeasure ||
-            isTestLyricsDashContinuedInNextSystem || isTestTabTiesAcrossSystemBreaks || isTestMultipleRestMeasuresXmlBreaks,
+            isTestLyricsDashContinuedInNextSystem || isTestTabTiesAcrossSystemBreaks || isTestHiddenStaffClefKeyTime ||
+            isTestMultipleRestMeasuresXmlBreaks,
         newSystemFromNewPageInXML: isTestPageBreakImpliesSystemBreak,
         newPageFromXML: isFunctionTestSystemAndPageBreaks || isTestMultipleRestMeasuresXmlBreaks,
         pageBackgroundColor: "#FFFFFF", // reset by drawingparameters default
@@ -617,9 +715,11 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     if (options.darkMode) {
         osmdInstance.setOptions({darkMode: true}); // note that we set pageBackgroundColor above, so we need to overwrite it here.
     }
+    if (options.drawHiddenNotes) {
+        osmdInstance.setOptions({drawHiddenNotes: true}); // before load(), which creates the beams of the hidden notes
+    }
     // note that loadDefaultValues() may be executed in setOptions with drawingParameters default
     //osmdInstance.EngravingRules.RenderSingleHorizontalStaffline = true; // to use this option here, place it after setOptions(), see above
-    osmdInstance.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false; // this would override the command line options (--plain etc)
     includeSkyBottomLine = options.skyBottomLine ?? false; // apparently es6 doesn't have ?? operator
     osmdInstance.drawSkyLine = includeSkyBottomLine; // if includeSkyBottomLine, draw skyline and bottomline, else not
     osmdInstance.drawBottomLine = includeSkyBottomLine;
@@ -648,6 +748,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     }
     if (isTextOctaveShiftExtraGraphicalMeasure ||
         isTestOctaveShiftInvisibleInstrument ||
+        isTestPedalInvisibleInstrument ||
         isTestWedgeMultilineCrescendo ||
         isTestWedgeMultilineDecrescendo ||
         isTestWavyLineMultilineExtraGraphicalMeasure ||
@@ -655,7 +756,9 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         isTestSlidesStandardAndTabStaff ||
         isTestPartAbbreviationsPartlyMissing ||
         isTestPartAbbreviationSingleStaff ||
-        isTestPartGroupNames) {
+        isTestPartGroupNames ||
+        isTestKeySignatureCourtesyClefs ||
+        isTestCourtesySignaturesStaffEnds) {
         osmdInstance.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
     }
     if (isTestPartAbbreviationSingleStaff) {
@@ -706,6 +809,7 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
     }
 
     const isTestOctaveShiftInvisibleInstrument = sampleFilename.includes("test_octaveshift_first_instrument_invisible");
+    const isTestPedalInvisibleInstrument = sampleFilename.includes("test_pedal_systembreak_first_instrument_invisible");
     const isTestInvisibleMeasureNotAffectingLayout = sampleFilename.includes("test_invisible_measure_not_affecting_layout");
     const isTestWordsDirectionLostWhenFirstInstrumentInvisible = sampleFilename.includes("test_words_direction_lost_when_first_instrument_invisible");
     const isTestTransposeEnharmonic9 = sampleFilename.includes("test_transpose_enharmonic_9");
@@ -713,12 +817,14 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
     const isTestTransposingGflatMajor = sampleFilename.includes("test_transposing_gflat_major");
     const isTestTransposingFsharpMajorEsharp = sampleFilename.includes("test_transposing_fsharp_major_e_sharp");
     const isTestTransposingIntervalSpelling = sampleFilename.includes("test_transposing_interval_spelling");
+    const isTestTransposingIntervalChordSpelling = sampleFilename.includes("test_transposing_interval_chord_spelling");
     // osmd.TransposeCalculator is static, shared by all samples: set it for each sample,
-    //   so that the samples after test_transposing_interval_spelling (in directory order) don't use its calculator.
-    osmdInstance.TransposeCalculator = isTestTransposingIntervalSpelling ?
+    //   so that the samples after the interval samples (in directory order) don't use their calculator.
+    osmdInstance.TransposeCalculator = isTestTransposingIntervalSpelling || isTestTransposingIntervalChordSpelling ?
         new OSMD.IntervalTransposeCalculator() : new OSMD.TransposeCalculator();
 
     if (isTestOctaveShiftInvisibleInstrument ||
+        isTestPedalInvisibleInstrument ||
         isTestWordsDirectionLostWhenFirstInstrumentInvisible
     ) {
         osmdInstance.Sheet.Instruments[0].Visible = false;
@@ -746,6 +852,10 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
     }
     if (isTestTransposingIntervalSpelling) {
         osmdInstance.Sheet.Transpose = -2;
+        osmdInstance.updateGraphic();
+    }
+    if (isTestTransposingIntervalChordSpelling) {
+        osmdInstance.Sheet.Transpose = 1;
         osmdInstance.updateGraphic();
     }
 

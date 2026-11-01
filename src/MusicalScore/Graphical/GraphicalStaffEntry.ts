@@ -103,7 +103,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         // and handleTie() doesn't draw a tie to a hidden note.
         // If the hidden one of the two is the tie note, its tie is drawn at the visible note whose notehead it shares:
         // the source shows the same picture whichever of the two it hides, so that must not decide whether the tie is drawn.
-        const noteWithNotehead: Note = tieNote?.PrintObject === false ? tieNote.visibleUnisonNoteSharingNotehead() ?? tieNote : tieNote;
+        const noteWithNotehead: Note = tieNote?.isVisible() === false ? tieNote.visibleUnisonNoteSharingNotehead() ?? tieNote : tieNote;
         const ownGraphicalNote: GraphicalNote = this.findGraphicalNoteFromNote(noteWithNotehead);
         if (ownGraphicalNote) {
             return ownGraphicalNote;

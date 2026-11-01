@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <!--
+    Regression sample for the room a staggered note gets in the spacing.
+    Voice 1 is stems up, voice 2 stems down. When the two voices are a second apart, one of the notes is
+    moved right by about a note head, beside the other one. The spacing has to make room for it: otherwise
+    the next note starts where it would without the move, so a tie from the moved note gets a note head
+    shorter, and in quick passages the moved note runs into the next note.
+    Measure 1: an A4 over a G4, the lower G4 moved and tied to the G4 of beat 2 (under a B4, not moved);
+    then a dotted A4 over a G4, the dotted A4 moved (with its dot) and tied to the A4 eighth after it.
+    Measure 2: sixteenths in voice 1 over quarters in voice 2. On each beat, the first sixteenth is a second
+    above the quarter, which is moved right, and the next sixteenth is on the quarter's line.
+    Measure 3: three voices, as in the left hand of Bach's Toccata BWV 565, m.30. The middle voice's G4 eighth,
+    a second below the upper voice's A4, is moved right, and its F4 sixteenth follows.
+  -->
+  <part-list>
+    <score-part id="P1"><part-name>Piano</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>4</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+
+      <!-- Voice 1 (upper): A4, B4, then a dotted A4 tied to an A4 eighth -->
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>quarter</type><stem>up</stem></note>
+      <note><pitch><step>B</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>quarter</type><stem>up</stem></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>6</duration><tie type="start"/><voice>1</voice><type>quarter</type><dot/><stem>up</stem><notations><tied type="start"/></notations></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>2</duration><tie type="stop"/><voice>1</voice><type>eighth</type><stem>up</stem><notations><tied type="stop"/></notations></note>
+
+      <backup><duration>16</duration></backup>
+
+      <!-- Voice 2 (lower): G4 tied to G4, then a G4 half -->
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>4</duration><tie type="start"/><voice>2</voice><type>quarter</type><stem>down</stem><notations><tied type="start"/></notations></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>4</duration><tie type="stop"/><voice>2</voice><type>quarter</type><stem>down</stem><notations><tied type="stop"/></notations></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>8</duration><voice>2</voice><type>half</type><stem>down</stem></note>
+    </measure>
+    <measure number="2">
+      <!-- Voice 1 (upper): sixteenths A4 G4 F4 E4, G4 F4 E4 D4, F4 E4 D4 C4, E4 D4 C4 B3 -->
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><beam number="1">begin</beam><beam number="2">begin</beam></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><beam number="1">continue</beam><beam number="2">continue</beam></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><beam number="1">continue</beam><beam number="2">continue</beam></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><beam number="1">end</beam><beam number="2">end</beam></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><beam number="1">begin</beam><beam number="2">begin</beam></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><beam number="1">continue</beam><beam number="2">continue</beam></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><beam number="1">continue</beam><beam number="2">continue</beam></note>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><beam number="1">end</beam><beam number="2">end</beam></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><beam number="1">begin</beam><beam number="2">begin</beam></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><beam number="1">continue</beam><beam number="2">continue</beam></note>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><beam number="1">continue</beam><beam number="2">continue</beam></note>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><beam number="1">end</beam><beam number="2">end</beam></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><beam number="1">begin</beam><beam number="2">begin</beam></note>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><beam number="1">continue</beam><beam number="2">continue</beam></note>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><beam number="1">continue</beam><beam number="2">continue</beam></note>
+      <note><pitch><step>B</step><octave>3</octave></pitch><duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><beam number="1">end</beam><beam number="2">end</beam></note>
+
+      <backup><duration>16</duration></backup>
+
+      <!-- Voice 2 (lower): quarters G4 F4 E4 D4 -->
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>4</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>4</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>4</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>4</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+    </measure>
+    <measure number="3">
+      <!-- Voice 1 (upper): A4 half, twice -->
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>8</duration><voice>1</voice><type>half</type><stem>up</stem></note>
+      <note><pitch><step>A</step><octave>4</octave></pitch><duration>8</duration><voice>1</voice><type>half</type><stem>up</stem></note>
+
+      <backup><duration>16</duration></backup>
+
+      <!-- Voice 2 (middle): G4 eighth, F4 and E4 sixteenths, F4 quarter, twice -->
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><type>eighth</type><stem>down</stem><beam number="1">begin</beam></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>16th</type><stem>down</stem><beam number="1">continue</beam><beam number="2">begin</beam></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>16th</type><stem>down</stem><beam number="1">end</beam><beam number="2">end</beam></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>4</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>2</duration><voice>2</voice><type>eighth</type><stem>down</stem><beam number="1">begin</beam></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>16th</type><stem>down</stem><beam number="1">continue</beam><beam number="2">begin</beam></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><voice>2</voice><type>16th</type><stem>down</stem><beam number="1">end</beam><beam number="2">end</beam></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>4</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+
+      <backup><duration>16</duration></backup>
+
+      <!-- Voice 3 (lower): C4 half, twice -->
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>8</duration><voice>3</voice><type>half</type><stem>down</stem></note>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>8</duration><voice>3</voice><type>half</type><stem>down</stem></note>
+      <barline location="right"><bar-style>light-heavy</bar-style></barline>
+    </measure>
+  </part>
+</score-partwise>

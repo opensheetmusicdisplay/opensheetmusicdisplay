@@ -39,7 +39,7 @@ export abstract class MusicSystem extends GraphicalObject {
     protected groupLabels: Map<InstrumentalGroup, GraphicalLabel> = new Map<InstrumentalGroup, GraphicalLabel>();
     protected measureNumberLabels: GraphicalLabel[] = [];
     protected maxLabelLength: number;
-    protected objectsToRedraw: [Object[], Object][] = [];
+    protected objectsToRedraw: [object[], object][] = [];
     protected instrumentBrackets: GraphicalObject[] = [];
     protected groupBrackets: GraphicalObject[] = [];
     protected graphicalMarkedAreas: GraphicalMarkedArea[] = [];
@@ -95,7 +95,7 @@ export abstract class MusicSystem extends GraphicalObject {
         return [...this.groupLabels.values(), ...this.labels.values()];
     }
 
-    public get ObjectsToRedraw(): [Object[], Object][] {
+    public get ObjectsToRedraw(): [object[], object][] {
         return this.objectsToRedraw;
     }
 
@@ -331,6 +331,7 @@ export abstract class MusicSystem extends GraphicalObject {
                 const graphicalLabel: GraphicalLabel = new GraphicalLabel(
                     instrNameLabel, instrumentLabelTextHeight, TextAlignmentEnum.LeftCenter, this.rules, this.boundingBox
                 );
+                graphicalLabel.SVGClass = isFirstSystem ? "osmd-part-name" : "osmd-part-abbreviation";
                 graphicalLabel.setLabelPositionAndShapeBorders();
                 this.labels.setValue(instrument, graphicalLabel);
                 // X is set after all group and part label widths are known; Y is set after staff spacing.
@@ -394,6 +395,7 @@ export abstract class MusicSystem extends GraphicalObject {
                 const label: GraphicalLabel = new GraphicalLabel(
                     new Label(text), textHeight, TextAlignmentEnum.LeftCenter, this.rules, this.boundingBox
                 );
+                label.SVGClass = isFirstSystem ? "osmd-part-group-name" : "osmd-part-group-abbreviation";
                 label.setLabelPositionAndShapeBorders();
                 this.groupLabels.set(group, label);
                 if (!byDepth[depth]) {

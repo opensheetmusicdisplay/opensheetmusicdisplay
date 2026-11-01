@@ -1,7 +1,6 @@
 import { expect } from "chai";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { PlacementEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/AbstractExpression";
-import { MusicSheetCalculator } from "../../../../src/MusicalScore/Graphical/MusicSheetCalculator";
 import { TestUtils } from "../../../Util/TestUtils";
 
 /**
@@ -64,7 +63,7 @@ describe("VexFlowTextFontFamily", (): void => {
         osmd.render();
         expect(Number(text("D.C. al").getAttribute("y"))).to.be.lessThan(Number(text("To").getAttribute("y")));
         // a custom ITextMeasurer without the optional computeTextWidthInCssFont() (load() sets OSMD's own again)
-        MusicSheetCalculator.TextMeasurer.computeTextWidthInCssFont = undefined;
+        osmd.EngravingRules.TextMeasurer.computeTextWidthInCssFont = undefined;
         expect((): void => osmd.render()).not.to.throw();
 
         // A bend reserves its text width plus 3px, with the text in the middle (VexFlow's Bend.updateWidth()),

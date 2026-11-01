@@ -361,6 +361,10 @@ export class PedalMarking extends Element {
 
     L('Rendering Pedal Marking');
 
+    // VexFlowPatch: the marks and brackets in a group (class vf-pedalmarking). A pedal marking of one shape gets the group's
+    //   class instead (<path class="vf-pedalmarking">), and one without shapes gets no group (see SVGContext.openGroup() with
+    //   attrs.mergeIntoChild and omitIfEmpty).
+    ctx.openGroup('pedalmarking', undefined, { mergeIntoChild: true, omitIfEmpty: true });
     if (this.style === PedalMarking.Styles.BRACKET || this.style === PedalMarking.Styles.MIXED || this.style === PedalMarking.Styles.MIXED_OPEN_END ||
         this.style === PedalMarking.Styles.BRACKET_OPEN_BEGIN || this.style === PedalMarking.Styles.BRACKET_OPEN_END || this.style === PedalMarking.Styles.BRACKET_OPEN_BOTH) {
       ctx.setLineWidth(this.render_options.bracket_line_width);
@@ -368,6 +372,7 @@ export class PedalMarking extends Element {
     } else if (this.style === PedalMarking.Styles.TEXT) {
       this.drawText();
     }
+    ctx.closeGroup();
 
     ctx.restore();
   }

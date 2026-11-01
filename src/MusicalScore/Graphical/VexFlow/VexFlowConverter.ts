@@ -18,6 +18,7 @@ import {Fonts} from "../../../Common/Enums/Fonts";
 import {OutlineAndFillStyleEnum, OUTLINE_AND_FILL_STYLE_DICT} from "../DrawingEnums";
 import log from "loglevel";
 import { ArticulationEnum, StemDirectionType, VoiceEntry } from "../../VoiceData/VoiceEntry";
+import { Articulation } from "../../VoiceData/Articulation";
 import { SystemLinePosition } from "../SystemLinePosition";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { OrnamentEnum, OrnamentContainer } from "../../VoiceData/OrnamentContainer";
@@ -28,14 +29,13 @@ import { Note, TremoloBetweenNotes, TremoloInfo } from "../../../MusicalScore/Vo
 import StaveNote = VF.StaveNote;
 import { ArpeggioType } from "../../VoiceData/Arpeggio";
 import { TabNote } from "../../VoiceData/TabNote";
+import { SourceStaffEntry } from "../../VoiceData/SourceStaffEntry";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
-import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 import { GraphicalMeasure } from "../GraphicalMeasure";
 import { Staff } from "../../VoiceData/Staff";
 import { VexFlowStaffEntry } from "./VexFlowStaffEntry";
-import { MusicSheetCalculator } from "../MusicSheetCalculator";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -323,7 +323,10 @@ export class VexFlowConverter {
             baseNote.sourceNote.TypeLength !== baseNoteLength &&
             baseNote.sourceNote.TypeLength.RealValue !== 0) {
             duration = VexFlowConverter.durations(baseNote.sourceNote.TypeLength, isTuplet)[0];
-            baseNote.numberOfDots = baseNote.sourceNote.DotsXml;
+            // Every chord member contributes to numDots below, so use the written dots for all of them.
+            for (const note of notes) {
+                note.numberOfDots = note.sourceNote.DotsXml;
+            }
         }
         let vfClefType: string = undefined;
         let numDots: number = baseNote.numberOfDots;
@@ -414,7 +417,7 @@ export class VexFlowConverter {
                     let linesShift: number;
                     for (const staffGve of staffGves) {
                         for (const gveNote of staffGve.notes) {
-                            if (gveNote === note || gveNote.sourceNote.isRest() || !gveNote.sourceNote.PrintObject) {
+                            if (gveNote === note || gveNote.sourceNote.isRest() || !gveNote.sourceNote.isVisible()) {
                                 continue;
                             }
                             // A cross-staff note doesn't move the rest towards the staff of its voice (see restMovesTowardsStaffOfVoice()).
@@ -703,7 +706,7 @@ export class VexFlowConverter {
             if (!stemColor && defaultColorStem) {
                 stemColor = defaultColorStem;
             }
-            const stemStyle: Object = { fillStyle: stemColor, strokeStyle: stemColor };
+            const stemStyle: object = { fillStyle: stemColor, strokeStyle: stemColor };
 
             if (stemColor) {
                 //gve.parentVoiceEntry.StemColor = stemColor; // this shouldn't be set by DefaultColorStem
@@ -799,7 +802,7 @@ export class VexFlowConverter {
 
         // half note tremolo: set notehead to half note (Vexflow otherwise takes the notehead from duration) (Hack)
         if (firstNote.Length.RealValue === 0.25 && firstNote.Notehead && firstNote.Notehead.Filled === false) {
-            const keyProps: Object[] = vfnote.getKeyProps();
+            const keyProps: object[] = vfnote.getKeyProps();
             for (let i: number = 0; i < keyProps.length; i++) {
                 (<any>keyProps[i]).code = "v81";
             }
@@ -827,10 +830,24 @@ export class VexFlowConverter {
             return;
         }
 
-        for (const articulation of gNote.sourceNote.ParentVoiceEntry.Articulations) {
+        // While another voice sounds in the staff, a mark at the note head faces it, e.g. the accent above a stem-down A4
+        //   lands on the head of a stem-up C5 of the other voice. Two parts sharing a staff put their marks at the stem end
+        //   instead (Gould, Behind Bars, pp. 117-118). A beamed group is placed as a whole, at the stem end if another voice
+        //   sounds during any of its notes: not some dots below the heads and some above the beam. A placement from the XML
+        //   still wins.
+        //   Of a chord, only the first note in the XML is in the beam (not necessarily gNote, the lowest).
+        const articulations: Articulation[] = VexFlowConverter.getDrawnArticulations(gNote.sourceNote.ParentVoiceEntry);
+        const beamNotes: Note[] = gNote.sourceNote.ParentVoiceEntry.Notes[0].NoteBeam?.Notes ?? [gNote.sourceNote];
+        const otherVoiceSounding: boolean = articulations.length > 0 &&
+            beamNotes.some((note: Note) => VexFlowConverter.otherVoiceSoundsDuring(note.ParentVoiceEntry));
+        for (const articulation of articulations) {
             let vfArtPosition: number = VF.Modifier.Position.ABOVE;
 
-            if (vfnote.getStemDirection() === VF.Stem.UP) {
+            if (otherVoiceSounding) {
+                if (vfnote.getStemDirection() === VF.Stem.DOWN) {
+                    vfArtPosition = VF.Modifier.Position.BELOW;
+                }
+            } else if (vfnote.getStemDirection() === VF.Stem.UP) {
                 vfArtPosition = VF.Modifier.Position.BELOW;
 
                 // if rules.ArticulationAboveNoteForStemUp set:
@@ -865,16 +882,6 @@ export class VexFlowConverter {
             switch (articulationEnum) {
                 case ArticulationEnum.accent: {
                     vfArt = new VF.Articulation("a>");
-                    const slurs: Slur[] = gNote.sourceNote.NoteSlurs;
-                    for (const slur of slurs) {
-                        if (slur.StartNote === gNote.sourceNote) { // && slur.PlacementXml === articulation.placement
-                            if (slur.PlacementXml === PlacementEnum.Above) {
-                                vfArt.setYShift(-rules.SlurStartArticulationYOffsetOfArticulation * 10);
-                            } else if (slur.PlacementXml === PlacementEnum.Below) {
-                                vfArt.setYShift(rules.SlurStartArticulationYOffsetOfArticulation * 10);
-                            }
-                        }
-                    }
                     (vfArt as any).render_options = {
                         ...(vfArt as any).render_options,
                         extra_left_px: 0,
@@ -933,17 +940,7 @@ export class VexFlowConverter {
                     break;
                 }
                 case ArticulationEnum.invertedfermata: {
-                    const pve: VoiceEntry = gNote.sourceNote.ParentVoiceEntry;
-                    const sourceNote: Note = gNote.sourceNote;
-                    // find inverted fermata, push it to last voice entry in staffentry list,
-                    //   so that it doesn't overlap notes (gets displayed right below higher note)
-                    //   TODO this could maybe be moved elsewhere or done more elegantly,
-                    //     but on the other hand here it only gets checked if we have an inverted fermata anyways, seems efficient.
-                    if (pve !== sourceNote.ParentVoiceEntry.ParentSourceStaffEntry.VoiceEntries.last()) {
-                        pve.Articulations = pve.Articulations.slice(pve.Articulations.indexOf(articulation));
-                        pve.ParentSourceStaffEntry.VoiceEntries.last().Articulations.push(articulation);
-                        continue;
-                    }
+                    // drawn at the last voice entry of the staff entry, see getDrawnArticulations()
                     vfArt = new VF.Articulation("a@u");
                     vfArtPosition = VF.Modifier.Position.BELOW;
                     articulation.placement = PlacementEnum.Below;
@@ -994,6 +991,53 @@ export class VexFlowConverter {
                 (vfnote as StaveNote).addModifier(0, vfArt);
             }
         }
+    }
+
+    /** The articulations drawn at the voice entry's note: its own, but the inverted fermatas of its staff entry go to the
+     *  staff entry's last voice entry, so that they don't overlap the notes of the other voices (#1278): the fermata of a
+     *  stem-up note is drawn right below a lower voice's note, not over it.
+     *  The model stays as it is. Before, the fermata was added to the last voice entry's articulations (and stayed in its
+     *  own voice entry's), so every further calculation, e.g. after updateGraphic(), drew it once more. */
+    private static getDrawnArticulations(voiceEntry: VoiceEntry): Articulation[] {
+        const isInvertedFermata: (articulation: Articulation) => boolean =
+            (articulation: Articulation): boolean => articulation.articulationEnum === ArticulationEnum.invertedfermata;
+        const staffVoiceEntries: VoiceEntry[] = voiceEntry.ParentSourceStaffEntry?.VoiceEntries ?? [voiceEntry];
+        if (voiceEntry !== staffVoiceEntries.last()) {
+            return voiceEntry.Articulations.filter((articulation: Articulation): boolean => !isInvertedFermata(articulation));
+        }
+        const articulations: Articulation[] = voiceEntry.Articulations.slice();
+        for (const otherVoiceEntry of staffVoiceEntries) {
+            if (otherVoiceEntry !== voiceEntry) {
+                articulations.push(...otherVoiceEntry.Articulations.filter(isInvertedFermata));
+            }
+        }
+        return articulations;
+    }
+
+    /** Whether a visible note or rest of another voice in the staff sounds during the voice entry, e.g. a half note of
+     *  another voice under the second quarter of the measure. Notes and rests that aren't drawn (see Note.isVisible()),
+     *  e.g. of a voice only for playback, don't count. */
+    private static otherVoiceSoundsDuring(voiceEntry: VoiceEntry): boolean {
+        const length: (entry: VoiceEntry) => number =
+            (entry: VoiceEntry): number => Math.max(...entry.Notes.map((note: Note) => note.Length.RealValue));
+        const staffEntry: SourceStaffEntry = voiceEntry.ParentSourceStaffEntry;
+        const staffIndex: number = staffEntry.ParentStaff.idInMusicSheet;
+        const start: number = staffEntry.Timestamp.RealValue;
+        const end: number = start + length(voiceEntry);
+        for (const container of staffEntry.VerticalContainerParent.ParentMeasure.VerticalSourceStaffEntryContainers) {
+            const otherStaffEntry: SourceStaffEntry = container.StaffEntries[staffIndex];
+            const otherStart: number = otherStaffEntry?.Timestamp.RealValue;
+            if (!otherStaffEntry || otherStart >= end) {
+                continue;
+            }
+            for (const other of otherStaffEntry.VoiceEntries) {
+                if (other.ParentVoice !== voiceEntry.ParentVoice && otherStart + length(other) > start &&
+                    other.Notes.some((note: Note) => note.isVisible())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public static generateOrnaments(vfnote: VF.StemmableNote, oContainer: OrnamentContainer): void {
@@ -1305,7 +1349,7 @@ export class VexFlowConverter {
         let timeSpec: string;
         switch (rhythm.SymbolEnum) {
             case RhythmSymbolEnum.NONE:
-                timeSpec = rhythm.Rhythm.Numerator + "/" + rhythm.Rhythm.Denominator;
+                timeSpec = (rhythm.NumeratorGroups?.join("+") ?? rhythm.Rhythm.Numerator) + "/" + rhythm.Rhythm.Denominator;
                 break;
             case RhythmSymbolEnum.COMMON:
                 timeSpec = "C";
@@ -1440,11 +1484,11 @@ export class VexFlowConverter {
         }
         const font: string = VexFlowConverter.vexFlowTextCssFont((bend as any).font, rules);
         (bend as any).setFont(font);
-        if (!MusicSheetCalculator.TextMeasurer.computeTextWidthInCssFont) {
+        if (!rules.TextMeasurer.computeTextWidthInCssFont) {
             return;
         }
         for (const part of (bend as any).phrase) {
-            const textWidth: number = MusicSheetCalculator.TextMeasurer.computeTextWidthInCssFont(part.text, font);
+            const textWidth: number = rules.TextMeasurer.computeTextWidthInCssFont(part.text, font);
             part.width = Math.max(part.width, textWidth + 3);
             part.draw_width = part.width / 2;
         }

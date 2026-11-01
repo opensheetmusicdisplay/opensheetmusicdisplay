@@ -34,15 +34,12 @@ export class StaveSection extends StaveModifier {
     ctx.save();
     ctx.lineWidth = 2;
     ctx.setFont(this.font.family, this.font.size, this.font.weight);
-    const text_measurements = ctx.measureText('' + this.section);
-    const text_width = text_measurements.width;
-    let text_height = text_measurements.height;
-    if (!text_height && text_measurements.emHeightAscent >= 0) { // VexFlowPatch
-      text_height = text_measurements.emHeightAscent + 2; // node canvas / generateImages fix
-    }
-    if (!text_height) { // canvas: sometimes no height available (VexFlowPatch)
-      text_height = text_measurements.fontBoundingBoxAscent + 3; // estimation
-    }
+    const text_width = ctx.measureText('' + this.section).width;
+    // VexFlowPatch: the box follows the font size, not the measured height of the text: that is the font's line height
+    //   (ascent + descent), which differs per platform, so the box's top line touched the capitals on macOS and was higher
+    //   on Linux. 1.5 * size (pt) = 1.125 em keeps the box measured on Windows (Arial: 1.117 em), in the browser and in
+    //   node canvas (generateImages), where the height was estimated.
+    const text_height = this.font.size * 1.5;
     let width = text_width + 6;  // add left & right padding
     if (width < 18) width = 18;
     const height = text_height + this.font.size / 10; // font.size / 10: padding
@@ -59,12 +56,15 @@ export class StaveSection extends StaveModifier {
       }
     }
     let x = this.x + shift_x;
+    // VexFlowPatch: the box and the text in a group (class vf-stavesection)
+    ctx.openGroup('stavesection');
     ctx.beginPath();
     ctx.lineWidth = 2;
     ctx.rect(x, y + text_height/4, width, height);
     ctx.stroke();
     x += (width - text_width) / 2;
     ctx.fillText('' + this.section, x, y + height );
+    ctx.closeGroup();
     ctx.restore();
     return this;
   }

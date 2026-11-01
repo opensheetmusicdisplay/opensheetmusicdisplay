@@ -17,6 +17,7 @@ import { ChordSymbolEnum, CustomChord, DegreesInfo } from "../../MusicalScore/Vo
 import { GeometricSkyBottomLineCaches } from "./GeometricSkyBottomLineContext";
 import { GraphicalNote } from "./GraphicalNote";
 import { Note } from "../VoiceData/Note";
+import { ITextMeasurer } from "../Interfaces/ITextMeasurer";
 
 /** Rendering and Engraving options, more fine-grained than [[IOSMDOptions]].
  *  Not all of these options are meant to be modified by users of the library,
@@ -279,6 +280,15 @@ export class EngravingRules {
      */
     public LyricsAlignmentStandard: TextAlignmentEnum;
     public LyricsHeight: number;
+    /** Whether to re-link lyric word chains split across voices of the same staff
+     * after reading, so that dashes are drawn between their syllables.
+     * Set before loading a score: the words are linked when loading. */
+    public RelinkLyricWordsAcrossVoices: boolean;
+    /** Whether the first lyric of a verse in a staff, if its text starts with the verse number, e.g. "1. Si" (MusicXML has no
+     * element for the number), is aligned like a lyric without one, with the number left of where the lyric starts. Default true.
+     * If false, the text is aligned as a whole, with the lyric right of the number. For left-aligned lyrics (LyricsAlignmentStandard).
+     * Set before loading a score: the lyrics are measured when its graphical objects are created. */
+    public LyricsVerseNumberLeftOfLyric: boolean;
     public LyricsYOffsetToStaffHeight: number;
     public LyricsYMarginToBottomLine: number;
     /** Extra x-shift (to the right) for short lyrics to be better vertically aligned.
@@ -338,7 +348,15 @@ export class EngravingRules {
     public TieHeightInterpolationK: number;
     public TieHeightInterpolationD: number;
     public SlurNoteHeadYOffset: number;
+    /** Not used anymore: a slur starts and ends SlurNoteHeadYOffset beyond the articulations of its start and end notes on its
+     *  side, as drawn (see GraphicalSlur), not this fixed distance beyond the end note.
+     * @deprecated
+     */
     public SlurEndArticulationYOffset: number;
+    /** Not used anymore: an accent at the start or end of a slur goes outside it, beyond its curve, unless that is too far from the
+     *  note (see GraphicalSlur), not this fixed distance further out at the start of a slur placed in the XML.
+     * @deprecated
+     */
     public SlurStartArticulationYOffsetOfArticulation: number;
     public SlurStemXOffset: number;
     public SlurSlopeMaxAngle: number;
@@ -492,10 +510,27 @@ export class EngravingRules {
      * the ones across staves. */
     public RenderSlursAcrossStaves: boolean;
     public RenderGlissandi: boolean;
+    /** Whether to draw hidden notes and rests (Note.PrintObject false, e.g. print-object="no" in the MusicXML) like visible
+     *  ones, with their beams, ties, tuplets and fingerings, and to let the cursor stop at them. Default false.
+     *  E.g. to show what a voice hidden for playback plays, like a tremolo written out as single notes.
+     *  Set by OSMDOptions.drawHiddenNotes. Beams and tuplets are created at load(): to change this rule after load(),
+     *  call osmd.updateGraphic() before the next render(). */
+    public RenderHiddenNotes: boolean;
+    /** The color of the hidden notes and rests drawn with RenderHiddenNotes, to tell them apart from visible ones.
+     *  Default "#A0A0A0CC", a light, slightly transparent gray, like hidden notes shown in MuseScore or Sibelius.
+     *  It colors their noteheads, accidentals, dots and articulations, and their stems, flags and ledger lines where all
+     *  notes of a chord are hidden notes, and with ColorBeams the beams of such notes. Needs ColoringEnabled.
+     *  Set it to "" to draw hidden notes in the colors of visible notes. Set by OSMDOptions.hiddenNotesColor. */
+    public HiddenNotesColor: string;
     public ColoringMode: ColoringMode;
     public ColoringEnabled: boolean;
     public ColorStemsLikeNoteheads: boolean;
+    /** Whether to draw a flag in the color of its stem. Default true. Otherwise, flags are drawn in DefaultColorStem.
+     *  A transparent stem, e.g. of a hidden note (print-object="no") or of `<stem>none</stem>`, hides its flag either way. */
     public ColorFlags: boolean;
+    /** Whether to draw a beam in the color of its stems, if two or more of them have a color, all the same, e.g. from the XML
+     *  or, with ColorStemsLikeNoteheads, the noteheads' color. Default true. The noteheads alone don't color a beam: an app
+     *  can color some noteheads without their beam. */
     public ColorBeams: boolean;
     public ColoringSetCurrent: Dictionary<NoteEnum|number, string>;
     /** Default color for all musical elements including key signature etc. Default undefined. */
@@ -624,6 +659,15 @@ export class EngravingRules {
     public RenderXMeasuresPerLineAkaSystem: number;
     public PageFormat: PageFormat;
     public PageBackgroundColor: string; // vexflow-color-string (#FFFFFF). Default undefined/transparent.
+    /** Whether to leave out the SVG group (`<g>`) around a note's head, stem and flag and around a beam when it would hold
+     *  only one element, which then gets the group's class, id and pointer-events: e.g. a notehead is drawn as
+     *  `<path class="vf-notehead" ...>` instead of `<g class="vf-notehead" ...><path ...></g>`.
+     *  Default true: these groups were about a fifth of the elements, and the SVG's elements take most of a rendered score's memory.
+     *  Set it to false for the previous structure, e.g. if your code selects `.vf-notehead path` or adds elements to these groups.
+     *  VexFlowGraphicalNote's getters like getNoteheadSVGs() and its setColor() work either way.
+     *  Only for the SVG backend, read in render().
+     */
+    public SVGMergeSingleChildGroups: boolean;
     /** Whether dark mode is enabled. This is read-only, to set this, please use osmd.setOptions({darkMode: true}). */
     public DarkModeEnabled: boolean;
     public UsePageBackgroundColorForTabNotes: boolean;
@@ -647,6 +691,12 @@ export class EngravingRules {
     public NoteToGraphicalNoteMap: Dictionary<number, GraphicalNote>;
     // this is basically a WeakMap, except we save the id in the Note instead of using a WeakMap.
     public NoteToGraphicalNoteMapObjectCount: number = 0;
+    /** Measures the width of texts like labels in this instance's fonts (e.g. DefaultFontFamily), set by the
+     *  VexFlowMusicSheetCalculator. Owned here (per OSMD instance) instead of statically (MusicSheetCalculator.TextMeasurer):
+     *  a static one measured with the rules of the most recently created instance in all instances,
+     *  and kept those rules, and through NoteToGraphicalNoteMap that instance's rendering, in memory after it was dropped.
+     */
+    public TextMeasurer: ITextMeasurer;
     /** How many times osmd.render() was already called on the currently loaded score.
      * Resets after osmd.load() (via osmd.reset()).
      * Can be relevant for transposition or generally informative.
@@ -656,31 +706,41 @@ export class EngravingRules {
     /** Whether to calculate the skyline and bottom-line geometrically, from the extents of the VexFlow draw calls,
      *  instead of drawing each measure on a hidden canvas and reading back its pixels (getImageData), which is much slower (see #937).
      *  Default true. If set to false, the previous pixel-based calculation is used,
-     *  see PreferredSkyBottomLineBatchCalculatorBackend etc.
+     *  see SkyBottomLineBatchMinMeasures.
      */
     public UseGeometricSkyBottomLineCalculation: boolean;
     /** Caches for the geometric skyline calculation (text measurements, flattened glyph outlines).
      *  Owned here (per OSMD instance, like NoteToGraphicalNoteMap) instead of statically,
      *  so that multiple OSMD instances stay independent. */
     public GeometricSkyBottomLineCaches: GeometricSkyBottomLineCaches;
-    /** The skyline and bottom-line batch calculation algorithm to use, if UseGeometricSkyBottomLineCalculation is false.
-     *  Note that this can be overridden if AlwaysSetPreferredSkyBottomLineBackendAutomatically is true (which is the default).
+    /** Not used anymore: the pixel-based batch calculation (UseGeometricSkyBottomLineCalculation false) always reads the pixels
+     *  with getImageData (SkyBottomLineBatchCalculatorBackendType.Plain). Its WebGL backend was removed,
+     *  as the geometric calculation (the default) is faster.
+     * @deprecated
      */
     public PreferredSkyBottomLineBatchCalculatorBackend: SkyBottomLineBatchCalculatorBackendType;
-    /** Whether to consider using WebGL in Firefox in EngravingRules.setPreferredSkyBottomLineBackendAutomatically() */
+    /** Not used anymore: the WebGL backend was removed, see PreferredSkyBottomLineBatchCalculatorBackend.
+     * @deprecated
+     */
     public DisableWebGLInFirefox: boolean;
-    /** Whether to consider using WebGL in Safari/iOS in EngravingRules.setPreferredSkyBottomLineBackendAutomatically() */
+    /** Not used anymore: the WebGL backend was removed, see PreferredSkyBottomLineBatchCalculatorBackend.
+     * @deprecated
+     */
     public DisableWebGLInSafariAndIOS: boolean;
 
-    /** The minimum number of measures in the sheet where the skyline and bottom-line batch calculation is enabled.
+    /** The minimum number of measures in the sheet where the skyline and bottom-line batch calculation is enabled,
+     *  if UseGeometricSkyBottomLineCalculation is false.
      *  Batch is faster for medium to large size scores, but slower for very short scores.
      */
     public SkyBottomLineBatchMinMeasures: number;
-    /** The minimum number of measures in the sheet where WebGL will be used. WebGL is slower for short scores, but much faster for large ones.
-     * Note that WebGL is currently never used in Safari and Firefox, because it's always slower there.
+    /** Not used anymore: the WebGL backend was removed, see PreferredSkyBottomLineBatchCalculatorBackend.
+     * @deprecated
      */
     public SkyBottomLineWebGLMinMeasures: number;
-    /** Whether to always set preferred backend (WebGL or Plain) automatically, depending on browser and number of measures. */
+    /** Not used anymore: the WebGL backend was removed, so there is no backend to choose,
+     *  see PreferredSkyBottomLineBatchCalculatorBackend.
+     * @deprecated
+     */
     public AlwaysSetPreferredSkyBottomLineBackendAutomatically: boolean;
 
     // Playback settings
@@ -951,6 +1011,8 @@ export class EngravingRules {
         // Lyrics
         this.LyricsAlignmentStandard = TextAlignmentEnum.LeftBottom; // CenterBottom and LeftBottom tested, spacing-optimized
         this.LyricsHeight = 2.0; // actually size of lyrics
+        this.RelinkLyricWordsAcrossVoices = true;
+        this.LyricsVerseNumberLeftOfLyric = true;
         this.LyricsYOffsetToStaffHeight = 0.0; // distance between lyrics and staff. could partly be even lower/dynamic
         this.LyricsYMarginToBottomLine = 0.2;
         this.LyricsExtraXShiftForShortLyrics = 0.5; // also see ChordSymbolExtraXShiftForShortChordSymbols, same principle
@@ -1059,6 +1121,8 @@ export class EngravingRules {
         this.RenderSlurs = true;
         this.RenderSlursAcrossStaves = true;
         this.RenderGlissandi = true;
+        this.RenderHiddenNotes = false;
+        this.HiddenNotesColor = "#A0A0A0CC";
         this.ColoringMode = ColoringMode.XML;
         this.ColoringEnabled = true;
         this.ColorStemsLikeNoteheads = false;
@@ -1134,6 +1198,7 @@ export class EngravingRules {
 
         this.PageFormat = PageFormat.UndefinedPageFormat; // default: undefined / 'infinite' height page, using the canvas'/container's width and height
         this.PageBackgroundColor = undefined; // default: transparent. half-transparent white: #FFFFFF88"
+        this.SVGMergeSingleChildGroups = true;
         this.DarkModeEnabled = false;
         this.UsePageBackgroundColorForTabNotes = true;
         this.RenderSingleHorizontalStaffline = false;
@@ -1149,7 +1214,7 @@ export class EngravingRules {
         this.AlwaysSetPreferredSkyBottomLineBackendAutomatically = true;
         this.DisableWebGLInFirefox = true;
         this.DisableWebGLInSafariAndIOS = true;
-        this.setPreferredSkyBottomLineBackendAutomatically();
+        this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.Plain;
 
         // Playback
         this.UseInterpolatedTempoForAccelerandoEtc = false; // wait for rit support etc. can also make
@@ -1169,27 +1234,14 @@ export class EngravingRules {
         }
     }
 
+    /** Not used anymore, without effect: OSMD calculates the skylines geometrically (UseGeometricSkyBottomLineCalculation, default
+     *  true), which is faster than the pixel-based calculation with either of its backends, WebGL or Plain. This only sets
+     *  PreferredSkyBottomLineBatchCalculatorBackend, which isn't read anymore, to Plain, the only backend left.
+     *  It chose WebGL for large scores in Chromium browsers before the WebGL backend was removed.
+     * @deprecated
+     */
     public setPreferredSkyBottomLineBackendAutomatically(numberOfGraphicalMeasures: number = -1): void {
-        let vendor: string = "";
-        let userAgent: string = "";
-        if (typeof globalThis === "object") { // it looks like globalThis can be undefined and cause build issues in es2017 (e.g. Android API 28), see #1299
-            vendor = globalThis.navigator?.vendor ?? "";
-            userAgent = globalThis.navigator?.userAgent ?? "";
-        }
-        let alwaysUsePlain: boolean = false;
-        if (this.DisableWebGLInSafariAndIOS && (/apple/i).test(vendor)) { // doesn't apply to Chrome on MacOS
-            alwaysUsePlain = true;
-        } else if (this.DisableWebGLInFirefox && userAgent.includes("Firefox")) {
-            alwaysUsePlain = true;
-        }
-        // In Safari (/iOS) and Firefox, the plain version is always faster (currently, Safari 15).
-        //   WebGL is faster for large scores in Chrome and Edge (both Chromium based). See #1158
         this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.Plain;
-        if (!alwaysUsePlain) {
-            if (numberOfGraphicalMeasures >= this.SkyBottomLineWebGLMinMeasures) {
-                this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.WebGL;
-            }
-        }
     }
 
     /** Makes it so that all musical elements (including key/time signature)

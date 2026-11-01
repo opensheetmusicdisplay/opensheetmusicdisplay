@@ -14,7 +14,7 @@ export class DynamicsContainer /*implements IComparable<DynamicsContainer>*/ {
     }
 
     public static Compare(a: DynamicsContainer, b: DynamicsContainer): number {
-        return a.parMultiExpression().AbsoluteTimestamp.CompareTo(b.parMultiExpression().AbsoluteTimestamp);
+        return a.parMultiExpression().AbsolutePlaybackTimestamp.CompareTo(b.parMultiExpression().AbsolutePlaybackTimestamp);
     }
 
     public continuousDynamicExpression: ContinuousDynamicExpression;

@@ -29,8 +29,10 @@ export class Cursor {
     // TODO add this for the OSMD object as well and refactor this into a util method?
     let id: number = 0;
     this.cursorElementId = "cursorImg-0";
-    // find unique cursor id in document
-    while (document.getElementById(this.cursorElementId)) {
+    // find an id that no other element has in the container's document, or in its shadow root (e.g. of a web component),
+    //   which has ids of its own: document.getElementById() doesn't find the elements in a shadow root
+    const root: ParentNode = container.getRootNode() as ParentNode; // outside a document: the topmost element
+    while (root.querySelector(`#${this.cursorElementId}`)) {
       id++;
       this.cursorElementId = `cursorImg-${id}`;
     }
@@ -63,9 +65,9 @@ export class Cursor {
 
   private container: HTMLElement;
   public cursorElement: HTMLImageElement;
-  /** a unique id of the cursor's HTMLElement in the document.
+  /** a unique id of the cursor's HTMLElement in its document, or in its shadow root (e.g. of a web component).
    * Should be constant between re-renders and backend changes,
-   * but different between different OSMD objects on the same page.
+   * but different between the cursors in the same document or shadow root, also those of different OSMD objects.
    */
   public cursorElementId: string;
   /** The desired zIndex (layer) of the cursor when no background color is set.
@@ -93,6 +95,17 @@ export class Cursor {
     this.hide();
   }
 
+  /** Releases the sheet the cursor was initialized with (see init()), so that the sheet and its rendering can be garbage collected
+   *  while the cursor is kept, e.g. by osmd.clear(). Until init() is called again (by osmd.load()), the cursor stays hidden,
+   *  Iterator is undefined, functions like next() and show() do nothing, and there are no notes under the cursor.
+   */
+  public releaseSheet(): void {
+    this.hide();
+    this.manager = undefined;
+    this.graphic = undefined;
+    this.iterator = undefined;
+  }
+
   /** Make the cursor visible. */
   public show(): void {
     this.hidden = false;
@@ -105,6 +118,9 @@ export class Cursor {
     if (!this.openSheetMusicDisplay.Sheet || !this.openSheetMusicDisplay.Sheet.SourceMeasures) { // just a safety measure
       console.log("OSMD.Cursor.resetIterator(): sheet or measures were null/undefined.");
       return;
+    }
+    if (!this.manager) {
+      return; // the sheet was released (see releaseSheet()), and the cursor wasn't initialized with the loaded one yet
     }
 
     // set selection start, so that when there's MinMeasureToDraw set, the cursor starts there right away instead of at measure 1
@@ -144,6 +160,9 @@ export class Cursor {
   public update(): void {
     if (this.hidden || this.hidden === undefined || this.hidden === null) {
       return;
+    }
+    if (!this.iterator || !this.graphic) {
+      return; // the sheet was released, see releaseSheet()
     }
     this.updateCurrentPage(); // attach cursor to new page DOM if necessary
     if (!this.getPageElement(this.currentPageNumber)) {
@@ -349,12 +368,18 @@ export class Cursor {
 
   /** Go to previous entry / note / vertical position. */
    public previous(): void {
+    if (!this.iterator) {
+      return; // the sheet was released, see releaseSheet()
+    }
     this.iterator.moveToPreviousVisibleVoiceEntry(false);
     this.update();
   }
 
   /** Go to next entry / note / vertical position. */
   public next(): void {
+    if (!this.iterator) {
+      return; // the sheet was released, see releaseSheet()
+    }
     this.iterator.moveToNextVisibleVoiceEntry(false); // moveToNext() would not skip notes in hidden (visible = false) parts
     this.update();
   }
@@ -425,6 +450,9 @@ export class Cursor {
 
   /** returns voices under the current Cursor position. Without instrument argument, all voices are returned. */
   public VoicesUnderCursor(instrument?: Instrument): VoiceEntry[] {
+    if (!this.iterator) {
+      return []; // the sheet was released, see releaseSheet()
+    }
     return this.iterator.CurrentVisibleVoiceEntries(instrument);
   }
 
@@ -450,6 +478,9 @@ export class Cursor {
    *  This is only necessary if using PageFormat (multiple pages).
    */
   public updateCurrentPage(): number {
+    if (!this.iterator || !this.graphic) {
+      return this.currentPageNumber; // the sheet was released, see releaseSheet()
+    }
     let timestamp: Fraction = this.iterator.currentTimeStamp;
     if (timestamp.RealValue < 0) {
       timestamp = new Fraction(0, 0);
@@ -500,7 +531,9 @@ export class Cursor {
 
   public set SkipInvisibleNotes(value: boolean) {
     this.skipInvisibleNotes = value;
-    this.iterator.SkipInvisibleNotes = value;
+    if (this.iterator) { // else the sheet was released (see releaseSheet()), and resetIterator() sets it on the next one
+      this.iterator.SkipInvisibleNotes = value;
+    }
   }
 
   public get CursorOptions(): CursorOptions {
@@ -521,6 +554,9 @@ export class Cursor {
   }
 
   public nextMeasure(): void {
+    if (!this.iterator) {
+      return; // the sheet was released, see releaseSheet()
+    }
     const startMeasure: SourceMeasure = this.Iterator.CurrentMeasure;
     let previousTime: number = this.Iterator.currentTimeStamp.RealValue;
     this.next();
@@ -537,6 +573,9 @@ export class Cursor {
   }
 
   public previousMeasure(): void {
+    if (!this.iterator) {
+      return; // the sheet was released, see releaseSheet()
+    }
     const startMeasure: SourceMeasure = this.Iterator.CurrentMeasure;
     let previousTime: number = this.Iterator.currentTimeStamp.RealValue;
     this.previous();

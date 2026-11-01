@@ -90,7 +90,7 @@ describe("VexFlow GraphicalNote", () => {
         expect(curves.every(curve => curve.getAttribute("stroke") === "#ff0000"), "curves stroked in the color").to.equal(true);
         expect(bend.filter(shape => shape.getAttribute("fill") !== "none").every(shape => shape.getAttribute("fill") === "#ff0000"),
             "labels and arrows filled with the color").to.equal(true);
-        expect(otherNote.getNoteheadSVGs()[0].getAttribute("fill"), "another note").to.equal("#000000");
+        expect(getComputedStyle(otherNote.getNoteheadSVGs()[0]).fill, "another note").to.equal("rgb(0, 0, 0)");
         div.remove();
     });
 
@@ -127,10 +127,11 @@ describe("VexFlow GraphicalNote", () => {
         div.remove();
     });
 
-    /** The colors of a glissando's shapes: the stroke of each line, then the fill of each label ("sl." in a TAB staff). */
+    /** The colors of a glissando's shapes: the stroke of each line, then the fill of each label ("sl." in a TAB staff),
+     *  which has no fill attribute in the default black. */
     function glissandoColors(glissando: Element): string[] {
         return [...Array.from(glissando.querySelectorAll("path")).map(line => line.getAttribute("stroke")),
-            ...Array.from(glissando.querySelectorAll("text")).map(label => label.getAttribute("fill"))];
+            ...Array.from(glissando.querySelectorAll("text")).map(label => label.getAttribute("fill") ?? "#000000")];
     }
 
     it("Colors the slides starting at a note with setColor() and applyToGlissandi, in a standard and a TAB staff", async () => {
@@ -174,7 +175,7 @@ describe("VexFlow GraphicalNote", () => {
             const slideStart: VexFlowGraphicalNote = measureNotes(osmd, 0, staffIndex)[3];
             const parts: HTMLElement[] = slideStart.getGlissandoSVGs();
             expect(parts.length, `${staff}: a part in each system`).to.equal(2);
-            expect(parts[0].closest(".staffline") === parts[1].closest(".staffline"), `${staff}: parts in the same system`).to.equal(false);
+            expect(parts[0].closest(".osmd-staffline") === parts[1].closest(".osmd-staffline"), `${staff}: parts in the same system`).to.equal(false);
             slideStart.setColor("#ff0000", { applyToGlissandi: true });
             expect(parts.every(part => glissandoColors(part).every(partColor => partColor === "#ff0000")), `${staff}: both parts colored`).to.equal(true);
             slideStart.setVisible(false);
@@ -209,7 +210,7 @@ describe("VexFlow GraphicalNote", () => {
         const tieEnd: VexFlowGraphicalNote = measureNotes(osmd, 1, 0)[0];
         const parts: HTMLElement[] = tieStart.getTieSVGs();
         expect(parts.length, "a part in each system").to.equal(2);
-        expect(parts[0].closest(".staffline") === parts[1].closest(".staffline"), "parts in the same system").to.equal(false);
+        expect(parts[0].closest(".osmd-staffline") === parts[1].closest(".osmd-staffline"), "parts in the same system").to.equal(false);
         expect(tieEnd.getTieSVGs().length, "the tie belongs to its start note").to.equal(0);
 
         tieEnd.setVisible(false);
@@ -232,6 +233,63 @@ describe("VexFlow GraphicalNote", () => {
             expect(graphicalTie.SVGElement === parts[0], `${tie}: SVGElement, the part in the first system`).to.equal(true);
             div.remove();
         }
+    });
+
+    // The getters search the note's own drawing: a sheet drawn in a shadow root (e.g. by a web component) isn't in the
+    //   document, and the first element with an id in the document or shadow root can be another sheet's, e.g. of a sheet
+    //   drawn by another OSMD bundle on the page (each bundle's Vexflow numbers the notes it creates from 1000).
+    it("Finds a note's stem, beams, ledger lines, slurs and ties in a shadow root, also after another drawing with the same ids", async () => {
+        const host: HTMLElement = TestUtils.getDivElement(document);
+        const shadowRoot: ShadowRoot = host.attachShadow({ mode: "open" });
+        const div: HTMLElement = document.createElement("div");
+        shadowRoot.appendChild(div);
+        const xmlNote: (pitch: string, eighths: number, notations: string) => string = (pitch: string, eighths: number, notations: string) =>
+            `<note><pitch><step>${pitch[0]}</step><octave>${pitch[1]}</octave></pitch><duration>${eighths}</duration><voice>1</voice>` +
+            `<type>${{ 1: "eighth", 2: "quarter", 4: "half", 8: "whole" }[eighths]}</type>${notations}</note>`;
+        // measure 1: a quarter A5 (on a ledger line) slurred to the second of two beamed eighths, and a half note tied to the
+        //   whole note of measure 2, which starts a new page
+        const measures: string[] = [
+            xmlNote("A5", 2, "<notations><slur type='start'/></notations>") + xmlNote("C5", 1, "<beam number='1'>begin</beam>") +
+            xmlNote("D5", 1, "<beam number='1'>end</beam><notations><slur type='stop'/></notations>") +
+            xmlNote("E5", 4, "<notations><tied type='start'/></notations>"),
+            "<print new-page='yes'/>" + xmlNote("E5", 8, "<notations><tied type='stop'/></notations>")];
+        const attributes: string = "<attributes><divisions>2</divisions><time><beats>4</beats><beat-type>4</beat-type></time>" +
+            "<clef><sign>G</sign><line>2</line></clef></attributes>";
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+        osmd.setOptions({ pageFormat: "A4_P", newPageFromXML: true });
+        await osmd.load(new DOMParser().parseFromString("<score-partwise version='4.0'><part-list><score-part id='P1'>" +
+            "<part-name>Piano</part-name></score-part></part-list><part id='P1'>" + measures.map((content: string, i: number) =>
+            `<measure number="${i + 1}">${i === 0 ? attributes : ""}${content}</measure>`).join("") + "</part></score-partwise>",
+            "application/xml"));
+        osmd.render();
+        expect(osmd.GraphicSheet.MusicPages.length, "premise: measure 2 on page 2").to.equal(2);
+        const [quarter, beamedEighth, , halfNote] = measureNotes(osmd, 0, 0);
+        // for each part: whether each element found is in the sheet's drawing
+        const found: () => [string, boolean[]][] = () => {
+            const parts: [string, HTMLElement[]][] = [
+                ["stems", [quarter.getStemSVG(), beamedEighth.getStemSVG()]],
+                ["beam", beamedEighth.getBeamSVGs()],
+                ["ledger line", quarter.getLedgerLineSVGs()],
+                ["slur", quarter.getSlurSVGs()],
+                ["tie parts", halfNote.getTieSVGs()],
+            ];
+            return parts.map(([part, elements]: [string, HTMLElement[]]): [string, boolean[]] =>
+                [part, elements.map((element: HTMLElement) => div.contains(element))]);
+        };
+        const expected: [string, boolean[]][] = [["stems", [true, true]], ["beam", [true]], ["ledger line", [true]], ["slur", [true]],
+            ["tie parts", [true, true]]];
+        expect(found(), "in a shadow root").to.deep.equal(expected);
+        // the root's first elements with the ids are then the other drawing's
+        shadowRoot.insertBefore(div.cloneNode(true), div);
+        expect(found(), "after another drawing with the same ids, e.g. of another OSMD bundle").to.deep.equal(expected);
+
+        // what the searched groups need to hold: a note without a beam has its stem in its group, a beam draws the stems of its
+        //   notes next to it (in the measure's group, see VexFlowMeasure.drawNotes()), and a tie's parts can be on two pages
+        expect([quarter, beamedEighth].map((note: VexFlowGraphicalNote) => note.getSVGGElement().contains(note.getStemSVG())),
+            "premise: the stems of the quarter, in its group, and of the beamed eighth, outside it").to.deep.equal([true, false]);
+        const tieParts: HTMLElement[] = halfNote.getTieSVGs();
+        expect(tieParts[0].closest("svg") === tieParts[1].closest("svg"), "premise: the tie's parts on the same page").to.equal(false);
+        host.remove();
     });
 
     // A TAB staff with a hammer-on from note 1 to 2, and a pull-off from note 3 to 4.
@@ -293,9 +351,10 @@ describe("VexFlow GraphicalNote", () => {
             `<voice>${voice}</voice><type>${type}</type><notations>${stop}${start}</notations></note>`;
     }
 
-    /** Renders a score of one staff (treble clef, 4/4) with the given measures, each starting a new system if systemBreaks. */
-    async function renderMeasures(div: HTMLElement, measures: string[], systemBreaks: boolean): Promise<OpenSheetMusicDisplay> {
-        const attributes: string = "<attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>" +
+    /** Renders a score of one staff (treble clef, 4/4) with the given measures, each starting a new system if systemBreaks.
+     *  The durations of their notes are in divisions per quarter. */
+    async function renderMeasures(div: HTMLElement, measures: string[], systemBreaks: boolean, divisions: number = 1): Promise<OpenSheetMusicDisplay> {
+        const attributes: string = `<attributes><divisions>${divisions}</divisions><time><beats>4</beats><beat-type>4</beat-type></time>` +
             "<clef><sign>G</sign><line>2</line></clef></attributes>";
         const measuresXml: string = measures.map((content: string, i: number) => `<measure number="${i + 1}">` +
             (i === 0 ? attributes : systemBreaks ? "<print new-system='yes'/>" : "") + content + "</measure>").join("");
@@ -354,5 +413,148 @@ describe("VexFlow GraphicalNote", () => {
             expect(ties.map(curvesUpwards), `${name}: the ties curved upwards`).to.deep.equal(upwards);
             div.remove();
         }
+    });
+
+    it("Tells whether a note is visible with isVisible(): false after setVisible(false), and for a note hidden in the score", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = await renderMeasures(div, [tiedNote("C5", 2, false) +
+            tiedNote("E5", 2, false).replace("<note>", "<note print-object='no'>")], false); // two half notes, the second one hidden
+        const [note, hiddenNote] = measureNotes(osmd, 0, 0);
+        expect([note.isVisible(), hiddenNote.isVisible()], "a note, and a note hidden in the score").to.deep.equal([true, false]);
+        note.setVisible(false);
+        expect(note.isVisible(), "hidden with setVisible(false)").to.equal(false);
+        note.setVisible(true);
+        expect(note.isVisible(), "shown again").to.equal(true);
+        note.setVisible(false, { applyToNotehead: false });
+        expect(note.isVisible(), "only its stem hidden, not its notehead").to.equal(true);
+        hiddenNote.setVisible(true);
+        expect(hiddenNote.isVisible(), "setVisible(true) doesn't draw a note hidden in the score").to.equal(false);
+
+        note.setVisible(false);
+        osmd.EngravingRules.RenderHiddenNotes = true;
+        osmd.render();
+        const afterRender: boolean[] = [note, hiddenNote].map(graphicalNote => osmd.EngravingRules.GNote(graphicalNote.sourceNote).isVisible());
+        expect(afterRender, "drawn again by a render, and the hidden note too with RenderHiddenNotes").to.deep.equal([true, true]);
+        div.remove();
+    });
+
+    // The stem of a note without a beam is drawn in the note's SVG group, which applyToNotehead hides. A beam draws the stems
+    //   of its notes, outside their groups.
+    it("Keeps the stem as it is with setVisible() and applyToStem false, also the stem of a note without a beam", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const xmlNote: (pitch: string, eighths: number, beam?: string) => string = (pitch: string, eighths: number, beam?: string) =>
+            `<note><pitch><step>${pitch[0]}</step><octave>${pitch[1]}</octave></pitch><duration>${eighths}</duration><voice>1</voice>` +
+            `<type>${eighths === 1 ? "eighth" : eighths === 2 ? "quarter" : "half"}</type>${beam ? `<beam number="1">${beam}</beam>` : ""}</note>`;
+        const osmd: OpenSheetMusicDisplay = await renderMeasures(div, [xmlNote("C5", 2) + xmlNote("D5", 1, "begin") + xmlNote("E5", 1, "end") +
+            xmlNote("F5", 4)], false, 2); // a quarter, two beamed eighths and a half note
+        const [quarter, beamedEighth] = measureNotes(osmd, 0, 0);
+        const visibility: (element: Element) => string = (element: Element) => getComputedStyle(element).visibility;
+        for (const [note, name] of [[quarter, "quarter without a beam"], [beamedEighth, "beamed eighth"]] as [VexFlowGraphicalNote, string][]) {
+            note.setVisible(false, { applyToStem: false });
+            expect([visibility(note.getNoteheadSVGs()[0]), visibility(note.getStemSVG())], `${name}: the notehead hidden, the stem kept`)
+                .to.deep.equal(["hidden", "visible"]);
+            note.setVisible(true);
+            note.setVisible(false, { applyToNotehead: false });
+            note.setVisible(false, { applyToStem: false });
+            expect(visibility(note.getStemSVG()), `${name}: a hidden stem kept hidden`).to.equal("hidden");
+        }
+        div.remove();
+    });
+
+    /** Renders a measure of a C#5 quarter, a D5 eighth with a flag, two beamed eighths, a D5-F5 quarter chord and a G5 eighth. */
+    async function renderNoteParts(div: HTMLElement): Promise<OpenSheetMusicDisplay> {
+        const xmlNote: (pitch: string, eighths: number, extra?: string) => string = (pitch: string, eighths: number, extra: string = "") =>
+            `<note>${extra.includes("<chord/>") ? "<chord/>" : ""}<pitch><step>${pitch[0]}</step>${pitch.includes("#") ? "<alter>1</alter>" : ""}` +
+            `<octave>${pitch[pitch.length - 1]}</octave></pitch><duration>${eighths}</duration><voice>1</voice>` +
+            `<type>${eighths === 1 ? "eighth" : "quarter"}</type>${extra.replace("<chord/>", "")}</note>`;
+        return renderMeasures(div, [xmlNote("C#5", 2, "<accidental>sharp</accidental>") + xmlNote("D5", 1) +
+            xmlNote("E5", 1, "<beam number='1'>begin</beam>") + xmlNote("F5", 1, "<beam number='1'>end</beam>") +
+            xmlNote("D5", 2) + xmlNote("F5", 2, "<chord/>") + xmlNote("G5", 1)], false, 2);
+    }
+
+    /** The classes of the groups without children in the SVG, e.g. "vf-modifiers" (none expected). */
+    function emptyGroups(div: HTMLElement): string[] {
+        return Array.from(div.querySelectorAll("g")).filter(group => group.childElementCount === 0).map(group => group.getAttribute("class"));
+    }
+
+    it("Draws a note's head, stem and flag and a beam as paths without a group each (SVGMergeSingleChildGroups), and no empty groups", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = await renderNoteParts(div);
+        expect(div.querySelectorAll("g.vf-notehead, g.vf-stem, g.vf-flag, g.vf-beam").length, "groups of note parts").to.equal(0);
+        expect(div.querySelectorAll("path.vf-notehead").length, "noteheads").to.equal(7);
+        expect(emptyGroups(div), "empty groups, e.g. the modifiers of a note without accidentals").to.deep.equal([]);
+        const [sharp, flagged, beamed, , chord, lastFlagged] = measureNotes(osmd, 0, 0);
+        expect(chord.getNoteheadSVGs().map(head => `${head.tagName}.${head.getAttribute("class")}`), "the chord's heads")
+            .to.deep.equal(["path.vf-notehead", "path.vf-notehead"]);
+        expect([sharp.getStemSVG(), flagged.getFlagSVG(), lastFlagged.getFlagSVG(), ...beamed.getBeamSVGs()].map(element => element.tagName),
+               "a stem, the flags, the beam").to.deep.equal(["path", "path", "path", "path"]);
+        expect(beamed.getStemSVG().id, "a beamed note's stem, with the id of its former group").to.equal(`vf-${beamed.getSVGId()}-stem`);
+        expect(measureNotes(osmd, 0, 0).map(note => note.getModifierSVGs().length), "the notes' modifier groups").to.deep.equal([1, 0, 0, 0, 0, 0]);
+
+        flagged.setColor("#FF0000");
+        beamed.setColor("#00FF00", { applyToBeams: true });
+        expect([flagged.getNoteheadSVGs()[0].getAttribute("fill"), flagged.getFlagSVG().getAttribute("fill"),
+                flagged.getStemSVG().getAttribute("stroke"), beamed.getBeamSVGs()[0].getAttribute("fill")],
+               "colored: the head, flag and stem of the eighth with a flag, and the beam").to.deep.equal(["#FF0000", "#FF0000", "#FF0000", "#00FF00"]);
+        div.remove();
+    });
+
+    it("Draws a group around each note head, stem, flag and beam with SVGMergeSingleChildGroups false, and no empty groups", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = await renderNoteParts(div);
+        osmd.EngravingRules.SVGMergeSingleChildGroups = false;
+        osmd.render();
+        expect(div.querySelectorAll("g.vf-notehead > path").length, "noteheads, each in a group").to.equal(7);
+        expect(emptyGroups(div), "empty groups").to.deep.equal([]);
+        const [sharp, flagged, beamed] = measureNotes(osmd, 0, 0);
+        expect([sharp.getStemSVG().parentElement, flagged.getFlagSVG(), ...beamed.getBeamSVGs()].map(element => element.getAttribute("class")),
+               "the groups of a stem, a flag and a beam").to.deep.equal(["vf-stem", "vf-flag", "vf-beam"]);
+        expect(measureNotes(osmd, 0, 0).map(note => note.getModifierSVGs().length), "the notes' modifier groups").to.deep.equal([1, 0, 0, 0, 0, 0]);
+
+        flagged.setColor("#FF0000");
+        beamed.setColor("#00FF00", { applyToBeams: true });
+        expect([flagged.getNoteheadSVGs()[0].querySelector("path").getAttribute("fill"), flagged.getFlagSVG().querySelector("path").getAttribute("fill"),
+                beamed.getBeamSVGs()[0].querySelector("path").getAttribute("fill")],
+               "colored: the head and flag of the eighth with a flag, and the beam").to.deep.equal(["#FF0000", "#FF0000", "#00FF00"]);
+        div.remove();
+    });
+
+    /** The computed fill, stroke, stroke-width and stroke-dasharray of an element, e.g. ["rgb(0, 0, 0)", "none", "0.3px", "none"] */
+    function strokeAndFill(element: Element): string[] {
+        const style: CSSStyleDeclaration = getComputedStyle(element);
+        return [style.fill, style.stroke, style.strokeWidth, style.strokeDasharray];
+    }
+
+    it("Writes no style attribute with its SVG default: the root svg sets them, also against a page's CSS for the svg", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        div.id = "svgDefaultsTest";
+        const pageCss: HTMLStyleElement = document.createElement("style");
+        pageCss.textContent = "#svgDefaultsTest, #svgDefaultsTest svg { fill: blue; stroke: blue; stroke-width: 5px; stroke-dasharray: 2px; }";
+        document.head.appendChild(pageCss);
+        const osmd: OpenSheetMusicDisplay = await renderNoteParts(div);
+        expect(div.querySelectorAll("[fill='#000000'], [stroke='none'], [stroke-width='1'], [stroke-dasharray='none']").length,
+               "attributes with the SVG default").to.equal(0);
+        expect(div.querySelectorAll("[pointer-events] [pointer-events]").length, "pointer-events inside a group that has it").to.equal(0);
+        const [sharp] = measureNotes(osmd, 0, 0);
+        expect(strokeAndFill(sharp.getNoteheadSVGs()[0]), "a notehead: filled black").to.deep.equal(["rgb(0, 0, 0)", "none", "0.3px", "none"]);
+        expect(strokeAndFill(sharp.getStemSVG()).slice(0, 2), "a stem: a black line").to.deep.equal(["none", "rgb(0, 0, 0)"]);
+        pageCss.remove();
+        div.remove();
+    });
+
+    it("Colors a note without its grace notes, which are drawn in its group", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const osmd: OpenSheetMusicDisplay = await renderMeasures(div, [
+            "<note><grace/><pitch><step>D</step><octave>5</octave></pitch><voice>1</voice><type>eighth</type></note>" +
+            "<note><pitch><step>C</step><octave>5</octave></pitch><duration>4</duration><voice>1</voice><type>whole</type></note>"], false);
+        const notes: VexFlowGraphicalNote[] = osmd.GraphicSheet.MeasureList[0][0].staffEntries[0].graphicalVoiceEntries
+            .map(voiceEntry => voiceEntry.notes[0] as VexFlowGraphicalNote);
+        const mainNote: VexFlowGraphicalNote = notes.find(note => !note.parentVoiceEntry.parentVoiceEntry.IsGrace);
+        const graceNote: VexFlowGraphicalNote = notes.find(note => note.parentVoiceEntry.parentVoiceEntry.IsGrace);
+        expect(mainNote.getSVGGElement().contains(graceNote.getSVGGElement()), "premise: the grace note in the main note's group").to.equal(true);
+        mainNote.setColor("#FF0000");
+        expect(getComputedStyle(mainNote.getNoteheadSVGs()[0]).fill, "the main note").to.equal("rgb(255, 0, 0)");
+        expect(getComputedStyle(graceNote.getNoteheadSVGs()[0]).fill, "its grace note").to.equal("rgb(0, 0, 0)");
+        div.remove();
     });
 });

@@ -148,4 +148,17 @@ describe("MusicPartManagerIterator measure order with repetitions", () => {
         ]);
         expect(lastInstructionTypes(14)).to.contain(RepetitionInstructionEnum.Fine);
     });
+
+    /**
+     * A jump written at the start of a measure, where a <sound> states it, is taken at the barline before, as when written
+     * at the end of the measure before (#1766). It used to be taken a measure late.
+     *
+     * Sample: two parts, measures 1-2 repeated with measure 2 as the first ending and measure 3 as the second. Segno in
+     * measure 1, To Coda at the start of the first ending, coda sign and D.S. al Coda at the start of measure 4. The To Coda's
+     * <sound> is in its direction in the upper part, the D.S. al Coda's directly in measure 4 of the lower part.
+     * After the D.S., the To Coda comes before the jump over the first ending.
+     */
+    it("takes a jump at the start of a measure at the barline before, where a <sound> in any part states it", async () => {
+        expect(await playedMeasures("test_repeat_jumps_at_measure_start.musicxml")).to.deep.equal([0, 1, 0, 2, 0, 3]);
+    });
 });

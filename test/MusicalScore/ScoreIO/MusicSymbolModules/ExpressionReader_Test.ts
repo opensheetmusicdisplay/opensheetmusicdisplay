@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { IXmlElement } from "../../../../src/Common/FileIO/Xml";
+import { Instrument } from "../../../../src/MusicalScore/Instrument";
 import { MusicSheet } from "../../../../src/MusicalScore/MusicSheet";
 import { MusicSheetReader } from "../../../../src/MusicalScore/ScoreIO/MusicSheetReader";
 import { DynamicEnum, InstantaneousDynamicExpression } from
@@ -10,7 +11,11 @@ import { ContDynamicEnum, ContinuousDynamicExpression } from
 import { EngravingRules } from "../../../../src/MusicalScore/Graphical/EngravingRules";
 import { PlacementEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/AbstractExpression";
 import { MultiTempoExpression, TempoExpressionEntry } from "../../../../src/MusicalScore/VoiceData/Expressions/MultiTempoExpression";
+import { UnknownExpression } from "../../../../src/MusicalScore/VoiceData/Expressions/UnknownExpression";
 import { RepetitionInstructionEnum } from "../../../../src/MusicalScore/VoiceData/Instructions/RepetitionInstruction";
+import { Fraction } from "../../../../src/Common/DataObjects/Fraction";
+import { DynamicsContainer } from "../../../../src/MusicalScore/VoiceData/HelperObjects/DynamicsContainer";
+import { MusicPartManagerIterator } from "../../../../src/MusicalScore/MusicParts/MusicPartManagerIterator";
 
 describe("ExpressionReader", () => {
     /** Reads a test/data sample (preprocessed by karma) into a MusicSheet, optionally with custom rules. */
@@ -152,6 +157,30 @@ describe("ExpressionReader", () => {
         });
     });
 
+    it("reads dynamics in a note's notations at the note, with their own placement", () => {
+        const dynamics: InstantaneousDynamicExpression[] = collectDynamics(readSheet("test/data/test_dynamics_in_notations.musicxml"));
+        expect(dynamics.map((dynamic: InstantaneousDynamicExpression): string => dynamic.DynamicExpression))
+            .to.deep.equal(["p", "f", "mf"]);
+        expect(dynamics.map((dynamic: InstantaneousDynamicExpression): number => dynamic.ParentMultiExpression.Timestamp.RealValue),
+               "the notes' timestamps, the grace note's in m2 (not the note's before it)").to.deep.equal([0.25, 0.5, 0.5]);
+        expect(dynamics.map((dynamic: InstantaneousDynamicExpression): PlacementEnum => dynamic.Placement),
+               "placement attribute of the dynamics").to.deep.equal([PlacementEnum.Below, PlacementEnum.Above, PlacementEnum.Below]);
+    });
+
+    it("places an expression without placement below a single staff without lyrics (HasLyrics only for parts with lyrics)", () => {
+        // every note set Instrument.HasLyrics, so such expressions were placed above, as on a vocal staff
+        const song: MusicSheet = readSheet("test/data/Mozart_AnChloe.xml");
+        expect(song.Instruments.map((instrument: Instrument): boolean => instrument.HasLyrics), "voice, piano").to.deep.equal([true, false]);
+        // the G.P. in m18 of this clarinet part has neither a placement attribute nor default-y
+        const sheet: MusicSheet = readSheet("test/data/test_multiple_rest_measures_with_key_signatures_1329_no_crowded_notes.musicxml");
+        expect(sheet.Instruments[0].HasLyrics).to.equal(false);
+        const generalPause: UnknownExpression = sheet.SourceMeasures
+            .flatMap((measure): MultiExpression[] => measure.StaffLinkedExpressions[0])
+            .flatMap((expression: MultiExpression): UnknownExpression[] => expression.UnknownList)
+            .find((expression: UnknownExpression): boolean => expression.Label === "G.P.");
+        expect(generalPause.Placement).to.equal(PlacementEnum.Below);
+    });
+
     describe("wedges and words with other direction-types in the same direction", () => {
         let sheet: MusicSheet;
         let wedges: ContinuousDynamicExpression[];
@@ -167,10 +196,18 @@ describe("ExpressionReader", () => {
             );
         });
 
-        it("reads words after a dynamic", () => {
+        it("reads words after a dynamic or a repetition mark", () => {
             const labels: string[] = sheet.SourceMeasures[0].StaffLinkedExpressions[0].flatMap((expression: MultiExpression): string[] =>
                 expression.EntriesList.map((entry: MultiExpressionEntry): string => entry.label));
             expect(labels).to.include("espress.");
+            expect(sheet.SourceMeasures[0].FirstRepetitionInstructions
+                .filter(instruction => instruction.type === RepetitionInstructionEnum.Segno).length).to.equal(1);
+            const tempoLabels: string[] = sheet.SourceMeasures[0].TempoExpressions.flatMap(tempo =>
+                tempo.EntriesList.map(entry => entry.label));
+            expect(tempoLabels).to.deep.equal(["Tempo I"]);
+            const last: typeof sheet.SourceMeasures[0] = sheet.SourceMeasures[3];
+            expect(last.LastRepetitionInstructions.find(instruction => instruction.type === RepetitionInstructionEnum.DaCapo)?.Words)
+                .to.equal("Da Capo bis Ende");
         });
 
         it("keeps the direction's placement for a wedge after a wedge stop or after words", () => {
@@ -185,7 +222,65 @@ describe("ExpressionReader", () => {
         });
     });
 
-    it("reads all the words of a direction, not only the first", () => {
+    it("places dynamics and wedge starts using divisions offsets without moving explicit sound changes", () => {
+        const sheet: MusicSheet = readSheet("test/data/test_dynamics_wedge_display_sound_offset.musicxml");
+        const dynamics: InstantaneousDynamicExpression[] = collectDynamics(sheet);
+        const wedges: ContinuousDynamicExpression[] = sheet.SourceMeasures.flatMap(measure =>
+            measure.StaffLinkedExpressions[0]
+                .map(expression => expression.StartingContinuousDynamic)
+                .filter(wedge => wedge !== undefined));
+        const marks: InstantaneousDynamicExpression[] = dynamics.filter(dynamic => dynamic.DynamicExpression === "p");
+        expect(marks.map(dynamic => dynamic.ParentMultiExpression.Timestamp.RealValue), "p anchors, also with default-x in m3")
+            .to.deep.equal([0.25, 0.25, 0.25]);
+        expect(wedges.map(wedge => wedge.StartMultiExpression.Timestamp.RealValue), "wedge anchors, also with default-x in m3")
+            .to.deep.equal([0.25, 0.25, 0.25]);
+        expect(wedges.map(wedge => wedge.EndMultiExpression.Timestamp.RealValue), "wedge stops keep their existing note anchor")
+            .to.deep.equal([0.75, 0.75, 0.75]);
+        for (const [index, wedge] of wedges.entries()) {
+            wedge.StartVolume = 0.2;
+            wedge.EndVolume = 0.8;
+            const midpoint: Fraction = new Fraction([0.625, 1.5, 2.5625][index], 1);
+            expect(wedge.getInterpolatedDynamic(midpoint), "interpolation uses the independent sound start in m" + (index + 1))
+                .to.be.closeTo(0.5, 1e-8);
+        }
+
+        // Reading the sheet leaves registration of playback dynamics to its consumer.
+        const timeline: DynamicsContainer[] = sheet.TimestampSortedDynamicExpressionsList;
+        for (const dynamic of dynamics) {
+            timeline.push(new DynamicsContainer(dynamic, 0));
+        }
+        timeline.sort(DynamicsContainer.Compare);
+        const iterator: MusicPartManagerIterator = sheet.MusicPartManager.getIterator();
+        const active: string[] = [];
+        const changes: number[] = [];
+        for (let i: number = 0; !iterator.EndReached && i < 12; i++) {
+            active.push((iterator.ActiveDynamicExpressions[0] as InstantaneousDynamicExpression)?.DynamicExpression);
+            changes.push(iterator.getCurrentDynamicChangingExpressions().length);
+            iterator.moveToNext();
+        }
+        expect(iterator.EndReached).to.equal(true);
+        expect(active, "default sound=no, sound=yes, then a sound-local offset")
+            .to.deep.equal(["mf", "p", "p", "mf", "p", "p", "p", "mf", "mf", "p", "p"]);
+        expect(changes, "one notification per change, including a sound change between notes")
+            .to.deep.equal([1, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0]);
+        iterator.moveToPrevious(); // last note
+        iterator.moveToPrevious(); // sound change between beats 2 and 3 has taken effect
+        expect((iterator.ActiveDynamicExpressions[0] as InstantaneousDynamicExpression).DynamicExpression).to.equal("p");
+        iterator.moveToPrevious();
+        expect((iterator.ActiveDynamicExpressions[0] as InstantaneousDynamicExpression).DynamicExpression).to.equal("mf");
+        expect((iterator.clone().ActiveDynamicExpressions[0] as InstantaneousDynamicExpression).DynamicExpression).to.equal("mf");
+    });
+
+    it("places Gounod's cresc. at its divisions offset, not scaled by the preceding half note", () => {
+        const sheet: MusicSheet = readSheet("test/data/CharlesGounod_Meditation.xml");
+        const crescendos: MultiExpression[] = sheet.SourceMeasures[19].StaffLinkedExpressions[0]
+            .filter(expression => expression.StartingContinuousDynamic?.Label === "cresc.");
+        expect(crescendos.length).to.equal(1);
+        // After a half note: 16 - 15 divisions at 8 per quarter = 1/32 of a whole note.
+        expect(crescendos[0].Timestamp.RealValue).to.equal(1 / 32);
+    });
+
+    it("reads all text fragments of a direction, not only the first", () => {
         const sheet: MusicSheet = readSheet("test/data/test_direction_words_split.musicxml");
         const tempoLabels: string[] = sheet.SourceMeasures[0].TempoExpressions.flatMap((tempo: MultiTempoExpression): string[] =>
             tempo.EntriesList.map((entry: TempoExpressionEntry): string => entry.label));
@@ -193,7 +288,21 @@ describe("ExpressionReader", () => {
             expression.EntriesList.map((entry: MultiExpressionEntry): string => entry.label));
         expect(tempoLabels, "tempo direction").to.deep.equal(["Allegro con brio"]);
         expect(textLabels, "text direction").to.deep.equal(["più f, marcato"]);
+        expect(sheet.SourceMeasures[0].rehearsalExpression.label, "rehearsal direction").to.equal("A′");
         expect(sheet.SourceMeasures[1].LastRepetitionInstructions.map(instruction => instruction.type), "repetition direction")
             .to.deep.equal([RepetitionInstructionEnum.DaCapo]);
+    });
+
+    it("puts note symbols between words into the text, stem-down ones as stem-up, but not other symbols", () => {
+        const sheet: MusicSheet = readSheet("test/data/test_words_symbols.musicxml");
+        const tempos: MultiTempoExpression[] = sheet.SourceMeasures[0].TempoExpressions;
+        expect(tempos.map((tempo: MultiTempoExpression): string => tempo.InstantaneousTempo.Label), "tempo marks, the oboe's repeated")
+            .to.deep.equal(["Fast (Straight\u266A)", "Fast (Straight\u{1D161}\u00B7)", "Fast (Straight\u266A)"]);
+        expect(tempos.slice(0, 2).map((tempo: MultiTempoExpression): number => tempo.InstantaneousTempo.TempoInBpm)).to.deep.equal([112, 160]);
+        const words: (measureIndex: number) => string[] = (measureIndex: number): string[] =>
+            sheet.SourceMeasures[measureIndex].StaffLinkedExpressions[0].flatMap((expression: MultiExpression): string[] =>
+                expression.EntriesList.map((entry: MultiExpressionEntry): string => entry.label));
+        expect(words(0), "measure 1").to.deep.equal(["(\u{1D15E})"]);
+        expect(words(1), "measure 2").to.deep.equal(["Hold (\u{1D15D}),\nthen play (\u2669) Keep going", "cresc.\u266A"]);
     });
 });

@@ -806,7 +806,7 @@ export class Beam extends Element {
   drawStems() {
     this.notes.forEach(note => {
       if (note.getStem()) {
-        this.context.openGroup('stem', note.getAttribute('id') + '-stem');
+        this.context.openGroup('stem', note.getAttribute('id') + '-stem', { mergeIntoChild: true }); // VexFlowPatch: mergeIntoChild, see SVGContext.openGroup()
         note.getStem().setContext(this.context).draw();
         this.context.closeGroup();
       }
@@ -847,7 +847,7 @@ export class Beam extends Element {
         const lastBeamY = this.getSlopeY(lastBeamX, firstStemX, beamY, this.slope);
 
         const noteSVGId = startNoteId;
-        this.context.openGroup('beam', `${noteSVGId}-beam${beamNumber}`);
+        this.context.openGroup('beam', `${noteSVGId}-beam${beamNumber}`, { mergeIntoChild: true }); // VexFlowPatch: mergeIntoChild
         this.context.beginPath();
         this.context.moveTo(startBeamX, startBeamY);
         this.context.lineTo(startBeamX, startBeamY + beamThickness);

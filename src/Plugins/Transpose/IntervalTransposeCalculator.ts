@@ -29,11 +29,24 @@ interface SpelledPitch {
  * etc. is unchanged. If the interval would need more than a double sharp/flat, or the pitch has a microtonal
  * accidental, the default calculator is used for that note.
  *
+ * Chord symbols are spelled more simply by default (SimpleChordSymbolSpelling): a root or bass that the interval
+ * would spell with a double sharp/flat or as Fb, Cb, E# or B# is spelled like the default calculator does,
+ * e.g. Ebmaj7 in D major transposed by +1 (Eb major) is Emaj7, not Fbmaj7, as lead sheet readers expect.
+ *
  * Opt-in, like the default calculator:
  *   osmd.TransposeCalculator = new IntervalTransposeCalculator();
  *   osmd.Sheet.Transpose = -2;
  */
 export class IntervalTransposeCalculator implements ITransposeCalculator {
+    /** Spell a chord symbol root or bass that the interval would spell with a double sharp/flat or as Fb, Cb, E# or B#
+     * like the default calculator does, e.g. Ebmaj7 in D major transposed by +1 as Emaj7 instead of Fbmaj7.
+     * The notes keep their interval spelling. Default: true. */
+    public SimpleChordSymbolSpelling: boolean = true;
+    /** Spell a note or chord symbol that the interval would spell with a double sharp/flat like the default calculator does instead,
+     * e.g. Ab in C major transposed by +1 (Db major) as A instead of Bbb.
+     * Default: false, i.e. double sharps/flats are used (like MuseScore with "Use double sharps and flats"). */
+    public AvoidDoubleAccidentals: boolean = false;
+
     /** Letters C D E F G A B by letter index. */
     private static readonly letters: NoteEnum[] = [NoteEnum.C, NoteEnum.D, NoteEnum.E, NoteEnum.F, NoteEnum.G, NoteEnum.A, NoteEnum.B];
     /** Letter index of the major tonic for key signatures -7..7: Cb Gb Db Ab Eb Bb F C G D A E B F# C#. */
@@ -50,7 +63,19 @@ export class IntervalTransposeCalculator implements ITransposeCalculator {
         this.fallback.transposeKey(keyInstruction, transpose);
     }
 
-    public transposePitch(pitch: Pitch, currentKeyInstruction: KeyInstruction, halftones: number): Pitch {
+    /** @param chordSymbol true for the root or bass of a chord symbol, which is spelled simply if SimpleChordSymbolSpelling is set */
+    public transposePitch(pitch: Pitch, currentKeyInstruction: KeyInstruction, halftones: number, chordSymbol: boolean = false): Pitch {
+        if (chordSymbol) {
+            return this.transposeByInterval(pitch, currentKeyInstruction, halftones,
+                this.SimpleChordSymbolSpelling || this.AvoidDoubleAccidentals, this.SimpleChordSymbolSpelling);
+        }
+        return this.transposeByInterval(pitch, currentKeyInstruction, halftones, this.AvoidDoubleAccidentals, false);
+    }
+
+    /** Transposes by interval, or like the default calculator if the interval spelling isn't wanted:
+     * a double sharp/flat (avoidDoubleAccidentals), or a sharp/flat that sounds like a natural (avoidWhiteKeyAccidentals: Fb, Cb, E#, B#). */
+    private transposeByInterval(pitch: Pitch, currentKeyInstruction: KeyInstruction, halftones: number,
+                                avoidDoubleAccidentals: boolean, avoidWhiteKeyAccidentals: boolean): Pitch {
         if (halftones === 0) {
             return pitch;
         }
@@ -65,10 +90,18 @@ export class IntervalTransposeCalculator implements ITransposeCalculator {
         const steps: number = IntervalTransposeCalculator.letterSteps(transposedKey.keyTypeOriginal, transposedKey.Key, halftones);
         const spelled: SpelledPitch = IntervalTransposeCalculator.spell(
             {letter: letter, octave: pitch.Octave, alter: Pitch.HalfTonesFromAccidental(pitch.Accidental)}, halftones, steps);
-        if (!spelled) {
+        if (!spelled ||
+            (avoidDoubleAccidentals && Math.abs(spelled.alter) === 2) ||
+            (avoidWhiteKeyAccidentals && spelled.alter !== 0 && IntervalTransposeCalculator.isWhiteKey(spelled))) {
             return this.fallback.transposePitch(pitch, currentKeyInstruction, halftones);
         }
         return new Pitch(IntervalTransposeCalculator.letters[spelled.letter], spelled.octave, Pitch.AccidentalFromHalfTones(spelled.alter));
+    }
+
+    /** Whether the spelled pitch sounds like a natural, e.g. Fb (E), Cb (B), E# (F), B# (C). */
+    private static isWhiteKey(pitch: SpelledPitch): boolean {
+        const halftone: number = (((IntervalTransposeCalculator.letters[pitch.letter] + pitch.alter) % 12) + 12) % 12;
+        return IntervalTransposeCalculator.letters.indexOf(halftone) >= 0;
     }
 
     /** The number of letter steps to move every note by, for a transposition by the given halftones

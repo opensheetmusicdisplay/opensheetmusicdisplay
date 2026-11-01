@@ -30,6 +30,62 @@ const attrNamesToIgnoreMap = {
   Vex.Merge(attrNamesToIgnoreMap.path, fontAttrNamesToIgnore);
 }
 
+// VexFlowPatch: the SVG defaults of the style attributes written on every shape, the values a shape has without them.
+//   An attribute with its default value is left out (see isInheritedStyle()), and the root <svg> sets these values as its
+//   style: so the shapes keep them when a page's CSS sets one of these properties for the SVG or a container around it,
+//   e.g. `svg { fill: currentColor }`, which the shapes' own attributes overrode before.
+const svgDefaultStyle = {
+  'fill': '#000000',
+  'stroke': 'none',
+  'stroke-width': '1',
+  'stroke-dasharray': 'none',
+};
+const svgDefaultStyleText = Object.keys(svgDefaultStyle).map(name => name + ': ' + svgDefaultStyle[name]).join('; ');
+
+/**
+ * VexFlowPatch: Whether a style attribute only repeats the value that its shape inherits: its SVG default (see
+ * svgDefaultStyle), e.g. stroke-dasharray="none" on every shape, and fill="#000000" and stroke="none" on every glyph: such
+ * attributes were about a third of an SVG's attributes. A shape without the attribute inherits the same value from the
+ * root <svg>, or from a group around it that sets the attribute (see SVGContext.openGroup() with attrs.strokeStyle).
+ *
+ * @param {Object<string, string>} inheritedStyle The style attributes that the shape inherits (see SVGContext.groupsStyle).
+ * @param {string} name The attribute's name.
+ * @param {string|number} value The attribute's value.
+ * @returns {boolean} Whether the value is the inherited one, so that the attribute can be left out.
+ */
+function isInheritedStyle(inheritedStyle, name, value) {
+  const inheritedValue = inheritedStyle[name];
+  return inheritedValue !== undefined && String(value) === inheritedValue;
+}
+
+// VexFlowPatch: the shortest decimal endings of 0 to 99 hundredths ('', '.05', '.5', '.54', ...), for roundCoordinate()
+const hundredthsTexts = [];
+for (let hundredths = 0; hundredths < 100; hundredths++) {
+  hundredthsTexts.push(hundredths === 0 ? '' :
+    hundredths % 10 === 0 ? '.' + hundredths / 10 : '.' + (hundredths < 10 ? '0' + hundredths : hundredths));
+}
+
+/**
+ * VexFlowPatch: Rounds a coordinate of path data to 2 decimals, e.g. 633.5434477499999 to "633.54". VexFlow wrote the
+ * coordinates as JavaScript prints doubles (14 characters on average), so rounded, the path data takes about half the
+ * memory and the file size, and the drawing moves by at most 0.005 px at zoom 1.
+ * The text is the same as String(Math.round(value * 100) / 100), but formatted from integers, the whole part and the
+ * hundredths: converting the rounded double to a string takes about 4 times as long.
+ *
+ * @param {number} value The coordinate.
+ * @returns {string} The coordinate rounded to 2 decimals, without trailing zeros ('NaN' for NaN, 'Infinity' for Infinity).
+ */
+function roundCoordinate(value) {
+  const hundredths = Math.round(value * 100);
+  const negative = hundredths < 0;
+  const absolute = negative ? -hundredths : hundredths;
+  if (!(absolute < 2147483648)) {
+    return '' + hundredths / 100; // NaN, Infinity, and values too big for the integer operations below
+  }
+  const whole = (absolute / 100) | 0;
+  return (negative ? '-' : '') + whole + hundredthsTexts[absolute - whole * 100];
+}
+
 export class SVGContext {
   constructor(element) {
     // element is the parent DOM object
@@ -37,13 +93,27 @@ export class SVGContext {
     // Create the SVG in the SVG namespace:
     this.svgNS = 'http://www.w3.org/2000/svg';
     const svg = this.create('svg');
+    // VexFlowPatch: the SVG defaults that the shapes' style attributes leave out (see isInheritedStyle())
+    svg.setAttribute('style', svgDefaultStyleText);
     // Add it to the canvas:
     this.element.appendChild(svg);
 
     // Point to it:
     this.svg = svg;
     this.groups = [this.svg]; // Create the group stack
+    // VexFlowPatch: for each group of the stack, whether its pointer events are on the bounding box, its own or inherited:
+    //   pointer-events is inherited, so it's only written on the outermost group with attrs.pointerBBox (see openGroup())
+    this.groupsPointerBBox = [false];
+    // VexFlowPatch: for each group of the stack, the style attributes that its shapes inherit and leave out (see
+    //   isInheritedStyle()): the SVG defaults, which the root <svg> sets, with those of groups opened with attrs.strokeStyle
+    this.groupsStyle = [svgDefaultStyle];
     this.parent = this.svg;
+    // VexFlowPatch: whether a group opened with attrs.mergeIntoChild is merged into its only element, see openGroup().
+    //   Set by OSMD (EngravingRules.SVGMergeSingleChildGroups).
+    this.mergeSingleChildGroups = false;
+    // VexFlowPatch: the innermost open group while it has no element of its own: { cls, id, attrs, merge, child }
+    //   (see openGroup())
+    this.pendingGroup = undefined;
 
     this.path = '';
     this.pen = { x: NaN, y: NaN };
@@ -92,8 +162,33 @@ export class SVGContext {
     return document.createElementNS(this.svgNS, svgElementType);
   }
 
-  // Allow grouping elements in containers for interactivity.
+  /**
+   * Opens a group: the elements drawn until closeGroup() go into it (allows grouping elements in containers for interactivity).
+   * VexFlowPatch: a group opened with attrs.omitIfEmpty (a note's modifiers, a barline, a tuplet) is only written once something
+   * is drawn into it, so a note without accidentals, dots etc. has no empty group for them. With attrs.mergeIntoChild (a note's
+   * head, stem and flag, a beam, a barline, a tuplet) and mergeSingleChildGroups set, the group is only written if it gets more
+   * than one element: an only element gets the group's class, id and pointer-events instead, e.g. `<path class="vf-notehead">`
+   * instead of `<g class="vf-notehead"><path>`. These groups were about a quarter of the elements, which take most of a score's
+   * memory.
+   * A group opened with attrs.strokeStyle (a stave's lines, see stave.js) gets the style that stroke() would give each line
+   * drawn into it, e.g. fill="none" stroke="#000000", which the lines inherit and leave out: so the group's style colors them,
+   * e.g. its stroke attribute or a CSS rule for its class.
+   *
+   * @param {string} cls The group's class, prefixed with "vf-".
+   * @param {string} id The group's id, prefixed with "vf-".
+   * @param {{pointerBBox: boolean, omitIfEmpty: boolean, mergeIntoChild: boolean, strokeStyle: boolean}} attrs pointerBBox:
+   *   pointer events on the group's bounding box.
+   * @returns {SVGGElement} The group, or undefined for a group with omitIfEmpty or mergeIntoChild (written when needed).
+   */
   openGroup(cls, id, attrs) {
+    if (this.pendingGroup) {
+      this.createPendingGroup(); // VexFlowPatch: a group inside it, so the pending group needs its own element
+    }
+    const merge = Boolean(attrs && attrs.mergeIntoChild && this.mergeSingleChildGroups);
+    if (merge || (attrs && attrs.omitIfEmpty)) {
+      this.pendingGroup = { cls, id, attrs, merge, child: undefined };
+      return undefined;
+    }
     const group = this.create('g');
     this.groups.push(group);
     this.parent.appendChild(group);
@@ -101,18 +196,92 @@ export class SVGContext {
     if (cls) group.setAttribute('class', Vex.Prefix(cls));
     if (id) group.setAttribute('id', Vex.Prefix(id));
 
-    if (attrs && attrs.pointerBBox) {
+    // VexFlowPatch: not inside a group that has it, e.g. a chord's noteheads in their note's group: inherited
+    const inheritedPointerBBox = this.groupsPointerBBox[this.groupsPointerBBox.length - 1];
+    if (attrs && attrs.pointerBBox && !inheritedPointerBBox) {
       group.setAttribute('pointer-events', 'bounding-box');
     }
+    this.groupsPointerBBox.push(inheritedPointerBBox || Boolean(attrs && attrs.pointerBBox));
+    // VexFlowPatch: the style that the group's shapes inherit
+    const inheritedStyle = this.groupsStyle[this.groupsStyle.length - 1];
+    this.groupsStyle.push(attrs && attrs.strokeStyle ? this.setGroupStrokeStyle(group, inheritedStyle) : inheritedStyle);
     return group;
   }
 
+  /**
+   * VexFlowPatch: Sets the style that stroke() gives a line on a group of lines (see openGroup() with attrs.strokeStyle): the
+   * context's style attributes with fill "none" and the line width, except those with the value the group inherits.
+   *
+   * @param {SVGGElement} group The group.
+   * @param {Object<string, string>} inheritedStyle The style attributes that the group inherits.
+   * @returns {Object<string, string>} The style attributes that the group's shapes inherit: the inherited ones and the group's.
+   */
+  setGroupStrokeStyle(group, inheritedStyle) {
+    const style = Object.assign({}, inheritedStyle);
+    const attrNamesToIgnore = attrNamesToIgnoreMap.path;
+    for (const name in this.attributes) {
+      if (attrNamesToIgnore[name]) {
+        continue; // the font, which a path doesn't get either (see setPathAttributes())
+      }
+      const value = String(name === 'fill' ? 'none' : name === 'stroke-width' ? this.lineWidth : this.attributes[name]);
+      if (value !== style[name]) {
+        group.setAttribute(name, value);
+        style[name] = value;
+      }
+    }
+    return style;
+  }
+
+  // VexFlowPatch: writes the element of the pending group (see openGroup()), around its first element if it has one
+  createPendingGroup() {
+    const { cls, id, attrs, child } = this.pendingGroup;
+    this.pendingGroup = undefined;
+    const group = this.openGroup(cls, id, { pointerBBox: attrs.pointerBBox });
+    if (child) {
+      group.appendChild(child); // the child was the parent's last element, right before the group
+    }
+  }
+
   closeGroup() {
+    const pending = this.pendingGroup;
+    if (pending) {
+      // VexFlowPatch: a group without an element of its own (see openGroup()): nothing was drawn into it, or one element
+      //   to merge it into, which gets the group's class, id and pointer-events
+      this.pendingGroup = undefined;
+      const child = pending.child;
+      if (child) {
+        if (pending.cls) {
+          const cls = Vex.Prefix(pending.cls);
+          const childClass = child.getAttribute('class');
+          if (childClass !== cls) {
+            child.setAttribute('class', childClass ? cls + ' ' + childClass : cls);
+          }
+        }
+        if (pending.id) {
+          // e.g. a beamed note's stem: the path's id ends with -stem0, the group's with -stem (GraphicalNote.getStemSVG())
+          child.setAttribute('id', Vex.Prefix(pending.id));
+        }
+        if (pending.attrs.pointerBBox && !this.groupsPointerBBox[this.groupsPointerBBox.length - 1]) {
+          child.setAttribute('pointer-events', 'bounding-box'); // unless inherited, e.g. from the note's group
+        }
+      }
+      return;
+    }
     this.groups.pop();
+    this.groupsPointerBBox.pop();
+    this.groupsStyle.pop();
     this.parent = this.groups[this.groups.length - 1];
   }
 
   add(elem) {
+    const pending = this.pendingGroup;
+    if (pending) { // VexFlowPatch: see openGroup()
+      if (pending.merge && !pending.child) {
+        pending.child = elem; // stays without the group if it remains the only element
+      } else {
+        this.createPendingGroup(); // the group is written after all, around the first element if one was kept
+      }
+    }
     this.parent.appendChild(elem);
   }
 
@@ -302,14 +471,17 @@ export class SVGContext {
     // Every drawn SVG element passes through here, and setAttributeNS is slower in browsers (it validates the qualified
     // name for a namespace). For these unprefixed names on new SVG elements (no lowercasing outside the HTML namespace)
     // both create the same attributes in the same order, so the SVG output is unchanged.
+    // Leaves out the style attributes that only repeat the inherited value, e.g. the SVG default (see isInheritedStyle()).
     const attrNamesToIgnore = attrNamesToIgnoreMap[element.nodeName];
+    const inheritedStyle = this.groupsStyle[this.groupsStyle.length - 1];
     const propertyNames = Object.keys(attributes);
     for (let i = 0; i < propertyNames.length; i++) {
       const propertyName = propertyNames[i];
-      if (attrNamesToIgnore && attrNamesToIgnore[propertyName]) {
+      const value = attributes[propertyName];
+      if ((attrNamesToIgnore && attrNamesToIgnore[propertyName]) || isInheritedStyle(inheritedStyle, propertyName, value)) {
         continue;
       }
-      element.setAttribute(propertyName, attributes[propertyName]);
+      element.setAttribute(propertyName, value);
     }
 
     return element;
@@ -401,6 +573,20 @@ export class SVGContext {
 
   // ## Paths:
 
+  // VexFlowPatch: the current path is collected in parts (pathParts) and joined when it is read. Appending to one string
+  // (this.path +=) made a chain of small strings (a rope) per path, which jsdom keeps as the attribute value: about 5 times
+  // the memory of the path data itself.
+  get path() {
+    if (this.pathParts.length !== 1) {
+      this.pathParts = [this.pathParts.join('')];
+    }
+    return this.pathParts[0];
+  }
+
+  set path(value) {
+    this.pathParts = [value];
+  }
+
   beginPath() {
     this.path = '';
     this.pen.x = NaN;
@@ -410,38 +596,38 @@ export class SVGContext {
   }
 
   moveTo(x, y) {
-    this.path += 'M' + x + ' ' + y;
+    this.pathParts.push('M' + roundCoordinate(x) + ' ' + roundCoordinate(y));
     this.pen.x = x;
     this.pen.y = y;
     return this;
   }
 
   lineTo(x, y) {
-    this.path += 'L' + x + ' ' + y;
+    this.pathParts.push('L' + roundCoordinate(x) + ' ' + roundCoordinate(y));
     this.pen.x = x;
     this.pen.y = y;
     return this;
   }
 
   bezierCurveTo(x1, y1, x2, y2, x, y) {
-    this.path += 'C' +
-      x1 + ' ' +
-      y1 + ',' +
-      x2 + ' ' +
-      y2 + ',' +
-      x + ' ' +
-      y;
+    this.pathParts.push('C' +
+      roundCoordinate(x1) + ' ' +
+      roundCoordinate(y1) + ',' +
+      roundCoordinate(x2) + ' ' +
+      roundCoordinate(y2) + ',' +
+      roundCoordinate(x) + ' ' +
+      roundCoordinate(y));
     this.pen.x = x;
     this.pen.y = y;
     return this;
   }
 
   quadraticCurveTo(x1, y1, x, y) {
-    this.path += 'Q' +
-      x1 + ' ' +
-      y1 + ',' +
-      x + ' ' +
-      y;
+    this.pathParts.push('Q' +
+      roundCoordinate(x1) + ' ' +
+      roundCoordinate(y1) + ',' +
+      roundCoordinate(x) + ' ' +
+      roundCoordinate(y));
     this.pen.x = x;
     this.pen.y = y;
     return this;
@@ -500,16 +686,16 @@ export class SVGContext {
       largeArcFlag = 1;
     }
 
-    this.path += 'M' + x1 + ' ' + y1 + ' A' +
-      radius + ' ' + radius + ' 0 ' + largeArcFlag + ' ' + sweepFlag + ' ' +
-      x2 + ' ' + y2;
+    this.pathParts.push('M' + roundCoordinate(x1) + ' ' + roundCoordinate(y1) + ' A' +
+      roundCoordinate(radius) + ' ' + roundCoordinate(radius) + ' 0 ' + largeArcFlag + ' ' + sweepFlag + ' ' +
+      roundCoordinate(x2) + ' ' + roundCoordinate(y2));
     if (!isNaN(this.pen.x) && !isNaN(this.pen.y)) {
       this.peth += 'M' + this.pen.x + ' ' + this.pen.y;
     }
   }
 
   closePath() {
-    this.path += 'Z';
+    this.pathParts.push('Z');
 
     return this;
   }
@@ -599,9 +785,10 @@ export class SVGContext {
   // path as "d", in the order that copying them into a new object first gave (Vex.Merge() into {}, then assigning the
   // replacements and "d", then applyAttributes()): the for...in order of the context's attributes (like Vex.Merge()),
   // followed by the replaced attributes and "d" that the context's attributes don't have. Skips the attributes that
-  // applyAttributes() ignores for paths.
+  // applyAttributes() ignores for paths, and those with the value the path inherits (see isInheritedStyle()).
   setPathAttributes(path, name1, value1, name2, value2) {
     const attrNamesToIgnore = attrNamesToIgnoreMap.path;
+    const inheritedStyle = this.groupsStyle[this.groupsStyle.length - 1];
     const attributes = this.attributes;
     let has1 = false;
     let has2 = false;
@@ -618,14 +805,14 @@ export class SVGContext {
         hasD = true;
         value = this.path;
       }
-      if (!attrNamesToIgnore[name]) {
+      if (!attrNamesToIgnore[name] && !isInheritedStyle(inheritedStyle, name, value)) {
         path.setAttribute(name, value);
       }
     }
-    if (!has1) {
+    if (!has1 && !isInheritedStyle(inheritedStyle, name1, value1)) {
       path.setAttribute(name1, value1);
     }
-    if (name2 !== undefined && !has2) {
+    if (name2 !== undefined && !has2 && !isInheritedStyle(inheritedStyle, name2, value2)) {
       path.setAttribute(name2, value2);
     }
     if (!hasD) {

@@ -39,6 +39,7 @@ export class LyricsReader {
                                 }
                             }
                             text = text.replace("  ", " "); // filter multiple spaces from concatenating e.g. text "a " with elision " "
+                            text = text.replace(/\n+$/, ""); // a line break at the end isn't followed by a further line of text
                             // <elision> separates Multiple syllabels on a single LyricNote
                             // "-" text indicating separated syllabel should be ignored
                             // we calculate the Dash element much later
@@ -110,6 +111,7 @@ export class LyricsReader {
                             }
                             // add each LyricEntry to currentVoiceEntry
                             if (lyricsEntry) {
+                                lyricsEntry.syllabic = syllabic;
                                 lyricsEntry.language = this.readLanguage(lyricNode, currentLyricVerseNumber);
                                 // only add the lyric entry if not another entry has already been given:
                                 if (!currentVoiceEntry.LyricsEntries[currentLyricVerseNumber]) {

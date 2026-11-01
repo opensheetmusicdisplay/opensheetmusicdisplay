@@ -59,9 +59,10 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
         const measureNode: SVGGElement = ctx.openGroup() as SVGGElement;
         if (measureNode) {
             measureNode.classList?.add("vf-measure");
-            measureNode.classList?.add("multi");
-            measureNode.id = `${this.MeasureNumber}`;
+            measureNode.classList?.add("osmd-multi");
+            measureNode.id = this.getSVGGElementId();
         }
+        this.svgGElement = measureNode; // undefined with the canvas backend
 
         // Draw stave lines
         this.stave.setContext(ctx).draw();
@@ -70,14 +71,15 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
         this.multiRestElement.setStave(this.stave);
         this.multiRestElement.setContext(ctx);
         this.multiRestElement.draw();
-        this.multiRestElement.id = `vf-multi${this.MeasureNumber}`;
         ctx.closeGroup();
 
         ctx.closeGroup();
 
         // Draw vertical lines
         for (const connector of this.connectors) {
+            ctx.openGroup("connector"); // like VexFlowMeasure.draw()
             connector.setContext(ctx).draw();
+            ctx.closeGroup();
         }
     }
 

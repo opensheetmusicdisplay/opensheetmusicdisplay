@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <!--
+    Regression sample for staggering the middle note of three voices.
+    The left hand of Schumann's Traeumerei (Kinderszenen op. 15 no. 7), m.23 beat 2, on one staff.
+    The voices are not numbered by pitch: voice 1 is the upper (C4), voice 2 the lower (C3),
+    voice 3 the middle (Bb3, a second below C4). The Bb3 collides with the C4 and has to be
+    staggered, whatever its voice number.
+  -->
+  <part-list>
+    <score-part id="P1"><part-name>Piano</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <key><fifths>-1</fifths></key>
+        <time><beats>2</beats><beat-type>4</beat-type></time>
+        <clef><sign>F</sign><line>4</line></clef>
+      </attributes>
+
+      <!-- Voice 1 (upper): C4 -->
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>half</type><stem>up</stem></note>
+
+      <backup><duration>4</duration></backup>
+
+      <!-- Voice 2 (lower): C3 -->
+      <note><pitch><step>C</step><octave>3</octave></pitch><duration>4</duration><voice>2</voice><type>half</type><stem>down</stem></note>
+
+      <backup><duration>4</duration></backup>
+
+      <!-- Voice 3 (middle): Bb3, a second below the upper voice -->
+      <note><pitch><step>B</step><alter>-1</alter><octave>3</octave></pitch><duration>1</duration><voice>3</voice><type>eighth</type><stem>up</stem><beam number="1">begin</beam></note>
+      <note><pitch><step>A</step><octave>3</octave></pitch><duration>1</duration><voice>3</voice><type>eighth</type><stem>up</stem><beam number="1">end</beam></note>
+      <note><pitch><step>G</step><octave>3</octave></pitch><duration>2</duration><voice>3</voice><type>quarter</type><stem>up</stem></note>
+    </measure>
+  </part>
+</score-partwise>

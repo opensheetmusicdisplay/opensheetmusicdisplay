@@ -126,6 +126,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      * By default, this will also hide the note's slurs, ties and glissandi, e.g. slides (see visibilityOptions).
      * (This only works with the default SVG backend, not with the Canvas backend/renderer)
      * To get a GraphicalNote from a Note, use osmd.EngravingRules.GNote(note).
+     * To check whether a note is visible, e.g. after setVisible(false), use isVisible().
      */
     public setVisible(visible: boolean, visibilityOptions: VisibilityOptions = {}): void {
         const applyToBeams: boolean = visibilityOptions.applyToBeams ?? true; // default option if not given
@@ -139,8 +140,17 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         const visibilityAttribute: string = "visibility";
         const visibilityString: string = visible ? "visible" : "hidden";
         if (applyToNotehead) {
+            const noteSVG: SVGGElement = this.getSVGGElement();
+            if (!applyToStem) {
+                // the stem of a note without a beam is drawn in the note's group (a beam draws the stems of its notes),
+                //   so it would be hidden with it: give it its own visibility, the one it has now, to keep it as it is.
+                const stemSVG: HTMLElement = this.getStemSVG();
+                if (noteSVG?.contains(stemSVG) && !stemSVG.hasAttribute(visibilityAttribute)) {
+                    stemSVG.setAttribute(visibilityAttribute, noteSVG.getAttribute(visibilityAttribute) === "hidden" ? "hidden" : "visible");
+                }
+            }
             // so that it also matches undefined (option not set).
-            this.getSVGGElement()?.setAttribute(visibilityAttribute, visibilityString);
+            noteSVG?.setAttribute(visibilityAttribute, visibilityString);
         }
         // instead of setAttribute, remove() also works, but isn't reversible.
         if (applyToStem) {
@@ -191,6 +201,15 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         // this currently also still leaves ledger lines visible.
     }
 
+    /** Whether the note is visible: false after setVisible(false), which hides its notehead (unless
+     * VisibilityOptions.applyToNotehead is false), and for a note hidden in the score, e.g. by print-object="no" (see Note.isVisible()).
+     * Like setVisible(), this works on the drawn SVG: a new render draws the notes hidden with setVisible() visible again.
+     * It's true for a note that isn't drawn at all, e.g. of a hidden instrument (Instrument.Visible false).
+     */
+    public isVisible(): boolean {
+        return super.isVisible() && this.getSVGGElement()?.getAttribute("visibility") !== "hidden";
+    }
+
     /**
      * Gets the SVGGElement containing this note, given the SVGRenderer is used.
      * This is for low-level rendering hacks and should be used with caution.
@@ -202,24 +221,84 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         return this.vfnote[0].getAttribute("el");
     }
 
+    /**
+     * Gets the SVG group of the measure the note is drawn in (see GraphicalMeasure.getSVGGElement()). Besides the note's group,
+     * it holds the note's ledger lines, which are drawn before the group, and a beam with the stems of its notes, drawn after
+     * them (see VexFlowMeasure.drawNotes()).
+     */
+    private getMeasureSVGGElement(): SVGGElement {
+        return this.parentVoiceEntry?.parentStaffEntry?.parentMeasure?.getSVGGElement();
+    }
+
+    /**
+     * Gets the element the note's sheet is drawn in: the OSMD container, which holds each page's SVG in a div (see
+     * SvgVexFlowBackend.initialize()), e.g. both parts of a tie across a page break.
+     * @returns the container, undefined if the note isn't drawn in an SVG, e.g. with the canvas backend
+     */
+    private getSheetContainer(): Element {
+        return this.getSVGGElement()?.ownerSVGElement?.parentElement?.parentElement;
+    }
+
+    /**
+     * Gets the first element with the given id in the scope, a part of the note's drawing, e.g. its measure's group.
+     * Searched in the scope, not the document: the document doesn't contain a sheet drawn in a shadow root (e.g. by a web
+     * component) or in a container that isn't attached to it, and its first element with the id can be another sheet's,
+     * e.g. of a sheet drawn by another OSMD bundle on the page (each bundle's Vexflow numbers the notes it creates from 1000).
+     * The id map of the document or shadow root the drawing is in answers first: when no element has the id (e.g. for a note
+     * without ledger lines), and when its first element with the id is in the scope. Otherwise the scope is searched, with
+     * an attribute selector: jsdom (29) finds nothing for "#id" when the root's first element with the id is outside the scope.
+     * @returns the element, null if there is none, undefined without a scope (e.g. with the canvas backend)
+     */
+    private static getSVGElementById(scope: Element, id: string): HTMLElement {
+        if (!scope) {
+            return undefined;
+        }
+        // undefined outside a document or shadow root: the root is then an element, without getElementById()
+        const element: HTMLElement = (scope.getRootNode() as Document | ShadowRoot).getElementById?.(id) as HTMLElement;
+        if (element === null) {
+            return null;
+        }
+        if (element && scope.contains(element)) {
+            return element;
+        }
+        return scope.querySelector<HTMLElement>(`[id="${id}"]`);
+    }
+
+    /**
+     * Gets the elements with the given id in the scope, e.g. the parts of a tie across a system break, which have the tie's id.
+     * Like getSVGElementById(), the id map of the drawing's root answers when no element has the id, e.g. for a note without
+     * a tie. Otherwise the scope is searched with an id selector, which browsers answer from their id maps too (Firefox searches
+     * the whole scope for an attribute selector). The ids are Vexflow's, e.g. "vf-auto1234-tie", valid in a selector.
+     * @returns the elements, none without a scope (e.g. with the canvas backend)
+     */
+    private static getSVGElementsById(scope: Element, id: string): HTMLElement[] {
+        if (!scope || (scope.getRootNode() as Document | ShadowRoot).getElementById?.(id) === null) {
+            return [];
+        }
+        return Array.from(scope.querySelectorAll<HTMLElement>(`#${id}`));
+    }
+
     /** Gets the SVG path element of the note's stem. */
     public getStemSVG(): HTMLElement {
-        const groupOrPath: HTMLElement = document.getElementById("vf-" + this.getSVGId() + "-stem");
-        // whether we get the group node or path node depends on whether the note has a beam, for some reason (TODO)
+        // the stem of a note without a beam is in the note's group, a beam's stems are next to the beam: both in the measure's group
+        const groupOrPath: HTMLElement = VexFlowGraphicalNote.getSVGElementById(this.getMeasureSVGGElement(), `vf-${this.getSVGId()}-stem`);
+        // the group node with EngravingRules.SVGMergeSingleChildGroups false and a beam (which draws the stems in groups
+        //   with this id), otherwise the path node
         if (groupOrPath?.children.length > 0) {
             return groupOrPath.children[0] as HTMLElement;
             // We want to return the same type of node every time, not a path node if no beam and a group node if it has a beam.
         }
         return groupOrPath;
-        // more correct, but Vex.Prefix() is not in the definitions:
-        //return document.getElementById((Vex as any).Prefix(this.getSVGId() + "-stem"));
+        // more correct than "vf-" for the id, but Vex.Prefix() is not in the definitions: (Vex as any).Prefix(this.getSVGId() + "-stem")
     }
 
-    /** Gets the SVG path elements of the beams starting on this note. */
+    /** Gets the SVG elements of the beams starting on this note: each beam's path, or with
+     *  EngravingRules.SVGMergeSingleChildGroups false, each beam's group (with the path). */
     public getBeamSVGs(): HTMLElement[] {
         const beamSVGs: HTMLElement[] = [];
+        const measureSVG: SVGGElement = this.getMeasureSVGGElement();
         for (let i: number = 0;; i++) {
-            const newSVG: HTMLElement = document.getElementById(`vf-${this.getSVGId()}-beam${i}`);
+            const newSVG: HTMLElement = VexFlowGraphicalNote.getSVGElementById(measureSVG, `vf-${this.getSVGId()}-beam${i}`);
             if (!newSVG) {
                 break;
             }
@@ -232,7 +311,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     public getLedgerLineSVGs(): HTMLElement[] {
         const ledgerSVGs: HTMLElement[] = [];
         const idString: string = `vf-${this.getSVGId()}ledgers`;
-        const groupSVG: HTMLElement = document.getElementById(idString);
+        const groupSVG: HTMLElement = VexFlowGraphicalNote.getSVGElementById(this.getMeasureSVGGElement(), idString);
         if (!groupSVG) {
             return [];
         }
@@ -250,7 +329,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         if (!svgId) {
             return tieSVGs; // no Vexflow note, e.g. in a multi-rest measure
         }
-        const ties: NodeListOf<HTMLElement> = document.querySelectorAll(`[id='vf-${svgId}-tie']`);
+        const ties: HTMLElement[] = VexFlowGraphicalNote.getSVGElementsById(this.getSheetContainer(), `vf-${svgId}-tie`);
         // TODO multiple ties have the same id sometimes, DOM elements are not supposed to have the same id, this is invalid HTML. But it works.
         for (const tie of ties) {
             tieSVGs.push(tie);
@@ -261,7 +340,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     /** Gets the SVG path elements of the note's slur curve. */
     public getSlurSVGs(): HTMLElement[] {
         const slurSVGs: HTMLElement[] = [];
-        const slurs: NodeListOf<HTMLElement> = document.querySelectorAll(`[id='vf-${this.getSVGId()}-slur']`);
+        const slurs: HTMLElement[] = VexFlowGraphicalNote.getSVGElementsById(this.getSheetContainer(), `vf-${this.getSVGId()}-slur`);
         // TODO multiple slurs have the same id sometimes, DOM elements are not supposed to have the same id, this is invalid HTML. But it works.
         for (const slur of slurs) {
             slurSVGs.push(slur);
@@ -273,7 +352,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      *  A glissando across a system break has a group in each system (see VexFlowMusicSheetDrawer.drawGlissando()). */
     public getGlissandoSVGs(): HTMLElement[] {
         const glissandoSVGs: HTMLElement[] = [];
-        const glissandi: NodeListOf<HTMLElement> = document.querySelectorAll(`[id='vf-${this.getSVGId()}-glissando']`);
+        const glissandi: HTMLElement[] = VexFlowGraphicalNote.getSVGElementsById(this.getSheetContainer(), `vf-${this.getSVGId()}-glissando`);
         // like the slurs, the two groups of a glissando across a system break have the same id.
         for (const glissando of glissandi) {
             glissandoSVGs.push(glissando);
@@ -281,7 +360,8 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         return glissandoSVGs;
     }
 
-    /** Gets the SVG elements of the note heads, e.g. the paths of a chord's heads, or the fret numbers of a TAB note (and its chord). */
+    /** Gets the SVG elements of the note heads, e.g. the paths of a chord's heads (with EngravingRules.SVGMergeSingleChildGroups
+     *  false: each head's group), or the fret numbers of a TAB note (and its chord). */
     public getNoteheadSVGs(): HTMLElement[] {
         if (this.isTabNote) {
             return this.getTabNoteSVGs().frets;
@@ -298,6 +378,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         return noteheads;
     }
 
+    /** Gets the SVG element of the note's flag: its path, or with EngravingRules.SVGMergeSingleChildGroups false, its group. */
     public getFlagSVG(): HTMLElement {
         const vfNote: HTMLElement = this.getVFNoteSVG();
         if (vfNote?.children?.length) {
@@ -326,8 +407,8 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         return undefined;
     }
 
-    /** Gets the SVG elements of the note's modifiers: the groups of a stave note's modifiers (e.g. accidentals),
-     *  or the shapes of a TAB note's modifiers (e.g. a bend's curve, arrow and label). */
+    /** Gets the SVG elements of the note's modifiers: the groups of a stave note's modifiers (e.g. accidentals; none if the
+     *  note has no modifiers), or the shapes of a TAB note's modifiers (e.g. a bend's curve, arrow and label). */
     public getModifierSVGs(): HTMLElement[] {
         if (this.isTabNote) {
             return this.getTabNoteSVGs().modifiers;
@@ -370,12 +451,19 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         return { frets, modifiers };
     }
 
-    /** Colors the paths of a group, e.g. of a note head, or a single shape, e.g. of a TAB note or a glissando: its fill,
-     *  or its stroke if it's only a line, like the curve of a bend or the line of a slide. */
+    /** Colors the paths of a group, e.g. of the accidentals, or a single shape, e.g. a note head, a beam, a TAB note or a
+     *  glissando: its fill, or its stroke if it's only a line, like the curve of a bend or the line of a slide.
+     *  A group in the group keeps its colors, e.g. a grace note in its main note's modifiers (it has its own setColor()):
+     *  its shapes would take a fill set on the group, as they leave out the default black (see the VexFlowPatch's SVGContext).
+     *  An ornament's group in the modifiers (g.vf-ornament: its glyph and accidental marks) is colored like the modifiers. */
     private static colorShapes(element: Element, color: string): void {
         if (element.children.length > 0) {
             for (const path of element.children) {
-                path.setAttribute("fill", color);
+                if (path.tagName !== "g") {
+                    path.setAttribute("fill", color);
+                } else if (path.classList.contains("vf-ornament")) {
+                    VexFlowGraphicalNote.colorShapes(path, color);
+                }
             }
         } else if (element.getAttribute("fill") === "none") {
             element.setAttribute("stroke", color);
@@ -406,18 +494,14 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         if (applyToBeams) {
             const beams: HTMLElement[] = this.getBeamSVGs();
             for (const beam of beams) {
-                for (const beamPath of beam.children) {
-                    beamPath.setAttribute("fill", color);
-                }
+                VexFlowGraphicalNote.colorShapes(beam, color); // the path, or its group (EngravingRules.SVGMergeSingleChildGroups)
             }
         }
 
         if (applyToFlag) {
             const flag: HTMLElement = this.getFlagSVG();
             if (flag) {
-                for (const flagPath of flag.children) {
-                    flagPath.setAttribute("fill", color);
-                }
+                VexFlowGraphicalNote.colorShapes(flag, color);
             }
         }
 
