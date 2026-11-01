@@ -235,6 +235,63 @@ describe("VexFlow GraphicalNote", () => {
         }
     });
 
+    // The getters search the note's own drawing: a sheet drawn in a shadow root (e.g. by a web component) isn't in the
+    //   document, and the first element with an id in the document or shadow root can be another sheet's, e.g. of a sheet
+    //   drawn by another OSMD bundle on the page (each bundle's Vexflow numbers the notes it creates from 1000).
+    it("Finds a note's stem, beams, ledger lines, slurs and ties in a shadow root, also after another drawing with the same ids", async () => {
+        const host: HTMLElement = TestUtils.getDivElement(document);
+        const shadowRoot: ShadowRoot = host.attachShadow({ mode: "open" });
+        const div: HTMLElement = document.createElement("div");
+        shadowRoot.appendChild(div);
+        const xmlNote: (pitch: string, eighths: number, notations: string) => string = (pitch: string, eighths: number, notations: string) =>
+            `<note><pitch><step>${pitch[0]}</step><octave>${pitch[1]}</octave></pitch><duration>${eighths}</duration><voice>1</voice>` +
+            `<type>${{ 1: "eighth", 2: "quarter", 4: "half", 8: "whole" }[eighths]}</type>${notations}</note>`;
+        // measure 1: a quarter A5 (on a ledger line) slurred to the second of two beamed eighths, and a half note tied to the
+        //   whole note of measure 2, which starts a new page
+        const measures: string[] = [
+            xmlNote("A5", 2, "<notations><slur type='start'/></notations>") + xmlNote("C5", 1, "<beam number='1'>begin</beam>") +
+            xmlNote("D5", 1, "<beam number='1'>end</beam><notations><slur type='stop'/></notations>") +
+            xmlNote("E5", 4, "<notations><tied type='start'/></notations>"),
+            "<print new-page='yes'/>" + xmlNote("E5", 8, "<notations><tied type='stop'/></notations>")];
+        const attributes: string = "<attributes><divisions>2</divisions><time><beats>4</beats><beat-type>4</beat-type></time>" +
+            "<clef><sign>G</sign><line>2</line></clef></attributes>";
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+        osmd.setOptions({ pageFormat: "A4_P", newPageFromXML: true });
+        await osmd.load(new DOMParser().parseFromString("<score-partwise version='4.0'><part-list><score-part id='P1'>" +
+            "<part-name>Piano</part-name></score-part></part-list><part id='P1'>" + measures.map((content: string, i: number) =>
+            `<measure number="${i + 1}">${i === 0 ? attributes : ""}${content}</measure>`).join("") + "</part></score-partwise>",
+            "application/xml"));
+        osmd.render();
+        expect(osmd.GraphicSheet.MusicPages.length, "premise: measure 2 on page 2").to.equal(2);
+        const [quarter, beamedEighth, , halfNote] = measureNotes(osmd, 0, 0);
+        // for each part: whether each element found is in the sheet's drawing
+        const found: () => [string, boolean[]][] = () => {
+            const parts: [string, HTMLElement[]][] = [
+                ["stems", [quarter.getStemSVG(), beamedEighth.getStemSVG()]],
+                ["beam", beamedEighth.getBeamSVGs()],
+                ["ledger line", quarter.getLedgerLineSVGs()],
+                ["slur", quarter.getSlurSVGs()],
+                ["tie parts", halfNote.getTieSVGs()],
+            ];
+            return parts.map(([part, elements]: [string, HTMLElement[]]): [string, boolean[]] =>
+                [part, elements.map((element: HTMLElement) => div.contains(element))]);
+        };
+        const expected: [string, boolean[]][] = [["stems", [true, true]], ["beam", [true]], ["ledger line", [true]], ["slur", [true]],
+            ["tie parts", [true, true]]];
+        expect(found(), "in a shadow root").to.deep.equal(expected);
+        // the root's first elements with the ids are then the other drawing's
+        shadowRoot.insertBefore(div.cloneNode(true), div);
+        expect(found(), "after another drawing with the same ids, e.g. of another OSMD bundle").to.deep.equal(expected);
+
+        // what the searched groups need to hold: a note without a beam has its stem in its group, a beam draws the stems of its
+        //   notes next to it (in the measure's group, see VexFlowMeasure.drawNotes()), and a tie's parts can be on two pages
+        expect([quarter, beamedEighth].map((note: VexFlowGraphicalNote) => note.getSVGGElement().contains(note.getStemSVG())),
+            "premise: the stems of the quarter, in its group, and of the beamed eighth, outside it").to.deep.equal([true, false]);
+        const tieParts: HTMLElement[] = halfNote.getTieSVGs();
+        expect(tieParts[0].closest("svg") === tieParts[1].closest("svg"), "premise: the tie's parts on the same page").to.equal(false);
+        host.remove();
+    });
+
     // A TAB staff with a hammer-on from note 1 to 2, and a pull-off from note 3 to 4.
     it("Hides and colors the label of a hammer-on or pull-off with its tie", async () => {
         const div: HTMLElement = TestUtils.getDivElement(document);
