@@ -192,9 +192,11 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
             this.multiRestElement = new VF.MultiMeasureRest(sourceMeasure.multipleRestMeasures, {
                         // number_line: 3
             });
+            ctx.openGroup("multirest"); // like VexFlowMultiRestMeasure.draw()
             this.multiRestElement.setStave(this.stave);
             this.multiRestElement.setContext(ctx);
             this.multiRestElement.draw();
+            ctx.closeGroup();
         }
      }
 }

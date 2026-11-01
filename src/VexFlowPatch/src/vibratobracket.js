@@ -97,6 +97,10 @@ export class VibratoBracket extends Element {
 
     L('Rendering VibratoBracket: start_x:', start_x, 'stop_x:', stop_x, 'y:', y);
 
+    // VexFlowPatch: the wavy line in a group (class vf-vibratobracket), or as a single shape with the group's class
+    //   (<path class="vf-vibratobracket">, see SVGContext.openGroup() with attrs.mergeIntoChild)
+    ctx.openGroup('vibratobracket', undefined, { mergeIntoChild: true });
     Vibrato.renderVibrato(ctx, start_x, y, this.render_options);
+    ctx.closeGroup();
   }
 }
