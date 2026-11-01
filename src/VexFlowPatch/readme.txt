@@ -42,6 +42,10 @@ glyph.js (custom addition):
 cache outline bounding boxes, glyph widths and scaled outline segments, and hand outlines to OSMD's geometric skyline context directly (performance, #1681, #1704, #1712, #1713, #1786)
 start a glyph's path with its outline, without a lone move to the glyph's origin, which Firefox 132 counted in getBBox() (#1833)
 
+gracenote.js (custom fix, vexflow 5 still draws the slash after the note's group):
+draw the slash in the note's group (vf-stavenote) after its modifiers, in drawModifiers(), which StaveNote.draw() calls
+  before it closes the group: drawn after it, the slash wasn't hidden with the note, e.g. by GraphicalNote.setVisible(false)
+
 gracenotegroup.js (custom addition, needs check if necessary in vexflow 4):
 check for gracenotegroup.spacing set, to allow e.g. spacing = 0 by default.
 (with previous default 4, spacing is way too large unnecessarily, in most cases)
@@ -63,9 +67,13 @@ count the text line of an ornament from the outermost of the notes at its time w
 format(): an ornament's accidental marks take text lines too, so that the ornament stacked on it isn't drawn beside them
 getExtent(): the box of the ornament with its accidental marks as draw() renders it (its position now from getRenderXY()), so
   that OSMD's slurs can keep clear of the ornaments of their start and end notes before drawing
+draw(): draw the glyph and its accidental marks in a group, class vf-ornament (merged vexflow 4), which an ornament of one
+  shape (a glyph without accidental marks) is merged into (see svgcontext.js)
 
 pedalmarking.js (custom addition):
 Add rendering options for pedals that break across systems.
+draw(): draw the marks and brackets in a group, class vf-pedalmarking (custom addition), which a pedal marking of one shape
+  is merged into and one without shapes doesn't get (see svgcontext.js)
 
 renderer.js (vexflow4: need to check if possible):
 CanvasContext: getContext(): use willReadFrequently option for marginal performance potential,
@@ -75,15 +83,22 @@ stave.js (merged/fixed vexflow 4):
 prevent a bug where a modifier width is NaN, leading to a VexFlow error (fixed vexflow 4)
 stave.setSection(section, y, xOffset = 0, fontSize = 12):
 add xOffset, fontSize arguments (see stavesection.js) (merged vexflow 4.x)
+draw(): draw the lines in a group of their own, class vf-stave (merged vexflow 4), which has their style
+  (e.g. stroke="#000000"), so that its stroke colors them (custom addition, see svgcontext.js)
 
 stavebarline.js (custom addition):
 support double_heavy barline (heavy-heavy in MusicXML)
 change padding for end barlines for multimeasurerest element (#1329)
+draw(): draw the barline in a group, class vf-stavebarline (merged vexflow 4), which a barline of one shape is merged into
+  and a barline without shapes doesn't get (see svgcontext.js)
+renderInitialLine false: a begin repeat barline without the line at the stave's start (custom addition, for OSMD's repeat
+  at the start of a one-staff system, which replaced the barline's draw() before)
 
 stavenote.js (custom addition):
 Fix stem/flag formatting. Instead of shifting notes by default, update the stem/flag rendering to render different voices aligned.
   Only offset if a note is the same voice, same note.
   (not yet in vexflow 4, PR 1263 open)
+Fix most common cases of crossing voices: when a stem-down note is above a stem-up note. (#1623)
 able to add svg node id+class to stem (merged vexflow 4.x)
 Save and restore noteheads (e.g. slash noteheads) in reset()
 open group for ledger lines (SVG)
@@ -98,11 +113,14 @@ add TO_CODA enum to type() and draw()
 fix x-positioning for TO_CODA and DS_AL_CODA in drawSymbolText()
 fix y-shift
 don't change x_shift in drawSymbolText(): every further draw of the stave moved the end texts (e.g. D.C.), alternating
+draw(): draw the text and the coda or segno glyph in a group, class vf-repetition (custom addition), which a repetition of
+  one shape is merged into and one without shapes doesn't get (see svgcontext.js)
 
 stavesection.js (half-fixed vexflow 4.x, collision, box not removable):
 stavesection.draw():
 adjust rectangle positioning, make height depend on font size (the measured text height differs per platform, and canvas has none)
 fix rehearsal marks not rendered with canvas backend in browser
+draw the box and the text in a group, class vf-stavesection (custom addition)
 
 stavetempo.js (custom addition):
 open a context group for vf-stavetempo, and one for its subgroup vf-bpm (for just the "= 150" text node)
@@ -120,6 +138,8 @@ renderText(): set the font before measuring the text (e.g. H, P, sl. of tab ties
 stavevolta.js (merged Vexflow 3.x):
 Fix the length of voltas for first measures in a system
 (whose lengths were wrongly extended by the width of the clef, key signature, etc. (beginInstructions) in Vexflow 1.2.93)
+draw(): draw the hooks, the number and the line in a group, class vf-volta (custom addition), which a volta of one shape
+  (the line of a middle measure) is merged into (see svgcontext.js)
 
 stem.js (fixed vexflow 4 (or earlier)):
 able to give an id+class to the stem node in SVG
@@ -132,6 +152,8 @@ able to add extra attributes (like svg node id) to a stroke (e.g. stem)
 fix rect() always using black color, ignoring attributes.stroke (ctx strokeStlye) -> fix defaultColorMusic ignored
 measureText(text, true) returns the text advance (getComputedTextLength()) as the width, like canvas measureText(), instead of the bounding box
 setRawFont(): use the whole family after the size (e.g. "Times New Roman" in "10pt Times New Roman"), not only its first word
+openGroup(cls, id, { strokeStyle: true }): the group gets the style of the lines drawn into it (e.g. fill="none" stroke="#000000"),
+  which they inherit and leave out, like the SVG defaults that the root svg sets (see stave.js)
 
 tables.js (custom addition):
 add inverted triangle notehead ('TI')
@@ -147,6 +169,7 @@ set the font of the slide text "sl." with the key family instead of font, so it'
 
 textbracket.js (custom fix):
 make sure text bracket doesn't go backwards+overlap (e.g. short octave bracket)
+draw(): draw the text, the superscript and the bracket in a group, class vf-textbracket (custom addition)
 
 tickcontext.js (custom fix):
 preFormat(): add the x_shift of a note moved right (e.g. staggered beside another voice's note by StaveNote.format()) to
@@ -162,6 +185,8 @@ add the note's x_shift, so that the strokes cross the stem of a note moved aside
 
 tuplet.js (vexflow 4: need to check if this option available):
 Add option tuplet.RenderTupletNumber
+draw(): draw the bracket and the number in a group, class vf-tuplet (merged vexflow 5), which a tuplet of one shape is
+  merged into and a tuplet without shapes doesn't get (see svgcontext.js)
 
 vexflow_font.js: (custom fix):
 downstem flag glyph (v9a): rotate and shift the flag so that it suits the stem better, as 1px steps don't align here)
@@ -171,6 +196,7 @@ vibratobracket.js: (custom option):
 add option vibratobracket.toEndOfStopStave: Render to the end of the stop note, instead of before it
 add option vibratobracket.stopBeforeNote: Render up to this note, in front of its modifiers, e.g. to the note after the stop note
 render to the end of the stop note without the width left of it (modifiers like accidentals and grace notes, displaced note heads)
+draw(): draw the wavy line in a group, class vf-vibratobracket (custom addition), which it is merged into (see svgcontext.js)
 
 Currently, we are using a heavily improved and customized version of Vexflow 1.2.93,
 because of some formatter advantages compared to Vexflow 3.x versions, see this issue:

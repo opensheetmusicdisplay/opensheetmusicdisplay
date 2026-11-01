@@ -115,6 +115,29 @@ describe("Drawing hidden notes (EngravingRules.RenderHiddenNotes)", (): void => 
             </score-partwise>`);
     });
 
+    // A tie in a measure with another voice curves on its stem side, away from the other voice (setTieDirections()), and a
+    //   hidden voice counts only while it's drawn. Before the fix, the direction chosen while the hidden notes were drawn was
+    //   kept: the tie stayed above when they were hidden again, instead of curving away from the stem as before.
+    it("chooses the direction of a tie again when the hidden notes of another voice are drawn or hidden", async (): Promise<void> => {
+        /** A half note E4 in voice 1, stem up, with a tie of the given type. */
+        const tiedHalfNoteE4: (tie: string) => string = (tie: string): string =>
+            `<note><pitch><step>E</step><octave>4</octave></pitch><duration>2</duration><tie type="${tie}"/><voice>1</voice>` +
+            `<type>half</type><stem>up</stem><notations><tied type="${tie}"/></notations></note>`;
+        await expectHiddenNotesDrawnLikeVisibleOnes(`<?xml version="1.0" encoding="UTF-8"?>
+            <score-partwise version="3.1">
+              <part-list><score-part id="P1"><part-name>Voices</part-name></score-part></part-list>
+              <part id="P1">
+                <measure number="1">
+                  <attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>
+                    <clef><sign>G</sign><line>2</line></clef></attributes>
+                  ${tiedHalfNoteE4("start")}${tiedHalfNoteE4("stop")}<backup><duration>4</duration></backup>
+                  <note print-object="no"><pitch><step>C</step><octave>4</octave></pitch><duration>4</duration><voice>2</voice>
+                    <type>whole</type></note>
+                </measure>
+              </part>
+            </score-partwise>`);
+    });
+
     // The cymbal tremolo of the Actor Prelude written out for playback as twelve hidden 16ths: a dotted half with tremolo
     //   strokes in voice 1, and the 16ths in voice 2.
     it("lets the cursor stop at the hidden notes it draws", async (): Promise<void> => {
@@ -147,19 +170,20 @@ describe("Drawing hidden notes (EngravingRules.RenderHiddenNotes)", (): void => 
             const visible: Set<string> = new Set<string>();
             const hidden: Set<string> = new Set<string>();
             const add: (colors: Set<string>, color: string) => void = (colors: Set<string>, color: string): void => {
-                colors.add(color === "black" ? "#000000" : color?.toUpperCase()); // "black": an element drawn without a style
+                // "black": an element drawn without a style; null: no fill attribute, the default black isn't written
+                colors.add(color === null || color === "black" ? "#000000" : color.toUpperCase());
             };
             for (const staffEntry of osmd.GraphicSheet.findGraphicalMeasure(0, 0).staffEntries) {
                 for (const gve of staffEntry.graphicalVoiceEntries) {
                     const note: VexFlowGraphicalNote = gve.notes[0] as VexFlowGraphicalNote;
                     const colors: Set<string> = note.sourceNote.PrintObject ? visible : hidden;
                     for (const notehead of note.getNoteheadSVGs()) {
-                        add(colors, notehead.querySelector("path").getAttribute("fill"));
+                        add(colors, notehead.getAttribute("fill"));
                     }
                     if (!note.sourceNote.PrintObject) {
                         add(colors, note.getStemSVG().getAttribute("stroke"));
-                        for (const beam of note.getBeamSVGs()) { // the group of each beam line
-                            add(colors, beam.querySelector("path").getAttribute("fill"));
+                        for (const beam of note.getBeamSVGs()) { // the path of each beam line
+                            add(colors, beam.getAttribute("fill"));
                         }
                     }
                 }

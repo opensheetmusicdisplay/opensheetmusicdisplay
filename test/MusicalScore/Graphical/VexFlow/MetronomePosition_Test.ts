@@ -153,7 +153,6 @@ describe("Metronome position rendering", (): void => {
 
     it("separates nearby marks with the geometric skyline", async (): Promise<void> => {
         osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = true;
-        osmd.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false;
         await osmd.load(TestUtils.getScore("test_metronome_close_positions.musicxml"));
         osmd.render();
         expect(marks().length).to.equal(2);
@@ -173,6 +172,34 @@ describe("Metronome position rendering", (): void => {
             expect(marks().length).to.be.greaterThan(0);
             expect(separate(marks()[0], inkBox(text)), `mark clear of "${label}"`).to.equal(true);
         }
+    });
+
+    // Tempo text goes above the staff, also without a placement attribute, and a mark at its time rises over it. Before fix,
+    // the calculator set the text's placement to above only after placing the marks: the first render placed the mark lower,
+    // as if the text were below the staff, and the next render (e.g. on a resize) or a render after updateGraphic() higher.
+    it("lifts a mark over tempo text without a placement attribute like over text placed above, also when rendering again", async (): Promise<void> => {
+        /** The direction with tempo text and a metronome mark, the given placement attribute (or none). */
+        function tempo(placement: string): string {
+            return `<direction${placement}><direction-type><words>Adagio</words></direction-type>` +
+                "<direction-type><metronome><beat-unit>quarter</beat-unit><per-minute>60</per-minute></metronome></direction-type></direction>";
+        }
+        /** The distance between the mark and the tempo text below it, in pixels. */
+        function gapAboveText(): number {
+            const text: SVGGraphicsElement = Array.from(div.querySelectorAll<SVGGraphicsElement>("text"))
+                .find((element: SVGGraphicsElement): boolean => element.textContent.trim() === "Adagio");
+            return inkBox(text).top - marks()[0].bottom;
+        }
+        await osmd.load(score(tempo(' placement="above"') + note("C", 4, "whole")));
+        osmd.render();
+        const gapToTextAbove: number = gapAboveText();
+        await osmd.load(score(tempo("") + note("C", 4, "whole")));
+        osmd.render();
+        expect(gapAboveText(), "without a placement attribute").to.be.closeTo(gapToTextAbove, 0.01);
+        osmd.render();
+        expect(gapAboveText(), "without a placement attribute, rendered again").to.be.closeTo(gapToTextAbove, 0.01);
+        osmd.updateGraphic();
+        osmd.render();
+        expect(gapAboveText(), "without a placement attribute, after updateGraphic()").to.be.closeTo(gapToTextAbove, 0.01);
     });
 
     it("places an end-of-measure mark on the next system and respects the drawing range", async (): Promise<void> => {

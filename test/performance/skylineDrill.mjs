@@ -107,7 +107,6 @@ function installContextHook() {
 // extraWarmups can insert extra renders before the capture (all equal anyway, kept for experiments).
 async function render(geo) {
     osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = geo;
-    osmd.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false;
     osmd.EngravingRules.SkyBottomLineBatchMinMeasures = 9999999;
     await osmd.load(loadParameter, sample);
     for (let i = 0; i < extraWarmups; i++) { osmd.render(); }

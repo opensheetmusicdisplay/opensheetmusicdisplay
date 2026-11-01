@@ -79,6 +79,8 @@ export abstract class GraphicalMeasure extends GraphicalObject {
     public isTabMeasure: boolean = false;
     /** Only exists on multiple rest measure (VexFlowMultiRestMeasure). See isMultiRestMeasure() function. */
     public multiRestElement: any;
+    /** The SVG group the measure was drawn into, see getSVGGElement(). Set by the backend's measure (VexFlowMeasure.draw()). */
+    protected svgGElement: SVGGElement = undefined;
 
     /** Whether a backend replaces this measure's note content with a repeat sign. */
     public get NotesAreAbbreviated(): boolean {
@@ -126,6 +128,38 @@ export abstract class GraphicalMeasure extends GraphicalObject {
         if (this.parentStaffLine) {
             this.PositionAndShape.Parent = this.parentStaffLine.PositionAndShape;
         }
+    }
+
+    /**
+     * Gets the SVG group (g.vf-measure) this measure was drawn into, with the SVG backend: its staff lines (g.vf-stave),
+     * barlines, clef, key and time signature, notes, and the ties that end in it.
+     * Each group has an id of its own in the sheet's drawing, e.g. "osmd-m11-1" for the group of MeasureList[11][1], the
+     * 12th measure of the second staff (see getSVGGElementId()). Several OSMD instances on a web page give their measures
+     * the same ids, so find a group by its id in the instance's container, or with this method.
+     * @returns The group, or undefined with the canvas backend and for a measure that isn't drawn.
+     * @example
+     * // the staff lines of the second staff's first measure in red
+     * osmd.GraphicSheet.MeasureList[0][1].getSVGGElement()?.querySelector(".vf-stave")?.setAttribute("stroke", "#FF0000");
+     */
+    public getSVGGElement(): SVGGElement {
+        return this.svgGElement;
+    }
+
+    /**
+     * Gets the id of the SVG group this measure is drawn into (see getSVGGElement()), unique in the sheet's drawing:
+     * "osmd-m", the measure's index in Sheet.SourceMeasures, "-" and its staff's index in Sheet.Staves, both counted from 0,
+     * which are the measure's indices in GraphicSheet.MeasureList: "osmd-m11-1" is MeasureList[11][1], the 12th measure of
+     * the second staff. A multiple rest measure has the index of its first measure. An extra instruction measure (the key or
+     * time signature of the next system at the end of a system) has the index of the measure it follows and an "x":
+     * "osmd-m1x-0" follows "osmd-m1-0".
+     * The index, not the measure number, which can repeat (e.g. 0 for a pickup and for an implicit measure after it).
+     */
+    protected getSVGGElementId(): string {
+        const staffIndex: number = this.ParentStaff.idInMusicSheet;
+        if (this.IsExtraGraphicalMeasure) {
+            return `osmd-m${this.ExtraGraphicalMeasurePreviousMeasure?.parentSourceMeasure?.measureListIndex}x-${staffIndex}`;
+        }
+        return `osmd-m${this.parentSourceMeasure?.measureListIndex}-${staffIndex}`;
     }
 
     /**

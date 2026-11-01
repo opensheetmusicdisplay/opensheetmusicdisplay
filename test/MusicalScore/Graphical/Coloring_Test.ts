@@ -58,12 +58,13 @@ describe("Coloring", (): void => {
     }
 
     /**
-     * A color as drawn in the SVG, in upper case: "black" for an element drawn without a style.
+     * A color as drawn in the SVG, in upper case: "black" for an element drawn without a style, and no attribute (null) for
+     * the default fill, black, which isn't written (see the VexFlowPatch's SVGContext). A stem always has a stroke attribute.
      * @param color the fill or stroke attribute
      * @returns the color as "#RRGGBB" or "#RRGGBBAA"
      */
     function drawnColor(color: string): string {
-        return color === "black" ? "#000000" : color?.toUpperCase();
+        return color === null || color === "black" ? "#000000" : color.toUpperCase();
     }
 
     /**
@@ -74,7 +75,7 @@ describe("Coloring", (): void => {
     function expectNoteColors(expected: string[], message: string): void {
         const actual: string[] = osmd.GraphicSheet.findGraphicalMeasure(0, 0).staffEntries.map((staffEntry): string => {
             const gNote: VexFlowGraphicalNote = staffEntry.graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote;
-            const head: string = drawnColor(gNote.getNoteheadSVGs()[0].querySelector("path").getAttribute("fill"));
+            const head: string = drawnColor(gNote.getNoteheadSVGs()[0].getAttribute("fill"));
             const stem: string = drawnColor(gNote.getStemSVG().getAttribute("stroke"));
             return `${gNote.sourceNote.Pitch.ToStringShort(3)}: head ${head}, stem ${stem}`;
         });
@@ -90,7 +91,7 @@ describe("Coloring", (): void => {
         const actual: string[] = [];
         for (const staffEntry of osmd.GraphicSheet.findGraphicalMeasure(0, 0).staffEntries) {
             for (const beam of (staffEntry.graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote).getBeamSVGs()) {
-                actual.push(drawnColor(beam.querySelector("path").getAttribute("fill")));
+                actual.push(drawnColor(beam.getAttribute("fill")));
             }
         }
         expect(actual, `${message}: ${actual.join(", ")}`).to.deep.equal(expected);
@@ -108,7 +109,7 @@ describe("Coloring", (): void => {
                 const gNote: VexFlowGraphicalNote = gve.notes[0] as VexFlowGraphicalNote;
                 const flag: HTMLElement = gNote.getFlagSVG();
                 if (flag) {
-                    const color: string = drawnColor(flag.querySelector("path").getAttribute("fill"));
+                    const color: string = drawnColor(flag.getAttribute("fill"));
                     actual.push(`${gNote.sourceNote.Pitch.ToStringShort(3)}: flag ${color}`);
                 }
             }

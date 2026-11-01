@@ -35,20 +35,11 @@ const MODES = {
     geo: (r) => { r.UseGeometricSkyBottomLineCalculation = true; },
     rasterSingle: (r) => {
         r.UseGeometricSkyBottomLineCalculation = false;
-        r.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false;
         r.SkyBottomLineBatchMinMeasures = 9999999;
     },
     rasterBatchPlain: (r) => {
         r.UseGeometricSkyBottomLineCalculation = false;
-        r.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false;
         r.SkyBottomLineBatchMinMeasures = 2;
-        r.PreferredSkyBottomLineBatchCalculatorBackend = 0; // Plain
-    },
-    rasterBatchWebGL: (r) => {
-        r.UseGeometricSkyBottomLineCalculation = false;
-        r.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false;
-        r.SkyBottomLineBatchMinMeasures = 2;
-        r.PreferredSkyBottomLineBatchCalculatorBackend = 1; // WebGL
     },
 };
 
@@ -96,7 +87,6 @@ async function run() {
             }
             row.modes[modeName] = { total: median(totals), skyline: median(skylines) };
             osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = true;
-            osmd.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = true;
             osmd.EngravingRules.SkyBottomLineBatchMinMeasures = 5;
         }
         rows.push(row);
@@ -107,15 +97,15 @@ async function run() {
 
 function renderTable(rows) {
     let html = "<table><tr><th>sample</th><th>geo total</th><th>geo skyline</th>"
-        + "<th>single total</th><th>batchPlain total</th><th>batchWebGL total</th>"
-        + "<th>skyline single</th><th>skyline batchPlain</th><th>skyline batchWebGL</th></tr>";
+        + "<th>single total</th><th>batchPlain total</th>"
+        + "<th>skyline single</th><th>skyline batchPlain</th></tr>";
     for (const r of rows) {
         const g = r.modes.geo;
         const f = (m) => m ? `${m.total.toFixed(0)}ms (x${(m.total / g.total).toFixed(2)})` : "-";
         const fs = (m) => m ? `${m.skyline.toFixed(1)}ms (x${(m.skyline / g.skyline).toFixed(1)})` : "-";
         html += `<tr><td>${r.sample}</td><td>${g.total.toFixed(0)}ms</td><td>${g.skyline.toFixed(1)}ms</td>`
-            + `<td>${f(r.modes.rasterSingle)}</td><td>${f(r.modes.rasterBatchPlain)}</td><td>${f(r.modes.rasterBatchWebGL)}</td>`
-            + `<td>${fs(r.modes.rasterSingle)}</td><td>${fs(r.modes.rasterBatchPlain)}</td><td>${fs(r.modes.rasterBatchWebGL)}</td></tr>`;
+            + `<td>${f(r.modes.rasterSingle)}</td><td>${f(r.modes.rasterBatchPlain)}</td>`
+            + `<td>${fs(r.modes.rasterSingle)}</td><td>${fs(r.modes.rasterBatchPlain)}</td></tr>`;
     }
     html += "</table>";
     document.getElementById("results").innerHTML = html;

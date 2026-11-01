@@ -52,6 +52,11 @@ export class Repetition extends StaveModifier {
   draw(stave, x) {
     this.setRendered();
 
+    // VexFlowPatch: the text and the coda or segno glyph in a group (class vf-repetition). A repetition of one shape, e.g.
+    //   "D.C." or a segno, gets the group's class instead (<text class="vf-repetition">), and one without shapes (NONE) gets
+    //   no group (see SVGContext.openGroup() with attrs.mergeIntoChild and omitIfEmpty).
+    const ctx = stave.checkContext();
+    ctx.openGroup('repetition', undefined, { mergeIntoChild: true, omitIfEmpty: true });
     switch (this.symbol_type) {
       case Repetition.type.CODA_RIGHT:
         this.drawCodaFixed(stave, x + stave.width);
@@ -93,6 +98,7 @@ export class Repetition extends StaveModifier {
       default:
         break;
     }
+    ctx.closeGroup();
 
     return this;
   }
