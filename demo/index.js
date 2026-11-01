@@ -786,8 +786,7 @@ import { IntervalTransposeCalculator } from '../src/Plugins/Transpose/IntervalTr
                 openSheetMusicDisplay.TransposeCalculator = transposeIntervalCheckbox && transposeIntervalCheckbox.checked ?
                     new IntervalTransposeCalculator() : new TransposeCalculator();
                 openSheetMusicDisplay.Sheet.Transpose = transposeValue;
-                openSheetMusicDisplay.updateGraphic();
-                rerender();
+                rerender(); // render() applies the transposition (no updateGraphic() needed), and keeps the cursor where it is
             }
         }
 
@@ -919,7 +918,7 @@ import { IntervalTransposeCalculator } from '../src/Plugins/Transpose/IntervalTr
                 window.osmd = openSheetMusicDisplay;
                 openSheetMusicDisplay.zoom = zoom;
                 // openSheetMusicDisplay.Sheet.Instruments[0].Staves[1].Visible = false;
-                //openSheetMusicDisplay.Sheet.Transpose = 3; // try transposing between load and first render if you have transpose issues with F# etc
+                //openSheetMusicDisplay.Sheet.Transpose = 3; // transpose by 3 halftones up: the next render() applies it
 
                 // braille: settings for the Music Braille samples (e.g. test_Braille_Facsimile_option) are
                 //   applied per-sample in setSampleSpecificOptions() (which runs before this load), and
