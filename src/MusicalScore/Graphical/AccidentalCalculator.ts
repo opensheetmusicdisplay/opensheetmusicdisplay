@@ -79,7 +79,12 @@ export class AccidentalCalculator {
             const sameLetter: boolean = startPitch !== undefined
                 && startPitch.FundamentalNote === pitch.FundamentalNote;
             if (sameLetter) {
-                return; // same written note held across the tie — accidental is implied
+                // Same written note held across the tie — the accidental is implied, unless the file writes it
+                //   (<accidental> on the continued note: the engraver repeats the sign, e.g. after a beat or a system break).
+                if (pitch.AccidentalXml && pitch.Accidental !== AccidentalEnum.NONE && this.Transpose === 0) {
+                    this.addAccidental(graphicalNote, pitch, pitchKey);
+                }
+                return;
             }
         }
 
