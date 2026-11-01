@@ -1135,7 +1135,10 @@ export class InstrumentReader {
       }
     }
     if (attrNode.element("time")) {
-      const timeNode: IXmlElement = attrNode.element("time");
+      // the <time> elements of one staff: a part may write its time signature once per staff, <time number="1"> and
+      //   <time number="2">, which were added up to 3/4 + 3/4 = 6/4
+      const timeList: IXmlElement[] = InstrumentReader.timeNodesOfOneStaff(attrNode.elements("time"));
+      const timeNode: IXmlElement = timeList[0];
       let symbolEnum: RhythmSymbolEnum = RhythmSymbolEnum.NONE;
       let timePrintObject: boolean = true;
       if (timeNode !== undefined && timeNode.hasAttributes) {
@@ -1160,7 +1163,6 @@ export class InstrumentReader {
       let denom: number = 0;
       let numeratorGroups: number[];
       const senzaMisura: boolean = (timeNode && timeNode.element("senza-misura") !== undefined);
-      const timeList: IXmlElement[] = attrNode.elements("time");
       const beatsList: IXmlElement[] = [];
       const typeList: IXmlElement[] = [];
       for (let idx: number = 0, len: number = timeList.length; idx < len; ++idx) {
@@ -1204,8 +1206,8 @@ export class InstrumentReader {
             }
             denom = maxDenom;
           } else {
-            num = parseInt(attrNode.element("time").element("beats").value, 10);
-            denom = parseInt(attrNode.element("time").element("beat-type").value, 10);
+            num = parseInt(timeNode.element("beats").value, 10);
+            denom = parseInt(timeNode.element("beat-type").value, 10);
           }
         } catch (ex) {
           errorMsg = ITextTranslation.translateText("ReaderErrorMessages/RhythmError", "Invalid rhythm. Set to default.");
@@ -1225,6 +1227,31 @@ export class InstrumentReader {
         this.abstractInstructions.push([1, new RhythmInstruction(new Fraction(4, 4, 0, false), RhythmSymbolEnum.NONE), currentFraction]);
       }
     }
+  }
+
+  /**
+   * The `<time>` elements that make up the measure's one time signature.
+   * Several `<beats>`/`<beat-type>` pairs inside one `<time>` are a composite signature (2/4 + 3/8) and are added up.
+   * `<time number="N">` elements are the signature written once per staff (the `number` attribute of `<time>` is the
+   * staff number, as for `<clef>` and `<key>`): adding them up made 3/4 + 3/4 = 6/4. The reader keeps one time signature
+   * per measure, so it takes the elements without a `number` (they apply to every staff), otherwise those of the
+   * lowest staff number. Different signatures per staff (polymeter) are not drawn per staff.
+   */
+  public static timeNodesOfOneStaff(timeNodes: IXmlElement[]): IXmlElement[] {
+    const staffNumberOf: (node: IXmlElement) => number = (node: IXmlElement): number => {
+      const value: string = node.attribute("number")?.value;
+      if (value === undefined) {
+        return undefined;
+      }
+      const parsed: number = parseInt(value, 10);
+      return isNaN(parsed) ? undefined : parsed;
+    };
+    const unnumbered: IXmlElement[] = timeNodes.filter((node: IXmlElement) => staffNumberOf(node) === undefined);
+    if (unnumbered.length > 0) {
+      return unnumbered;
+    }
+    const lowest: number = Math.min(...timeNodes.map((node: IXmlElement) => staffNumberOf(node)));
+    return timeNodes.filter((node: IXmlElement) => staffNumberOf(node) === lowest);
   }
 
   /**
