@@ -65,6 +65,11 @@ export class VoiceGenerator {
   private instrument: Instrument;
   // private lastBeamTag: string = "";
   private openBeams: Beam[] = []; // works like a stack, with push and pop
+  /** Beams read from a continue or end before their begin in the document: the notes of a voice written staff by
+   *  staff put its later notes on the other staff first (e.g. a voice crossing to the piano's other staff), and the
+   *  reader dropped them ("invalid beamnumber": flags instead of the beam). createBeam() opens such a beam without a
+   *  begin; handleOpenBeam() merges it into the beam it follows in time. Cleared at the end of the measure. */
+  private orphanBeams: Beam[] = [];
   private beamNumberOffset: number = 0;
   private get openTieDict(): { [_: number]: Tie } { return this.staff.openTieDict; }
   private currentOctaveShift: number = 0;
@@ -290,6 +295,17 @@ export class VoiceGenerator {
     if (this.openBeams.length > 0 && this.currentNote) {
       this.handleOpenBeam();
     }
+    // a beam without a begin that no begun beam took: dropped, as before
+    for (const orphan of this.orphanBeams) {
+      for (const note of orphan.Notes) {
+        note.NoteBeam = undefined;
+      }
+      const index: number = this.openBeams.indexOf(orphan);
+      if (index >= 0) {
+        this.openBeams.splice(index, 1);
+      }
+    }
+    this.orphanBeams = [];
   }
 
   /** Check/delete open ties that don't exceed measure duration. Currently unused as it's incorrect, see below. */
@@ -666,6 +682,12 @@ export class VoiceGenerator {
           }
         }
         let sameVoiceEntry: boolean = false;
+        if (this.openBeams.length === 0 && beamNumber === 1 && currentBeamTag !== "begin") {
+          // a continue/end before its begin (see orphanBeams): a beam of its own until the begun beam it follows is handled
+          const orphan: Beam = new Beam(beamNumber, this.beamNumberOffset);
+          this.openBeams.push(orphan);
+          this.orphanBeams.push(orphan);
+        }
         if (!(beamNumber > 0 && beamNumber <= this.openBeams.length) || !this.openBeams[beamNumber - 1]) {
           log.debug("[OSMD] invalid beamnumber"); // this shouldn't happen, probably error in this method
           return;
@@ -717,11 +739,61 @@ export class VoiceGenerator {
   /**
    * Check for open [[Beam]]s at end of [[SourceMeasure]] and closes them explicity.
    */
+  /** Appends to openBeam (begun, its end not read yet) the beams read without a begin (orphanBeams) that follow it in
+   *  time, each starting where the beam's last note ends. True when one was merged: the orphan was closed by its end,
+   *  so the beam is complete. */
+  private mergeOrphanBeams(openBeam: Beam): boolean {
+    if (this.orphanBeams.indexOf(openBeam) >= 0) {
+      return false;
+    }
+    let merged: boolean = false;
+    while (this.orphanBeams.length > 0) {
+      const last: Note = CollectionUtil.last(openBeam.Notes);
+      const lastTimestamp: Fraction = last.ParentStaffEntry?.Timestamp;
+      if (!lastTimestamp) {
+        break;
+      }
+      const next: Fraction = Fraction.plus(lastTimestamp, last.Length);
+      let following: Beam = undefined;
+      for (const orphan of this.orphanBeams) {
+        if (orphan.Notes.length === 0 || this.openBeams.indexOf(orphan) >= 0) {
+          continue;
+        }
+        const timestamp: Fraction = orphan.Notes[0].ParentStaffEntry?.Timestamp;
+        if (timestamp?.Equals(next)) {
+          following = orphan;
+          break;
+        }
+      }
+      if (!following) {
+        break;
+      }
+      const offset: number = openBeam.Notes.length;
+      for (const note of following.ExtendedNoteList) {
+        if (following.Notes.indexOf(note) >= 0) {
+          openBeam.addNoteToBeam(note);
+        } else {
+          openBeam.ExtendedNoteList.push(note);
+        }
+      }
+      for (const index of following.SecondaryBreakIndices) {
+        openBeam.SecondaryBreakIndices.push(index + offset);
+      }
+      this.orphanBeams.splice(this.orphanBeams.indexOf(following), 1);
+      merged = true;
+    }
+    return merged;
+  }
+
   private handleOpenBeam(): void {
     const openBeam: Beam = this.openBeams.last();
     if (openBeam.Notes.length === 0) {
       // TODO why is there such a beam? sample: test_percussion_display_step_from_xml
       this.endBeam(); // otherwise beamLastNote.ParentStaffEntry will throw an undefined error
+      return;
+    }
+    if (this.mergeOrphanBeams(openBeam)) {
+      this.endBeam();
       return;
     }
     if (openBeam.Notes.length === 1) {
