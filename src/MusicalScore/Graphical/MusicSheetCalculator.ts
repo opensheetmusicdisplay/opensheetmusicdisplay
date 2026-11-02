@@ -1133,6 +1133,11 @@ export abstract class MusicSheetCalculator {
         // (must come after Slurs)
         if (!this.leadSheet) {
             this.calculateOrnaments();
+            // calculate all wavy lines (vibrato, trill marks), before the octave shifts: a trill sign and its wavy line go closer
+            //   to the notes than an octave sign (Gould, Behind Bars, pp. 29 and 135), and than dynamics and text (pp. 135, 139)
+            if (this.rules.RenderWavyLines) {
+                this.calculateWavyLines();
+            }
             // calculate all OctaveShifts
             this.calculateOctaveShifts(); // should be before chord symbols
         }
@@ -1149,10 +1154,6 @@ export abstract class MusicSheetCalculator {
             if (this.rules.RenderPedals) {
                 // calculate all Pedal Expressions
                 this.calculatePedals();
-            }
-            //calculate all wavy lines (vibrato, trill marks)
-            if (this.rules.RenderWavyLines) {
-                this.calculateWavyLines();
             }
         }
         // calculate endings last, so they appear above measure numbers

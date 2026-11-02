@@ -25,6 +25,10 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
     private supscript: string;
     /** Main text element */
     private text: string;
+    /** The stave text position the bracket is drawn at, in staff spaces like Vexflow's Stave options top_text_position (above)
+     *  and bottom_text_position (below): set by the calculator from the skyline or bottom line, see getTextBracket().
+     *  Undefined: the start stave's own. */
+    public textPosition: number;
 
     /**
      * Create a new vexflow ocatve shift
@@ -150,6 +154,15 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
         if (this.endsOnDifferentStaffLine) {
             // make bracket open-ended (--- instead of ---|) if not ending on current staffline
             (vfBracket as any).render_options.show_bracket = false;
+        }
+        if (this.textPosition !== undefined) {
+            // Vexflow draws the bracket at a line counted from its stave's text position, which also places other marks of that
+            //   stave: e.g. a trill mark, a fermata or a pedal mark, and a trill line. So the bracket isn't moved there by setting
+            //   the stave's text position (which would move those marks into the bracket), but by its line.
+            const staveOptions: any = start.getStave().options;
+            const staveTextPosition: number = this.position === VF.TextBracket.Positions.TOP ?
+                staveOptions.top_text_position : staveOptions.bottom_text_position;
+            vfBracket.setLine((vfBracket as any).line + this.textPosition - staveTextPosition);
         }
         return vfBracket;
     }
