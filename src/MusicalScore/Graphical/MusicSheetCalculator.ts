@@ -22,8 +22,11 @@ import { MusicSystem } from "./MusicSystem";
 import { GraphicalTie } from "./GraphicalTie";
 import { RepetitionInstruction, RepetitionInstructionEnum, AlignmentType } from "../VoiceData/Instructions/RepetitionInstruction";
 import { MultiExpression, MultiExpressionEntry } from "../VoiceData/Expressions/MultiExpression";
+import { MoodExpression } from "../VoiceData/Expressions/MoodExpression";
+import { UnknownExpression } from "../VoiceData/Expressions/UnknownExpression";
 import { StaffEntryLink } from "../VoiceData/StaffEntryLink";
 import { MusicSystemBuilder } from "./MusicSystemBuilder";
+import { SystemLinesEnum } from "./SystemLinesEnum";
 import { MultiTempoExpression } from "../VoiceData/Expressions/MultiTempoExpression";
 import { Repetition } from "../MusicSource/Repetition";
 import { PointF2D } from "../../Common/DataObjects/PointF2D";
@@ -56,7 +59,7 @@ import { Label } from "../Label";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { VerticalSourceStaffEntryContainer } from "../VoiceData/VerticalSourceStaffEntryContainer";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
-import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
+import { AbstractExpression, PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { AbstractGraphicalInstruction } from "./AbstractGraphicalInstruction";
 import { GraphicalInstantaneousTempoExpression } from "./GraphicalInstantaneousTempoExpression";
 import { InstantaneousTempoExpression, MetronomeNote, MetronomeNoteGroup } from "../VoiceData/Expressions/InstantaneousTempoExpression";
@@ -255,12 +258,7 @@ export abstract class MusicSheetCalculator {
                 const sourceMeasure: SourceMeasure = musicSheet.SourceMeasures[idx];
                 // console.log(sourceMeasure.MeasureNumber + " can be reduced: " + sourceMeasure.canBeReducedToMultiRest());
                 const canBeReduced: boolean = !sourceMeasure.isReducedToMultiRest && sourceMeasure.canBeReducedToMultiRest();
-                // A multirest only shows the key and time signature its first measure starts with,
-                //   so a measure that starts with a key or time change ends the sequence before it (and can begin the next one).
-                //   It draws the clef change its last measure ends with (see MusicSystemBuilder.getEndInstructionsStaffEntry()),
-                //   before its barline, so a measure that ends with a clef change ends the sequence after it.
-                if (multiRestCount > 0 && (!canBeReduced || sourceMeasure.hasBeginInstructions() ||
-                    this.endsWithClefChangeInVisibleStaff(musicSheet.SourceMeasures[idx - 1]))) {
+                if (multiRestCount > 0 && (!canBeReduced || this.multiRestSequenceEndsBefore(sourceMeasure, musicSheet.SourceMeasures[idx - 1]))) {
                     if (multiRestCount > 1) { //Actual multirest sequence just happened. Process
                         beginMultiRestMeasure.multipleRestMeasures = multiRestCount;
                         //regen graphical measures for this source measure
@@ -326,6 +324,26 @@ export abstract class MusicSheetCalculator {
         return sourceMeasure.LastInstructionsStaffEntries.some((staffEntry: SourceStaffEntry, staffIndex: number): boolean =>
             staffEntry?.Instructions.some((instruction: AbstractNotationInstruction): boolean => instruction instanceof ClefInstruction) &&
             musicSheet.getStaffFromIndex(staffIndex).isVisible());
+    }
+
+    /**
+     * Whether a sequence of rest measures that becomes a multiple rest measure (AutoGenerateMultipleRestMeasuresFromRestMeasures)
+     * ends before the given rest measure, which can begin the next sequence.
+     * A multiple rest measure only shows what its first measure begins with, and the barline and clef change its last measure
+     * ends with (see MusicSystemBuilder.getEndInstructionsStaffEntry()),
+     * so the sequence ends before a key change or a time signature, a rehearsal mark, and a system or page break from the XML
+     * that the layout follows (see MusicSystemBuilder.buildMusicSystems()),
+     * and after a double, final or heavy-heavy barline (the other barline styles are drawn like a regular one,
+     * see VexFlowMeasure.addMeasureLine()) and after a clef change, which is drawn before the barline.
+     * @param previousMeasure the last measure of the sequence
+     */
+    private multiRestSequenceEndsBefore(sourceMeasure: SourceMeasure, previousMeasure: SourceMeasure): boolean {
+        const barline: SystemLinesEnum = previousMeasure.endingBarStyleEnum;
+        return sourceMeasure.hasBeginInstructions() || sourceMeasure.rehearsalExpression !== undefined ||
+            this.rules.NewSystemAtXMLNewSystemAttribute && sourceMeasure.printNewSystemXml ||
+            (this.rules.NewPageAtXMLNewPageAttribute || this.rules.NewSystemAtXMLNewPageAttribute) && sourceMeasure.printNewPageXml ||
+            barline === SystemLinesEnum.DoubleThin || barline === SystemLinesEnum.ThinBold || barline === SystemLinesEnum.DoubleBold ||
+            this.endsWithClefChangeInVisibleStaff(previousMeasure);
     }
 
     /**
@@ -609,6 +627,7 @@ export abstract class MusicSheetCalculator {
         // maybe give rules as argument instead of just setting fontStyle and maybe other settings manually afterwards
         const graphicalLabel: GraphicalLabel = new GraphicalLabel(label, this.rules.MeasureNumberLabelHeight,
                                                                   TextAlignmentEnum.LeftBottom, this.rules);
+        graphicalLabel.SVGClass = "osmd-measure-number";
 
         const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
 
@@ -629,7 +648,9 @@ export abstract class MusicSheetCalculator {
         start -= staffLine.PositionAndShape.RelativePosition.x;
         end -= staffLine.PositionAndShape.RelativePosition.x;
 
-        // correct for hypersensitive collision checks, notes having skyline extend too far to left and right
+        // correct for hypersensitive collision checks, notes having skyline extend too far to left and right.
+        //   getSkyLineMinInRange() also reads the sample after the range: at a system start, the top of the clef under
+        //   the end of the number is only in that sample.
         const startCollisionCheck: number = start + 0.5;
         const endCollisionCheck: number = end - 0.5;
 
@@ -870,7 +891,9 @@ export abstract class MusicSheetCalculator {
     }
 
     /**
-     * Calculate all the Mood and Unknown Expressions for a single [[MultiExpression]].
+     * Calculate all the Mood and Unknown Expressions for a single [[MultiExpression]]: its words, drawn together in one label.
+     * A verbal crescendo or diminuendo at the same position (e.g. "cresc.") is not part of the label: it's drawn as a dynamic
+     * of its own (see calculateDynamicExpressions()).
      * @param multiExpression
      * @param measureIndex
      * @param staffIndex
@@ -882,10 +905,11 @@ export abstract class MusicSheetCalculator {
         let relative: PointF2D = new PointF2D();
 
         const defaultYXml: number = multiExpression.UnknownList[0]?.defaultYXml;
-        if ((multiExpression.MoodList.length > 0) || (multiExpression.UnknownList.length > 0)) {
+        const wordsEntries: MultiExpressionEntry[] = multiExpression.EntriesList.filter((entry: MultiExpressionEntry): boolean =>
+            entry.expression instanceof MoodExpression || entry.expression instanceof UnknownExpression);
+        if (wordsEntries.length > 0) {
         let combinedExprString: string  = "";
-        for (let idx: number = 0, len: number = multiExpression.EntriesList.length; idx < len; ++idx) {
-            const entry: MultiExpressionEntry = multiExpression.EntriesList[idx];
+        for (const entry of wordsEntries) {
             if (entry.prefix !== "") {
                 if (combinedExprString === "") {
                     combinedExprString += entry.prefix;
@@ -911,17 +935,22 @@ export abstract class MusicSheetCalculator {
         }
 
         const fontHeight: number = this.rules.UnknownTextHeight;
-        const placement: PlacementEnum = multiExpression.getPlacementOfFirstEntry();
+        // Placement, font, color and language of the first words: the first entry (getPlacementOfFirstEntry() etc.) can be a
+        //   "cresc." with a placement and font of its own.
+        const firstWords: AbstractExpression = wordsEntries[0].expression;
+        const placement: PlacementEnum = firstWords.Placement;
+        const fontStyle: FontStyles = firstWords instanceof UnknownExpression ? firstWords.fontStyle ?? FontStyles.Regular : FontStyles.Italic;
         const graphLabel: GraphicalLabel  = this.calculateLabel(staffLine,
                                                                 relative, combinedExprString,
-                                                                multiExpression.getFontstyleOfFirstEntry(),
+                                                                fontStyle,
                                                                 placement,
                                                                 fontHeight);
-        const colorXML: string = multiExpression.getColorXMLOfFirstEntry();
+        graphLabel.SVGClass = "osmd-words";
+        const colorXML: string = firstWords.ColorXML;
         if (this.rules.ExpressionsUseXMLColor && colorXML) {
             graphLabel.ColorXML = colorXML;
         }
-        graphLabel.Label.language = multiExpression.EntriesList[0]?.expression.language;
+        graphLabel.Label.language = firstWords.language;
         if (this.rules.PlaceWordsInsideStafflineFromXml) {
             if (defaultYXml < 0 && defaultYXml > -50) { // within staffline
                 let newY: number = defaultYXml / 10; // OSMD units
@@ -1104,6 +1133,11 @@ export abstract class MusicSheetCalculator {
         // (must come after Slurs)
         if (!this.leadSheet) {
             this.calculateOrnaments();
+            // calculate all wavy lines (vibrato, trill marks), before the octave shifts: a trill sign and its wavy line go closer
+            //   to the notes than an octave sign (Gould, Behind Bars, pp. 29 and 135), and than dynamics and text (pp. 135, 139)
+            if (this.rules.RenderWavyLines) {
+                this.calculateWavyLines();
+            }
             // calculate all OctaveShifts
             this.calculateOctaveShifts(); // should be before chord symbols
         }
@@ -1120,10 +1154,6 @@ export abstract class MusicSheetCalculator {
             if (this.rules.RenderPedals) {
                 // calculate all Pedal Expressions
                 this.calculatePedals();
-            }
-            //calculate all wavy lines (vibrato, trill marks)
-            if (this.rules.RenderWavyLines) {
-                this.calculateWavyLines();
             }
         }
         // calculate endings last, so they appear above measure numbers
@@ -2241,6 +2271,7 @@ export abstract class MusicSheetCalculator {
                                                                        this.rules.UnknownTextHeight,
                                                                        textAlignment,
                                                                        this.rules.TempoYSpacing);
+                graphLabel.SVGClass = "osmd-tempo";
                 if (entry.Expression.ColorXML && this.rules.ExpressionsUseXMLColor) {
                     graphLabel.ColorXML = entry.Expression.ColorXML;
                 }
@@ -2529,6 +2560,7 @@ export abstract class MusicSheetCalculator {
             const title: GraphicalLabel = new GraphicalLabel(musicSheet.Title, this.rules.SheetTitleHeight, TextAlignmentEnum.CenterBottom, this.rules);
             title.Label.IsCreditLabel = true;
             title.Label.colorDefault = defaultColorTitle;
+            title.SVGClass = "osmd-title";
             this.graphicalMusicSheet.Title = title;
             title.setLabelPositionAndShapeBorders();
         } else if (!this.rules.RenderTitle) {
@@ -2539,6 +2571,7 @@ export abstract class MusicSheetCalculator {
                 musicSheet.Subtitle, this.rules.SheetSubtitleHeight, TextAlignmentEnum.CenterCenter, this.rules);
             subtitle.Label.IsCreditLabel = true;
             subtitle.Label.colorDefault = defaultColorTitle;
+            subtitle.SVGClass = "osmd-subtitle";
             this.graphicalMusicSheet.Subtitle = subtitle;
             subtitle.setLabelPositionAndShapeBorders();
         } else if (!this.rules.RenderSubtitle) {
@@ -2549,6 +2582,7 @@ export abstract class MusicSheetCalculator {
                 musicSheet.Composer, this.rules.SheetComposerHeight, TextAlignmentEnum.RightCenter, this.rules);
             composer.Label.IsCreditLabel = true;
             composer.Label.colorDefault = defaultColorTitle;
+            composer.SVGClass = "osmd-composer";
             this.graphicalMusicSheet.Composer = composer;
             composer.setLabelPositionAndShapeBorders();
         } else if (!this.rules.RenderComposer) {
@@ -2559,6 +2593,7 @@ export abstract class MusicSheetCalculator {
                 musicSheet.Lyricist, this.rules.SheetAuthorHeight, TextAlignmentEnum.LeftCenter, this.rules);
             lyricist.Label.IsCreditLabel = true;
             lyricist.Label.colorDefault = defaultColorTitle;
+            lyricist.SVGClass = "osmd-lyricist";
             this.graphicalMusicSheet.Lyricist = lyricist;
             lyricist.setLabelPositionAndShapeBorders();
         } else if (!this.rules.RenderLyricist) {
@@ -2569,6 +2604,7 @@ export abstract class MusicSheetCalculator {
                 musicSheet.Copyright, this.rules.SheetCopyrightHeight, TextAlignmentEnum.CenterBottom, this.rules);
                 copyright.Label.IsCreditLabel = true;
                 copyright.Label.colorDefault = defaultColorTitle;
+            copyright.SVGClass = "osmd-copyright";
             this.graphicalMusicSheet.Copyright = copyright;
             copyright.setLabelPositionAndShapeBorders();
         } else if (!this.rules.RenderCopyright) {
@@ -2602,6 +2638,7 @@ export abstract class MusicSheetCalculator {
                 wrapped, this.rules.SheetSubtitleHeight, credit.textAlignment, this.rules);
             label.Label.IsCreditLabel = true;
             label.Label.colorDefault = this.rules.DefaultColorTitle;
+            label.SVGClass = "osmd-credit";
             label.setLabelPositionAndShapeBorders();
             label.PositionAndShape.RelativePosition = new PointF2D(0, nextY);
             this.graphicalMusicSheet.FirstPageCreditWords.push(label);
@@ -3725,6 +3762,7 @@ export abstract class MusicSheetCalculator {
                             const label: Label = new Label(fingering.value, alignment);
                             const gLabel: GraphicalLabel = new GraphicalLabel(
                                 label, this.rules.FingeringTextSize, label.textAlignment, this.rules, line.PositionAndShape);
+                            gLabel.SVGClass = "osmd-fingering";
                             if (fingering.fontFamily) {
                                 label.fontFamily = fingering.fontFamily;
                             }
@@ -3732,6 +3770,8 @@ export abstract class MusicSheetCalculator {
                             gLabel.setLabelPositionAndShapeBorders();
                             const marginLeft: number = positionX + gLabel.PositionAndShape.BorderMarginLeft;
                             const marginRight: number = positionX + gLabel.PositionAndShape.BorderMarginRight;
+                            // (the read also takes the sample after the margin box, which reaches the stem at the right of
+                            //   a note head with its stem up, see getSkyLineMinInRange())
                             let skybottomFurthest: number = undefined;
                             if (placement === PlacementEnum.Above) {
                                 skybottomFurthest = skybottomcalculator.getSkyLineMinInRange(marginLeft, marginRight);
@@ -4034,6 +4074,7 @@ export abstract class MusicSheetCalculator {
         }
         const dash: GraphicalLabel = new GraphicalLabel(
             label, textHeight, TextAlignmentEnum.CenterBottom, this.rules);
+        dash.SVGClass = "osmd-dash";
         dash.setLabelPositionAndShapeBorders();
         staffLine.LyricsDashes.push(dash);
         if (this.staffLinesWithLyricWords.indexOf(staffLine) === -1) {
@@ -4226,6 +4267,7 @@ export abstract class MusicSheetCalculator {
         leftLabel.colorDefault = this.rules.DefaultColorLyrics; // if undefined, no change. saves an if check
         const leftDash: GraphicalLabel = new GraphicalLabel(
             leftLabel, this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom, this.rules);
+        leftDash.SVGClass = "osmd-dash";
         leftDash.setLabelPositionAndShapeBorders();
         staffLine.LyricsDashes.push(leftDash);
         if (this.staffLinesWithLyricWords.indexOf(staffLine) === -1) {
@@ -4238,6 +4280,7 @@ export abstract class MusicSheetCalculator {
         const rightLabel: Label = new Label("-");
         const rightDash: GraphicalLabel = new GraphicalLabel(
             rightLabel, this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom, this.rules);
+        rightDash.SVGClass = "osmd-dash";
         rightDash.setLabelPositionAndShapeBorders();
         staffLine.LyricsDashes.push(rightDash);
         rightDash.PositionAndShape.Parent = staffLine.PositionAndShape;
@@ -4263,10 +4306,12 @@ export abstract class MusicSheetCalculator {
 
                 if (this.graphicalMusicSheet.MeasureList[i][j].ParentStaff.isVisible()) {
                     for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {
+                        // also a verbal crescendo or diminuendo next to words: the words label doesn't include it
+                        //   (see calculateMoodAndUnknownExpression())
                         if (sourceMeasure.StaffLinkedExpressions[j][k].InstantaneousDynamic !== undefined ||
                             (sourceMeasure.StaffLinkedExpressions[j][k].StartingContinuousDynamic !== undefined &&
                                 sourceMeasure.StaffLinkedExpressions[j][k].StartingContinuousDynamic.StartMultiExpression ===
-                                sourceMeasure.StaffLinkedExpressions[j][k] && sourceMeasure.StaffLinkedExpressions[j][k].UnknownList.length === 0)
+                                sourceMeasure.StaffLinkedExpressions[j][k])
                         ) {
                             this.calculateDynamicExpressionsForMultiExpression(sourceMeasure.StaffLinkedExpressions[j][k], i, j);
                         }

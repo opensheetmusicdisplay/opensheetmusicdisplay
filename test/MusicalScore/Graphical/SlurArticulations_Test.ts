@@ -336,7 +336,7 @@ describe("Slur at a note with an articulation", () => {
                 //   which brought it down through the key signature from the start of the staff)
                 const lastPart: GraphicalSlur = slurIn(7);
                 const staffLine: StaffLine = lastPart.staffEntries[0].parentMeasure.ParentStaffLine;
-                const flats: Box[] = Array.from(container.querySelectorAll(".vf-measure[id='7'] .vf-keysignature path"))
+                const flats: Box[] = Array.from(container.querySelectorAll("#osmd-m6-0 .vf-keysignature path"))
                     .map((flat: Element) => toStaffLine(flat as SVGGraphicsElement, staffLine));
                 expect(flats.length, `${render}: the flats of the key signature of m.7`).to.equal(2);
                 for (const flat of flats) {

@@ -20,6 +20,8 @@ import { FontStyles } from "../../../Common/Enums/FontStyles";
 import { RehearsalExpression } from "../../VoiceData/Expressions/RehearsalExpression";
 import { Pedal } from "../../VoiceData/Expressions/ContinuousExpressions/Pedal";
 import { WavyLine } from "../../VoiceData/Expressions/ContinuousExpressions/WavyLine";
+import { NoteTypeHandler } from "../../VoiceData/NoteType";
+import { musicXmlColorToCss } from "../../../Common/DataObjects/XmlColor";
 
 export class ExpressionReader {
     private musicSheet: MusicSheet;
@@ -231,8 +233,18 @@ export class ExpressionReader {
                                                              true);
                         instantaneousTempoExpression.parentMeasure = currentMeasure;
                         this.soundTempo = bpmNumber;
-                        // make sure to take dotted beats into account
-                        currentMeasure.TempoInBPM = this.soundTempo * (dotted?1.5:1);
+                        // measure.TempoInBPM drives playback and is expressed in quarter notes per minute.
+                        //   If this direction also carried a <sound tempo> (isTempoInstruction), that value is
+                        //   authoritative for playback and was already written to measure.TempoInBPM above, so
+                        //   keep it: this matches what MuseScore plays and respects files where the printed mark
+                        //   and the sounding tempo intentionally differ (e.g. "half = 144" with sound tempo 144).
+                        //   Otherwise derive the tempo from the metronome mark itself, converting its per-minute
+                        //   value via the beat unit: e.g. "half = 88" -> 176, "eighth = 120" -> 60 (a dotted beat
+                        //   unit is 1.5x as long). Either way the mark is still DISPLAYED with its original beat
+                        //   unit + per-minute via the InstantaneousTempoExpression, which keeps bpmNumber.
+                        if (!isTempoInstruction) {
+                            currentMeasure.TempoInBPM = bpmNumber * NoteTypeHandler.beatUnitInQuarters(beatUnit.value, dotted);
+                        }
                         this.musicSheet.HasBPMInfo = true;
                         instantaneousTempoExpression.dotted = dotted;
                         instantaneousTempoExpression.beatUnit = beatUnit.value;
@@ -787,7 +799,7 @@ export class ExpressionReader {
         }
         const colorAttr: Attr = wordsNode.attribute("color");
         if (colorAttr) {
-            fontColor = colorAttr.value;
+            fontColor = musicXmlColorToCss(colorAttr.value, this.musicSheet.XmlColorAlphaLast);
         }
         const language: string = wordsNode.attribute("xml:lang")?.value;
         let defaultYXml: number;

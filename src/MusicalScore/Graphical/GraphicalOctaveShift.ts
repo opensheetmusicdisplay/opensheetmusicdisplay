@@ -24,6 +24,7 @@ export class GraphicalOctaveShift extends GraphicalObject {
     public octaveSymbol: MusicSymbol;
     public dashesStart: PointF2D;
     public dashesEnd: PointF2D;
+    /** Whether the octave shift goes on after this bracket, in the next system or after the drawn range: no closing hook. */
     public endsOnDifferentStaffLine: boolean;
     /** Whether the octave shift should be drawn until the end of the measure, instead of the current note. */
     public graphicalEndAtMeasureEnd: boolean;

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>OSMD A/B page</title>
+<style>
+    body { margin: 0; font-family: sans-serif; }
+    .osmdBox { width: 1440px; position: absolute; left: 0; top: 0; visibility: hidden; }
+</style>
+</head>
+<body>
+<script>
+// Page of chromeAB.mjs and chromeSvgCompare.mjs: loads several OSMD bundles (?bundles=a.min.js,b.min.js, paths from the
+// repository root), each with its own OSMD instance in its own (hidden) container, and runs shuffled, paired rounds per
+// sample (runSample()), or compares the SVGs the bundles render (compareSample(), compareSampleNumbers()).
+// Phase timers per bundle (outermost call only): layout (reCalculate()), draw (drawSheet()), sky (calculateSkyBottomLines()).
+const params = new URLSearchParams(location.search);
+const BUNDLES = params.get("bundles").split(",");
+let seed = Number(params.get("seed") || 12345);
+const random = () => {
+    seed = (seed * 1103515245 + 12345) % 2147483648;
+    return seed / 2147483648;
+};
+const shuffled = (array) => {
+    const a = [...array];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+};
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+function loadScript (src) {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+/** Wraps proto[name] to add the time of its outermost calls to timers[key]. */
+function wrap (proto, name, timers, key) {
+    const orig = proto[name];
+    let depth = 0;
+    proto[name] = function phaseTimer (...args) {
+        if (depth > 0) {
+            return orig.apply(this, args);
+        }
+        depth++;
+        const t0 = performance.now();
+        try {
+            return orig.apply(this, args);
+        } finally {
+            timers[key] += performance.now() - t0;
+            depth--;
+        }
+    };
+}
+/** Decodes a sample file (UTF-8, or UTF-16 with a byte order mark). */
+function decode (bytes) {
+    if (bytes[0] === 0xFF && bytes[1] === 0xFE) {
+        return new TextDecoder("utf-16le").decode(bytes.subarray(2));
+    }
+    if (bytes[0] === 0xFE && bytes[1] === 0xFF) {
+        return new TextDecoder("utf-16be").decode(bytes.subarray(2));
+    }
+    return new TextDecoder().decode(bytes); // (skips a UTF-8 byte order mark)
+}
+async function readSample (sample) {
+    const bytes = new Uint8Array(await (await fetch("/test/data/" + sample)).arrayBuffer());
+    return sample.endsWith(".mxl") ? bundles[0].OSMD.MXLHelper.MXLtoXMLstring(bytes) : decode(bytes);
+}
+
+const bundles = [];
+window.ready = (async () => {
+    for (const bundle of BUNDLES) {
+        await loadScript("/" + bundle + "?v=" + Date.now());
+        const OSMD = window.opensheetmusicdisplay;
+        delete window.opensheetmusicdisplay;
+        const timers = { layout: 0, draw: 0, sky: 0 };
+        wrap(OSMD.GraphicalMusicSheet.prototype, "reCalculate", timers, "layout");
+        wrap(OSMD.VexFlowMusicSheetDrawer.prototype, "drawSheet", timers, "draw");
+        wrap(OSMD.VexFlowMusicSheetCalculator.prototype, "calculateSkyBottomLines", timers, "sky");
+        const box = document.createElement("div");
+        box.className = "osmdBox";
+        document.body.appendChild(box);
+        const osmd = new OSMD.OpenSheetMusicDisplay(box, { autoResize: false, backend: "svg" });
+        osmd.setLogLevel("error");
+        bundles.push({ name: bundle, OSMD, osmd, timers, box });
+    }
+    return BUNDLES.length;
+})();
+
+/**
+ * Renders the sample with every bundle and compares the serialized SVGs with the first bundle's, with VexFlow's
+ * auto-generated element ids normalized (vf-auto####, numbered by a global counter that shifts when a change constructs more
+ * or fewer VexFlow objects) and raw.
+ */
+window.compareSample = async (sample) => {
+    await window.ready;
+    const xml = await readSample(sample);
+    const raw = [];
+    for (const b of bundles) {
+        await b.osmd.load(xml, sample);
+        b.osmd.render();
+        raw.push([...b.box.querySelectorAll("svg")].map(svg => new XMLSerializer().serializeToString(svg)).join("\n"));
+    }
+    const normalized = raw.map(s => s.replace(/vf-auto\d+/g, "vf-auto#"));
+    return normalized.slice(1).map((s, index) => {
+        const base = normalized[0];
+        if (s === base) {
+            return { equal: true, rawEqual: raw[index + 1] === raw[0] };
+        }
+        let i = 0;
+        while (i < s.length && s[i] === base[i]) {
+            i++;
+        }
+        return { equal: false, at: i, base: base.slice(i - 80, i + 80), other: s.slice(i - 80, i + 80) };
+    });
+};
+
+const NUMBER = /-?\d+(?:\.\d+)?(?:e[-+]?\d+)?/g;
+/** Rasterizes an SVG (img + canvas, on white) and returns its RGBA pixels. */
+async function rasterize (svgString) {
+    const img = new Image();
+    img.src = URL.createObjectURL(new Blob([svgString], { type: "image/svg+xml" }));
+    await img.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0);
+    URL.revokeObjectURL(img.src);
+    return ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+}
+/**
+ * Like compareSample() for two bundles, for SVGs that differ: are they equal except for numbers, and by how much do the
+ * numbers differ? With pixels, also rasterizes both SVGs of each differing page and counts the differing pixels.
+ */
+window.compareSampleNumbers = async (sample, pixels) => {
+    await window.ready;
+    const xml = await readSample(sample);
+    const svgs = [];
+    for (const b of bundles.slice(0, 2)) {
+        await b.osmd.load(xml, sample);
+        b.osmd.render();
+        svgs.push([...b.box.querySelectorAll("svg")].map(svg => new XMLSerializer().serializeToString(svg)));
+    }
+    const res = { rawEqual: true, structureEqual: true, numbers: 0, differingNumbers: 0, maxDiff: 0, maxDiffContext: "",
+        pixels: 0, differingPixels: 0, maxChannelDiff: 0 };
+    if (svgs[0].length !== svgs[1].length) {
+        return { ...res, rawEqual: false, structureEqual: false, note: "different page count" };
+    }
+    for (let page = 0; page < svgs[0].length; page++) {
+        const a = svgs[0][page];
+        const b = svgs[1][page];
+        if (a === b) {
+            continue;
+        }
+        res.rawEqual = false;
+        const textA = a.replace(NUMBER, "#");
+        const textB = b.replace(NUMBER, "#");
+        if (textA !== textB) {
+            res.structureEqual = false;
+            let i = 0;
+            while (i < textA.length && textA[i] === textB[i]) {
+                i++;
+            }
+            res.note = `page ${page}: ${textA.slice(i - 100, i + 60)} ||| ${textB.slice(i - 100, i + 60)}`;
+            continue;
+        }
+        const numbersA = [...a.matchAll(NUMBER)];
+        const numbersB = [...b.matchAll(NUMBER)];
+        res.numbers += numbersA.length;
+        for (let i = 0; i < numbersA.length; i++) {
+            if (numbersA[i][0] === numbersB[i][0]) {
+                continue;
+            }
+            res.differingNumbers++;
+            const diff = Math.abs(Number(numbersA[i][0]) - Number(numbersB[i][0]));
+            if (diff > res.maxDiff) {
+                res.maxDiff = diff;
+                const at = numbersA[i].index;
+                res.maxDiffContext = `${numbersA[i][0]} -> ${numbersB[i][0]} in ${a.slice(a.lastIndexOf("<", at), at + 20)}`;
+            }
+        }
+        if (pixels) {
+            const [pixelsA, pixelsB] = [await rasterize(a), await rasterize(b)];
+            if (pixelsA.length !== pixelsB.length) {
+                res.note = "different raster size";
+                continue;
+            }
+            res.pixels += pixelsA.length / 4;
+            for (let i = 0; i < pixelsA.length; i += 4) {
+                let diff = 0;
+                for (let c = 0; c < 4; c++) {
+                    diff = Math.max(diff, Math.abs(pixelsA[i + c] - pixelsB[i + c]));
+                }
+                if (diff > 0) {
+                    res.differingPixels++;
+                    res.maxChannelDiff = Math.max(res.maxChannelDiff, diff);
+                }
+            }
+        }
+    }
+    return res;
+};
+
+/**
+ * Loads the sample into every bundle's instance, renders it warm times, then runs the rounds: in each, every bundle renders
+ * (or loads) the sample once, in a shuffled order. Returns the times per bundle: total, layout, sky, draw (one per round).
+ * Modes: render: render(); layout: render() plus the browser's layout of the drawing; frame: render() until the next frame;
+ * load: load().
+ */
+window.runSample = async (sample, rounds, warm, mode) => {
+    await window.ready;
+    const xml = await readSample(sample);
+    for (const b of bundles) {
+        await b.osmd.load(xml, sample);
+        for (let i = 0; i < warm; i++) {
+            b.osmd.render();
+        }
+        b.box.getBoundingClientRect();
+        b.result = { total: [], layout: [], draw: [], sky: [] };
+    }
+    for (let round = 0; round < rounds; round++) {
+        await sleep(5);
+        for (const b of shuffled(bundles)) {
+            for (const key of Object.keys(b.timers)) {
+                b.timers[key] = 0;
+            }
+            if (mode === "load") {
+                const t0 = performance.now();
+                await b.osmd.load(xml, sample);
+                b.result.total.push(performance.now() - t0);
+            } else if (mode === "frame") {
+                b.box.style.visibility = "visible";
+                await sleep(20);
+                const t0 = performance.now();
+                b.osmd.render();
+                await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
+                b.result.total.push(performance.now() - t0);
+                b.box.style.visibility = "hidden";
+            } else {
+                const t0 = performance.now();
+                b.osmd.render();
+                if (mode === "layout") {
+                    b.box.getBoundingClientRect(); // the browser's layout of the drawing, which it needs before showing it
+                }
+                b.result.total.push(performance.now() - t0);
+                // Lay out the drawing now, outside the timing. Otherwise the next call that needs the layout does it, e.g. the
+                //   next render() of another bundle (its getContainerContentWidth()), and the time is counted there.
+                b.box.getBoundingClientRect();
+            }
+            for (const key of Object.keys(b.timers)) {
+                b.result[key].push(b.timers[key]);
+            }
+        }
+    }
+    return Object.fromEntries(bundles.map(b => [b.name, b.result]));
+};
+</script>
+</body>
+</html>

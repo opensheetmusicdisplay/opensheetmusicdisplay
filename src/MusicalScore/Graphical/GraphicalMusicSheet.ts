@@ -27,6 +27,7 @@ import { MusicSheetDrawer } from "./MusicSheetDrawer";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { GraphicalObject } from "./GraphicalObject";
 import { ClassType } from "../Interfaces/AClassHierarchyTrackable";
+import { ITransposeCalculator } from "../Interfaces/ITransposeCalculator";
 // import { VexFlowMusicSheetDrawer } from "./VexFlow/VexFlowMusicSheetDrawer";
 // import { SvgVexFlowBackend } from "./VexFlow/SvgVexFlowBackend"; // causes build problem with npm start
 
@@ -62,6 +63,11 @@ export class GraphicalMusicSheet {
     //private systemImages: Dictionary<MusicSystem, SystemImageProperties> = new Dictionary<MusicSystem, SystemImageProperties>();
     private numberOfStaves: number;
     private leadSheet: boolean = false;
+    /** The transposition the graphical notes and chord symbols were created with (see Initialize()):
+     *  MusicSheet.Transpose, followed by each instrument's Transpose. */
+    private preparedTransposition: number[] = [];
+    /** The transpose calculator the graphical notes and chord symbols were created with (see Initialize()). */
+    private preparedTransposeCalculator: ITransposeCalculator;
 
     public get ParentMusicSheet(): MusicSheet {
         return this.musicSheet;
@@ -195,10 +201,36 @@ export class GraphicalMusicSheet {
         }
     }
 
+    /** Empties the lists of graphical objects for creating them from the music sheet (MusicSheetCalculator.prepareGraphicalMusicSheet()),
+     *  and remembers the transposition they are created with, see {@link TranspositionChanged}.
+     */
     public Initialize(): void {
         this.verticalGraphicalStaffEntryContainers = [];
         this.musicPages = [];
         this.measureList = [];
+        this.preparedTransposition = this.currentTransposition();
+        this.preparedTransposeCalculator = MusicSheetCalculator.transposeCalculator;
+    }
+
+    /** Whether the transposition changed since the graphical notes and chord symbols were created:
+     *  osmd.Sheet.Transpose, an instrument's Transpose, or, while one of them isn't 0, osmd.TransposeCalculator.
+     *  The notes and chord symbols are transposed when they are created, the key signatures in each layout (reCalculate()),
+     *  so osmd.render() creates the graphic again when the transposition changed.
+     *  A changed option of the same calculator (e.g. IntervalTransposeCalculator.AvoidDoubleAccidentals) doesn't count:
+     *  call osmd.updateGraphic() after that.
+     */
+    public get TranspositionChanged(): boolean {
+        const transposition: number[] = this.currentTransposition();
+        if (transposition.some((halftones: number, index: number): boolean => halftones !== this.preparedTransposition[index])) {
+            return true;
+        }
+        return transposition.some((halftones: number): boolean => halftones !== 0) &&
+            MusicSheetCalculator.transposeCalculator !== this.preparedTransposeCalculator;
+    }
+
+    /** The halftones the sheet is transposed by: MusicSheet.Transpose, followed by each instrument's Transpose. */
+    private currentTransposition(): number[] {
+        return [this.musicSheet.Transpose, ...this.musicSheet.Instruments.map((instrument: Instrument): number => instrument.Transpose)];
     }
 
     public reCalculate(): void {

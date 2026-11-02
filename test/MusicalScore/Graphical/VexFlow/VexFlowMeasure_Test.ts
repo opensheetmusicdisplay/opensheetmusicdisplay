@@ -314,9 +314,10 @@ describe("VexFlow Measure", () => {
          osmd.render();
          expect(drawnOrnamentAccidentals(osmd), "[above, below] of each measure's turn").to.deep.equal(
             [[[], ["##"]], [[], ["#", "#"]], [[], ["n", "#"]], [["#", "#"], []]]);
-         // the two sharps of measure 2 are drawn side by side with a space between them, before the turn itself
+         // the two sharps of measure 2 are drawn side by side with a space between them, before the turn itself (in the
+         //   ornament's group, g.vf-ornament)
          const ornamentPaths: Element[] = Array.from((osmd.GraphicSheet.MeasureList[1][0].staffEntries[0].graphicalVoiceEntries[0]
-            .notes[0] as VexFlowGraphicalNote).getModifierSVGs()[0].children);
+            .notes[0] as VexFlowGraphicalNote).getModifierSVGs()[0].querySelector("g.vf-ornament").children);
          const [first, second] = ornamentPaths.map((path: Element): DOMRect => (path as SVGGraphicsElement).getBBox());
          // the accidentalSpacing (3) is scaled by 1/1.3, like the ornament's accidentals themselves
          expect(second.x - (first.x + first.width), "the space between the two sharps").to.be.closeTo(3 / 1.3, 1.5);
@@ -333,9 +334,10 @@ describe("VexFlow Measure", () => {
          osmd.render();
          expect(drawnOrnamentAccidentals(osmd), "[above, below] of each measure's ornament").to.deep.equal(
             [[["#", "##"], []], [[], ["b", "bb"]], [[], ["n", "b"]], [["bs"], []]]);
-         // the sharp and the double sharp of the triple sharp share one line, like the accidentals of a note
+         // the sharp and the double sharp of the triple sharp share one line, like the accidentals of a note (in the
+         //   ornament's group, g.vf-ornament, after the trill)
          const ornamentPaths: Element[] = Array.from((osmd.GraphicSheet.MeasureList[0][0].staffEntries[0].graphicalVoiceEntries[0]
-            .notes[0] as VexFlowGraphicalNote).getModifierSVGs()[0].children);
+            .notes[0] as VexFlowGraphicalNote).getModifierSVGs()[0].querySelector("g.vf-ornament").children);
          const [sharp, doubleSharp] = ornamentPaths.slice(1).map((path: Element): DOMRect => (path as SVGGraphicsElement).getBBox());
          expect(sharp.y + sharp.height / 2, "the centers of the sharp and the double sharp")
             .to.be.closeTo(doubleSharp.y + doubleSharp.height / 2, 1);
@@ -1175,14 +1177,10 @@ describe("VexFlow Measure", () => {
             tuplet.Notes.flat().filter((note: Note) => note.PrintObject && note.ParentStaff === measure.ParentStaff);
          expect(drawnNotes(triplets[0], upperMeasure).length, "notes of the first triplet drawn on the upper staff").to.equal(1);
 
-         // The indices of the triplets with a number drawn in the measure. The numbers are the glyphs (filled paths) in the
-         //   measure's SVG group that belong to no note, beam, clef, key or time signature, which have groups of their own
-         //   (the staff lines are stroked, with fill="none"). A number is centered over the triplet's notes in the staff.
+         // The indices of the triplets with a number drawn in the measure. The numbers are the paths of the measure's tuplets
+         //   (path.vf-tuplet, or in a g.vf-tuplet with a bracket's rects). A number is centered over the triplet's notes in the staff.
          const numberedTriplets: (measure: GraphicalMeasure) => number[] = (measure: GraphicalMeasure): number[] => {
-            const measureGroup: Element = (measure.staffEntries[0].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote)
-               .getSVGGElement().closest("g.vf-measure");
-            const numbers: Element[] = Array.from(measureGroup.querySelectorAll("path:not([fill='none'])")).filter((path: Element) =>
-               !path.closest(".vf-stavenote, .vf-beam, .vf-clef, .vf-keysignature, .vf-timesignature")); // a beam is a path.vf-beam
+            const numbers: Element[] = Array.from(measure.getSVGGElement().querySelectorAll("path.vf-tuplet, .vf-tuplet > path"));
             return numbers.map((tupletNumber: Element) => {
                const numberBox: DOMRect = (tupletNumber as SVGGraphicsElement).getBBox();
                const centerX: number = numberBox.x + numberBox.width / 2;
@@ -1257,7 +1255,10 @@ describe("VexFlow Measure", () => {
    // Non-regression test for the WIDTH-DRIVEN case of SlurFlattenToObstacle (issue #1466): a wide slur over a
    // (near-)flat passage must not balloon. The minimum-arc floor grows with sqrt(width) rather than linearly, so
    // wide slurs stay proportionally flat. Chopin Étude Op. 10 No. 4 has several system-spanning slurs that would
-   // otherwise arc very high; this checks the widest slur on the sheet is flattened substantially.
+   // otherwise arc very high; this checks the widest slur of measures 61-68 is flattened substantially. That is the
+   // widest slur of the whole sheet in Firefox (measures 66-68), and as wide and flattened as the widest in Chrome, whose
+   // narrower window breaks the systems elsewhere: the same check as for all 83 measures, which take 6 to 8 times as long
+   // to render.
    it("Keeps a wide slur over a flat passage from ballooning (SlurFlattenToObstacle, width-driven)", (done: Mocha.Done) => {
       const score: Document = TestUtils.getScore("test_dynamics_attribute_Chopin_Etudes_op_10_4_Duepree02.musicxml");
       if (!score) {
@@ -1302,6 +1303,9 @@ describe("VexFlow Measure", () => {
 
       const osmdOff: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
       const osmdOn: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+      for (const osmd of [osmdOff, osmdOn]) {
+         osmd.setOptions({ drawFromMeasureNumber: 61, drawUpToMeasureNumber: 68 });
+      }
 
       osmdOff.load(xml).then(() => {
          osmdOff.EngravingRules.SlurFlattenToObstacle = false;

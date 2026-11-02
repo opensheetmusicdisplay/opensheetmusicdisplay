@@ -93,13 +93,14 @@ export class SkyBottomLineCalculator {
         // range - Array.slice truncates its float bounds toward zero, which Math.trunc reproduces - so the
         // subsampled values are unchanged (min/max are order- and duplicate-independent).
         const arrayChunkSize: number = concatLength / arrayLength;
-        const subSampledSkyLine: number[] = [];
-        const subSampledBottomLine: number[] = [];
-        for (let chunkIndex: number = 0; chunkIndex < concatLength; chunkIndex += arrayChunkSize) {
-            if (subSampledSkyLine.length === arrayLength) {
-                break; // TODO find out why skyline.length becomes arrayLength + 1. see log.debug below
-            }
-
+        // Preallocated and index-filled like the concatenated lines: the staffline keeps these arrays (remapped in place below),
+        // and pushing would leave the room an array grows by unused, up to about a third of its memory.
+        const subSampledSkyLine: number[] = new Array(arrayLength);
+        const subSampledBottomLine: number[] = new Array(arrayLength);
+        let sampleCount: number = 0;
+        // The sample count also ends the loop: chunkIndex adds up arrayChunkSize, and the rounding can leave it just below
+        // concatLength after the last chunk, which would add a sample.
+        for (let chunkIndex: number = 0; chunkIndex < concatLength && sampleCount < arrayLength; chunkIndex += arrayChunkSize) {
             const endIndex: number = Math.min(concatLength, chunkIndex + arrayChunkSize);
             const startColumn: number = Math.trunc(chunkIndex); // slice(chunkIndex, ...) truncates the start toward zero
             let endColumn: number = Math.trunc(endIndex + 1); // slice's end is exclusive; "+ 1" mirrors the old endIndex + 1
@@ -117,15 +118,18 @@ export class SkyBottomLineCalculator {
                     bottomLineMax = bottomLineConcat[column];
                 }
             }
-            subSampledSkyLine.push(skyLineMin);
-            subSampledBottomLine.push(bottomLineMax);
+            subSampledSkyLine[sampleCount] = skyLineMin;
+            subSampledBottomLine[sampleCount] = bottomLineMax;
+            sampleCount++;
+        }
+        if (sampleCount !== arrayLength) { // only without columns (a staffline without measures)
+            log.debug(`SkyLine calculation was not correct (${sampleCount} instead of ${arrayLength})`);
+            subSampledSkyLine.length = sampleCount;
+            subSampledBottomLine.length = sampleCount;
         }
 
         this.mSkyLine = subSampledSkyLine;
         this.mBottomLine = subSampledBottomLine;
-        if (this.mSkyLine.length !== arrayLength) { // bottomline will always be same length as well
-            log.debug(`SkyLine calculation was not correct (${this.mSkyLine.length} instead of ${arrayLength})`);
-        }
 
         // Remap the values from 0 to +/- height in units. The extremes are found with a scan instead of
         // Math.max(...array) (which spreads the whole array into a call), and the remap is done in place.
@@ -709,9 +713,13 @@ export class SkyBottomLineCalculator {
     }
 
     /**
-     * This method finds the SkyLine's minimum value within a given range.
-     * @param startIndex Starting index
-     * @param endIndex End index (including)
+     * This method finds the SkyLine's minimum value within a given range: in the samples the range touches (rounded outward,
+     * a sample is 1 / SamplingUnit wide) and also in the sample after them. Callers rely on that extra sample, e.g. a measure
+     * number at a system start (the top of the clef is under the end of the number, see
+     * MusicSheetCalculator.calculateSingleMeasureNumberPlacement()) and a fingering above (the stem at the right of the
+     * note head). For the samples a box touches only, see getSkyLineMinForLabel().
+     * @param startIndex Start of the range, in units relative to the staffline
+     * @param endIndex End of the range (the sample after it is read too)
      */
     public getSkyLineMinInRange(startIndex: number, endIndex: number): number {
         return this.getMinInRange(this.SkyLine, startIndex, endIndex);
@@ -738,9 +746,10 @@ export class SkyBottomLineCalculator {
     }
 
     /**
-     * This method finds the BottomLine's maximum value within a given range.
-     * @param startIndex Start index of the range
-     * @param endIndex End index of the range (excluding)
+     * This method finds the BottomLine's maximum value within a given range: in the samples the range touches and also in
+     * the sample after them, see getSkyLineMinInRange(). For the samples a box touches only, see getBottomLineMaxForLabel().
+     * @param startIndex Start of the range, in units relative to the staffline
+     * @param endIndex End of the range (the sample after it is read too)
      */
     public getBottomLineMaxInRange(startIndex: number, endIndex: number): number {
         return this.getMaxInRange(this.BottomLine, startIndex, endIndex);
@@ -928,10 +937,11 @@ export class SkyBottomLineCalculator {
         }
     }
     /**
-     * Get all values of the selected line inside the given range
+     * Get the minimum of the selected line in the samples the given range touches and in the sample after them,
+     * see getSkyLineMinInRange().
      * @param skyBottomArray Skyline or bottom line
-     * @param startIndex start index
-     * @param endIndex end index (including)
+     * @param startIndex start of the range
+     * @param endIndex end of the range
      */
     private getMinInRange(skyBottomArray: number[], startIndex: number, endIndex: number): number {
         startIndex = Math.floor(startIndex * this.SamplingUnit);
@@ -956,15 +966,17 @@ export class SkyBottomLineCalculator {
         }
 
         if (startIndex >= 0 && endIndex <= skyBottomArray.length) {
-            return Math.min(...skyBottomArray.slice(startIndex, endIndex + 1)); // slice does not include end (index)
+            // endIndex + 1: also the sample after the range (since 554d2775, against an empty slice; callers rely on it now)
+            return Math.min(...skyBottomArray.slice(startIndex, endIndex + 1));
         }
     }
 
     /**
-     * Get the maximum value inside the given indices
+     * Get the maximum of the selected line in the samples the given range touches and in the sample after them,
+     * see getSkyLineMinInRange().
      * @param skyBottomArray Skyline or bottom line
-     * @param startIndex start index
-     * @param endIndex end index (including)
+     * @param startIndex start of the range
+     * @param endIndex end of the range
      */
     private getMaxInRange(skyBottomArray: number[], startIndex: number, endIndex: number): number {
         startIndex = Math.floor(startIndex * this.SamplingUnit);
@@ -989,7 +1001,8 @@ export class SkyBottomLineCalculator {
         }
 
         if (startIndex >= 0 && endIndex <= skyBottomArray.length) {
-            return Math.max(...skyBottomArray.slice(startIndex, endIndex + 1)); // slice does not include end (index)
+            // endIndex + 1: also the sample after the range, see getMinInRange()
+            return Math.max(...skyBottomArray.slice(startIndex, endIndex + 1));
         }
     }
     // FIXME: What does this do here?

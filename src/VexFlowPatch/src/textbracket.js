@@ -128,6 +128,8 @@ export class TextBracket extends Element {
 
     ctx.save();
     this.applyStyle(ctx);
+    // VexFlowPatch: the text, the superscript and the bracket in a group (class vf-textbracket)
+    ctx.openGroup('textbracket');
 
     // Draw text
     ctx.fillText(this.text, start.x, start.y);
@@ -225,6 +227,7 @@ export class TextBracket extends Element {
       ctx.closePath();
     }
 
+    ctx.closeGroup();
     ctx.restore();
   }
 }

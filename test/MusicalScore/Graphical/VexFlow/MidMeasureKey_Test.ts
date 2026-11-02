@@ -6,6 +6,7 @@ import { TransposeCalculator } from "../../../../src/Plugins/Transpose/Transpose
 import { ITransposeCalculator } from "../../../../src/MusicalScore/Interfaces/ITransposeCalculator";
 import { GraphicalStaffEntry } from "../../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
 import { AccidentalEnum } from "../../../../src/Common/DataObjects/Pitch";
+import { KeyInstruction } from "../../../../src/MusicalScore/VoiceData/Instructions/KeyInstruction";
 import { unitInPixels } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
 
 describe("Mid-measure key rendering", (): void => {
@@ -181,5 +182,27 @@ describe("Mid-measure key rendering", (): void => {
             .to.deep.equal([AccidentalEnum.NONE, AccidentalEnum.NONE]);
         expect(key.getBBox().x + key.getBBox().width, "the key precedes the entire grace group")
             .to.be.lessThan(graceNotes[0].vfnote[0].getAbsoluteX());
+    });
+
+    it("draws a key after the notes of the last measure at its end", async (): Promise<void> => {
+        await loadScore("test_key_signature_final_measure_end.musicxml");
+
+        // The last measure has no following measure to carry the key into, so it stays at the measure end (it was lost).
+        const lastIndex: number = osmd.GraphicSheet.MeasureList.length - 1;
+        for (let staffIndex: number = 0; staffIndex < 2; staffIndex++) {
+            const keyEntries: GraphicalStaffEntry[] = osmd.GraphicSheet.MeasureList[lastIndex][staffIndex].staffEntries.filter(
+                (entry: GraphicalStaffEntry): boolean => entry.sourceStaffEntry.Instructions.length > 0,
+            );
+            expect(keyEntries, "the return key stays in the last measure").to.have.length(1);
+            expect(keyEntries[0].sourceStaffEntry.Timestamp.RealValue, "at the measure end").to.equal(0.25);
+            expect((keyEntries[0].sourceStaffEntry.Instructions[0] as KeyInstruction).Key, "four sharps").to.equal(4);
+        }
+        const lastNoteX: number = notesIn(lastIndex)[0].vfnote[0].getAbsoluteX();
+        const lastKeys: SVGGraphicsElement[] = keys()
+            .sort((a: SVGGraphicsElement, b: SVGGraphicsElement): number => a.getBBox().x - b.getBBox().x)
+            .slice(-2);
+        for (const key of lastKeys) {
+            expect(key.getBBox().x, "the key is drawn on both staves after the last note").to.be.greaterThan(lastNoteX);
+        }
     });
 });

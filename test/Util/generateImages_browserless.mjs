@@ -4,7 +4,6 @@ import FS from "fs";
 import jsdom from "jsdom";
 import Path from "path";
 import { fileURLToPath } from "url";
-//import headless_gl from "gl"; // this is now imported dynamically in a try catch, in case gl install fails, see #1160
 import OSMD from "../../build/opensheetmusicdisplay.min.js"; // window needs to be available before we can require OSMD
 // for debugging, use opensheetmusicdisplay.min.js, created by npm run build:webpack-dev
 /*
@@ -43,7 +42,7 @@ let [osmdBuildDir, sampleDir, imageDir, imageFormat, pageWidth, pageHeight, filt
 imageFormat = imageFormat?.toLowerCase();
 if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageFormat !== "svg")) {
     console.log("usage: " +
-        "node test/Util/generateImages_browserless.mjs osmdBuildDir sampleDirectory imageDirectory svg|png [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime]");
+        "node test/Util/generateImages_browserless.mjs osmdBuildDir sampleDirectory imageDirectory svg|png [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime] [--batch]");
     console.log("  (use pageWidth and pageHeight 0 to not divide the rendering into pages (endless page))");
     console.log('  (use "all" to skip filterRegex parameter. "allSmall" with --osmdtesting additionally skips the two biggest OSMD samples,' +
         ' ActorPreludeSample and CharlesGounod_Meditation (a few seconds each), e.g. for quick runs on slow machines)');
@@ -110,36 +109,6 @@ async function init () {
     global.Node = window.Node;
     if (imageFormat === "png") {
         global.Canvas = window.Canvas;
-    }
-
-    // For WebGLSkyBottomLineCalculatorBackend: Try to import gl dynamically
-    //   this is so that the script doesn't fail if gl could not be installed,
-    //   which can happen in some linux setups where gcc-11 is installed, see #1160
-    try {
-        const { default: headless_gl } = await import("gl");
-        const oldCreateElement = document.createElement.bind(document);
-        document.createElement = function (tagName, options) {
-            if (tagName.toLowerCase() === "canvas") {
-                const canvas = oldCreateElement(tagName, options);
-                const oldGetContext = canvas.getContext.bind(canvas);
-                canvas.getContext = function (contextType, contextAttributes) {
-                    if (contextType.toLowerCase() === "webgl" || contextType.toLowerCase() === "experimental-webgl") {
-                        const gl = headless_gl(canvas.width, canvas.height, contextAttributes);
-                        gl.canvas = canvas;
-                        return gl;
-                    } else {
-                        return oldGetContext(contextType, contextAttributes);
-                    }
-                };
-                return canvas;
-            } else {
-                return oldCreateElement(tagName, options);
-            }
-        };
-    } catch {
-        if (skyBottomLinePreference === "--webgl") {
-            debug("WebGL image generation was requested but gl is not installed; using non-WebGL generation.");
-        }
     }
 
     if (process.platform === "win32") {
@@ -617,25 +586,21 @@ function debug (msg, debugEnabled = true) {
     }
 }
 
+/**
+ * Returns the OSMD options for the skyline calculation given as the 10th command line argument (skyBottomLinePreference):
+ * with "--batch", the pixel-based batch calculation (drawing the measures on a canvas and reading its pixels),
+ * which OSMD uses if EngravingRules.UseGeometricSkyBottomLineCalculation is false, else the default geometric calculation.
+ * @returns {object} The options for osmd.setOptions().
+ */
 function makeSkyBottomLineOptions() {
     // skyBottomLinePreference assumed to be globally set
-    const preference = skyBottomLinePreference ?? "";
-    if (preference === "--batch") {
+    if (skyBottomLinePreference === "--batch") {
         return {
-            preferredSkyBottomLineBatchCalculatorBackend: 0, // plain
-            skyBottomLineBatchCriteria: 0, // use batch algorithm only
-        };
-    } else if (preference === "--webgl") {
-        return {
-            preferredSkyBottomLineBatchCalculatorBackend: 1, // webgl
-            skyBottomLineBatchCriteria: 0, // use batch algorithm only
-        };
-    } else {
-        return {
-            preferredSkyBottomLineBatchCalculatorBackend: 0, // plain
-            skyBottomLineBatchCriteria: Infinity, // use non-batch algorithm only
+            useGeometricSkyBottomLineCalculation: false,
+            skyBottomLineBatchMinMeasures: 0, // use batch algorithm only
         };
     }
+    return {};
 }
 
 /**
@@ -709,6 +674,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestTabTiesAcrossSystemBreaks = sampleFilename.startsWith("test_tab_hammer-on_pull-off_tie_across_system_breaks");
     // a key and time change at a system break (courtesy signatures), see test_hidden_staff_clef_key_time: systems as in the file
     const isTestHiddenStaffClefKeyTime = sampleFilename.startsWith("test_hidden_staff_clef_key_time");
+    // multiple rest measures ending at the system and page breaks of the file, see test_multiple_rest_measures_auto_xml_breaks
+    const isTestMultipleRestMeasuresXmlBreaks = sampleFilename.startsWith("test_multiple_rest_measures_auto_xml_breaks");
     const isTestCopyrightBelowLastSystem = sampleFilename.includes("copyright_below_last_system");
     const isTestFirstPageCreditWords = sampleFilename.startsWith("test_first_page_credit_words");
     const isTestOptimizeExtremeLedgerBeams = sampleFilename.includes("test_beam_intersecting_ledger_lines") && !process.argv.includes("--native-vexflow");
@@ -737,9 +704,10 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         drawUpToMeasureNumber: drawUpToMeasureNumber,
         drawMeasureNumbersOnlyAtSystemStart: isTestMeasureNumbersOnlyAtSystemStart,
         newSystemFromXML: isFunctionTestSystemAndPageBreaks || isTestMeasureNumbersOnlyAtSystemStart || isTestGraceNotesOnlyMeasure ||
-            isTestLyricsDashContinuedInNextSystem || isTestTabTiesAcrossSystemBreaks || isTestHiddenStaffClefKeyTime,
+            isTestLyricsDashContinuedInNextSystem || isTestTabTiesAcrossSystemBreaks || isTestHiddenStaffClefKeyTime ||
+            isTestMultipleRestMeasuresXmlBreaks,
         newSystemFromNewPageInXML: isTestPageBreakImpliesSystemBreak,
-        newPageFromXML: isFunctionTestSystemAndPageBreaks,
+        newPageFromXML: isFunctionTestSystemAndPageBreaks || isTestMultipleRestMeasuresXmlBreaks,
         pageBackgroundColor: "#FFFFFF", // reset by drawingparameters default
         pageFormat: pageFormat, // reset by drawingparameters default,
         ...makeSkyBottomLineOptions()
@@ -752,7 +720,6 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     }
     // note that loadDefaultValues() may be executed in setOptions with drawingParameters default
     //osmdInstance.EngravingRules.RenderSingleHorizontalStaffline = true; // to use this option here, place it after setOptions(), see above
-    osmdInstance.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false; // this would override the command line options (--plain etc)
     includeSkyBottomLine = options.skyBottomLine ?? false; // apparently es6 doesn't have ?? operator
     osmdInstance.drawSkyLine = includeSkyBottomLine; // if includeSkyBottomLine, draw skyline and bottomline, else not
     osmdInstance.drawBottomLine = includeSkyBottomLine;

@@ -270,14 +270,16 @@ export abstract class MusicSystem extends GraphicalObject {
             if (!instrument1 || !instrument2) {
                 continue;
             }
+            // a part-group groups whole parts: from the first staff of its first part to the last staff of its last part
+            //   (e.g. both staves of a piano that ends the group), among the system's stafflines (the visible staves)
             let firstStaffLine: StaffLine = undefined;
             let lastStaffLine: StaffLine = undefined;
             for (let idx2: number = 0, len2: number = this.staffLines.length; idx2 < len2; ++idx2) {
                 const staffLine: StaffLine = this.staffLines[idx2];
-                if (staffLine.ParentStaff === instrument1.Staves[0]) {
+                if (!firstStaffLine && staffLine.ParentStaff.ParentInstrument === instrument1) {
                     firstStaffLine = staffLine;
                 }
-                if (staffLine.ParentStaff === instrument2.Staves[0]) {
+                if (staffLine.ParentStaff.ParentInstrument === instrument2) {
                     lastStaffLine = staffLine;
                 }
             }
@@ -331,6 +333,7 @@ export abstract class MusicSystem extends GraphicalObject {
                 const graphicalLabel: GraphicalLabel = new GraphicalLabel(
                     instrNameLabel, instrumentLabelTextHeight, TextAlignmentEnum.LeftCenter, this.rules, this.boundingBox
                 );
+                graphicalLabel.SVGClass = isFirstSystem ? "osmd-part-name" : "osmd-part-abbreviation";
                 graphicalLabel.setLabelPositionAndShapeBorders();
                 this.labels.setValue(instrument, graphicalLabel);
                 // X is set after all group and part label widths are known; Y is set after staff spacing.
@@ -394,6 +397,7 @@ export abstract class MusicSystem extends GraphicalObject {
                 const label: GraphicalLabel = new GraphicalLabel(
                     new Label(text), textHeight, TextAlignmentEnum.LeftCenter, this.rules, this.boundingBox
                 );
+                label.SVGClass = isFirstSystem ? "osmd-part-group-name" : "osmd-part-group-abbreviation";
                 label.setLabelPositionAndShapeBorders();
                 this.groupLabels.set(group, label);
                 if (!byDepth[depth]) {

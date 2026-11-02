@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>OSMD profile page</title>
+<style>
+    body { margin: 0; font-family: sans-serif; }
+    #osmdBox { width: 1440px; position: absolute; left: 0; top: 0; }
+</style>
+</head>
+<body>
+<div id="osmdBox"></div>
+<script>
+// Page of chromeProfile.mjs, chromeEval.mjs and chromeForcedLayouts.mjs: loads one OSMD bundle (?bundle=path from the
+// repository root, default export/bundles/names/opensheetmusicdisplay.min.js, see webpack.names.mjs) and exposes
+// prepare(), renderN(), paintN() and loadN(), with wall-clock timers of a few phases (outermost calls only).
+// Options: ?options={...} (OSMDOptions as JSON), ?timers=0 (no phase timers).
+// Timing experiments that change the output: ?fakeBBox=1 (getBBox() of a text returns a constant, without a layout),
+// ?hideDuringDraw=1 (the container is display:none while drawing).
+const params = new URLSearchParams(location.search);
+const BUNDLE = params.get("bundle") || "export/bundles/names/opensheetmusicdisplay.min.js";
+const OPTIONS = JSON.parse(params.get("options") || "{}");
+const timers = {};
+/** Wraps proto[name] to add the time of its outermost calls to timers[key]. */
+function wrap (proto, name, key) {
+    if (!proto || typeof proto[name] !== "function") {
+        return false;
+    }
+    const orig = proto[name];
+    let depth = 0;
+    timers[key] = 0;
+    proto[name] = function phaseTimer (...args) {
+        if (depth > 0) {
+            return orig.apply(this, args);
+        }
+        depth++;
+        const t0 = performance.now();
+        try {
+            return orig.apply(this, args);
+        } finally {
+            timers[key] += performance.now() - t0;
+            depth--;
+        }
+    };
+    return true;
+}
+if (params.get("fakeBBox") === "1") {
+    const origGetBBox = SVGGraphicsElement.prototype.getBBox;
+    SVGGraphicsElement.prototype.getBBox = function (...args) {
+        if (this.tagName === "text") {
+            return { x: 0, y: -10, width: 8 * (this.textContent || "").length, height: 12 };
+        }
+        return origGetBBox.apply(this, args);
+    };
+}
+window.ready = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "/" + BUNDLE + "?v=" + Date.now();
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+}).then(() => {
+    const OSMD = window.opensheetmusicdisplay;
+    window.OSMD = OSMD;
+    if (params.get("timers") !== "0") {
+        wrap(OSMD.GraphicalMusicSheet.prototype, "reCalculate", "layout");
+        wrap(OSMD.VexFlowMusicSheetDrawer.prototype, "drawSheet", "draw");
+        wrap(OSMD.VexFlowMusicSheetCalculator.prototype, "calculateSkyBottomLines", "sky");
+        wrap(OSMD.MusicSheetCalculator?.prototype, "calculateXLayout", "xlayout");
+        wrap(OSMD.VexFlowMusicSheetCalculator.prototype, "formatMeasures", "formatMeasures");
+    }
+    if (params.get("hideDuringDraw") === "1") {
+        const proto = OSMD.VexFlowMusicSheetDrawer.prototype;
+        const origDrawSheet = proto.drawSheet;
+        proto.drawSheet = function (...args) {
+            const box = document.getElementById("osmdBox");
+            box.style.display = "none";
+            try {
+                return origDrawSheet.apply(this, args);
+            } finally {
+                box.style.display = "";
+            }
+        };
+    }
+    window.osmd = new OSMD.OpenSheetMusicDisplay(document.getElementById("osmdBox"), { autoResize: false, backend: "svg", ...OPTIONS });
+    window.osmd.setLogLevel("error");
+    return Object.keys(timers);
+});
+/** Decodes a sample file (UTF-8, or UTF-16 with a byte order mark). */
+function decode (bytes) {
+    if (bytes[0] === 0xFF && bytes[1] === 0xFE) {
+        return new TextDecoder("utf-16le").decode(bytes.subarray(2));
+    }
+    if (bytes[0] === 0xFE && bytes[1] === 0xFF) {
+        return new TextDecoder("utf-16be").decode(bytes.subarray(2));
+    }
+    return new TextDecoder().decode(bytes); // (skips a UTF-8 byte order mark)
+}
+/** Loads the sample and renders it warm times. Returns the score's size and the number of SVG elements. */
+window.prepare = async (sample, warm) => {
+    await window.ready;
+    const bytes = new Uint8Array(await (await fetch("/test/data/" + sample)).arrayBuffer());
+    window.xml = sample.endsWith(".mxl") ? await window.OSMD.MXLHelper.MXLtoXMLstring(bytes) : decode(bytes);
+    await window.osmd.load(window.xml, sample);
+    for (let i = 0; i < warm; i++) {
+        window.osmd.render();
+    }
+    document.body.getBoundingClientRect();
+    return { elements: document.querySelectorAll("#osmdBox svg *").length, measures: window.osmd.Sheet.SourceMeasures.length,
+        staves: window.osmd.Sheet.Staves.length };
+};
+/**
+ * Renders n times. Returns the time of each render() and its phase timers. The browser's layout of each drawing is forced
+ * right after the timing, so that the next render() doesn't pay for it (it is in a CPU profile, outside render()).
+ */
+window.renderN = (n) => {
+    const res = [];
+    for (let i = 0; i < n; i++) {
+        for (const key of Object.keys(timers)) {
+            timers[key] = 0;
+        }
+        const t0 = performance.now();
+        window.osmd.render();
+        res.push({ total: performance.now() - t0, ...timers });
+        document.body.getBoundingClientRect();
+    }
+    return res;
+};
+/** Renders n times, each time until the browser has produced the next frame (style, layout and paint of the new SVG). */
+window.paintN = async (n) => {
+    const res = [];
+    for (let i = 0; i < n; i++) {
+        await new Promise(resolve => setTimeout(resolve, 20));
+        const t0 = performance.now();
+        window.osmd.render();
+        const t1 = performance.now();
+        document.body.getBoundingClientRect(); // style and layout now
+        const t2 = performance.now();
+        await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
+        res.push({ js: t1 - t0, styleLayout: t2 - t1, untilFrame: performance.now() - t0 });
+    }
+    return res;
+};
+/** Loads the prepared sample n times. Returns the time of each load(). */
+window.loadN = async (n) => {
+    const res = [];
+    for (let i = 0; i < n; i++) {
+        const t0 = performance.now();
+        await window.osmd.load(window.xml, "sample");
+        res.push(performance.now() - t0);
+    }
+    return res;
+};
+</script>
+</body>
+</html>

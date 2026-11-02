@@ -307,6 +307,11 @@
      const notation_center_x = this.x_pos + (this.width / 2);
      const notation_start_x = notation_center_x - (width / 2);
  
+     // VexFlowPatch: the bracket and the number in a group (class vf-tuplet, like VexFlow 5 draws them). A tuplet of one shape,
+     //   e.g. a beamed triplet's number, gets the group's class instead (<path class="vf-tuplet">), and a tuplet without shapes
+     //   (no bracket and no number) gets no group (see SVGContext.openGroup() with attrs.mergeIntoChild and omitIfEmpty).
+     this.context.openGroup('tuplet', undefined, { mergeIntoChild: true, omitIfEmpty: true });
+ 
      // draw bracket if the tuplet is not beamed
      if (this.bracketed) {
        const line_width = this.width / 2 - width / 2 - 5;
@@ -363,6 +368,7 @@
          x_offset += glyph.getMetrics().width;
        });
      }
+     this.context.closeGroup();
    }
  }
  

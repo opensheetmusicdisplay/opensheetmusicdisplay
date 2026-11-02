@@ -1,4 +1,3 @@
-import { SkyBottomLineBatchCalculatorBackendType } from "../../OpenSheetMusicDisplay";
 import { EngravingRules } from "./EngravingRules";
 import { PlainSkyBottomLineBatchCalculatorBackend } from "./PlainSkyBottomLineBatchCalculatorBackend";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
@@ -6,8 +5,6 @@ import { SkyBottomLineBatchCalculatorBackend } from "./SkyBottomLineBatchCalcula
 import { SkyBottomLineCalculationResult } from "./SkyBottomLineCalculationResult";
 import { StaffLine } from "./StaffLine";
 import { VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
-import { WebGLSkyBottomLineBatchCalculatorBackend } from "./WebGLSkyBottomLineBatchCalculatorBackend";
-import log from "loglevel";
 import { CollectionUtil } from "../../Util/CollectionUtil";
 
 interface IBatchEntry {
@@ -26,7 +23,7 @@ interface IBatch {
 export class SkyBottomLineBatchCalculator {
     private batches: Map<EngravingRules, IBatch>;
 
-    constructor(staffLines: StaffLine[], preferredBackend: SkyBottomLineBatchCalculatorBackendType) {
+    constructor(staffLines: StaffLine[]) {
         const batchEntryArrayList: Map<EngravingRules, IBatchEntry[]> = new Map<EngravingRules, IBatchEntry[]>();
         for (const staffLine of staffLines) {
             const rules: EngravingRules = staffLine.ParentMusicSystem.rules;
@@ -48,19 +45,7 @@ export class SkyBottomLineBatchCalculator {
         this.batches = new Map<EngravingRules, IBatch>();
         for (const [rules, batchEntryArray] of batchEntryArrayList.entries()) {
             const measures: VexFlowMeasure[] = CollectionUtil.flat(batchEntryArray.map(entry => entry.measures));
-            const backend: SkyBottomLineBatchCalculatorBackend = ((): SkyBottomLineBatchCalculatorBackend => {
-                if (preferredBackend === SkyBottomLineBatchCalculatorBackendType.Plain) {
-                    return new PlainSkyBottomLineBatchCalculatorBackend(rules, measures).initialize();
-                } else {
-                    try {
-                        return new WebGLSkyBottomLineBatchCalculatorBackend(rules, measures).initialize();
-                    } catch {
-                        log.info("Couldn't create WebGLBackend for Skyline. Using fallback.");
-                        return new PlainSkyBottomLineBatchCalculatorBackend(rules, measures).initialize();
-                    }
-                }
-            })();
-            backend.initialize();
+            const backend: SkyBottomLineBatchCalculatorBackend = new PlainSkyBottomLineBatchCalculatorBackend(rules, measures).initialize();
 
             this.batches.set(rules, {
                 backend,

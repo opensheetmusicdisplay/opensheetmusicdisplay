@@ -53,14 +53,11 @@ const MODES = {
     geo: (r) => { r.UseGeometricSkyBottomLineCalculation = true; },
     single: (r) => {
         r.UseGeometricSkyBottomLineCalculation = false;
-        r.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false;
         r.SkyBottomLineBatchMinMeasures = 9999999;
     },
     batch: (r) => {
         r.UseGeometricSkyBottomLineCalculation = false;
-        r.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false;
         r.SkyBottomLineBatchMinMeasures = 2;
-        r.PreferredSkyBottomLineBatchCalculatorBackend = 0; // Plain
     },
 };
 
@@ -102,7 +99,6 @@ for (const sample of SAMPLES) {
         result.modes[modeName] = { total: median(totals), skyline: median(skylines) };
         // restore defaults
         osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = true;
-        osmd.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = true;
         osmd.EngravingRules.SkyBottomLineBatchMinMeasures = 5;
     }
     rows.push(result);

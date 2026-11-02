@@ -76,6 +76,9 @@ describe("GeometricSkyBottomLineCalculation", () => {
         /** Tolerance for the fraction of values differing by more than 0.5 units (default 0.005).
          *  E.g. the tablature sample has known benign difference classes slightly above the default. */
         bigDiffFractionTolerance?: number;
+        /** Compares with the raster batch calculation (SkyBottomLineBatchCalculator: the measures drawn into table canvases,
+         *  read with one getImageData per table) instead of the per-staffline one (a canvas per measure). */
+        batch?: boolean;
     }
 
     /** Fresh load + one captured first render with the given method.
@@ -86,8 +89,8 @@ describe("GeometricSkyBottomLineCalculation", () => {
     async function capturedRender(osmd: OpenSheetMusicDisplay, score: Document, geometric: boolean,
                                   options: ICompareOptions): Promise<ICapturedLine[]> {
         osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = geometric;
-        osmd.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false;
-        osmd.EngravingRules.SkyBottomLineBatchMinMeasures = 9999999; // use the non-batched raster path
+        // use the non-batched raster path, or the batched one for any number of measures
+        osmd.EngravingRules.SkyBottomLineBatchMinMeasures = options.batch ? 0 : 9999999;
         osmd.EngravingRules.NewSystemAtXMLNewSystemAttribute = !!options.newSystemAttribute;
         await osmd.load(score);
         capture = [];
@@ -95,7 +98,6 @@ describe("GeometricSkyBottomLineCalculation", () => {
         const result: ICapturedLine[] = capture;
         capture = undefined;
         osmd.EngravingRules.UseGeometricSkyBottomLineCalculation = true;
-        osmd.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = true;
         osmd.EngravingRules.SkyBottomLineBatchMinMeasures = 5;
         return result;
     }
@@ -153,6 +155,12 @@ describe("GeometricSkyBottomLineCalculation", () => {
         await compareGeometricWithRaster("OSMD_function_test_all.xml");
     });
 
+    it("agrees with the raster batch calculation for OSMD_function_test_all", async function (): Promise<void> {
+        // what the raster method uses from SkyBottomLineBatchMinMeasures (5) measures on, with its Plain backend
+        this.timeout(30000);
+        await compareGeometricWithRaster("OSMD_function_test_all.xml", { batch: true });
+    });
+
     it("agrees with the raster calculation for chord symbols", async function (): Promise<void> {
         this.timeout(30000);
         await compareGeometricWithRaster("OSMD_function_test_chord_symbols.musicxml");
@@ -188,7 +196,6 @@ describe("GeometricSkyBottomLineCalculation", () => {
         // but 10px sans-serif on the fresh canvas of the raster method, which drew "H" 1.2 px further right.
         this.timeout(30000);
         const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(TestUtils.getDivElement(document), { autoResize: false });
-        osmd.EngravingRules.AlwaysSetPreferredSkyBottomLineBackendAutomatically = false;
         osmd.EngravingRules.SkyBottomLineBatchMinMeasures = 9999999; // use the non-batched raster path
         await osmd.load(TestUtils.getScore("OSMD_Function_Test_Tablature_Hammeron_Pulloff.musicxml"));
 

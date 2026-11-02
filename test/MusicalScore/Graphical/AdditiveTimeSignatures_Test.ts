@@ -20,10 +20,14 @@ describe("Additive time signatures", () => {
                 (entry.Instructions.find(instruction => instruction instanceof RhythmInstruction) as RhythmInstruction).NumeratorGroups));
             expect(groups).to.deep.equal([[[2, 2, 3], [2, 2, 3]], [[3, 2, 2], undefined], [undefined, undefined]]);
             expect(osmd.Sheet.SourceMeasures.map(measure => measure.Duration.RealValue)).to.deep.equal([7 / 8, 7 / 8, 7 / 8]);
-            // [measure number, number of glyphs] of the time signatures drawn, the flute's first: 2+2+3 over 8 has 6 glyphs, 7 over 8 two
+            // [measure group id (osmd-m<measure index>-<staff index>), number of glyphs] of the time signatures drawn, the flute's
+            //   first: 2+2+3 over 8 has 6 glyphs, 7 over 8 two
             const timeSignatures: [string, number][] = Array.from(container.querySelectorAll(".vf-timesignature"))
                 .map((time): [string, number] => [time.closest(".vf-measure").id, time.querySelectorAll("path").length]);
-            expect(timeSignatures).to.deep.equal([["1", 6], ["2", 6], ["3", 2], ["1", 6], ["2", 2], ["3", 2]]);
+            expect(timeSignatures).to.deep.equal([
+                ["osmd-m0-0", 6], ["osmd-m1-0", 6], ["osmd-m2-0", 2], // flute
+                ["osmd-m0-1", 6], ["osmd-m1-1", 2], ["osmd-m2-1", 2], // oboe
+            ]);
         } finally {
             osmd.clear();
             container.remove();

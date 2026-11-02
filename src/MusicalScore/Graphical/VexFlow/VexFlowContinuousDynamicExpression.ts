@@ -22,6 +22,7 @@ export class VexFlowContinuousDynamicExpression extends GraphicalContinuousDynam
                                             TextAlignmentEnum.LeftCenter,
                                             this.rules,
                                             this.PositionAndShape);
+            this.label.SVGClass = "osmd-dynamic"; // cresc., dim. (the lines of a wedge get "osmd-wedge" from the drawer)
 
             this.label.Label.fontStyle = FontStyles.Italic;
             this.label.setLabelPositionAndShapeBorders();

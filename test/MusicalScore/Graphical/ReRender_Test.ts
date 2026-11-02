@@ -73,13 +73,15 @@ describe("Re-rendering a loaded sheet", (): void => {
     //   where the voice collision handling lengthens one stem (and turns the other one down), changing the slope of the beam.
     // test_chord_whole_rest_overlap: chord symbols not over a note (over a whole measure rest), attached to the measure
     //   during the render, which the y-alignment of the chord symbols of the staffline read on a re-render.
+    // Compared as SVG, which is faster than drawing the whole Moonlight sonata on a canvas and encoding the page as a PNG.
     for (const sampleName of ["test_slurs_long_steep_arc_moonlight_sonata_issue1466.musicxml", "test_chord_whole_rest_overlap.musicxml"]) {
         it(`renders ${sampleName} again like the first time`, async (): Promise<void> => {
+            osmd.setOptions({ backend: "svg" });
             await load(sampleName);
             osmd.render();
-            const firstRender: string[] = pageImages();
+            const firstRender: string[] = pageSvgs();
             osmd.render();
-            expectSameImages(pageImages(), firstRender, "second render");
+            expectSameImages(pageSvgs(), firstRender, "second render");
         });
     }
 

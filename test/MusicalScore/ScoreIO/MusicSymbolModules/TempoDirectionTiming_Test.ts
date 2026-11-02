@@ -30,6 +30,18 @@ describe("Tempo direction timing", (): void => {
         </direction>`;
     }
 
+    /** A metronome mark beatUnit = perMinute, dotted if given, with a <sound tempo> if soundTempo is given. */
+    function metronome(beatUnit: string, perMinute: number, dotted: boolean = false, soundTempo?: number): string {
+        return `<direction placement="above"><direction-type><metronome><beat-unit>${beatUnit}</beat-unit>
+          ${dotted ? "<beat-unit-dot/>" : ""}<per-minute>${perMinute}</per-minute></metronome></direction-type>
+          ${soundTempo ? `<sound tempo="${soundTempo}"/>` : ""}</direction>`;
+    }
+
+    /** A direction with words and no <sound tempo>. */
+    function wordsDirection(text: string): string {
+        return `<direction><direction-type><words>${text}</words></direction-type></direction>`;
+    }
+
     function score(content: string): Document {
         return new DOMParser().parseFromString(`<score-partwise version="4.0">
           <part-list><score-part id="P1"><part-name>Flute</part-name></score-part></part-list>
@@ -196,5 +208,68 @@ describe("Tempo direction timing", (): void => {
             words + note("E") + modulation + note("F")));
         // Simultaneous Allegro must not replace sound 120; a later Allegro without sound can set its own tempo.
         expect(bpms()).to.deep.equal([120, 180, 130, 195]);
+    });
+
+    it("sets a measure's TempoInBPM in quarter notes per minute: the sound tempo, else the metronome mark by its beat unit", async (): Promise<void> => {
+        // [beat unit, dotted, per-minute, sound tempo, TempoInBPM]: a <sound tempo> wins over the mark it comes with
+        const marks: [string, boolean, number, number, number][] = [
+            ["half", false, 88, undefined, 176], ["half", false, 88, 176, 176], ["quarter", true, 60, undefined, 90],
+            ["eighth", false, 120, undefined, 60], ["quarter", false, 60, 72, 72]];
+        for (const [beatUnit, dotted, perMinute, soundTempo, tempoInBpm] of marks) {
+            await osmd.load(score(metronome(beatUnit, perMinute, dotted, soundTempo) + note("C") + note("D") + note("E") + note("F")));
+            expect(osmd.Sheet.SourceMeasures[0].TempoInBPM, `${beatUnit}${dotted ? " dotted" : ""} = ${perMinute}, sound tempo ${soundTempo}`)
+                .to.equal(tempoInBpm);
+        }
+    });
+
+    it("gives the tempo of a metronome mark without a sound tempo in quarter notes per minute, also as the start tempo", async (): Promise<void> => {
+        const modulation: string = `<direction><direction-type><metronome><beat-unit>quarter</beat-unit>
+          <beat-unit>quarter</beat-unit><beat-unit-dot/></metronome></direction-type></direction>`;
+        await osmd.load(score(metronome("half", 30) + note("C") + metronome("quarter", 60, true) + note("D") +
+            metronome("eighth", 120) + note("E") + modulation + note("F")));
+        // half = 30 is 60 quarter notes per minute, dotted quarter = 60 is 90, eighth = 120 is 60, and quarter = dotted quarter
+        //   after it 60 * 1.5 = 90 (before: 30, 60, 120 and 180)
+        expect(bpms()).to.deep.equal([60, 90, 60, 90]);
+        expect(osmd.Sheet.TimestampSortedTempoExpressionsList.map(expression => expression.InstantaneousTempo.TempoInBpm),
+               "the marks' own numbers, which are drawn, and the note equation's tempo").to.deep.equal([30, 60, 120, 90]);
+        expect(osmd.Sheet.DefaultStartTempoInBpm).to.equal(60);
+        expect(osmd.Sheet.userStartTempoInBPM).to.equal(60);
+        expect(osmd.Sheet.getExpressionsStartTempoInBPM()).to.equal(60);
+
+        // a continuous tempo starts at the tempo before it (without interpolation, the default, the iterator stays at it)
+        await osmd.load(score(metronome("half", 30) + note("C") +
+            "<direction><direction-type><words>stretto</words></direction-type></direction>" + note("D") + note("E") + note("F")));
+        expect(osmd.Sheet.TimestampSortedTempoExpressionsList[1].ContinuousTempo.StartTempo).to.equal(60);
+        expect(bpms()).to.deep.equal([60, 60, 60, 60]);
+    });
+
+    it("returns to the tempo before the latest temporary change at a tempo, and to the first tempo at Tempo I", async (): Promise<void> => {
+        // piu lento and poco lento get Lento's 48 BPM
+        await osmd.load(score(tempo(120) + note("C") + wordsDirection("piu lento") + note("D") +
+            wordsDirection("a tempo") + note("E") + note("F")));
+        expect(bpms()).to.deep.equal([120, 48, 120, 120]);
+        // in quarter notes per minute: half = 30 without a sound tempo is 60
+        await osmd.load(score(metronome("half", 30) + note("C") + wordsDirection("piu lento") + note("D") +
+            wordsDirection("a tempo") + note("E") + note("F")));
+        expect(bpms()).to.deep.equal([60, 48, 60, 60]);
+        await osmd.load(score(tempo(120) + note("C") + tempo(90) + note("D") + wordsDirection("poco lento") + note("E") +
+            wordsDirection("a tempo") + note("F")));
+        expect(bpms()).to.deep.equal([120, 90, 48, 90]);
+        await osmd.load(score(tempo(120) + note("C") + tempo(90) + note("D") + wordsDirection("Tempo I") + note("E") + note("F")));
+        expect(bpms()).to.deep.equal([120, 90, 120, 120]);
+        // a temporary change with a metronome mark at the same time
+        await osmd.load(score(tempo(120) + note("C") + tempo(144) + wordsDirection("piu mosso") + note("D") +
+            wordsDirection("a tempo") + note("E") + note("F")));
+        expect(bpms()).to.deep.equal([120, 144, 120, 120]);
+        // the first tempo of the piece, although poco makes it look like a temporary change
+        await osmd.load(score(note("C") + wordsDirection("Poco allegretto") + note("D") + note("E") +
+            wordsDirection("a tempo") + note("F")));
+        expect(bpms()).to.deep.equal([100, 112, 112, 112]);
+    });
+
+    it("keeps the tempo at poco rit. and molto accel., which have no BPM of their own", async (): Promise<void> => {
+        await osmd.load(score(tempo(120) + note("C") + wordsDirection("poco rit.") + note("D") + wordsDirection("a tempo") +
+            note("E") + wordsDirection("molto accel.") + note("F")));
+        expect(bpms()).to.deep.equal([120, 120, 120, 120]);
     });
 });
