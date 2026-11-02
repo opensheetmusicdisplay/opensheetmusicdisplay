@@ -637,8 +637,8 @@ export class VoiceGenerator {
     try {
       // The primary beam (number 1) first, whatever the element order: a note listing <beam number="2"> before
       //   <beam number="1"> (e.g. a sixteenth triplet inside an eighth beam) was read by its secondary beam, whose
-      //   begin closed the primary one, so the eighths after the triplet were drawn with flags. Stable sort, so the
-      //   usual order is unchanged.
+      //   begin closed the primary one, so the beam broke there: the eighth before the triplet and the triplet were
+      //   drawn with flags. Stable sort, so the usual order is unchanged.
       const numberOf: (element: IXmlElement) => number = (element: IXmlElement) =>
         parseInt(element.attribute("number")?.value, 10) || 1;
       const sortedBeamNodes: IXmlElement[] = node.elements("beam").slice().sort((a, b) => numberOf(a) - numberOf(b));

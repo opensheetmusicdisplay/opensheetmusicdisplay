@@ -89,6 +89,7 @@
         <stem>down</stem>
         <beam number="1">continue</beam>
         <beam number="2">begin</beam>
+        <notations><tuplet type="start"/></notations>
       </note>
       <note>
         <pitch><step>C</step><octave>5</octave></pitch>
@@ -109,6 +110,7 @@
         <stem>down</stem>
         <beam number="1">continue</beam>
         <beam number="2">end</beam>
+        <notations><tuplet type="stop"/></notations>
       </note>
       <note>
         <pitch><step>C</step><octave>5</octave></pitch>
