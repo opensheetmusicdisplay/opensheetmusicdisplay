@@ -71,6 +71,14 @@ describe("MusicXML color attributes", () => {
         return Array.from(div.querySelectorAll(selector)).map(element => element.getAttribute("fill"));
     }
 
+    /** The fill of each notehead's path: the patched VexFlow writes the class on the path itself (`<path class="vf-notehead">`),
+     *  an unpatched one on a group around it (`<g class="vf-notehead"><path>`). */
+    function noteheadFills(div: HTMLElement): string[] {
+        return Array.from(div.querySelectorAll(".vf-notehead"))
+            .map(notehead => notehead.tagName === "path" ? notehead : notehead.querySelector("path"))
+            .map(path => path?.getAttribute("fill"));
+    }
+
     it("converts #AARRGGBB to CSS #RRGGBBAA and leaves other strings unchanged", () => {
         expect(musicXmlColorToCss("#80FF0000")).to.equal("#FF000080");
         expect(musicXmlColorToCss("#FF000000")).to.equal("#000000FF"); // opaque black, not invisible
@@ -107,10 +115,10 @@ describe("MusicXML color attributes", () => {
     it("renders the converted color as SVG fill", async () => {
         const { osmd, div } = await load(score(halfTransparentRedXml));
         osmd.render();
-        const noteheadFills: string[] = fillsOf(div, "g.vf-notehead path");
-        expect(noteheadFills.length).to.equal(2);
-        expect(noteheadFills[0]).to.equal(halfTransparentRedCss);
-        expect(noteheadFills[1]).to.not.equal(halfTransparentRedCss);
+        const fills: string[] = noteheadFills(div);
+        expect(fills.length).to.equal(2);
+        expect(fills[0]).to.equal(halfTransparentRedCss);
+        expect(fills[1]).to.not.equal(halfTransparentRedCss);
         const wordsText: Element = Array.from(div.querySelectorAll("text")).find(text => text.textContent === "colored words");
         expect(wordsText, "words label").to.not.equal(undefined);
         expect(wordsText.getAttribute("fill")).to.equal(halfTransparentRedCss);
@@ -136,7 +144,7 @@ describe("MusicXML color attributes", () => {
         expect(notes(osmd)[0].NoteheadColorXml).to.equal(halfTransparentRedCss);
         expect(wordsExpressions(osmd)[0].ColorXML).to.equal(halfTransparentRedCss);
         osmd.render();
-        expect(fillsOf(div, "g.vf-notehead path")[0]).to.equal(halfTransparentRedCss);
+        expect(noteheadFills(div)[0]).to.equal(halfTransparentRedCss);
     });
 
     it("keeps the transparent note of test_note_notehead_color_transparent.musicxml (MuseScore 4.5.2) transparent", async () => {
