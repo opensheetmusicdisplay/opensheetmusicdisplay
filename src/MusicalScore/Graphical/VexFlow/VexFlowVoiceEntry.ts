@@ -10,6 +10,7 @@ import { ColoringModes } from "../../../Common/Enums/ColoringModes";
 import { GraphicalNote } from "../GraphicalNote";
 import { EngravingRules } from "../EngravingRules";
 import { NoteHeadShape } from "../../VoiceData/Notehead";
+import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
 
 export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
     private mVexFlowStaveNote: VF.StemmableNote;
@@ -56,6 +57,29 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
 
     public get vfStaveNote(): VF.StemmableNote {
         return this.mVexFlowStaveNote;
+    }
+
+    /** Sorts the notes from bottom to top like Vexflow sorts the keys of a StaveNote: by the staff line they're drawn on,
+     *  and notes on the same line (e.g. G and G sharp) by pitch.
+     *  Vexflow sorts only its key properties and noteheads, while the accidentals, string numbers, ties etc. of a note are added
+     *  at the note's index in this array (VexFlowGraphicalNote.vfnoteIndex), and the note is placed at the notehead at that index.
+     *  So in any other order they'd be drawn at another note, e.g. in a chord of G sharp and A flat, which have the same pitch,
+     *  the flat at the G and the sharp at the A, and Vexflow warns "Unsorted keys in note will be sorted".
+     */
+    public sortForVexflow(): GraphicalNote[] {
+        this.notes.sort((a: GraphicalNote, b: GraphicalNote): number =>
+            VexFlowVoiceEntry.drawnStaffLine(a) - VexFlowVoiceEntry.drawnStaffLine(b) ||
+            (a.sourceNote.Pitch?.getHalfTone() ?? 0) - (b.sourceNote.Pitch?.getHalfTone() ?? 0));
+        return this.notes;
+    }
+
+    /** The staff line Vexflow draws the note on, from the note's key (VexFlowGraphicalNote.vfpitch, the drawn pitch, e.g. transposed)
+     *  like in StaveNote.calculateKeyProps(), but in the treble clef: the note's clef moves all notes of a StaveNote by the same
+     *  number of lines, so their order stays the same. 0 for a note without a key (a rest).
+     */
+    private static drawnStaffLine(note: GraphicalNote): number {
+        const key: string = (note as VexFlowGraphicalNote).vfpitch?.[0];
+        return key ? VF.keyProperties(key, "treble", {}).line : 0;
     }
 
     /** Apply custom noteheads from Note.CustomNoteheadVFCode. This should happen before color(). */
