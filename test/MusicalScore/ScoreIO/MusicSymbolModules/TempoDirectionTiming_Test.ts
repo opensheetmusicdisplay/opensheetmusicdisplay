@@ -30,6 +30,13 @@ describe("Tempo direction timing", (): void => {
         </direction>`;
     }
 
+    /** A metronome mark beatUnit = perMinute, dotted if given, with a <sound tempo> if soundTempo is given. */
+    function metronome(beatUnit: string, perMinute: number, dotted: boolean = false, soundTempo?: number): string {
+        return `<direction placement="above"><direction-type><metronome><beat-unit>${beatUnit}</beat-unit>
+          ${dotted ? "<beat-unit-dot/>" : ""}<per-minute>${perMinute}</per-minute></metronome></direction-type>
+          ${soundTempo ? `<sound tempo="${soundTempo}"/>` : ""}</direction>`;
+    }
+
     function score(content: string): Document {
         return new DOMParser().parseFromString(`<score-partwise version="4.0">
           <part-list><score-part id="P1"><part-name>Flute</part-name></score-part></part-list>
@@ -196,5 +203,17 @@ describe("Tempo direction timing", (): void => {
             words + note("E") + modulation + note("F")));
         // Simultaneous Allegro must not replace sound 120; a later Allegro without sound can set its own tempo.
         expect(bpms()).to.deep.equal([120, 180, 130, 195]);
+    });
+
+    it("sets a measure's TempoInBPM in quarter notes per minute: the sound tempo, else the metronome mark by its beat unit", async (): Promise<void> => {
+        // [beat unit, dotted, per-minute, sound tempo, TempoInBPM]: a <sound tempo> wins over the mark it comes with
+        const marks: [string, boolean, number, number, number][] = [
+            ["half", false, 88, undefined, 176], ["half", false, 88, 176, 176], ["quarter", true, 60, undefined, 90],
+            ["eighth", false, 120, undefined, 60], ["quarter", false, 60, 72, 72]];
+        for (const [beatUnit, dotted, perMinute, soundTempo, tempoInBpm] of marks) {
+            await osmd.load(score(metronome(beatUnit, perMinute, dotted, soundTempo) + note("C") + note("D") + note("E") + note("F")));
+            expect(osmd.Sheet.SourceMeasures[0].TempoInBPM, `${beatUnit}${dotted ? " dotted" : ""} = ${perMinute}, sound tempo ${soundTempo}`)
+                .to.equal(tempoInBpm);
+        }
     });
 });
