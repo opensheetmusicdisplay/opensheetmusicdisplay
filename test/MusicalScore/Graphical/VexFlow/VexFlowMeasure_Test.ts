@@ -665,22 +665,19 @@ describe("VexFlow Measure", () => {
       osmd.load(score).then(() => {
          osmd.render();
          const gm: GraphicalMeasure = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
-         let hidden: any;
-         let visible: any;
+         let hidden: GraphicalNote;
+         let visible: GraphicalNote;
          for (const gve of gm.staffEntries[0].graphicalVoiceEntries) {
             if (gve.notes[0].sourceNote.PrintObject) {
-               visible = (gve as VexFlowVoiceEntry).vfStaveNote;
+               visible = gve.notes[0];
             } else {
-               hidden = (gve as VexFlowVoiceEntry).vfStaveNote;
+               hidden = gve.notes[0];
             }
          }
-         const accidentals: (vfStaveNote: any) => number = (vfStaveNote: any) =>
-            vfStaveNote.modifiers.filter((modifier: any) => modifier.getCategory() === "accidentals").length;
          expect(hidden, "should find the hidden eighth").to.not.be.undefined;
          expect(visible, "should find the half note").to.not.be.undefined;
-         expect(hidden.note_heads[0].getAbsoluteX(), "the two heads share one column").to.equal(visible.note_heads[0].getAbsoluteX());
-         expect(accidentals(visible), "the half note draws the flat of the shared head").to.equal(1);
-         expect(accidentals(hidden), "the hidden eighth keeps no invisible flat").to.equal(0);
+         expect(visible.DrawnAccidental, "the half note draws the flat of the shared head").to.equal(AccidentalEnum.FLAT);
+         expect(hidden.DrawnAccidental, "the hidden eighth keeps no invisible flat").to.equal(AccidentalEnum.NONE);
          done();
       }).catch(done);
    });

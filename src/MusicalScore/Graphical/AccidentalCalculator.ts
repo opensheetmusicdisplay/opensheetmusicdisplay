@@ -84,21 +84,17 @@ export class AccidentalCalculator {
             const sameLetter: boolean = startPitch !== undefined
                 && startPitch.FundamentalNote === pitch.FundamentalNote;
             if (sameLetter) {
-                // Same written note held across the tie — the accidental is implied, unless the file writes it
-                //   (<accidental> on the continued note: the engraver repeats the sign, e.g. after a beat or a system break).
-                if (pitch.AccidentalXml && pitch.Accidental !== AccidentalEnum.NONE && this.Transpose === 0) {
-                    this.addAccidental(graphicalNote, pitch, pitchKey);
-                }
-                return;
+                return; // same written note held across the tie — accidental is implied
             }
         }
 
         // A printed sign that disagrees with <alter> is drawn as printed (a historical sharp cancelling the key's flat,
         //   sounding E natural); the measure keeps the sounding alteration, so the next E natural gets no natural sign.
-        //   VexFlowGraphicalNote.setAccidental() draws the printed glyph.
-        if (this.Transpose === 0 && AccidentalCalculator.printedMismatchGlyph(pitch)) {
+        const printedAccidental: AccidentalEnum = this.Transpose === 0 ? AccidentalCalculator.printedMismatchAccidental(pitch) : undefined;
+        if (printedAccidental !== undefined) {
             this.currentInMeasureNoteAlterationsDict.setValue(pitchKey, pitch.AccidentalHalfTones);
-            this.addAccidental(graphicalNote, pitch, pitchKey);
+            this.addAccidental(graphicalNote, new Pitch(pitch.FundamentalNote, pitch.Octave, printedAccidental, pitch.AccidentalXml,
+                false, pitch.OctaveShiftApplied), pitchKey);
             return;
         }
 
@@ -161,21 +157,21 @@ export class AccidentalCalculator {
         }
     }
 
-    /** The VexFlow glyph of the printed <accidental> of the pitch when it is a plain sign whose alteration differs from
-     *  the sounding one (<alter>), else undefined. Signs drawn as two glyphs (natural-sharp, ...) are left to
-     *  VexFlowGraphicalNote.setAccidental(). A transposed pitch has no AccidentalXml. */
-    public static printedMismatchGlyph(pitch: Pitch): string | undefined {
-        const glyph: [string, number] = pitch?.AccidentalXml ? AccidentalCalculator.printedGlyphs[pitch.AccidentalXml] : undefined;
-        return glyph && glyph[1] !== pitch.AccidentalHalfTones ? glyph[0] : undefined;
+    /** The printed <accidental> of the pitch when it is a plain sign whose alteration differs from the sounding one
+     *  (<alter>), else undefined: e.g. SHARP for an E with <alter>0</alter> and <accidental>sharp</accidental>.
+     *  (The reader makes a note with <accidental>natural</accidental> natural, so a natural can't differ, and signs drawn
+     *  as two glyphs, natural-sharp, ..., are left to VexFlowGraphicalNote.setAccidental().)
+     *  A transposed pitch has no AccidentalXml. */
+    private static printedMismatchAccidental(pitch: Pitch): AccidentalEnum {
+        const printed: AccidentalEnum = pitch.AccidentalXml ? AccidentalCalculator.printedAccidentals[pitch.AccidentalXml] : undefined;
+        return printed !== undefined && Pitch.HalfTonesFromAccidental(printed) !== pitch.AccidentalHalfTones ? printed : undefined;
     }
 
-    private static readonly printedGlyphs: { [accidentalXml: string]: [string, number] } = {
-        "double-flat": ["bb", -2],
-        "double-sharp": ["##", 2],
-        "flat": ["b", -1],
-        "flat-flat": ["bb", -2],
-        "natural": ["n", 0],
-        "sharp": ["#", 1],
+    private static readonly printedAccidentals: { [accidentalXml: string]: AccidentalEnum } = {
+        "double-sharp": AccidentalEnum.DOUBLESHARP,
+        "flat": AccidentalEnum.FLAT,
+        "flat-flat": AccidentalEnum.DOUBLEFLAT,
+        "sharp": AccidentalEnum.SHARP,
     };
 
     /** Adds the accidental of the pitch to the note, and remembers the note for isAccidentalDrawnAtSameTime(). */

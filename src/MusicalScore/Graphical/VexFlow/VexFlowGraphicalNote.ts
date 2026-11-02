@@ -11,7 +11,6 @@ import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { KeyInstruction } from "../../VoiceData/Instructions/KeyInstruction";
 import { EngravingRules } from "../EngravingRules";
 import { VexFlowMultiRestMeasure } from "./VexFlowMultiRestMeasure";
-import { AccidentalCalculator } from "../AccidentalCalculator";
 
 /**
  * The VexFlow version of a [[GraphicalNote]].
@@ -65,12 +64,6 @@ export class VexFlowGraphicalNote extends GraphicalNote {
             (pitch.Accidental === AccidentalEnum.SHARP && pitch.AccidentalXml === "natural-sharp") ||
             (pitch.Accidental === AccidentalEnum.FLAT && pitch.AccidentalXml === "natural-flat")) {
             this.vfpitch[1] = pitch.AccidentalXml;
-        }
-        // a printed sign that disagrees with the sounding pitch (<alter>) is drawn as printed
-        //   (AccidentalCalculator.printedMismatchGlyph)
-        const printedGlyph: string = AccidentalCalculator.printedMismatchGlyph(pitch);
-        if (printedGlyph) {
-            this.vfpitch[1] = printedGlyph;
         }
         this.DrawnAccidental = drawPitch.Accidental;
         //}

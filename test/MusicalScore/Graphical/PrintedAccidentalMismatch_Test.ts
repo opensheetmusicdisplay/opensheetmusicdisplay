@@ -1,12 +1,12 @@
 import { expect } from "chai";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
-import { VexFlowMeasure } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowMeasure";
-import { VexFlowVoiceEntry } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowVoiceEntry";
+import { AccidentalEnum } from "../../../src/Common/DataObjects/Pitch";
+import { GraphicalMeasure } from "../../../src/MusicalScore/Graphical/GraphicalMeasure";
 import { TestUtils } from "../../Util/TestUtils";
 
 /**
  * In MusicXML the sounding pitch comes from `<alter>` and the printed sign from `<accidental>`. When they disagree, the
- * note draws the printed sign (as MuseScore and Finale do): e.g. a historical engraving (Eccles, Violin Sonata in
+ * note draws the printed sign: e.g. a historical engraving (Eccles, Violin Sonata in
  * G minor, Largo m. 4) writes a sharp before an E to cancel the key's flat, sounding E natural — `<alter>0</alter>` with
  * `<accidental>sharp</accidental>`. It was drawn as a natural. A sharp or flat written without `<alter>` (some exports)
  * was dropped; it is drawn now. The measure keeps the sounding alteration, so the next E natural gets no natural sign.
@@ -32,11 +32,9 @@ describe("Printed accidental that disagrees with <alter>", () => {
         const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
         await osmd.load(xml);
         osmd.render();
-        const measure: VexFlowMeasure = osmd.GraphicSheet.MeasureList[0][0] as VexFlowMeasure;
-        const drawn: string[][] = measure.staffEntries.map(entry =>
-            ((entry.graphicalVoiceEntries[0] as VexFlowVoiceEntry).vfStaveNote as any).modifiers
-                .filter((modifier: any) => modifier.getCategory() === "accidentals").map((modifier: any) => modifier.type));
-        expect(drawn, "E (alter 0, printed sharp) / E / F (no alter, printed sharp) / F").to.deep.equal([["#"], [], ["#"], []]);
+        const measure: GraphicalMeasure = osmd.GraphicSheet.MeasureList[0][0];
+        const drawn: string[] = measure.staffEntries.map(entry => AccidentalEnum[entry.graphicalVoiceEntries[0].notes[0].DrawnAccidental]);
+        expect(drawn, "E (alter 0, printed sharp) / E / F (no alter, printed sharp) / F").to.deep.equal(["SHARP", "NONE", "SHARP", "NONE"]);
         osmd.clear();
         div.remove();
     });
