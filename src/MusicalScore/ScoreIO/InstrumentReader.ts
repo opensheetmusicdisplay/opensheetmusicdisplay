@@ -1237,7 +1237,7 @@ export class InstrumentReader {
    * per measure, so it takes the elements without a `number` (they apply to every staff), otherwise those of the
    * lowest staff number. Different signatures per staff (polymeter) are not drawn per staff.
    */
-  public static timeNodesOfOneStaff(timeNodes: IXmlElement[]): IXmlElement[] {
+  private static timeNodesOfOneStaff(timeNodes: IXmlElement[]): IXmlElement[] {
     const staffNumberOf: (node: IXmlElement) => number = (node: IXmlElement): number => {
       const value: string = node.attribute("number")?.value;
       if (value === undefined) {

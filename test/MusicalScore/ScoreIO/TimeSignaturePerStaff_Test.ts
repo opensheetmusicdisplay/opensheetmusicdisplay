@@ -48,8 +48,9 @@ describe("Time signature written per staff", () => {
     }
 
     const threeFour: string = "<time><beats>3</beats><beat-type>4</beat-type></time>";
+    // as MuseScore 4.7 writes it when the second staff doesn't show the time signature, e.g. a guitar's tablature staff
     const perStaffThreeFour: string = "<time number=\"1\"><beats>3</beats><beat-type>4</beat-type></time>" +
-        "<time number=\"2\"><beats>3</beats><beat-type>4</beat-type></time>";
+        "<time number=\"2\" print-object=\"no\"><beats>3</beats><beat-type>4</beat-type></time>";
 
     let container: HTMLElement;
     let osmd: OpenSheetMusicDisplay;
@@ -64,13 +65,14 @@ describe("Time signature written per staff", () => {
         container.remove();
     });
 
-    /** The time signatures at the start of the measure, one per staff. */
+    /** The time signatures at the start of the measure, one per staff, e.g. "3/4", or "3/4 hidden" if it isn't drawn. */
     function rhythms(sheet: MusicSheet, measureIndex: number): string[] {
         const result: string[] = [];
         for (const entry of sheet.SourceMeasures[measureIndex].FirstInstructionsStaffEntries) {
             for (const instruction of entry?.Instructions ?? []) {
                 if (instruction instanceof RhythmInstruction) {
-                    result.push(`${instruction.Rhythm.Numerator}/${instruction.Rhythm.Denominator}`);
+                    result.push(`${instruction.Rhythm.Numerator}/${instruction.Rhythm.Denominator}` +
+                        (instruction.PrintObject ? "" : " hidden"));
                 }
             }
         }
@@ -80,7 +82,8 @@ describe("Time signature written per staff", () => {
     it("reads the same time signature written per staff as one 3/4, not 6/4", async () => {
         const sheet: MusicSheet = await load(score(threeFour, pianoMeasures(perStaffThreeFour)));
         expect(rhythms(sheet, 0)).to.deep.equal(["3/4", "3/4", "3/4"]);
-        expect(sheet.SourceMeasures[0].Duration.RealValue).to.equal(0.75);
+        // with 6/4, every measure was read as a pickup measure, numbered 0
+        expect(sheet.SourceMeasures.map((measure) => measure.MeasureNumber)).to.deep.equal([1, 2]);
     });
 
     it("takes the lowest staff number's time signature when they differ per staff", async () => {
