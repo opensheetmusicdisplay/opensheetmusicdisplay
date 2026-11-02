@@ -119,6 +119,9 @@ export class MusicPartManagerIterator {
         }
         return 0;
     }
+    /** The tempo at the current position in quarter notes per minute: a `<sound tempo>`, or else the tempo instruction's,
+     *  e.g. 60 for a metronome mark half = 30 (see InstantaneousTempoExpression.TempoInQuarterNotesPerMinute).
+     */
     public get CurrentBpm(): number {
         return this.currentBpm;
     }
@@ -312,7 +315,7 @@ export class MusicPartManagerIterator {
                 this.currentBpm = interpolatedBpm;
             }
         } else if (expression.PlaybackTempoInBpm || expression.InstantaneousTempo?.TempoInBpm) {
-            this.currentBpm = expression.PlaybackTempoInBpm ?? expression.InstantaneousTempo.TempoInBpm;
+            this.currentBpm = expression.PlaybackTempoInBpm ?? expression.InstantaneousTempo.TempoInQuarterNotesPerMinute;
         } else if (expression.ContinuousTempo?.StartTempo > 0) {
             // Without interpolation, restore the baseline instead of retaining the BPM from a later position.
             this.currentBpm = expression.ContinuousTempo.StartTempo;

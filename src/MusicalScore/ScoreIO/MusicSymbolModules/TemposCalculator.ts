@@ -55,6 +55,7 @@ export class TemposCalculator implements IAfterSheetReadingModule {
         const primoTempo: number = TemposCalculator.cleanExpListStartingEntry(musicSheet, AllExp);
         const ExpressionsList: MultiTempoExpression[] = [];
         let previousMte: MultiTempoExpression = null;
+        // the tempo in force, in quarter notes per minute (a metronome mark's TempoInBpm counts its beat unit)
         let previousTempo: number = primoTempo;
         let soundTempoTimestamp: Fraction;
         for (let mteIndex: number = 0, mteSource: MultiTempoExpression[] = AllExp; mteIndex < mteSource.length; mteIndex++) {
@@ -103,7 +104,7 @@ export class TemposCalculator implements IAfterSheetReadingModule {
                     previousTempo = mte.PlaybackTempoInBpm;
                     soundTempoTimestamp = mte.AbsolutePlaybackTimestamp;
                 } else if (mte.InstantaneousTempo?.TempoInBpm > 0 && !mte.AbsolutePlaybackTimestamp.Equals(soundTempoTimestamp)) {
-                    previousTempo = mte.InstantaneousTempo.TempoInBpm;
+                    previousTempo = mte.InstantaneousTempo.TempoInQuarterNotesPerMinute;
                 }
             }
             /** Here we process two mte entries with the same TimeStamp.
@@ -149,7 +150,7 @@ export class TemposCalculator implements IAfterSheetReadingModule {
                 previousTempo = mte.PlaybackTempoInBpm;
                 soundTempoTimestamp = mte.AbsolutePlaybackTimestamp;
             } else if (mte.InstantaneousTempo != null && !mte.AbsolutePlaybackTimestamp.Equals(soundTempoTimestamp)) {
-                previousTempo = mte.InstantaneousTempo.TempoInBpm;
+                previousTempo = mte.InstantaneousTempo.TempoInQuarterNotesPerMinute;
             }
             if (mte.ContinuousTempo != null) {
                 const cte: ContinuousTempoExpression = mte.ContinuousTempo;
@@ -203,7 +204,7 @@ export class TemposCalculator implements IAfterSheetReadingModule {
             musicSheet.DefaultStartTempoInBpm = primoTempo;
         }
     }
-    /** Clean the start of the  expressions list and return the TempoPrimo BPM.
+    /** Clean the start of the  expressions list and return the TempoPrimo BPM (in quarter notes per minute).
      *
      * Use the initial setting until the first playback instruction, or resolve an instruction at time zero.
      * Return that BPM for TempoPrimo; a later instruction must not become the starting tempo.
@@ -234,7 +235,7 @@ export class TemposCalculator implements IAfterSheetReadingModule {
                 Inst0.TempoInBpm = InstantaneousTempoExpression.getDefaultValueForInstTempo(InstTempo.moderato);
             }
         }
-        return soundTempo > 0 ? soundTempo : Inst0.TempoInBpm;
+        return soundTempo > 0 ? soundTempo : Inst0.TempoInQuarterNotesPerMinute;
     }
 }
 export class TempoSorter {

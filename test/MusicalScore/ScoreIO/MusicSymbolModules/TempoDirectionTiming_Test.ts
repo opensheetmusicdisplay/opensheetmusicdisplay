@@ -216,4 +216,25 @@ describe("Tempo direction timing", (): void => {
                 .to.equal(tempoInBpm);
         }
     });
+
+    it("gives the tempo of a metronome mark without a sound tempo in quarter notes per minute, also as the start tempo", async (): Promise<void> => {
+        const modulation: string = `<direction><direction-type><metronome><beat-unit>quarter</beat-unit>
+          <beat-unit>quarter</beat-unit><beat-unit-dot/></metronome></direction-type></direction>`;
+        await osmd.load(score(metronome("half", 30) + note("C") + metronome("quarter", 60, true) + note("D") +
+            metronome("eighth", 120) + note("E") + modulation + note("F")));
+        // half = 30 is 60 quarter notes per minute, dotted quarter = 60 is 90, eighth = 120 is 60, and quarter = dotted quarter
+        //   after it 60 * 1.5 = 90 (before: 30, 60, 120 and 180)
+        expect(bpms()).to.deep.equal([60, 90, 60, 90]);
+        expect(osmd.Sheet.TimestampSortedTempoExpressionsList.map(expression => expression.InstantaneousTempo.TempoInBpm),
+               "the marks' own numbers, which are drawn, and the note equation's tempo").to.deep.equal([30, 60, 120, 90]);
+        expect(osmd.Sheet.DefaultStartTempoInBpm).to.equal(60);
+        expect(osmd.Sheet.userStartTempoInBPM).to.equal(60);
+        expect(osmd.Sheet.getExpressionsStartTempoInBPM()).to.equal(60);
+
+        // a continuous tempo starts at the tempo before it (without interpolation, the default, the iterator stays at it)
+        await osmd.load(score(metronome("half", 30) + note("C") +
+            "<direction><direction-type><words>stretto</words></direction-type></direction>" + note("D") + note("E") + note("F")));
+        expect(osmd.Sheet.TimestampSortedTempoExpressionsList[1].ContinuousTempo.StartTempo).to.equal(60);
+        expect(bpms()).to.deep.equal([60, 60, 60, 60]);
+    });
 });
