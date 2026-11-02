@@ -2359,8 +2359,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     if (headroom === Infinity) { // will cause Vexflow error
       return;
     }
+    if (headroom >= trillSkyline) {
+      // Nothing in the way reaches above the top of the trill mark. But the line, drawn level with the trill mark, reaches down to
+      //   about its bottom: so what's higher than that is in its way too, e.g. notes with ledger lines or a measure number.
+      //   Not the trill mark itself, though, which the skyline still has after trillEndX (its glyph is centered on the note head):
+      //   so from 1 unit further on.
+      headroom = startX + 1 < stopX ? parentStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(startX + 1, stopX) : Infinity;
+    }
     //If somewhere in our wavy line path we have to render higher than where the trill mark is set...
-    if (headroom < trillSkyline) {
+    if (headroom < trillWavyLineBottom) {
       startStave.options.top_text_position = -headroom;
       endStave.options.top_text_position = -headroom;
       //A decent enough approximation. Better than recalculating via Canvas or SVG sampling
@@ -2586,14 +2593,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       if (headroom === Infinity) { // will cause Vexflow error
         return;
       }
-      (textBracket.start.getStave().options as any).top_text_position = Math.abs(headroom);
+      vfOctaveShift.textPosition = Math.abs(headroom);
       parentStaffline.SkyBottomLineCalculator.updateSkyLineInRange(startX, stopX, headroom - fontSize * 2);
     } else {
       const footroom: number = parentStaffline.SkyBottomLineCalculator.getBottomLineMaxInRange(startX, stopX);
       if (footroom === Infinity) { // will cause Vexflow error
         return;
       }
-      (textBracket.start.getStave().options as any).bottom_text_position = footroom;
+      vfOctaveShift.textPosition = footroom;
       //Vexflow positions top vs. bottom text in a slightly inconsistent way it seems
       parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX, stopX, footroom + fontSize * 1.5);
     }
