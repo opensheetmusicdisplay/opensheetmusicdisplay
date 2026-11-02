@@ -333,8 +333,9 @@ export class RepetitionCalculator {
                 for (let idx: number = 0, len: number = currentRepetitionInstruction.endingIndices.length; idx < len; ++idx) {
                     const endingIndex: number = currentRepetitionInstruction.endingIndices[idx];
                     currentRepetition.RepetitonUnderConstruction.setEndingEndIndex(endingIndex, this.currentMeasureIndex);
-                    this.currentMeasure.LastRepetitionInstructions.push(currentRepetitionInstruction);
                 }
+                // once, also for an ending of several passes, e.g. "1, 3" (else its end would be drawn twice)
+                this.currentMeasure.LastRepetitionInstructions.push(currentRepetitionInstruction);
             }
             break;
         case RepetitionInstructionEnum.Segno:

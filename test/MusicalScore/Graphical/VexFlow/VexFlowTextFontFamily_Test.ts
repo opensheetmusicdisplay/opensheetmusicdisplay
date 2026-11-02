@@ -38,7 +38,7 @@ describe("VexFlowTextFontFamily", (): void => {
         osmd.EngravingRules.NewSystemAtXMLNewSystemAttribute = true; // for the system breaks of the last sample
         const samples: [string, string[]][] = [
             ["test_rehearsal_marks_simple_one_measure.musicxml", ["A"]], // rehearsal mark
-            ["test_repeat_da_capo_in_second_ending.musicxml", ["2", "D.C."]], // ending, repetition instruction
+            ["test_repeat_da_capo_in_second_ending.musicxml", ["2.", "D.C."]], // ending (its text), repetition instruction
             ["test_metronome_beside_tempo_text.musicxml", [" = 88"]], // metronome mark
             ["test_octaveshift_stop_missing_1696.musicxml", ["8", "va"]], // octave shift
             ["test_fingering_Simple_Chords_Treble_Bass.musicxml", ["1", "5"]], // fingerings left and above/below

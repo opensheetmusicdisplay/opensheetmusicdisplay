@@ -134,8 +134,9 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
             return this.StartIndex;
         }
         let result: number = this.backwardJumpInstructions[this.backwardJumpInstructions.length - 1].measureIndex;
-        if (this.endingIndexDict[this.NumberOfEndings]) {
-            result = Math.max(this.endingIndexDict[this.NumberOfEndings].part.EndIndex, result);
+        // (not only the last ending's: an ending for a later pass can come first, e.g. "1, 3" before "2")
+        for (const ending of this.endingParts) {
+            result = Math.max(ending.part.EndIndex, result);
         }
         return result;
     }

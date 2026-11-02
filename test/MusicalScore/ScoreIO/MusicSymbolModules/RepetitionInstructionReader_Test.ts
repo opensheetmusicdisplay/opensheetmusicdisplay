@@ -191,6 +191,38 @@ describe("RepetitionInstructionReader", () => {
         });
     });
 
+    describe("handleLineRepetitionInstructions", () => {
+        /** The ending instruction the reader reads from a barline with the given ending element. */
+        function readEnding(ending: string, location: string = "left"): RepetitionInstruction {
+            const reader: RepetitionInstructionReader = new RepetitionInstructionReader();
+            reader.MusicSheet = new MusicSheet();
+            reader.prepareReadingMeasure(undefined, 0);
+            reader.handleLineRepetitionInstructions(new IXmlElement(new DOMParser().parseFromString(
+                `<barline location="${location}">${ending}</barline>`, "text/xml").documentElement));
+            return reader.repetitionInstructions[0];
+        }
+
+        // MusicXML separates the passes by commas (MuseScore writes "1, 3"), only the first number was read
+        it("reads all the passes an ending is played on", () => {
+            expect(readEnding("<ending number=\"1, 3\" type=\"start\"/>").endingIndices).to.deep.equal([1, 3]);
+            expect(readEnding("<ending number=\"1,3\" type=\"stop\"/>", "right").endingIndices).to.deep.equal([1, 3]);
+            expect(readEnding("<ending number=\"10,12\" type=\"start\"/>").endingIndices).to.deep.equal([10, 12]);
+            // not MusicXML, but written
+            expect(readEnding("<ending number=\"1 - 3, 6\" type=\"start\"/>").endingIndices).to.deep.equal([1, 2, 3, 6]);
+            expect(readEnding("<ending number=\"1 + 2\" type=\"start\"/>").endingIndices).to.deep.equal([1, 2]);
+        });
+
+        // The text replaced the number attribute (so "1." lost the pass after a D.S.), and one without a number threw.
+        it("draws an ending's text, and reads its passes from the number attribute, unless they have no number in common", () => {
+            const ending: RepetitionInstruction = readEnding("<ending number=\"1, 3\" type=\"start\">1.</ending>");
+            expect(ending.endingIndices, "passes").to.deep.equal([1, 3]);
+            expect(ending.Words, "drawn").to.equal("1.");
+            expect(readEnding("<ending number=\"2\" type=\"start\">Last time</ending>").endingIndices).to.deep.equal([2]);
+            // Finale v27.3 wrote number="1" for a second ending "2" (#1367)
+            expect(readEnding("<ending number=\"1\" type=\"start\">2</ending>").endingIndices).to.deep.equal([2]);
+        });
+    });
+
     describe("words mentioning D.S. within a longer text (issue #1687)", () => {
         const path: string = "test/data/test_words_voice_tacet_on_ds_1687.musicxml";
         let sheet: MusicSheet;

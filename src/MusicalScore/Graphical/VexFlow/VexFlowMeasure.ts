@@ -622,7 +622,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
             //convert to VF units (pixels)
             vexFlowVoltaHeight *= 10;
-            this.stave.setVoltaType(voltaType, repetitionInstruction.endingIndices[0], vexFlowVoltaHeight);
+            // all the passes it's played on, e.g. "1, 3", unless the score gives a text for it, e.g. "1., 3." (VexFlow draws it as given)
+            const label: string = repetitionInstruction.Words ?? repetitionInstruction.endingIndices.join(", ");
+            this.stave.setVoltaType(voltaType, label as any, vexFlowVoltaHeight);
             const volta: VF.StaveModifier = this.stave.getModifiers().last();
             VexFlowConverter.setVexFlowTextFontFamily((volta as any).font, this.rules);
             skyBottomLineCalculator.updateSkyLineInRange(start, end, newSkylineValueForMeasure);
