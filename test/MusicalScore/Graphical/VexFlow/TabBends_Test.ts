@@ -116,4 +116,27 @@ describe("Tablature bends", () => {
         expect(result.modifiers[0].phrase.map((step: any) => step.type)).to.deep.equal([0, 1]);
         expect(result.modifiers[0].phrase.map((step: any) => step.text)).to.deep.equal(["1/2", ""]);
     });
+    it("reserves enough width for consecutive fractional bend labels", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        div.style.width = "1400px";
+        const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div, {autoResize: false, backend: "svg"});
+        try {
+            await osmd.load(`<?xml version="1.0"?><score-partwise version="4.0">
+                <part-list><score-part id="P1"><part-name>Guitar</part-name></score-part></part-list>
+                <part id="P1"><measure number="1"><attributes><divisions>1</divisions>
+                <time><beats>1</beats><beat-type>4</beat-type></time><clef><sign>TAB</sign><line>5</line></clef></attributes>
+                <note><pitch><step>E</step><octave>3</octave></pitch><duration>1</duration><type>quarter</type>
+                <notations><technical><string>3</string><fret>9</fret><bend><bend-alter>3</bend-alter></bend>
+                <bend><bend-alter>1</bend-alter></bend></technical></notations></note></measure></part></score-partwise>`);
+            osmd.render();
+            const labels: SVGTextElement[] = Array.from(div.querySelectorAll("text"));
+            const first: SVGTextElement = labels.find(label => label.textContent === "1 1/2");
+            const last: SVGTextElement = labels.find(label => label.textContent === "1/2");
+            const gap: number = Number(last.getAttribute("x")) - Number(first.getAttribute("x")) - first.getComputedTextLength();
+            expect(gap).to.be.at.least(0);
+        } finally {
+            div.remove();
+        }
+    });
+
 });
