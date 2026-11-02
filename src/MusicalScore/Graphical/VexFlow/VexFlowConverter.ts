@@ -302,7 +302,7 @@ export class VexFlowConverter {
         // if (gve.octaveShiftValue !== OctaveEnum.NONE) { // gves with accidentals in octave shift brackets can be unsorted
         gve.sortForVexflow(); // also necessary for some other cases, see test_sorted_notes... sample
         //   sort and reverse replace the array anyways, so we might as well directly sort them reversely for now.
-        //   otherwise we should copy the array, see the commented GraphicalVoiceEntry.sortedNotesCopyForVexflow()
+        //   otherwise we should copy the array first
         //   another alternative: don't sort gve notes, instead collect and sort tickables in an array,
         //     then iterate over the array by addTickable() in VexFlowMeasure.graphicalMeasureCreatedCalculations()
         const notes: GraphicalNote[] = gve.notes;
