@@ -270,14 +270,16 @@ export abstract class MusicSystem extends GraphicalObject {
             if (!instrument1 || !instrument2) {
                 continue;
             }
+            // a part-group groups whole parts: from the first staff of its first part to the last staff of its last part
+            //   (e.g. both staves of a piano that ends the group), among the system's stafflines (the visible staves)
             let firstStaffLine: StaffLine = undefined;
             let lastStaffLine: StaffLine = undefined;
             for (let idx2: number = 0, len2: number = this.staffLines.length; idx2 < len2; ++idx2) {
                 const staffLine: StaffLine = this.staffLines[idx2];
-                if (staffLine.ParentStaff === instrument1.Staves[0]) {
+                if (!firstStaffLine && staffLine.ParentStaff.ParentInstrument === instrument1) {
                     firstStaffLine = staffLine;
                 }
-                if (staffLine.ParentStaff === instrument2.Staves[0]) {
+                if (staffLine.ParentStaff.ParentInstrument === instrument2) {
                     lastStaffLine = staffLine;
                 }
             }
