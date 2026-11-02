@@ -99,6 +99,9 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     public MeasureWidthFactor: number = 1.0;
     /** Ignore tempo instructions like metronome numbers, e.g. because a bpm was set in the UI */
     public IgnoreTempoInstructions: boolean = false;
+    /** Whether the MusicXML's 8-digit colors are #RRGGBBAA (alpha last) instead of the spec's #AARRGGBB.
+     *  Set by the reader from <software>: MuseScore exports them like that, see [[musicXmlColorsAreAlphaLast]]. */
+    public XmlColorAlphaLast: boolean = false;
     /** The default languages of the lyrics. A lyric's own xml:lang comes first, see LyricsEntry.language. */
     public LyricLanguages: LyricLanguage[] = [];
 

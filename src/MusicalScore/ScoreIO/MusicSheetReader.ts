@@ -27,6 +27,7 @@ import {RepetitionCalculator} from "./MusicSymbolModules/RepetitionCalculator";
 import {EngravingRules} from "../Graphical/EngravingRules";
 import { ReaderPluginManager } from "./ReaderPluginManager";
 import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
+import { musicXmlColorsAreAlphaLast } from "../../Common/DataObjects/XmlColor";
 
 export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
@@ -58,6 +59,19 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
     public get CompleteNumberOfStaves(): number {
         return this.completeNumberOfStaves;
+    }
+
+    /** All <identification><encoding><software> values (a file can name several programs, e.g. Finale and Dolet). */
+    private static readEncodingSoftware(root: IXmlElement): string[] {
+        const software: string[] = [];
+        for (const identification of root.elements("identification")) {
+            for (const encoding of identification.elements("encoding")) {
+                for (const node of encoding.elements("software")) {
+                    software.push(node.value);
+                }
+            }
+        }
+        return software;
     }
 
     public static doCalculationsAfterDurationHasBeenSet(instrumentReaders: InstrumentReader[]): void {
@@ -169,6 +183,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         // Guitar Pro 5 writes the dynamic of every note (its velocity) as <dynamics> in the note's <notations>:
         //   drawn, they would repeat at almost every note (Guitar Pro 7 writes them only where a dynamic is set)
         const readNotationDynamics: boolean = encoding?.value !== "Guitar Pro 5";
+        // MuseScore writes 8-digit colors as #RRGGBBAA instead of MusicXML's #AARRGGBB, see musicXmlColorsAreAlphaLast()
+        this.musicSheet.XmlColorAlphaLast = musicXmlColorsAreAlphaLast(MusicSheetReader.readEncodingSoftware(root));
 
         while (couldReadMeasure) {
             // TODO changing this.rules.PartAndSystemAfterFinalBarline requires a reload of the piece for measure numbers to be updated

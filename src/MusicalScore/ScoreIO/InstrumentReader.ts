@@ -28,6 +28,7 @@ import {NoteType, NoteTypeHandler} from "../VoiceData/NoteType";
 import { SystemLinesEnumHelper } from "../Graphical/SystemLinesEnum";
 import { ReaderPluginManager } from "./ReaderPluginManager";
 import { TremoloInfo } from "../VoiceData/Note";
+import { musicXmlColorToCss } from "../../Common/DataObjects/XmlColor";
 // import {Dictionary} from "typescript-collections";
 
 // FIXME: The following classes are missing
@@ -699,23 +700,11 @@ export class InstrumentReader {
     return [stemDirectionXml, stemColorXml, noteheadColorXml];
   }
 
-  /** Parse a color in XML format. Can be #ARGB or #RGB format, colors as byte hex values.
-   *  @return color in Vexflow format #[A]RGB or undefined for invalid xmlColorString
+  /** Parse a color in XML format: #RRGGBB or #AARRGGBB (alpha first), or #RRGGBBAA from MuseScore (see MusicSheet.XmlColorAlphaLast).
+   *  @return the color in CSS format (#RRGGBB or #RRGGBBAA), as used by OSMD's options and passed to SVG/canvas
    */
   public parseXmlColor(xmlColorString: string): string {
-    return xmlColorString;
-    // previous implementation:
-    // if (!xmlColorString) {
-    //   return undefined;
-    // }
-
-    // if (xmlColorString.length === 7) { // #RGB
-    //   return xmlColorString;
-    // } else if (xmlColorString.length === 9) { // #ARGB
-    //   return "#" + xmlColorString.substr(3); // cut away alpha channel // why?
-    // } else {
-    //   return undefined; // invalid xml color
-    // }
+    return musicXmlColorToCss(xmlColorString, this.musicSheet.XmlColorAlphaLast);
   }
 
   public doCalculationsAfterDurationHasBeenSet(): void {

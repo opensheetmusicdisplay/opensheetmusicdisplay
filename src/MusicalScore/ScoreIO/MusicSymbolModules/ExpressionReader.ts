@@ -20,6 +20,7 @@ import { FontStyles } from "../../../Common/Enums/FontStyles";
 import { RehearsalExpression } from "../../VoiceData/Expressions/RehearsalExpression";
 import { Pedal } from "../../VoiceData/Expressions/ContinuousExpressions/Pedal";
 import { WavyLine } from "../../VoiceData/Expressions/ContinuousExpressions/WavyLine";
+import { musicXmlColorToCss } from "../../../Common/DataObjects/XmlColor";
 
 export class ExpressionReader {
     private musicSheet: MusicSheet;
@@ -787,7 +788,7 @@ export class ExpressionReader {
         }
         const colorAttr: Attr = wordsNode.attribute("color");
         if (colorAttr) {
-            fontColor = colorAttr.value;
+            fontColor = musicXmlColorToCss(colorAttr.value, this.musicSheet.XmlColorAlphaLast);
         }
         const language: string = wordsNode.attribute("xml:lang")?.value;
         let defaultYXml: number;
