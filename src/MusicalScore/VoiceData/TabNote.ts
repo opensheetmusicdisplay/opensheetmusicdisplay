@@ -9,7 +9,6 @@ import { SourceMeasure } from "./SourceMeasure";
 export interface TabBendSegment {
     bendalter: number;
     direction: string;
-    preBend?: boolean;
 }
 
 export class TabNote extends Note {
