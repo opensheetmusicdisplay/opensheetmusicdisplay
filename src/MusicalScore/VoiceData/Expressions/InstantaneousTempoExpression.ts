@@ -343,11 +343,24 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
     public set StaffNumber(value: number) {
         this.staffNumber = value;
     }
+    /** The tempo of the expression. For a metronome mark with a per-minute, its printed number, which counts its beat unit
+     *  (e.g. 30 for half = 30, see TempoInQuarterNotesPerMinute), otherwise in quarter notes per minute.
+     */
     public get TempoInBpm(): number {
         return this.tempoInBpm;
     }
     public set TempoInBpm(value: number) {
         this.tempoInBpm = value;
+    }
+    /** The tempo in quarter notes per minute, the unit of a `<sound tempo>` and of playback: TempoInBpm, converted by the
+     *  beat unit for a metronome mark with a per-minute, e.g. 60 for half = 30, 90 for dotted quarter = 60 and 60 for
+     *  eighth = 120.
+     */
+    public get TempoInQuarterNotesPerMinute(): number {
+        if (this.beatUnit === undefined) {
+            return this.tempoInBpm;
+        }
+        return this.tempoInBpm * NoteTypeHandler.beatUnitInQuarters(this.beatUnit, this.dotted);
     }
     public get ParentMultiTempoExpression(): MultiTempoExpression {
         return this.parentMultiTempoExpression;

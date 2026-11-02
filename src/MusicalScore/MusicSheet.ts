@@ -169,6 +169,9 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         // (*) this.playbackSettings.BeatsPerMinute = startTempo;
         this.userStartTempoInBPM = startTempo;
     }
+    /** The start tempo the file gives, in quarter notes per minute (e.g. 60 for a metronome mark half = 30 without a
+     *  `<sound tempo>`). Setting it sets userStartTempoInBPM too.
+     */
     public get DefaultStartTempoInBpm(): number {
         return this.defaultStartTempoInBpm;
     }
@@ -483,7 +486,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     //    }
     //
     //}
-    /** The tempo at the start of the piece, not the first later tempo instruction. */
+    /** The tempo at the start of the piece in quarter notes per minute, not the first later tempo instruction. */
     public getExpressionsStartTempoInBPM(): number {
         const expressions: MultiTempoExpression[] = this.TimestampSortedTempoExpressionsList;
         let me: MultiTempoExpression = expressions[0];
@@ -497,7 +500,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
             }
         }
         if (me.InstantaneousTempo) {
-            return me.PlaybackTempoInBpm ?? me.InstantaneousTempo.TempoInBpm;
+            return me.PlaybackTempoInBpm ?? me.InstantaneousTempo.TempoInQuarterNotesPerMinute;
         } else if (me.ContinuousTempo) {
             return me.ContinuousTempo.StartTempo;
         }
