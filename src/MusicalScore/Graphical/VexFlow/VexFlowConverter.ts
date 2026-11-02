@@ -1,3 +1,5 @@
+import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
+import { TabBend, TabBendPhrase, formatTabBendInterval } from "./TabBendLayout";
 import Vex from "vexflow";
 import VF = Vex.Flow;
 import {ClefEnum} from "../../VoiceData/Instructions/ClefInstruction";
@@ -1151,7 +1153,7 @@ export class VexFlowConverter {
     public static CreateTabNote(gve: GraphicalVoiceEntry): VF.TabNote {
         const tabPositions: {str: number, fret: number}[] = [];
         const notes: GraphicalNote[] = gve.notes.reverse();
-        const tabPhrases: { type: number, text: string, width: number }[] = [];
+        const tabPhrases: TabBendPhrase[] = [];
         const frac: Fraction = gve.notes[0].graphicalNoteLength;
         const isTuplet: boolean = gve.notes[0].sourceNote.NoteTuplet !== undefined;
         let duration: string = VexFlowConverter.durations(frac, isTuplet)[0];
@@ -1170,22 +1172,21 @@ export class VexFlowConverter {
                 (tabPosition as any).fret = "x";
                 isXNotehead = true;
             }
+            if (tabNote.FretVisible === false) {
+                (tabPosition as any).fret = "";
+            } else if (tabNote.FretParentheses) {
+                (tabPosition as any).fret = `(${tabPosition.fret})`;
+            }
             tabPositions.push(tabPosition);
             if (tabNote.BendArray) {
                 tabNote.BendArray.forEach( function( bend: {bendalter: number, direction: string} ): void {
-                    let phraseText: string;
-                    const phraseStep: number = bend.bendalter - tabPosition.fret;
-                    if (phraseStep > 1) {
-                        phraseText = "Full";
-                    } else if (phraseStep === 1) {
-                        phraseText = "1/2";
-                    } else {
-                        phraseText = "1/4";
-                    }
+                    // MusicXML bend-alter is a semitone interval, independent of the fret number.
+                    if (bend.bendalter === 0) { return; }
+                    const phraseText: string = formatTabBendInterval(bend.bendalter);
                     if (bend.direction === "up") {
-                        tabPhrases.push({type: VF.Bend.UP, text: phraseText, width: 10});
+                        tabPhrases.push({type: VF.Bend.UP, text: phraseText});
                     } else {
-                        tabPhrases.push({type: VF.Bend.DOWN, text: phraseText, width: 10});
+                        tabPhrases.push({type: VF.Bend.DOWN, text: ""});
                     }
                 });
             }
@@ -1226,11 +1227,12 @@ export class VexFlowConverter {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
         }
 
-        tabPhrases.forEach(function(phrase: { type: number, text: string, width: number }): void {
-            const bend: VF.Bend = new VF.Bend(phrase.text, phrase.type !== VF.Bend.UP);
+        if (tabPhrases.length > 0) {
+            // Pass the complete timed gesture and let VexFlow measure its label widths.
+            const bend: VF.Bend = new TabBend(gve as VexFlowVoiceEntry, tabPhrases);
             VexFlowConverter.setVexFlowTextFontOfBend(bend, rules);
             vfnote.addModifier(bend);
-        });
+        }
 
         return vfnote;
     }
