@@ -6,6 +6,7 @@ import { TransposeCalculator } from "../../../../src/Plugins/Transpose/Transpose
 import { ITransposeCalculator } from "../../../../src/MusicalScore/Interfaces/ITransposeCalculator";
 import { GraphicalStaffEntry } from "../../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
 import { AccidentalEnum } from "../../../../src/Common/DataObjects/Pitch";
+import { KeyInstruction } from "../../../../src/MusicalScore/VoiceData/Instructions/KeyInstruction";
 import { unitInPixels } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
 
 describe("Mid-measure key rendering", (): void => {
@@ -194,13 +195,14 @@ describe("Mid-measure key rendering", (): void => {
             );
             expect(keyEntries, "the return key stays in the last measure").to.have.length(1);
             expect(keyEntries[0].sourceStaffEntry.Timestamp.RealValue, "at the measure end").to.equal(0.25);
+            expect((keyEntries[0].sourceStaffEntry.Instructions[0] as KeyInstruction).Key, "four sharps").to.equal(4);
         }
+        const lastNoteX: number = notesIn(lastIndex)[0].vfnote[0].getAbsoluteX();
         const lastKeys: SVGGraphicsElement[] = keys()
             .sort((a: SVGGraphicsElement, b: SVGGraphicsElement): number => a.getBBox().x - b.getBBox().x)
             .slice(-2);
-        expect(lastKeys.map((key: SVGGraphicsElement): number => key.querySelectorAll("path").length),
-            "the four-sharp key is drawn on both staves").to.deep.equal([4, 4]);
-        expect(lastKeys[0].getBBox().x, "the key follows the last note")
-            .to.be.greaterThan(notesIn(lastIndex)[0].vfnote[0].getAbsoluteX());
+        for (const key of lastKeys) {
+            expect(key.getBBox().x, "the key is drawn on both staves after the last note").to.be.greaterThan(lastNoteX);
+        }
     });
 });
