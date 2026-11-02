@@ -1,5 +1,5 @@
 import {Fraction} from "../../Common/DataObjects/Fraction";
-import {Repetition} from "../MusicSource/Repetition";
+import {Repetition, RepetitionEndingPart} from "../MusicSource/Repetition";
 import {DynamicsContainer} from "../VoiceData/HelperObjects/DynamicsContainer";
 import {MappingSourceMusicPart} from "../MusicSource/MappingSourceMusicPart";
 import {SourceMeasure} from "../VoiceData/SourceMeasure";
@@ -8,7 +8,7 @@ import {Instrument} from "../Instrument";
 import {VerticalSourceStaffEntryContainer} from "../VoiceData/VerticalSourceStaffEntryContainer";
 import {RhythmInstruction} from "../VoiceData/Instructions/RhythmInstruction";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
-import {RepetitionInstruction} from "../VoiceData/Instructions/RepetitionInstruction";
+import {AlignmentType, RepetitionInstruction, RepetitionInstructionEnum} from "../VoiceData/Instructions/RepetitionInstruction";
 import {ContinuousDynamicExpression} from "../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import {InstantaneousDynamicExpression} from "../VoiceData/Expressions/InstantaneousDynamicExpression";
 import {MultiTempoExpression} from "../VoiceData/Expressions/MultiTempoExpression";
@@ -475,12 +475,52 @@ export class MusicPartManagerIterator {
             }
         }
         this.currentMeasureIndex++;
+        this.skipEndingsOfOtherPasses();
         if (this.JumpResponsibleRepetition !== undefined && this.currentMeasureIndex > this.JumpResponsibleRepetition.EndIndex) {
             this.jumpResponsibleRepetition = undefined;
         }
         if (this.replayedRepetitionFromWords && this.currentMeasureIndex > this.replayedRepetitionFromWords.EndIndex) {
             this.replayedRepetitionFromWords = undefined;
         }
+    }
+
+    /**
+     * Moves past the endings starting at the current measure that are for other passes of their repeat on its last pass,
+     * e.g. past a second ending after the first ending "1, 3" on the third pass. (The passes before jump back at the end of
+     * their ending, and over the endings before theirs, see the repeat's forward jump in handleRepetitionsAtMeasureEnd().)
+     */
+    private skipEndingsOfOtherPasses(): void {
+        for (let skipped: {repetition: Repetition, ending: RepetitionEndingPart} = this.findEndingOfOtherPass(); skipped;
+             skipped = this.findEndingOfOtherPass()) {
+            this.currentMeasureIndex = skipped.ending.part.EndIndex + 1;
+            this.jumpResponsibleRepetition = skipped.repetition;
+            this.forwardJumpOccurred = true;
+        }
+    }
+
+    /** The ending starting at the current measure, with its repeat, if the repeat is on its last pass and that pass has another ending. */
+    private findEndingOfOtherPass(): {repetition: Repetition, ending: RepetitionEndingPart} {
+        if (this.musicSheet.Rules.CursorIgnoreRepetitions) {
+            return undefined;
+        }
+        for (const instruction of this.musicSheet.SourceMeasures[this.currentMeasureIndex]?.FirstRepetitionInstructions ?? []) {
+            const repetition: Repetition = instruction.parentRepetition;
+            // (only a repeat's: endings that the repetition of a D.C. or D.S. took, e.g. one with no forward repeat after its
+            //   segno, are played as they come)
+            if (instruction.type !== RepetitionInstructionEnum.Ending || instruction.alignment !== AlignmentType.Begin ||
+                !repetition || repetition.FromWords || repetition.SkipRepetition || !this.repetitionIterationCountDictKeys.contains(repetition)) {
+                continue;
+            }
+            const pass: number = this.getRepetitionIterationCount(repetition);
+            const ending: RepetitionEndingPart = repetition.EndingParts.find(
+                (part: RepetitionEndingPart): boolean => part.part.StartIndex === this.currentMeasureIndex);
+            const passEndingStartIndex: number = repetition.getForwardJumpTargetForIteration(pass);
+            if (pass >= repetition.UserNumberOfRepetitions && ending && passEndingStartIndex >= 0 &&
+                passEndingStartIndex !== this.currentMeasureIndex) {
+                return {repetition: repetition, ending: ending};
+            }
+        }
+        return undefined;
     }
     private doBackJump(currentRepetition: Repetition): void {
         if (currentRepetition.SkipRepetition || this.musicSheet.Rules.CursorIgnoreRepetitions) {

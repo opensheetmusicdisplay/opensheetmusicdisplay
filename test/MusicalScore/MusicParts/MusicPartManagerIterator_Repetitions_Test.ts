@@ -168,21 +168,23 @@ describe("MusicPartManagerIterator measure order with repetitions", () => {
      * one after a D.S., and is drawn with all of them, or with its text. Only the first number was read (from the text, if
      * given): the second pass skipped the "1, 2" ending, and after the D.S., the second ending was played again instead of
      * the first one with the Fine. The voltas were labeled with the first number only.
+     * The last pass skips the endings of other passes after its own, e.g. the second ending after a "1, 3" on the third.
      *
-     * Sample: two movements, see the comment in the file. The second movement's endings have texts, "1., 3." and "2.".
+     * Sample: three movements, see the comment in the file. The second movement's endings have texts, "1., 3." and "2.".
      */
     it("plays an ending on all the passes it names, e.g. \"1, 3\" for the first and the one after a D.S., and draws them", async () => {
         expect(await playedMeasures("test_repeat_endings_of_several_passes.musicxml")).to.deep.equal([
             0, 1, 2, 0, 1, 2, 0, 3,
             4, 5, 6, 7, 5, 6, 8, 9, 5, 6, 7,
+            10, 11, 10, 12, 10, 11, 13,
         ]);
         // the repeat ends with its second ending, which comes after the ending for the first and third pass
         const repeat: Repetition = osmd.Sheet.Repetitions.find((repetition: Repetition): boolean => !repetition.FromWords && repetition.StartIndex === 5);
         expect(repeat.EndIndex, "end of the second movement's repeat").to.equal(8);
         osmd.render();
         expect(Array.from(container.querySelectorAll(".vf-volta text")).map((text: Element): string => text.textContent),
-               "volta labels").to.deep.equal(["1, 2", "3", "1., 3.", "2."]);
-        // the start and end of the two-measure "1, 2", "3", "1., 3." and "2." (the end of "1, 2" was drawn once per number)
-        expect(container.querySelectorAll(".vf-volta").length, "voltas").to.equal(5);
+               "volta labels").to.deep.equal(["1, 2", "3", "1., 3.", "2.", "1, 3", "2"]);
+        // the start and end of the two-measure "1, 2", and the others (the end of "1, 2" was drawn once per number)
+        expect(container.querySelectorAll(".vf-volta").length, "voltas").to.equal(7);
     });
 });
