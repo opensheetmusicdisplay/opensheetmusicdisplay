@@ -37,6 +37,7 @@ export class RepetitionInstructionReader {
       let type: string = "";
       let style: string = "";
       const endingIndices: number[] = [];
+      let endingText: string = undefined;
 
       // read barline style
       const styleNode: IXmlElement = barlineNode.element("bar-style");
@@ -66,34 +67,20 @@ export class RepetitionInstructionReader {
             //   making this uneffective. Unclear whether the intention is to render the volta or not. (See #1367)
           }
           type = childNode.attribute("type").value;
-          let num: string = childNode.attribute("number").value;
-          if (childNode.value) {
-            num = childNode.value;
-            // MusicXML spec: "The element text is used when the text displayed in the ending is different than what appears in the number attribute."
-            //   Finale v27.3 accordingly seems to put the desired printed number here instead of in "number" (#1367)
-          }
-
-          // Parse the given ending indices:
-          // handle cases like: "1, 2" or "1 + 2" or even "1 - 3, 6"
-          const separatedEndingIndices: string[] = num.split("[,+]");
-          for (let idx2: number = 0, len2: number = separatedEndingIndices.length; idx2 < len2; ++idx2) {
-            const separatedEndingIndex: string = separatedEndingIndices[idx2];
-            const indices: string[] = separatedEndingIndex.match("[0-9]");
-
-            // check if possibly something like "1-3" is given..
-            if (separatedEndingIndex.search("-") !== -1 && indices.length === 2) {
-              const startIndex: number = parseInt(indices[0], 10);
-              const endIndex: number = parseInt(indices[1], 10);
-              for (let index: number = startIndex; index <= endIndex; index++) {
-                endingIndices.push(index);
-              }
-            } else {
-              for (let idx3: number = 0, len3: number = indices.length; idx3 < len3; ++idx3) {
-                const index: string = indices[idx3];
-                endingIndices.push(parseInt(index, 10));
-              }
+          // The number attribute says on which passes the ending is played, e.g. "1, 3": on the first, and on the third,
+          //   after a D.S. or D.C. MusicXML spec: "The element text is used when the text displayed in the ending is different
+          //   than what appears in the number attribute." It's drawn instead of the numbers, e.g. "1., 3." or "Last time".
+          let numbers: number[] = RepetitionInstructionReader.readEndingNumbers(childNode.attribute("number").value);
+          const text: string = childNode.value.trim();
+          if (text) {
+            endingText = text;
+            // Finale v27.3 put the printed number here instead of in "number": number="1" for a "2" (#1367)
+            const textNumbers: number[] = RepetitionInstructionReader.readEndingNumbers(text);
+            if (textNumbers.length > 0 && !textNumbers.some((textNumber: number): boolean => numbers.includes(textNumber))) {
+              numbers = textNumbers;
             }
           }
+          endingIndices.push(...numbers);
         }
       }
 
@@ -106,6 +93,7 @@ export class RepetitionInstructionReader {
           if (type === "start") {
             const newInstruction: RepetitionInstruction = new RepetitionInstruction(this.currentMeasureIndex, RepetitionInstructionEnum.Ending,
                                                                                     AlignmentType.Begin, undefined, endingIndices);
+            newInstruction.Words = endingText;
             this.addInstruction(this.repetitionInstructions, newInstruction);
           }
           if (direction === "forward") {
@@ -132,6 +120,27 @@ export class RepetitionInstructionReader {
       }
     }
     return pieceEndingDetected;
+  }
+
+  /**
+   * Reads the passes an ending is played on from its number attribute or text, e.g. [1, 3] from "1, 3", "1,3" or "1., 3.".
+   * Ranges and plus signs aren't MusicXML, but are read too: [1, 2, 3, 6] from "1 - 3, 6", [1, 2] from "1 + 2".
+   */
+  private static readEndingNumbers(value: string): number[] {
+    const numbers: number[] = [];
+    for (const part of value.split(/[,+]/)) {
+      const numberTexts: string[] = part.match(/\d+/g) ?? [];
+      if (numberTexts.length === 2 && part.includes("-")) {
+        for (let index: number = parseInt(numberTexts[0], 10); index <= parseInt(numberTexts[1], 10); index++) {
+          numbers.push(index);
+        }
+      } else {
+        for (const numberText of numberTexts) {
+          numbers.push(parseInt(numberText, 10));
+        }
+      }
+    }
+    return numbers;
   }
 
   /**
