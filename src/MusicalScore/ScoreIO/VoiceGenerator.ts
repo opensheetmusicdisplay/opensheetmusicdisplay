@@ -499,7 +499,9 @@ export class VoiceGenerator {
         bendElementsArr.forEach(function (bend: IXmlElement): void {
             const bendalterNote: IXmlElement = bend.element("bend-alter");
             const releaseNode: IXmlElement = bend.element("release");
-            if (releaseNode !== undefined || parseFloat(bendalterNote.value) < 0) {
+            // a negative bend-alter is a release (MuseScore writes no <release/>), or a pre-bend, marked by <pre-bend/>
+            const isPreBend: boolean = bend.element("pre-bend") !== undefined;
+            if (releaseNode !== undefined || (parseFloat(bendalterNote.value) < 0 && !isPreBend)) {
               bends.push({bendalter: parseFloat(bendalterNote.value), direction: "down"});
             } else {
               bends.push({bendalter: parseFloat(bendalterNote.value), direction: "up"});

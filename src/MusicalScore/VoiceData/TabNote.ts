@@ -21,7 +21,10 @@ export class TabNote extends Note {
         this.bendArray = bendArray;
     }
 
+    /** Whether the fret number is drawn: false when the `<notations>` with string and fret have print-object="no",
+     *  e.g. for the end note of a bend from MuseScore (see VoiceGenerator). */
     public FretVisible: boolean = true;
+    /** Whether the fret number is drawn in parentheses, from `<notehead parentheses="yes">`. */
     public FretParentheses: boolean = false;
 
     private stringNumberTab: number; // there can also be string numbers for e.g. violin in treble clef.

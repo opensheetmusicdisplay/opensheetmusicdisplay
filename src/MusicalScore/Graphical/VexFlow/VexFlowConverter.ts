@@ -1,5 +1,3 @@
-import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
-import { TabBend, TabBendPhrase, formatTabBendInterval } from "./TabBendLayout";
 import Vex from "vexflow";
 import VF = Vex.Flow;
 import {ClefEnum} from "../../VoiceData/Instructions/ClefInstruction";
@@ -1138,7 +1136,7 @@ export class VexFlowConverter {
     public static CreateTabNote(gve: GraphicalVoiceEntry): VF.TabNote {
         const tabPositions: {str: number, fret: number}[] = [];
         const notes: GraphicalNote[] = gve.notes.reverse();
-        const tabPhrases: TabBendPhrase[] = [];
+        const tabPhrases: { type: number, text: string }[] = [];
         const frac: Fraction = gve.notes[0].graphicalNoteLength;
         const isTuplet: boolean = gve.notes[0].sourceNote.NoteTuplet !== undefined;
         let duration: string = VexFlowConverter.durations(frac, isTuplet)[0];
@@ -1165,13 +1163,11 @@ export class VexFlowConverter {
             tabPositions.push(tabPosition);
             if (tabNote.BendArray) {
                 tabNote.BendArray.forEach( function( bend: {bendalter: number, direction: string} ): void {
-                    // MusicXML bend-alter is a semitone interval, independent of the fret number.
                     if (bend.bendalter === 0) { return; }
-                    const phraseText: string = formatTabBendInterval(bend.bendalter);
                     if (bend.direction === "up") {
-                        tabPhrases.push({type: VF.Bend.UP, text: phraseText});
+                        tabPhrases.push({type: VF.Bend.UP, text: VexFlowConverter.bendText(bend.bendalter)});
                     } else {
-                        tabPhrases.push({type: VF.Bend.DOWN, text: ""});
+                        tabPhrases.push({type: VF.Bend.DOWN, text: ""}); // a release isn't labeled
                     }
                 });
             }
@@ -1213,8 +1209,11 @@ export class VexFlowConverter {
         }
 
         if (tabPhrases.length > 0) {
-            // Pass the complete timed gesture and let VexFlow measure its label widths.
-            const bend: VF.Bend = new TabBend(gve as VexFlowVoiceEntry, tabPhrases);
+            // One Bend for all segments, so that a release continues from the preceding bend
+            //   (the legacy constructor's release flag adds an up segment of its own).
+            //   Without a width, VexFlow sizes each segment by its text (Bend.updateWidth()) like the legacy constructor;
+            //   the typings require one.
+            const bend: VF.Bend = new VF.Bend("", false, tabPhrases as { type: number, text: string, width: number }[]);
             VexFlowConverter.setVexFlowTextFontOfBend(bend, rules);
             vfnote.addModifier(bend);
         }
@@ -1457,6 +1456,21 @@ export class VexFlowConverter {
         if (rules.VexFlowTextFontFamily) {
             font.family = rules.VexFlowTextFontFamily;
         }
+    }
+
+    /**
+     * Returns the text of a tab bend by its interval in semitones (MusicXML's bend-alter, independent of the fret),
+     * in whole tones like in tablature: "1/4", "1/2", "3/4", "Full" (a whole tone), "1 1/4", "1 1/2", ..., "2".
+     * Rounded to quarter tones.
+     */
+    private static bendText(semitones: number): string {
+        const quarterTones: number = Math.round(Math.abs(semitones) * 2);
+        if (quarterTones === 4) {
+            return "Full";
+        }
+        const wholeTones: number = Math.floor(quarterTones / 4);
+        const fraction: string = ["", "1/4", "1/2", "3/4"][quarterTones % 4];
+        return wholeTones > 0 ? `${wholeTones} ${fraction}`.trim() : fraction;
     }
 
     /**

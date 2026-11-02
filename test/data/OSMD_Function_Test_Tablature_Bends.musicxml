@@ -162,7 +162,7 @@
                         <string>4</string>
                         <fret>2</fret>
                         <bend>
-                            <bend-alter>4</bend-alter>
+                            <bend-alter>2</bend-alter>
                         </bend>
                     </technical>
                 </notations>
@@ -182,7 +182,7 @@
                         <string>4</string>
                         <fret>3</fret>
                         <bend>
-                            <bend-alter>4</bend-alter>
+                            <bend-alter>1</bend-alter>
                         </bend>
                     </technical>
                 </notations>
@@ -203,7 +203,7 @@
                         <string>4</string>
                         <fret>4</fret>
                         <bend>
-                            <bend-alter>4</bend-alter>
+                            <bend-alter>0.5</bend-alter>
                         </bend>
                     </technical>
                 </notations>
@@ -223,7 +223,7 @@
                         <string>4</string>
                         <fret>5</fret>
                         <bend>
-                            <bend-alter>4</bend-alter>
+                            <bend-alter>3</bend-alter>
                         </bend>
                     </technical>
                 </notations>

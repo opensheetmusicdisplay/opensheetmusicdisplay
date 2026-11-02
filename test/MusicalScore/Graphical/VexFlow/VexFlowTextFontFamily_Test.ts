@@ -44,7 +44,7 @@ describe("VexFlowTextFontFamily", (): void => {
             ["test_octaveshift_stop_missing_1696.musicxml", ["8", "va"]], // octave shift
             ["test_fingering_Simple_Chords_Treble_Bass.musicxml", ["1", "5"]], // fingerings left and above/below
             ["test_grace_note_modifiers_once.musicxml", ["II"]], // string number
-            ["OSMD_Function_Test_Tablature_Alleffects.musicxml", ["5", "2", "H", "sl."]], // tab fret number, two-tone bend, hammer-on, slide
+            ["OSMD_Function_Test_Tablature_Alleffects.musicxml", ["5", "Full", "H", "sl."]], // tab fret number, bend, hammer-on, slide
             ["test_tab_hammer-on_pull-off_tie_across_system_breaks.musicxml", ["H", "P"]], // hammer-on, pull-off across a system break
         ];
         for (const [sample, vexFlowTexts] of samples) {

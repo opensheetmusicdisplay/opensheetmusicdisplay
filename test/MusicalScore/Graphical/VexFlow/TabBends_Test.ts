@@ -5,138 +5,80 @@ import { TabNote } from "../../../../src/MusicalScore/VoiceData/TabNote";
 import { TestUtils } from "../../../Util/TestUtils";
 
 describe("Tablature bends", () => {
-    async function renderBend(
-        amount: number, fret: number, release: boolean = false, releaseOnly: boolean = false, splitNotations: boolean = false
-    ): Promise<any> {
-        const div: HTMLElement = TestUtils.getDivElement(document);
-        const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div, {autoResize: false, backend: "svg"});
-        const bends: string = (releaseOnly ? "" : `<bend><bend-alter>${amount}</bend-alter></bend>`) +
-            (release ? `<bend><bend-alter>${amount}</bend-alter><release/></bend>` : "");
+    let div: HTMLElement;
+    beforeEach(() => { div = TestUtils.getDivElement(document); });
+    afterEach(() => { div.remove(); });
+
+    /** A quarter note on string 4 at the given fret, with more `<technical>` children (e.g. bends) and `<note>` children. */
+    function tabNote(fret: number, technical: string = "", noteChildren: string = ""): string {
+        return `<note><pitch><step>E</step><octave>3</octave></pitch><duration>1</duration><type>quarter</type>${noteChildren}
+            <notations><technical><string>4</string><fret>${fret}</fret>${technical}</technical></notations></note>`;
+    }
+
+    /** A bend by the given interval in semitones (MusicXML's bend-alter, negative for a release or a pre-bend),
+     *  with an optional element that marks it, "release" or "pre-bend". */
+    function bend(semitones: number, mark: string = ""): string {
+        return `<bend><bend-alter>${semitones}</bend-alter>${mark ? `<${mark}/>` : ""}</bend>`;
+    }
+
+    /** Renders the notes as a measure of a guitar tab (SVG backend) and returns them. */
+    async function renderTab(container: HTMLElement, notes: string[]): Promise<VexFlowGraphicalNote[]> {
+        const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(container, {autoResize: false, backend: "svg"});
         await osmd.load(`<?xml version="1.0" encoding="UTF-8"?><score-partwise version="4.0">
             <part-list><score-part id="P1"><part-name>Guitar</part-name></score-part></part-list>
             <part id="P1"><measure number="1"><attributes><divisions>1</divisions>
-            <time><beats>4</beats><beat-type>4</beat-type></time>
+            <time><beats>${notes.length}</beats><beat-type>4</beat-type></time>
             <clef><sign>TAB</sign><line>5</line></clef><staff-details><staff-lines>6</staff-lines></staff-details>
-            </attributes><note><pitch><step>E</step><octave>3</octave></pitch><duration>4</duration><type>whole</type>
-            <notations><technical><string>4</string><fret>${fret}</fret>
-            ${splitNotations ? "</technical></notations><notations><technical>" : ""}${bends}</technical></notations>
-            </note></measure></part></score-partwise>`);
+            </attributes>${notes.join("")}</measure></part></score-partwise>`);
         osmd.render();
-        const note: VexFlowGraphicalNote = osmd.GraphicSheet.findGraphicalMeasure(0, 0)
-            .staffEntries[0].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote;
-        const modifiers: any[] = (note.vfnote[0] as any).getModifiers().filter((modifier: any) => modifier.getCategory() === "bends");
-        // All curve coordinates must be finite: an explicit VexFlow phrase width
-        // without draw_width silently produces NaN SVG paths.
-        for (const path of Array.from(div.querySelectorAll("svg path"))) {
+        for (const path of Array.from(container.querySelectorAll("svg path"))) {
             expect(path.getAttribute("d")).not.to.match(/NaN|Infinity/);
         }
-        const result: any = {modifiers, amount: (note.sourceNote as TabNote).BendArray[0].bendalter,
-            labels: Array.from(div.querySelectorAll("svg text")).map((text: Element) => text.textContent)};
-        div.remove();
-        return result;
+        return osmd.GraphicSheet.findGraphicalMeasure(0, 0).staffEntries
+            .map(staffEntry => staffEntry.graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
     }
 
-    for (const fret of [0, 2, 12]) {
-        it(`labels a semitone bend as 1/2 at fret ${fret}`, async () => {
-            const result: any = await renderBend(1, fret);
-            expect(result.modifiers[0].phrase[0].text).to.equal("1/2");
-            expect(result.labels).to.include("1/2");
-        });
+    /** The labels drawn with the note's bends (a release draws an empty text). */
+    function bendLabels(note: VexFlowGraphicalNote): SVGTextElement[] {
+        return note.getModifierSVGs().filter(svg => svg.tagName === "text" && svg.textContent !== "") as unknown as SVGTextElement[];
     }
 
-    it("preserves fractional semitones for quarter-tone bends", async () => {
-        const result: any = await renderBend(0.5, 2);
-        expect(result.amount).to.equal(0.5);
-        expect(result.modifiers[0].phrase[0].text).to.equal("1/4");
+    it("labels a bend by its interval in whole tones, independently of the fret", async () => {
+        // [bend-alter (semitones), fret, label]
+        const bends: [number, number, string][] = [[0.5, 7, "1/4"], [1, 7, "1/2"], [1.5, 7, "3/4"], [2, 7, "Full"],
+            [2.5, 7, "1 1/4"], [3, 7, "1 1/2"], [4, 7, "2"], [1, 0, "1/2"], [1, 12, "1/2"]];
+        const notes: VexFlowGraphicalNote[] = await renderTab(div, bends.map(([semitones, fret]) => tabNote(fret, bend(semitones))));
+        expect(notes.map(note => bendLabels(note).map(label => label.textContent).join())).to.deep.equal(bends.map(b => b[2]));
     });
 
-    for (const [amount, label] of [[1.5, "3/4"], [2.5, "1 1/4"], [3, "1 1/2"], [4, "2"]] as [number, string][]) {
-        it(`labels a ${amount}-semitone bend as ${label}`, async () => {
-            const result: any = await renderBend(amount, 2);
-            expect(result.modifiers[0].phrase[0].text).to.equal(label);
-        });
-    }
-
-    it("labels a whole-tone bend as Full", async () => {
-        const result: any = await renderBend(2, 2);
-        expect(result.modifiers[0].phrase[0].text).to.equal("Full");
+    it("draws a bend and its release as one curve, labeled at the bend, a pre-bend as a bend, and two bends side by side", async () => {
+        const notes: VexFlowGraphicalNote[] = await renderTab(div, [
+            tabNote(7, bend(2) + bend(-2, "release")),
+            tabNote(7, bend(-2)), // only a release, like on the end note of a bend from MuseScore, which writes no <release/>
+            tabNote(7, bend(1) + bend(1)),
+            tabNote(7, bend(-2, "pre-bend")), // a pre-bend as MuseScore writes it
+        ]);
+        expect(notes.map(note => bendLabels(note).map(label => label.textContent))).to.deep.equal([["Full"], [], ["1/2", "1/2"], ["Full"]]);
+        // curves: drawn as paths without a fill (one per segment), the arrowheads and labels are filled
+        const curves: number[] = notes.map(note => note.getModifierSVGs().filter(svg => svg.getAttribute("fill") === "none").length);
+        expect(curves, "curves of each note").to.deep.equal([2, 1, 2, 1]);
+        const [first, second] = bendLabels(notes[2]).map(label => label.getBBox());
+        expect(first.x + first.width, "end of the first label").to.be.lessThan(second.x);
     });
 
-    it("reads a negative bend in a separate notations block as a release", async () => {
-        const result: any = await renderBend(-1, 2, false, false, true);
-        expect(result.modifiers).to.have.length(1);
-        expect(result.modifiers[0].phrase.map((step: any) => step.type)).to.deep.equal([1]);
+    it("reads a release from a second <notations> of a note, and hides a fret in hidden <notations> (MuseScore)", async () => {
+        // MuseScore writes a bend as the bent note and an end note at the bent pitch, whose string and fret are hidden,
+        //   and the release of that end note in another <notations>.
+        const notes: VexFlowGraphicalNote[] = await renderTab(div, [
+            tabNote(2, bend(1)),
+            `<note><pitch><step>F</step><octave>3</octave></pitch><duration>1</duration><type>quarter</type>
+                <notations print-object="no"><technical><string>4</string><fret>2</fret></technical></notations>
+                <notations><technical>${bend(-1)}</technical></notations></note>`,
+            tabNote(2, "", "<notehead parentheses='yes'>normal</notehead>"),
+        ]);
+        expect((notes[1].sourceNote as TabNote).BendArray).to.deep.equal([{bendalter: -1, direction: "down"}]);
+        expect(notes.map(note => note.getNoteheadSVGs().map(fret => fret.textContent))).to.deep.equal([["2"], [""], ["(2)"]]);
+        const hiddenFret: HTMLElement = notes[1].getNoteheadSVGs()[0];
+        expect(hiddenFret.previousElementSibling.getAttribute("width"), "no gap behind the hidden fret").to.equal("0");
     });
-
-    it("renders a release-only bend without an extra upward segment", async () => {
-        const result: any = await renderBend(1, 2, true, true);
-        expect(result.modifiers).to.have.length(1);
-        expect(result.modifiers[0].phrase.map((step: any) => step.type)).to.deep.equal([1]);
-    });
-
-    it("anchors a connected bend peak over its hidden continuation and retains visible parentheses", async () => {
-        const div: HTMLElement = TestUtils.getDivElement(document);
-        const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div, {autoResize: false, backend: "svg"});
-        const xml: string = `<?xml version="1.0"?><score-partwise version="4.0">
-            <part-list><score-part id="P1"><part-name>Guitar</part-name></score-part></part-list>
-            <part id="P1"><measure number="1"><attributes><divisions>1</divisions>
-            <time><beats>3</beats><beat-type>4</beat-type></time><clef><sign>TAB</sign><line>5</line></clef>
-            <staff-details><staff-lines>6</staff-lines></staff-details></attributes>
-            <note><pitch><step>E</step><octave>3</octave></pitch><duration>1</duration><type>quarter</type>
-            <notations><technical><string>4</string><fret>2</fret><bend><bend-alter>1</bend-alter></bend></technical></notations></note>
-            <note><pitch><step>F</step><octave>3</octave></pitch><duration>1</duration><type>quarter</type>
-            <notehead parentheses="yes">normal</notehead>
-            <notations print-object="no"><technical><string>4</string><fret>2</fret></technical></notations>
-            <notations><technical><bend><bend-alter>-1</bend-alter></bend></technical></notations></note>
-            <note><pitch><step>E</step><octave>3</octave></pitch><duration>1</duration><type>quarter</type>
-            <notehead parentheses="yes">normal</notehead><notations><technical><string>4</string><fret>2</fret>
-            </technical></notations></note></measure></part></score-partwise>`;
-        try {
-            await osmd.load(xml);
-            osmd.render();
-            const measure: any = osmd.GraphicSheet.findGraphicalMeasure(0, 0);
-            const target: any = measure.staffEntries[1].graphicalVoiceEntries[0].notes[0];
-            expect(target.sourceNote.FretVisible).to.equal(false);
-            const labels: string[] = Array.from(div.querySelectorAll("svg text")).map((text: Element) => text.textContent);
-            expect(labels.filter((text: string) => text === "2")).to.have.length(1);
-            expect(labels).to.include("(2)");
-            const group: Element = div.querySelector(".vf-tab-bend-span");
-            expect(group).not.to.equal(null);
-            const bendLabel: SVGGraphicsElement = group.querySelector("text");
-            const box: DOMRect = bendLabel.getBBox();
-            const targetNote: any = target.vfnote[0];
-            expect(box.x + box.width / 2).to.be.closeTo(targetNote.getAbsoluteX() + targetNote.glyph.getWidth() / 2, 0.5);
-            expect(group.querySelector("path").getAttribute("d")).not.to.match(/NaN|Infinity/);
-        } finally { div.remove(); }
-    });
-
-    it("renders a bend and release as one continuous phrase", async () => {
-        const result: any = await renderBend(1, 2, true);
-        expect(result.modifiers).to.have.length(1);
-        expect(result.modifiers[0].phrase.map((step: any) => step.type)).to.deep.equal([0, 1]);
-        expect(result.modifiers[0].phrase.map((step: any) => step.text)).to.deep.equal(["1/2", ""]);
-    });
-    it("reserves enough width for consecutive fractional bend labels", async () => {
-        const div: HTMLElement = TestUtils.getDivElement(document);
-        div.style.width = "1400px";
-        const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div, {autoResize: false, backend: "svg"});
-        try {
-            await osmd.load(`<?xml version="1.0"?><score-partwise version="4.0">
-                <part-list><score-part id="P1"><part-name>Guitar</part-name></score-part></part-list>
-                <part id="P1"><measure number="1"><attributes><divisions>1</divisions>
-                <time><beats>1</beats><beat-type>4</beat-type></time><clef><sign>TAB</sign><line>5</line></clef></attributes>
-                <note><pitch><step>E</step><octave>3</octave></pitch><duration>1</duration><type>quarter</type>
-                <notations><technical><string>3</string><fret>9</fret><bend><bend-alter>3</bend-alter></bend>
-                <bend><bend-alter>1</bend-alter></bend></technical></notations></note></measure></part></score-partwise>`);
-            osmd.render();
-            const labels: SVGTextElement[] = Array.from(div.querySelectorAll("text"));
-            const first: SVGTextElement = labels.find(label => label.textContent === "1 1/2");
-            const last: SVGTextElement = labels.find(label => label.textContent === "1/2");
-            const gap: number = Number(last.getAttribute("x")) - Number(first.getAttribute("x")) - first.getComputedTextLength();
-            expect(gap).to.be.at.least(0);
-        } finally {
-            div.remove();
-        }
-    });
-
 });
