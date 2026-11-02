@@ -62,12 +62,15 @@ describe("Slur offset at a shared end note", () => {
         throw new Error("no staff line with measure 2");
     }
 
-    it("ends the inner slur at its note, as without the outer slur", async () => {
+    it("ends the inner slur at its note, as without the outer slur, and the outer slur above it", async () => {
         // (the offset of a second slur ending at a note is for the longer one only)
         for (const systemBreak of [false, true]) {
-            const inner: GraphicalSlur = pieces(await render(systemBreak)).inner;
+            const osmd: OpenSheetMusicDisplay = await render(systemBreak);
+            const { outer, inner } = pieces(osmd);
             const alone: GraphicalSlur = pieces(await render(systemBreak, false)).inner;
+            const offset: number = osmd.EngravingRules.SlursStartingAtSameStaffEntryYOffset;
             expect(inner.bezierEndPt.y).to.be.closeTo(alone.bezierEndPt.y, 0.01, `system break ${systemBreak}`);
+            expect(outer.bezierEndPt.y).to.be.closeTo(inner.bezierEndPt.y - offset, 0.01, `system break ${systemBreak}: the outer slur ends above it`);
         }
     });
 });
