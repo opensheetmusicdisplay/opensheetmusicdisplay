@@ -9,14 +9,13 @@ describe("Clef Converter MusicXML to VexFlow", () => {
     let reader: MusicSheetReader;
     let parser: DOMParser;
 
-    before((): void => {
+    beforeAll((): void => {
       reader = new MusicSheetReader();
       parser = new DOMParser();
     });
 
-    it("reads treble key", (done: Mocha.Done) => {
+    it("reads treble key", () => {
       getMusicSheetWithClef("G").getStaffFromIndex(0);
-      done();
     });
 
     /**

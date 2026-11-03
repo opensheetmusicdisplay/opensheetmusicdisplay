@@ -5,15 +5,14 @@ import { MusicSheet } from "../../../src/MusicalScore/MusicSheet";
 import { IXmlElement } from "../../../src/Common/FileIO/Xml";
 
 describe("NoteType", () => {
-    it("parses 32nd note correctly (sample value)", (done: Mocha.Done) => {
+    it("parses 32nd note correctly (sample value)", () => {
         expect(NoteTypeHandler.StringToNoteType("32nd")).to.equal(NoteType._32nd);
-        done();
     });
 
     // assumption of NoteTypeToString(): the enum values are the indexes of their strings in NoteTypeXmlValues.
     //   Comparing the strings with the enum members (not just with their own indexes) also catches a misspelled string,
     //   like "eigth", which made StringToNoteType("eighth") return UNDEFINED.
-    it("converts each NoteType to its MusicXML type string (in XML: <note><type>) and back", (done: Mocha.Done) => {
+    it("converts each NoteType to its MusicXML type string (in XML: <note><type>) and back", () => {
         const xmlTypes: [NoteType, string][] = [
             [NoteType.UNDEFINED, ""], [NoteType._1024th, "1024th"], [NoteType._512th, "512th"], [NoteType._256th, "256th"],
             [NoteType._128th, "128th"], [NoteType._64th, "64th"], [NoteType._32nd, "32nd"], [NoteType._16th, "16th"],
@@ -26,12 +25,11 @@ describe("NoteType", () => {
             expect(NoteTypeHandler.StringToNoteType(xmlType), `StringToNoteType("${xmlType}")`).to.equal(noteType);
         }
         expect(NoteType.EIGTH, "the misspelled EIGTH, kept for compatibility").to.equal(NoteType.EIGHTH);
-        done();
     });
 
     // Note.NoteTypeXml is the notated type, also where the length differs from it (dotted, tuplet),
     //   e.g. the Braille plugin takes the note value from it.
-    it("reads the type of eighth notes into Note.NoteTypeXml, also of dotted and triplet eighths", (done: Mocha.Done) => {
+    it("reads the type of eighth notes into Note.NoteTypeXml, also of dotted and triplet eighths", () => {
         const triplet: string = "<time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>";
         const xml: string = `<?xml version="1.0" encoding="UTF-8"?>
             <score-partwise version="4.0">
@@ -56,7 +54,6 @@ describe("NoteType", () => {
         const noteTypes: NoteType[] = sheet.Instruments[0].Voices[0].VoiceEntries.map(voiceEntry => voiceEntry.Notes[0].NoteTypeXml);
         expect(noteTypes).to.deep.equal([NoteType.EIGHTH, NoteType.EIGHTH, NoteType.EIGHTH, NoteType._16th,
                                          NoteType.EIGHTH, NoteType.EIGHTH, NoteType.EIGHTH, NoteType.QUARTER]);
-        done();
     });
 
     // converts a metronome mark's per-minute into quarter notes per minute (InstantaneousTempoExpression.TempoInQuarterNotesPerMinute)

@@ -17,7 +17,7 @@ import { PlacementEnum } from "../../../src/MusicalScore/VoiceData/Expressions/A
  */
 describe("Tie direction of parts sharing a staff", () => {
     let osmd: OpenSheetMusicDisplay;
-    before(async () => {
+    beforeAll(async () => {
         osmd = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
         await osmd.load(TestUtils.getScore("test_tie_direction_parts_sharing_staff_traumerei_measure12.musicxml"));
         osmd.render();

@@ -185,8 +185,7 @@ export default defineConfig(
         files: ["test/**/*.ts"],
         languageOptions: {
             globals: {
-                ...globals.mocha,
-                Mocha: "readonly",
+                ...globals.vitest,
             },
         },
     },
@@ -215,7 +214,6 @@ export default defineConfig(
             globals: {
                 ...globals.browser,
                 ...globals.node,
-                ...globals.mocha,
             },
         },
         rules: {

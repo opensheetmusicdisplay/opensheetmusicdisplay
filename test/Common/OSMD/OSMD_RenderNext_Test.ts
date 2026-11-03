@@ -28,13 +28,13 @@ describe("OpenSheetMusicDisplay incremental rendering (renderNext)", () => {
     let container: HTMLElement;
     let osmd: OpenSheetMusicDisplay;
 
-    beforeEach((done: Mocha.Done): void => {
+    beforeEach(async (): Promise<void> => {
         // a fresh container per test: an OSMD instance only removes its own previous rendering from the container
         container = TestUtils.getDivElement(document);
         osmd = TestUtils.createOpenSheetMusicDisplay(container); // autoResize: false
         osmd.setOptions({ drawCredits: true, newSystemFromXML: true }); // the sample's system breaks: 4 systems regardless of width
         osmd.EngravingRules.RenderCopyright = true; // default false
-        osmd.load(TestUtils.getScore(sampleFilename)).then((): void => done(), done);
+        await osmd.load(TestUtils.getScore(sampleFilename));
     });
 
     afterEach((): void => {

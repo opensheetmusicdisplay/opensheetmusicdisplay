@@ -41,7 +41,7 @@ describe("ExpressionReader", () => {
         const path: string = "test/data/test_combined_dynamics_1705.musicxml";
         let dynamics: InstantaneousDynamicExpression[];
 
-        before((): void => {
+        beforeAll((): void => {
             dynamics = collectDynamics(readSheet(path));
         });
 
@@ -118,7 +118,7 @@ describe("ExpressionReader", () => {
     describe("MusicXML 4.0 dynamics pf, sfzp and n", () => {
         let dynamics: InstantaneousDynamicExpression[];
 
-        before((): void => {
+        beforeAll((): void => {
             dynamics = collectDynamics(readSheet("test/data/test_dynamics_musicxml4_n_pf_sfzp.musicxml"));
         });
 
@@ -141,7 +141,7 @@ describe("ExpressionReader", () => {
     describe("dynamics after words or a wedge in the same direction", () => {
         let dynamics: InstantaneousDynamicExpression[];
 
-        before((): void => {
+        beforeAll((): void => {
             dynamics = collectDynamics(readSheet("test/data/test_direction_dynamics_after_words_and_wedge.musicxml"));
         });
 
@@ -185,7 +185,7 @@ describe("ExpressionReader", () => {
         let sheet: MusicSheet;
         let wedges: ContinuousDynamicExpression[];
 
-        before((): void => {
+        beforeAll((): void => {
             sheet = readSheet("test/data/test_direction_several_direction_types.musicxml");
             wedges = sheet.SourceMeasures.flatMap((measure): ContinuousDynamicExpression[] =>
                 measure.StaffLinkedExpressions.flatMap((staffExpressions: MultiExpression[]): ContinuousDynamicExpression[] =>
@@ -310,7 +310,7 @@ describe("ExpressionReader", () => {
         const path: string = "test/data/test_direction_words_with_sound_dynamics.musicxml";
         let sheet: MusicSheet;
 
-        before((): void => {
+        beforeAll((): void => {
             sheet = readSheet(path);
         });
 

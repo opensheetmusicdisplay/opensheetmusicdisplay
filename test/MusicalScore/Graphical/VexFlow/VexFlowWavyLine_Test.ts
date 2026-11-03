@@ -29,30 +29,27 @@ describe("VexFlowVibratoBracket", () => {
         return new VexFlowVibratoBracket(new WavyLine(undefined), new BoundingBox(undefined));
     }
 
-    it("setStartNote returns false for an undefined staff entry instead of throwing", (done: Mocha.Done) => {
+    it("setStartNote returns false for an undefined staff entry instead of throwing", () => {
         const bracket: VexFlowVibratoBracket = createBracket();
         let result: boolean;
         expect(() => result = bracket.setStartNote(undefined)).to.not.throw();
         expect(result, "no start note could be found").to.be.false;
         expect(bracket.startNote, "start note stays unset").to.be.undefined;
-        done();
     });
 
-    it("setEndNote returns false for an undefined staff entry instead of throwing", (done: Mocha.Done) => {
+    it("setEndNote returns false for an undefined staff entry instead of throwing", () => {
         const bracket: VexFlowVibratoBracket = createBracket();
         let result: boolean;
         expect(() => result = bracket.setEndNote(undefined)).to.not.throw();
         expect(result, "no end note could be found").to.be.false;
         expect(bracket.endNote, "end note stays unset").to.be.undefined;
-        done();
     });
 
-    it("still reports false for a staff entry without voice entries", (done: Mocha.Done) => {
+    it("still reports false for a staff entry without voice entries", () => {
         const bracket: VexFlowVibratoBracket = createBracket();
         const emptyStaffEntry: GraphicalStaffEntry = { graphicalVoiceEntries: [] } as GraphicalStaffEntry;
         expect(bracket.setStartNote(emptyStaffEntry), "no start note in an empty staff entry").to.be.false;
         expect(bracket.setEndNote(emptyStaffEntry), "no end note in an empty staff entry").to.be.false;
-        done();
     });
 });
 

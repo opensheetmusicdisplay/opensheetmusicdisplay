@@ -43,7 +43,7 @@ describe("VexFlow Measure - Room for Staggered Notes", () => {
       return second.notes[0].PositionAndShape.AbsolutePosition.x - first.notes[0].PositionAndShape.AbsolutePosition.x;
    }
 
-   it("Should give a staggered note as much room before the next note as a sixteenth that isn't moved", (done: Mocha.Done) => {
+   it("Should give a staggered note as much room before the next note as a sixteenth that isn't moved", () => {
       // Measure 2: on each beat, voice 2's quarter is moved right, beside the sixteenth a second above it.
       const measure: VexFlowMeasure = renderMeasures()[1];
       for (const beat of [0, 0.25, 0.5, 0.75]) {
@@ -54,10 +54,9 @@ describe("VexFlow Measure - Room for Staggered Notes", () => {
          expect(distance(moved, next)).to.be.at.least(distance(next, afterNext) - 0.01,
             `at ${beat}, the moved quarter must get as much room before the next sixteenth as a sixteenth that isn't moved`);
       }
-      done();
    });
 
-   it("Should give a staggered middle voice note of three as much room before the next note as a sixteenth", (done: Mocha.Done) => {
+   it("Should give a staggered middle voice note of three as much room before the next note as a sixteenth", () => {
       // Measure 3: on beats 1 and 3, voice 2's G4 eighth is moved right, beside voice 1's A4, and its F4 sixteenth follows.
       const measure: VexFlowMeasure = renderMeasures()[2];
       for (const beat of [0, 0.5]) {
@@ -68,7 +67,6 @@ describe("VexFlow Measure - Room for Staggered Notes", () => {
          expect(distance(moved, next)).to.be.at.least(distance(next, afterNext) - 0.01,
             `at ${beat}, the moved eighth must get at least as much room before the next note as a sixteenth`);
       }
-      done();
    });
 
 });

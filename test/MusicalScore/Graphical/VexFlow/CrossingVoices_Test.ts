@@ -39,7 +39,7 @@ describe("Crossing voices - lower note with upwards stem, higher note with downw
         return gve.notes[0].PositionAndShape.AbsolutePosition.x;
     }
 
-    it("Should shift the stem-up voice right when crossed with a higher stem-down voice (2 voices)", (done: Mocha.Done) => {
+    it("Should shift the stem-up voice right when crossed with a higher stem-down voice (2 voices)", () => {
         const measures: VexFlowMeasure[] = renderMeasures("test_crossing_voices.musicxml");
 
         // Measure 1: Voice 1 (G4, stem up) crossed under Voice 2 (C5, B4, A4, G4, stem down)
@@ -69,10 +69,9 @@ describe("Crossing voices - lower note with upwards stem, higher note with downw
             expect(Math.abs(noteX(gves, 1) - noteX(gves, 2))).to.be.lessThan(0.1,
                 `measure 2 at ${timestamp}: uncrossed voices should stay aligned`);
         }
-        done();
     });
 
-    it("Should shift crossed beamed eighth notes and dotted notes (2 voices)", (done: Mocha.Done) => {
+    it("Should shift crossed beamed eighth notes and dotted notes (2 voices)", () => {
         const measures: VexFlowMeasure[] = renderMeasures("test_crossing_voices.musicxml");
 
         // Measure 3: beamed eighth notes crossing mid-measure
@@ -95,10 +94,9 @@ describe("Crossing voices - lower note with upwards stem, higher note with downw
         const m4: VexFlowMeasure = measures[3];
         expect(noteX(voiceEntriesAt(m4, 0), 1) - noteX(voiceEntriesAt(m4, 0), 2)).to.be.greaterThan(0.2);
         expect(noteX(voiceEntriesAt(m4, 0.375), 1) - noteX(voiceEntriesAt(m4, 0.375), 2)).to.be.greaterThan(1);
-        done();
     });
 
-    it("Should separate crossed voices in 3-voice measures", (done: Mocha.Done) => {
+    it("Should separate crossed voices in 3-voice measures", () => {
         const measures: VexFlowMeasure[] = renderMeasures("test_crossing_voices.musicxml");
 
         // Measure 6, beat 4 (0.75): Voice 2 (D5, down), Voice 3 (C5, up), Voice 1 (A4, up)
@@ -114,10 +112,9 @@ describe("Crossing voices - lower note with upwards stem, higher note with downw
             "measure 7 at 0: stem-up A4 should be shifted right of stem-down D5");
         expect(noteX(m7Beat1, 3) - noteX(m7Beat1, 1)).to.be.greaterThan(0.5,
             "measure 7 at 0: middle B4 should be shifted further right of A4");
-        done();
     });
 
-    it("Should not shift crossed voices when they are far apart or have no stems reaching the other notehead", (done: Mocha.Done) => {
+    it("Should not shift crossed voices when they are far apart or have no stems reaching the other notehead", () => {
         const measures: VexFlowMeasure[] = renderMeasures("test_crossing_voices_distant_stemless.musicxml");
 
         // Measure 1 (both stems visible):
@@ -153,7 +150,6 @@ describe("Crossing voices - lower note with upwards stem, higher note with downw
             expect(noteX(gves, 1) - noteX(gves, 2)).to.be.greaterThan(0.5,
                 `measure ${measureIndex + 1}: stem-down half note reaches whole note G4, should shift`);
         }
-        done();
     });
 
 });

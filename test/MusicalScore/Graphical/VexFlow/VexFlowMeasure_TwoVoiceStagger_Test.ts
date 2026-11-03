@@ -39,7 +39,7 @@ describe("VexFlow Measure - Two-Voice Stagger", () => {
       return gve.notes[0].PositionAndShape.AbsolutePosition.x;
    }
 
-   it("Should stagger a dotted upper note rather than the lower note a second below, which would cover its dot", (done: Mocha.Done) => {
+   it("Should stagger a dotted upper note rather than the lower note a second below, which would cover its dot", () => {
       // Measure 1: a dotted A4 over a G4, then a dotted G4 over an F4.
       const measure: VexFlowMeasure = renderMeasures()[0];
       for (const timestamp of [0, 0.5]) {
@@ -48,19 +48,17 @@ describe("VexFlow Measure - Two-Voice Stagger", () => {
          expect(noteX(gves, 1) - noteX(gves, 2)).to.be.greaterThan(1,
             `at ${timestamp}, the dotted upper note must be staggered, its dot next to its head`);
       }
-      done();
    });
 
-   it("Should stagger a dotted upper note in a space over a dotted lower note, whose dot then goes below", (done: Mocha.Done) => {
+   it("Should stagger a dotted upper note in a space over a dotted lower note, whose dot then goes below", () => {
       // Measure 2, beat 1: a dotted A4 over a dotted G4.
       const gves: VexFlowVoiceEntry[] = voiceEntriesAt(renderMeasures()[1], 0);
       expect(gves.length).to.equal(2, "the first beat should have two voices");
       expect(noteX(gves, 1) - noteX(gves, 2)).to.be.greaterThan(1,
          "the dotted upper note in a space must be staggered, the lower dot going to the space below");
-      done();
    });
 
-   it("Should still stagger the lower note when it is the only one dotted, or the dotted upper note is on a line", (done: Mocha.Done) => {
+   it("Should still stagger the lower note when it is the only one dotted, or the dotted upper note is on a line", () => {
       // Measure 2, beat 3: an A4 over a dotted G4. Measure 3, beat 1: a dotted G4 over a dotted F4.
       const measures: VexFlowMeasure[] = renderMeasures();
       for (const [measureIndex, timestamp] of [[1, 0.5], [2, 0]]) {
@@ -69,12 +67,11 @@ describe("VexFlow Measure - Two-Voice Stagger", () => {
          expect(noteX(gves, 2) - noteX(gves, 1)).to.be.greaterThan(1,
             `in measure ${measureIndex + 1} at ${timestamp}, the dotted lower note must be staggered, as before`);
       }
-      done();
    });
 
    const lowerChordPath: string = "test_two_voice_stagger_lower_chord_second.musicxml";
 
-   it("Should stagger a lower chord whose top key is a second below the upper note", (done: Mocha.Done) => {
+   it("Should stagger a lower chord whose top key is a second below the upper note", () => {
       // Measure 1: an A4 over E4+G4, then an A4+C5 over E4+G4. Measure 2: the A4 eighth over E4+G4.
       const measures: VexFlowMeasure[] = renderMeasures(lowerChordPath);
       for (const [measureIndex, timestamp] of [[0, 0], [0, 0.25], [1, 0.875]]) {
@@ -83,10 +80,9 @@ describe("VexFlow Measure - Two-Voice Stagger", () => {
          expect(noteX(gves, 2) - noteX(gves, 1)).to.be.greaterThan(1,
             `in measure ${measureIndex + 1} at ${timestamp}, the lower chord must be staggered, its G4 clear of the A4`);
       }
-      done();
    });
 
-   it("Should not stagger a lower chord whose top key is in unison with the upper note, or a third below it", (done: Mocha.Done) => {
+   it("Should not stagger a lower chord whose top key is in unison with the upper note, or a third below it", () => {
       // Measure 1: an A4 over E4+A4, then a C5 over E4+G4.
       const measure: VexFlowMeasure = renderMeasures(lowerChordPath)[0];
       for (const timestamp of [0.5, 0.75]) {
@@ -95,10 +91,9 @@ describe("VexFlow Measure - Two-Voice Stagger", () => {
          expect(Math.abs(noteX(gves, 2) - noteX(gves, 1))).to.be.lessThan(0.5,
             `at ${timestamp}, the two notes must stay on the beat`);
       }
-      done();
    });
 
-   it("Should stagger a dotted upper note over a lower chord whose top key is a second below", (done: Mocha.Done) => {
+   it("Should stagger a dotted upper note over a lower chord whose top key is a second below", () => {
       // Measure 2: a dotted A4 over E4+G4, then a dotted A4 over a dotted E4+G4.
       const measure: VexFlowMeasure = renderMeasures(lowerChordPath)[1];
       for (const timestamp of [0, 0.5]) {
@@ -107,10 +102,9 @@ describe("VexFlow Measure - Two-Voice Stagger", () => {
          expect(noteX(gves, 1) - noteX(gves, 2)).to.be.greaterThan(1,
             `at ${timestamp}, the dotted upper note must be staggered, its dot next to its head`);
       }
-      done();
    });
 
-   it("Should stagger crossed voices when the stem-up chord's top key is a second below the stem-down note", (done: Mocha.Done) => {
+   it("Should stagger crossed voices when the stem-up chord's top key is a second below the stem-down note", () => {
       // Measure 3: a stem-down A4 over a stem-up E4+G4, then over a stem-up G4.
       const measure: VexFlowMeasure = renderMeasures(lowerChordPath)[2];
       for (const timestamp of [0, 0.5]) {
@@ -119,7 +113,6 @@ describe("VexFlow Measure - Two-Voice Stagger", () => {
          expect(noteX(gves, 1) - noteX(gves, 2)).to.be.greaterThan(1,
             `at ${timestamp}, the stem-up G4 must be staggered right of the stem-down A4`);
       }
-      done();
    });
 
 });

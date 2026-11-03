@@ -15,7 +15,7 @@ describe("Music Sheet Calculator", () => {
     let score: IXmlElement;
     let sheet: MusicSheet;
 
-    it("calculates music sheet", (done: Mocha.Done) => {
+    it("calculates music sheet", () => {
         // this.timeout = 10000;
         // Load the XML file
         const xml: Document = TestUtils.getScore(filename);
@@ -26,6 +26,5 @@ describe("Music Sheet Calculator", () => {
 
         const graphicalSheet: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calculator);
         graphicalSheet.reCalculate();
-        done();
     });
 });
