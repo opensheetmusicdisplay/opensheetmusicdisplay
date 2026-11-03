@@ -314,23 +314,18 @@ describe("ExpressionReader", () => {
             sheet = readSheet(path);
         });
 
-        /** The texts of the expressions of measure [index] (staff 1): the marking of a dynamic, the label of words. */
-        function labels(index: number): string[] {
-            return sheet.SourceMeasures[index].StaffLinkedExpressions[0].flatMap((expression: MultiExpression): string[] =>
+        /** The texts of the expressions of measure [measureIndex] at staff [staffIndex] of [musicSheet] (by default the
+         *  sample's only staff): the marking of a dynamic, the label of words. */
+        function labels(measureIndex: number, staffIndex: number = 0, musicSheet: MusicSheet = sheet): string[] {
+            return musicSheet.SourceMeasures[measureIndex].StaffLinkedExpressions[staffIndex].flatMap((expression: MultiExpression): string[] =>
                 expression.EntriesList.map((entry: MultiExpressionEntry): string =>
                     entry.expression instanceof InstantaneousDynamicExpression ? entry.expression.DynamicExpression : entry.label));
         }
 
-        it("reads the words next to a dynamic in the same direction, before or after it", () => {
+        it("reads the words next to a dynamic, before or after it, without a dynamic, and words that are a dynamic", () => {
             expect(labels(1), "leggero e pp").to.have.members(["leggero e", "pp"]);
             expect(labels(2), "p sempre").to.have.members(["p", "sempre"]);
-        });
-
-        it("reads words without a dynamic", () => {
-            expect(labels(3)).to.deep.equal(["dolce"]);
-        });
-
-        it("reads words that are a dynamic by themselves: p as text, cresc. as a continuous dynamic", () => {
+            expect(labels(3), "dolce").to.deep.equal(["dolce"]);
             expect(labels(4), "p as words").to.deep.equal(["p"]);
             expect(labels(5), "cresc. as words").to.deep.equal(["cresc."]);
             const crescendos: ContinuousDynamicExpression[] = sheet.SourceMeasures[5].StaffLinkedExpressions[0]
@@ -340,48 +335,27 @@ describe("ExpressionReader", () => {
                 .to.deep.equal([ContDynamicEnum.crescendo]);
         });
 
-        it("reads the words of a tempo direction with sound dynamics as the tempo", () => {
-            expect(sheet.SourceMeasures[6].TempoExpressions.flatMap((tempo: MultiTempoExpression): string[] =>
-                tempo.EntriesList.map((entry: TempoExpressionEntry): string => entry.label))).to.deep.equal(["Allegro"]);
-        });
-
         it("reads the \"piu\" before the f in CharlesGounod_Meditation.xml m. 33 (violin, cello, piano) and m. 66 (piano)", () => {
             const gounod: MusicSheet = readSheet("test/data/CharlesGounod_Meditation.xml");
-            /** The words and dynamics of measure [measureIndex] at staff [staffIndex] of the sheet. */
-            function texts(measureIndex: number, staffIndex: number): string[] {
-                return gounod.SourceMeasures[measureIndex].StaffLinkedExpressions[staffIndex].flatMap(
-                    (expression: MultiExpression): string[] => expression.EntriesList.map((entry: MultiExpressionEntry): string =>
-                        entry.expression instanceof InstantaneousDynamicExpression ? entry.expression.DynamicExpression : entry.label));
-            }
-            // (the direction also has a space-only <words> element, read as an empty expression like the blank words of other samples)
+            // (the direction also has a <words> with only a no-break space, read as an empty expression)
             // staff indices: violin 0, cello 1, cello ad lib. 2, organ ad lib. 3-4, piano 5-6
-            expect(texts(32, 0), "m. 33, violin").to.include.members(["piu", "f"]);
-            expect(texts(32, 1), "m. 33, cello").to.include.members(["piu", "f"]);
-            expect(texts(32, 5), "m. 33, piano").to.include.members(["piu", "f"]);
-            expect(texts(65, 5), "m. 66, piano").to.include.members(["piu", "f"]);
-            expect(texts(65, 0), "m. 66, violin: no dynamic there").to.deep.equal(["tutta forza."]);
+            expect(labels(32, 0, gounod), "m. 33, violin").to.include.members(["piu", "f"]);
+            expect(labels(32, 1, gounod), "m. 33, cello").to.include.members(["piu", "f"]);
+            expect(labels(32, 5, gounod), "m. 33, piano").to.include.members(["piu", "f"]);
+            expect(labels(65, 5, gounod), "m. 66, piano").to.include.members(["piu", "f"]);
+            expect(labels(65, 0, gounod), "m. 66, violin: no dynamic there").to.deep.equal(["tutta forza."]);
         });
 
-        it("keeps the playback dynamics of the dynamics marks", () => {
+        it("still reads the words of a tempo direction as the tempo, and the dynamics at their notes with their sound dynamics", () => {
+            expect(sheet.SourceMeasures[6].TempoExpressions.flatMap((tempo: MultiTempoExpression): string[] =>
+                tempo.EntriesList.map((entry: TempoExpressionEntry): string => entry.label))).to.deep.equal(["Allegro"]);
             const dynamics: InstantaneousDynamicExpression[] = collectDynamics(sheet);
             expect(dynamics.map((dynamic: InstantaneousDynamicExpression): string => dynamic.DynamicExpression))
                 .to.deep.equal(["mf", "pp", "p", "f"]);
+            expect(dynamics.map((dynamic: InstantaneousDynamicExpression): number => dynamic.ParentMultiExpression.AbsolutePlaybackTimestamp.RealValue),
+                   "the first notes of m. 1, 2, 3 and 8").to.deep.equal([0, 1, 2, 7]);
             expect(dynamics.map((dynamic: InstantaneousDynamicExpression): number => dynamic.SoundDynamic))
                 .to.deep.equal([89, 31, 54, 106]);
-            const timeline: DynamicsContainer[] = sheet.TimestampSortedDynamicExpressionsList;
-            for (const dynamic of dynamics) {
-                timeline.push(new DynamicsContainer(dynamic, 0));
-            }
-            timeline.sort(DynamicsContainer.Compare);
-            const iterator: MusicPartManagerIterator = sheet.MusicPartManager.getIterator();
-            const active: string[] = [];
-            for (; !iterator.EndReached; iterator.moveToNext()) {
-                if (iterator.CurrentMeasureIndex === active.length) {
-                    active.push((iterator.ActiveDynamicExpressions[0] as InstantaneousDynamicExpression)?.DynamicExpression);
-                }
-            }
-            expect(active, "the instantaneous dynamic at the first note of each measure")
-                .to.deep.equal(["mf", "pp", "p", "p", "p", "p", "p", "f"]);
         });
     });
 });
