@@ -1,4 +1,4 @@
 v24
 # Recommended Node version; matches what CI uses (.github/workflows/ci.yml). v24 is the current LTS.
 # Minimum is Node 20.19 / 22.13 / 24+: ESLint 10 (run by the lint step) won't start on older Node,
-# and Node 18 is no longer supported.
+# and Node 18 is no longer supported. npm start (webpack-dev-server 6) needs Node 22.15+.
