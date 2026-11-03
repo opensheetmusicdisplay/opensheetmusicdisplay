@@ -208,7 +208,9 @@ describe("OpenSheetMusicDisplay Main Export", () => {
     });
 
     it("load invalid URL", async () => {
-        const url: string = "https://www.afjkhfjkauu2ui3z2uiu.com";
+        // port 1 is one of the fetch standard's bad ports, which browsers never connect to: the load fails at once and
+        //   without the network (a made-up domain needed a DNS lookup)
+        const url: string = "http://127.0.0.1:1/does_not_exist.musicxml";
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
         await expect(opensheetmusicdisplay.load(url), "an invalid URL").rejects.toThrow(/url/i);
