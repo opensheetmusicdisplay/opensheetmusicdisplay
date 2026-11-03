@@ -550,20 +550,13 @@ export class InstrumentReader {
           }
           // TODO do we need to process bars with left location too?
         } else if (xmlNode.name === "sound") {
-          // (*) MetronomeReader.readTempoInstruction(xmlNode, this.musicSheet, this.currentXmlMeasureIndex);
-          try {
-            if (xmlNode.attribute("tempo")) { // can be null, not just undefined!
-
-                const tempo: number = parseFloat(xmlNode.attribute("tempo").value);
-
-                // should set the PlaybackSettings only at first Measure
-                if (this.currentXmlMeasureIndex === 0) {
-                    this.musicSheet.DefaultStartTempoInBpm = tempo;
-                    this.musicSheet.HasBPMInfo = true;
-                }
-            }
-          } catch (e) {
-            log.debug("InstrumentReader.readTempoInstruction", e);
+          // a <sound tempo> outside a direction changes playback like one in a direction, without a printed tempo
+          const expressionReader: ExpressionReader = this.expressionReaders[0];
+          if (expressionReader && xmlNode.attribute("tempo")) {
+            expressionReader.readExpressionParameters(
+              xmlNode, this.instrument, this.divisions, currentFraction, previousFraction, this.currentMeasure.MeasureNumber, false
+            );
+            expressionReader.read(xmlNode, this.currentMeasure, currentFraction);
           }
         } else if (xmlNode.name === "harmony") {
           const noteStaff: number = this.getNoteStaff(xmlNode);

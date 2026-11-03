@@ -217,7 +217,8 @@ export class TemposCalculator implements IAfterSheetReadingModule {
             }
         }
         musicSheet.TimestampSortedTempoExpressionsList = ExpressionsList;
-        if (ExpressionsList[0]?.InstantaneousTempo && ExpressionsList[0].AbsolutePlaybackTimestamp.RealValue === 0) {
+        if (ExpressionsList[0]?.AbsolutePlaybackTimestamp.RealValue === 0 &&
+            (ExpressionsList[0].InstantaneousTempo || ExpressionsList[0].PlaybackTempoInBpm > 0)) {
             musicSheet.DefaultStartTempoInBpm = primoTempo;
         }
     }
@@ -240,17 +241,21 @@ export class TemposCalculator implements IAfterSheetReadingModule {
         if (ExpList.length === 0 || ExpList[0].AbsolutePlaybackTimestamp.RealValue !== 0) {
             return ms.DefaultStartTempoInBpm || ms.userStartTempoInBPM;
         }
-        if (!ExpList[0].InstantaneousTempo) {
-            const I: InstantaneousTempoExpression = new InstantaneousTempoExpression("*generated", PlacementEnum.Above, 1, 0, ExpList[0], true);
-            ExpList[0].addExpression(I, "");
-        }
-        const Inst0: InstantaneousTempoExpression = ExpList[0].InstantaneousTempo;
         let soundTempo: number = ExpList[0].PlaybackTempoInBpm;
         for (let i: number = 1; i < ExpList.length && ExpList[i].AbsolutePlaybackTimestamp.RealValue === 0; i++) {
             if (ExpList[i].PlaybackTempoInBpm > 0) {
                 soundTempo = ExpList[i].PlaybackTempoInBpm;
             }
         }
+        if (ExpList[0].EntriesList.length === 0) {
+            // a sound tempo without a printed tempo: use it without generating a tempo mark
+            return soundTempo;
+        }
+        if (!ExpList[0].InstantaneousTempo) {
+            const I: InstantaneousTempoExpression = new InstantaneousTempoExpression("*generated", PlacementEnum.Above, 1, 0, ExpList[0], true);
+            ExpList[0].addExpression(I, "");
+        }
+        const Inst0: InstantaneousTempoExpression = ExpList[0].InstantaneousTempo;
         if (!(Inst0.TempoInBpm > 0)) {
             // Missing BPM can be 0, or undefined for a generated expression or an unknown tempo word.
             if (soundTempo > 0) {

@@ -102,6 +102,19 @@ describe("Tempo direction timing", (): void => {
         expect(bpms()).to.deep.equal([60, 60, 120, 120]);
     });
 
+    it("applies a sound tempo without a printed tempo at its position, without drawing or raising a tempo mark", async (): Promise<void> => {
+        // a sound tempo of 0 is ignored
+        await osmd.load(score(`<direction><direction-type><dynamics><p/></dynamics></direction-type><sound tempo="120"/></direction>
+          ${note("C")}${metronome("quarter", 60)}<sound tempo="90"/>${note("D")}
+          ${note("E")}${metronome("quarter", 60)}<sound tempo="0"/>${note("F")}`));
+        osmd.render();
+        expect(bpms()).to.deep.equal([120, 90, 90, 60]);
+        expect(osmd.Sheet.getExpressionsStartTempoInBPM()).to.equal(120);
+        const marks: DOMRect[] = Array.from(div.querySelectorAll(".vf-stavetempo")).map(mark => mark.getBoundingClientRect());
+        expect(marks.length, "no generated mark at the start").to.equal(2);
+        expect(marks[0].top, "the sound does not raise the mark at its time").to.be.closeTo(marks[1].top, 0.01);
+    });
+
     it("activates a sound change between notes and restores tempo on reverse traversal", async (): Promise<void> => {
         await osmd.load(score(tempo(60) + note("C") + note("D") +
             tempo(120, "<offset>-0.5</offset>", "<offset>-0.5</offset>") + note("E") + note("F")));
