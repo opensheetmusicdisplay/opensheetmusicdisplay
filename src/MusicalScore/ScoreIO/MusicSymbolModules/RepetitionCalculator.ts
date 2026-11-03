@@ -799,7 +799,8 @@ export class RepetitionCalculator {
               }
               let repetitions: number = currentRep.DefaultNumberOfRepetitions;
               if (currentRep.BackwardJumpInstructions.length === 1 && currentRep.BackwardJumpInstructions[0].Times > 0) {
-                repetitions = currentRep.BackwardJumpInstructions[0].Times;
+                // (a pass per ending number: e.g. with times="2", a "1, 3" ending is also played after a D.S., as the third)
+                repetitions = Math.max(currentRep.BackwardJumpInstructions[0].Times, Object.keys(currentRep.EndingIndexDict).length);
               }
               currentRep.UserNumberOfRepetitions = repetitions;
           }

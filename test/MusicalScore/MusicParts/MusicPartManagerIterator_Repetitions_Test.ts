@@ -21,8 +21,8 @@ describe("MusicPartManagerIterator measure order with repetitions", () => {
     });
 
     /** Loads the sample and returns the measure indices the iterator plays, in order (a measure played again right after a jump is listed again). */
-    async function playedMeasures(sample: string): Promise<number[]> {
-        await osmd.load(TestUtils.getScore(sample));
+    async function playedMeasures(sample: string | Document): Promise<number[]> {
+        await osmd.load(typeof sample === "string" ? TestUtils.getScore(sample) : sample);
         const measures: number[] = [];
         const iterator: MusicPartManagerIterator = osmd.Sheet.MusicPartManager.getIterator();
         while (!iterator.EndReached) {
@@ -186,5 +186,48 @@ describe("MusicPartManagerIterator measure order with repetitions", () => {
                "volta labels").to.deep.equal(["1, 2", "3", "1., 3.", "2.", "1, 3", "2"]);
         // the start and end of the two-measure "1, 2", and the others (the end of "1, 2" was drawn once per number)
         expect(container.querySelectorAll(".vf-volta").length, "voltas").to.equal(7);
+    });
+
+    /**
+     * A repeat with more lyric verses under it than two is played once per verse (Repetition.checkRepetitionForMultipleLyricVerses).
+     * The verses were never counted (LyricsEntries.keys is a method, so keys.length was its arity, 0), so it was played twice.
+     *
+     * Sample: measures 1-2 repeated, with three lyric verses, then measure 3.
+     */
+    it("plays a repeat once per lyric verse under it", async () => {
+        expect(await playedMeasures("test_repeat_three_lyric_verses.musicxml")).to.deep.equal([0, 1, 0, 1, 0, 1, 2]);
+        expect(osmd.Sheet.Repetitions[0].DefaultNumberOfRepetitions).to.equal(3);
+    });
+
+    /**
+     * The times of a backward repeat (<repeat times>) is how many times the repeat is played. It wins over the lyric verses.
+     * It was not read, so a repeat without lyrics was played twice (RepetitionCalculator already used Times when set).
+     *
+     * Sample: measures 1-2 repeated with times="3" and no lyrics, then measure 3;
+     * measures 4-5 repeated with times="2" and three lyric verses, then measure 6.
+     */
+    it("plays a repeat the times written on it", async () => {
+        expect(await playedMeasures("test_repeat_times.musicxml")).to.deep.equal([0, 1, 0, 1, 0, 1, 2, 3, 4, 3, 4, 5]);
+    });
+
+    /**
+     * A repeat played the times written on it still has a pass per ending number: with times="2" and the endings "1, 3"
+     * and "2", the "1, 3" ending is played on the first pass and again after the D.S., as the third. The two passes took
+     * the endings 2 and 3, so the first pass jumped over the "1, 3" ending.
+     *
+     * Sample: test_repeat_endings_of_several_passes.musicxml with times="2" at the backward repeat of its second movement
+     * (the "1, 3" ending's) and times="3" at the first movement's ("1, 2" and "3"). (The repeat of its third movement has
+     * two backward repeats: times is used only for a repeat with one.)
+     */
+    it("plays an ending for the pass after a D.S. also with <repeat times>", async () => {
+        const score: Document = TestUtils.getScore("test_repeat_endings_of_several_passes.musicxml").cloneNode(true) as Document;
+        const backwardRepeats: Element[] = Array.from(score.querySelectorAll("repeat[direction='backward']"));
+        backwardRepeats[0].setAttribute("times", "3");
+        backwardRepeats[1].setAttribute("times", "2");
+        expect(await playedMeasures(score)).to.deep.equal([
+            0, 1, 2, 0, 1, 2, 0, 3,
+            4, 5, 6, 7, 5, 6, 8, 9, 5, 6, 7,
+            10, 11, 10, 12, 10, 11, 13,
+        ]);
     });
 });
