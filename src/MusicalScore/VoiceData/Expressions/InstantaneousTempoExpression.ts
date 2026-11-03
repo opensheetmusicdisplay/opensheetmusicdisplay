@@ -49,7 +49,13 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
         this.setTempoAndTempoType(soundTempo);
     }
 
-    public dotted: boolean;
+    public dotCount: number = 0;
+    public get dotted(): boolean {
+        return this.dotCount > 0;
+    }
+    public set dotted(value: boolean) {
+        this.dotCount = value ? 1 : 0;
+    }
     public beatUnit: string;
     public isMetronomeMark: boolean;
     /** Whether a metronome mark is drawn (false for MusicXML print-object="no"). A hidden mark still sets the tempo. */
@@ -362,7 +368,7 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
         if (this.beatUnit === undefined) {
             return this.tempoInBpm;
         }
-        return this.tempoInBpm * NoteTypeHandler.beatUnitInQuarters(this.beatUnit, this.dotted);
+        return this.tempoInBpm * NoteTypeHandler.beatUnitInQuarters(this.beatUnit) * (2 - Math.pow(0.5, this.dotCount));
     }
     public get ParentMultiTempoExpression(): MultiTempoExpression {
         return this.parentMultiTempoExpression;

@@ -20,7 +20,6 @@ import { FontStyles } from "../../../Common/Enums/FontStyles";
 import { RehearsalExpression } from "../../VoiceData/Expressions/RehearsalExpression";
 import { Pedal } from "../../VoiceData/Expressions/ContinuousExpressions/Pedal";
 import { WavyLine } from "../../VoiceData/Expressions/ContinuousExpressions/WavyLine";
-import { NoteTypeHandler } from "../../VoiceData/NoteType";
 import { musicXmlColorToCss } from "../../../Common/DataObjects/XmlColor";
 
 export class ExpressionReader {
@@ -214,7 +213,6 @@ export class ExpressionReader {
                 } else {
                     // Simple metronome mark: beat-unit = BPM
                     const beatUnit: IXmlElement = dirContentNode.element("beat-unit");
-                    const dotted: boolean = dirContentNode.element("beat-unit-dot") !== undefined;
                     const bpm: IXmlElement = dirContentNode.element("per-minute");
                     if (beatUnit !== undefined && bpm) {
                         // per-minute can contain text alongside the number (e.g. "c. 108" for circa)
@@ -230,6 +228,8 @@ export class ExpressionReader {
                                                              this.currentMultiTempoExpression,
                                                              true);
                         instantaneousTempoExpression.parentMeasure = currentMeasure;
+                        instantaneousTempoExpression.beatUnit = beatUnit.value;
+                        instantaneousTempoExpression.dotCount = dirContentNode.elements("beat-unit-dot").length;
                         this.soundTempo = bpmNumber;
                         // measure.TempoInBPM drives playback and is expressed in quarter notes per minute.
                         //   If this direction also carried a <sound tempo> (isTempoInstruction), that value is
@@ -241,11 +241,9 @@ export class ExpressionReader {
                         //   unit is 1.5x as long). Either way the mark is still DISPLAYED with its original beat
                         //   unit + per-minute via the InstantaneousTempoExpression, which keeps bpmNumber.
                         if (!isTempoInstruction) {
-                            currentMeasure.TempoInBPM = bpmNumber * NoteTypeHandler.beatUnitInQuarters(beatUnit.value, dotted);
+                            currentMeasure.TempoInBPM = instantaneousTempoExpression.TempoInQuarterNotesPerMinute;
                         }
                         this.musicSheet.HasBPMInfo = true;
-                        instantaneousTempoExpression.dotted = dotted;
-                        instantaneousTempoExpression.beatUnit = beatUnit.value;
                         instantaneousTempoExpression.printObject = dirContentNode.attribute("print-object")?.value !== "no";
                         this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, "");
                         this.currentMultiTempoExpression.CombinedExpressionsText = "test";
