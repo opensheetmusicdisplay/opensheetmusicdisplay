@@ -18,7 +18,7 @@ import { DynamicsContainer } from "../../../../src/MusicalScore/VoiceData/Helper
 import { MusicPartManagerIterator } from "../../../../src/MusicalScore/MusicParts/MusicPartManagerIterator";
 
 describe("ExpressionReader", () => {
-    /** Reads a test/data sample (preprocessed by karma) into a MusicSheet, optionally with custom rules. */
+    /** Reads a test/data sample into a MusicSheet, optionally with custom rules. */
     function readSheet(path: string, rules: EngravingRules = new EngravingRules()): MusicSheet {
         const doc: Document = ((window as any).__xml__)[path];
         expect(doc, "sample file is loaded: " + path).to.not.equal(undefined);
