@@ -98,6 +98,7 @@ It would be great if free software were sustainable on its own. But to keep on i
 
 Features already available in early access for [Github Sponsors](https://github.com/sponsors/opensheetmusicdisplay):
 * OSMD Audio Player
+* Audio Export (save the playback as a WAV or MP3 file, rendered in the browser, much faster than real time) - NEW!
 * Native modules + example projects (React Native, Kotlin/Android, Swift/iOS)
 * Jianpu Display (Numbered Musical Notation), with playback
 * Annotations (text comments and music symbols, e.g. dynamics or fermatas, on the score) - NEW!
