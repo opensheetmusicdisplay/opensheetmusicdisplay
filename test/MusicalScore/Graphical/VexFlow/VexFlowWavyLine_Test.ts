@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { Pitch } from "../../../../src/Common/DataObjects/Pitch";
 import { BoundingBox } from "../../../../src/MusicalScore/Graphical/BoundingBox";

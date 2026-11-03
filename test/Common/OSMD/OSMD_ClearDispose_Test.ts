@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 import * as OSMDExports from "../../../src";
 import { TestUtils } from "../../Util/TestUtils";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";

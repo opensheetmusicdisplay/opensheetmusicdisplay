@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 import { NoteType, NoteTypeHandler } from "../../../src/MusicalScore/VoiceData/NoteType";
 import { MusicSheetReader } from "../../../src/MusicalScore/ScoreIO/MusicSheetReader";
 import { MusicSheet } from "../../../src/MusicalScore/MusicSheet";

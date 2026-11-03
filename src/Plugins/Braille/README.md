@@ -685,7 +685,7 @@ Points worth copying into your own integration:
 
 ### 4.7 Testing
 
-- **Run:** `npm test` (Vitest browser mode + Chai, headless Firefox). Lint: `npm run eslint`;
+- **Run:** `npm test` (Vitest browser mode, headless Firefox). Lint: `npm run eslint`;
   type check: `npx tsc --noEmit`.
 - **Location:** `test/Plugins/Braille/BrailleConverter_Test.ts` — ~150 braille test cases,
   from symbol-table units up to full-score integration.

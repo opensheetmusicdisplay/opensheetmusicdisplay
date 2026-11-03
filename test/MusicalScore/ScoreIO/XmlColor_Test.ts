@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { musicXmlColorToCss, musicXmlColorsAreAlphaLast } from "../../../src/Common/DataObjects/XmlColor";
 import { Note } from "../../../src/MusicalScore/VoiceData/Note";

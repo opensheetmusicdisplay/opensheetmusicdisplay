@@ -186,7 +186,6 @@ export default defineConfig(
         languageOptions: {
             globals: {
                 ...globals.mocha,
-                chai: "readonly",
                 Mocha: "readonly",
             },
         },

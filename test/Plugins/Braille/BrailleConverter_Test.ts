@@ -1,4 +1,4 @@
-import * as chai from "chai";
+import { chai } from "vitest";
 import { BrailleConverter, BrailleOutput, BrailleDebugEntry } from "../../../src/Plugins/Braille/BrailleConverter";
 import { BrailleBarOverBarLayout } from "../../../src/Plugins/Braille/BrailleBarOverBar";
 import { textToBraille, BRAILLE_SYLLABIC_SLUR } from "../../../src/Plugins/Braille/BrailleSymbols";

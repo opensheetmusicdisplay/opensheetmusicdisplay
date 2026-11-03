@@ -5,7 +5,7 @@ import { IXmlElement }            from "../../../src/Common/FileIO/Xml";
 import { KeyInstruction }         from "../../../src/MusicalScore/VoiceData/Instructions/KeyInstruction";
 import { KeyEnum as KeyModeEnum } from "../../../src/MusicalScore/VoiceData/Instructions/KeyInstruction";
 import { VexFlowConverter }       from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowConverter";
-import { expect }                 from "chai";
+import { expect }                 from "vitest";
 import { AbstractNotationInstruction } from "../../../src/MusicalScore/VoiceData/Instructions/AbstractNotationInstruction";
 import { RhythmInstruction, RhythmSymbolEnum } from "../../../src/MusicalScore/VoiceData/Instructions/RhythmInstruction";
 import { SourceStaffEntry } from "../../../src/MusicalScore/VoiceData/SourceStaffEntry";

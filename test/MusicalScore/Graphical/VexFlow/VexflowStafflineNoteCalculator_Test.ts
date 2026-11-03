@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 import { GraphicalMeasure } from "../../../../src/MusicalScore/Graphical/GraphicalMeasure";
 import { VexFlowGraphicalNote } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
 import { BoundingBox } from "../../../../src/MusicalScore/Graphical/BoundingBox";
