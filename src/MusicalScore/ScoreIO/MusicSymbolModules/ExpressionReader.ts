@@ -169,10 +169,10 @@ export class ExpressionReader {
             const tempoAttr: IXmlAttribute = n.attribute("tempo");
             const dynAttr: IXmlAttribute = n.attribute("dynamics");
             if (tempoAttr) {
-                // const match: string[] = tempoAttr.value.match(/^(\d+\.?\d{0,9}|\.\d{1,9})$/);
-                const match: string[] = tempoAttr.value.match(/^(\d+)(\.\d+)?$/);
-                if (match?.length > 0) {
-                    this.soundTempo = Math.round(Number.parseFloat(tempoAttr.value));
+                const tempoText: string = tempoAttr.value.replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, "");
+                const tempo: number = Number(tempoText);
+                if (/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(tempoText) && Number.isFinite(tempo) && tempo >= 0) {
+                    this.soundTempo = tempo;
                 } else {
                     log.info("invalid xml tempo: " + tempoAttr.value);
                     this.soundTempo = 100;

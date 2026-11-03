@@ -138,14 +138,16 @@ describe("Tempo direction timing", (): void => {
 
     it("uses the sound BPM over printed BPM and tempo text", async (): Promise<void> => {
         const direction: string = `<direction><direction-type><metronome><beat-unit>half</beat-unit>
-          <per-minute>60</per-minute></metronome></direction-type><sound tempo="120"/></direction>`;
+          <per-minute>60</per-minute></metronome></direction-type><sound tempo="142.5"/></direction>`;
         const words: string = "<direction><direction-type><words>Allegro</words></direction-type></direction>";
         await osmd.load(score(direction + words + note("C") + note("D") + note("E") + note("F")));
         expect(osmd.Sheet.SourceMeasures[0].TempoExpressions[0].InstantaneousTempo.TempoInBpm).to.equal(60);
-        expect(bpms()).to.deep.equal([120, 120, 120, 120]);
-        expect(osmd.Sheet.getExpressionsStartTempoInBPM()).to.equal(120);
+        expect(osmd.Sheet.SourceMeasures[0].TempoInBPM).to.equal(142.5);
+        expect(bpms()).to.deep.equal([142.5, 142.5, 142.5, 142.5]);
+        expect(osmd.Sheet.DefaultStartTempoInBpm).to.equal(142.5);
+        expect(osmd.Sheet.getExpressionsStartTempoInBPM()).to.equal(142.5);
 
-        const markWithoutSound: string = direction.replace('<sound tempo="120"/>', "");
+        const markWithoutSound: string = direction.replace('<sound tempo="142.5"/>', "");
         const wordsWithSound: string = words.replace("</direction>", '<sound tempo="120"/></direction>');
         await osmd.load(score(markWithoutSound + wordsWithSound + note("C") + note("D") + note("E") + note("F")));
         expect(bpms()).to.deep.equal([120, 120, 120, 120]);
@@ -271,5 +273,14 @@ describe("Tempo direction timing", (): void => {
         await osmd.load(score(tempo(120) + note("C") + wordsDirection("poco rit.") + note("D") + wordsDirection("a tempo") +
             note("E") + wordsDirection("molto accel.") + note("F")));
         expect(bpms()).to.deep.equal([120, 120, 120, 120]);
+    });
+
+    it("validates decimal sound syntax", async (): Promise<void> => {
+        const values: [string, number][] = [[" &#x9;&#xD;+120.&#xA; ", 120], [".5", 0.5],
+            ["-1", 100], ["\u00a0120\u00a0", 100]];
+        await osmd.load(score(values.map(([value]): string =>
+            `<direction><direction-type><words>Andante</words></direction-type><sound tempo="${value}"/></direction>` + note("C")
+        ).join("")));
+        expect(bpms()).to.deep.equal(values.map(([, expected]): number => expected));
     });
 });
