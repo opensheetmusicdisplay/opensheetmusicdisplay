@@ -63,4 +63,18 @@ export class TestUtils {
         onTestFinished((): void => spies.forEach((spy: MockInstance): void => spy.mockRestore()));
         return messages;
     }
+
+    /**
+     * Puts setTimeout(), clearTimeout() and Date on Vitest's fake clock until the test ends, so that the test lets time pass
+     * at once with vi.advanceTimersByTime() or vi.runAllTimers() instead of waiting, e.g. for OSMD's resize timers or for a
+     * click, which OSMD reports only after the 200 ms of a double click (measured with Date). Does nothing if the fake clock
+     * is on already. Promises, requestAnimationFrame() and the browser's own callbacks (e.g. ResizeObserver's) stay real.
+     */
+    public static useFakeClock(): void {
+        if (vi.isFakeTimers()) {
+            return;
+        }
+        vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
+        onTestFinished((): void => { vi.useRealTimers(); });
+    }
 }

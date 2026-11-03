@@ -1,4 +1,4 @@
-import { expect } from "vitest";
+import { expect, vi } from "vitest";
 import * as OSMDExports from "../../../src";
 import { TestUtils } from "../../Util/TestUtils";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
@@ -229,21 +229,21 @@ describe("OSMD clear() and dispose()", () => {
     it("turning autoResize on again re-renders a rendered sheet only if the container's width changed meanwhile", async () => {
         const container: HTMLElement = TestUtils.getDivElement(document);
         container.style.width = "800px";
-        /** Waits for the re-render that turning autoResize on schedules (timers of 0 and 1 ms), if any. */
-        const timers: () => Promise<void> = (): Promise<void> => new Promise((resolve: () => void) => setTimeout(resolve, 100));
         try {
             const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(container); // autoResize is on by default
             await osmd.load(TestUtils.getScore(sampleName));
             osmd.render();
             const rendered: number = osmd.EngravingRules.RenderCount;
+            // turning autoResize on schedules the re-render, if any, with timers of 0 and 1 ms: run them on Vitest's fake clock
+            TestUtils.useFakeClock();
             osmd.setOptions({ autoResize: false });
             osmd.setOptions({ autoResize: true });
-            await timers();
+            vi.runAllTimers();
             expect(osmd.EngravingRules.RenderCount, "renders after off and on, same width").to.equal(rendered);
             osmd.AutoResizeEnabled = false;
             container.style.width = "600px";
             osmd.AutoResizeEnabled = true;
-            await timers();
+            vi.runAllTimers();
             expect(osmd.EngravingRules.RenderCount, "renders after off, a narrower container, and on").to.equal(rendered + 1);
             osmd.dispose();
         } finally {
@@ -290,14 +290,11 @@ describe("OSMD clear() and dispose()", () => {
                 instance.render();
             }
             const rendered: number = osmd.EngravingRules.RenderCount;
+            // on Vitest's fake clock, also its Date, which the listener measures the time since the last resize event with
+            TestUtils.useFakeClock();
             listener(new Event("resize"));
             listenerWithoutWeakRef(new Event("resize"));
-            for (let waited: number = 0; waited < 2000; waited += 20) {
-                if (instances.every((instance: OpenSheetMusicDisplay) => instance.EngravingRules.RenderCount > rendered)) {
-                    break;
-                }
-                await new Promise<void>((resolve: () => void) => setTimeout(resolve, 20));
-            }
+            vi.advanceTimersByTime(200);
             expect(osmd.EngravingRules.RenderCount, "renders after a resize").to.equal(rendered + 1);
             expect(osmdWithoutWeakRef.EngravingRules.RenderCount, "renders after a resize, without WeakRef").to.equal(rendered + 1);
 
