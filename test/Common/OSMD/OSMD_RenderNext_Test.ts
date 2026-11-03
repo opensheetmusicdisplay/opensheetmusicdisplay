@@ -314,17 +314,18 @@ describe("OpenSheetMusicDisplay incremental rendering of the endless page in bat
     it("draws wedges and octave shifts continued in the next systems", async () => {
         // a crescendo through 4 systems, and an 8vb that ends in a system where the bass staff has no notes yet. The batches
         //   drew the systems before such a wedge's or octave shift's end without it: the batch's layout didn't reach the end.
-        //   (Now the layout of the first batch reaches the end of the crescendo, in the last system, so it is the only batch.)
-        // The batch's first layout ends before the crescendo does: the crescendo was left without lines there, which logged
-        //   "Not enough lines for SkyBottomLine calculation". Now it's drawn to the end of that layout, like at a system break.
+        //   Now the layout of a batch reaches the end of an octave shift that goes on after the systems it draws. A wedge is drawn
+        //   to the end of a layout that ends before it does, like at a system break (it was left without lines, which logged "Not
+        //   enough lines for SkyBottomLine calculation"), and its part in a system doesn't depend on later systems: the crescendo
+        //   is drawn by several batches.
         const messages: string[] = TestUtils.catchLogs();
         osmd.setOptions({ newSystemFromXML: true });
-        for (const [sampleFilename, measures] of [["test_wedge_multiline_crescendo.musicxml", 2],
-                                                 ["test_grace_notes_only_measure_spanners.musicxml", 1]] as [string, number][]) {
+        for (const [sampleFilename, measures, minBatches] of [["test_wedge_multiline_crescendo.musicxml", 2, 2],
+                                                             ["test_grace_notes_only_measure_spanners.musicxml", 1, 1]] as [string, number, number][]) {
             await osmd.load(TestUtils.getScore(sampleFilename));
             renderNextInOneBatch();
             const pagesInOneBatch: string[][] = drawnPages();
-            renderNextUntilDone({ measures });
+            expect(renderNextUntilDone({ measures }), `${sampleFilename}: batches`).to.be.at.least(minBatches);
             expect(drawnPages(), sampleFilename).to.deep.equal(pagesInOneBatch);
         }
         expect(messages, "nothing logged").to.deep.equal([]);

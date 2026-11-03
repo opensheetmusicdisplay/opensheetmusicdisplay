@@ -18,7 +18,7 @@ import { ColoringModes } from "../Common/Enums/ColoringModes";
 import { IOSMDOptions, OSMDOptions, AutoBeamOptions, BackendType, CursorOptions, CursorType } from "./OSMDOptions";
 import { EngravingRules, PageFormat } from "../MusicalScore/Graphical/EngravingRules";
 import { AbstractExpression } from "../MusicalScore/VoiceData/Expressions/AbstractExpression";
-import { ContinuousDynamicExpression } from "../MusicalScore/VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
+import { MultiExpression } from "../MusicalScore/VoiceData/Expressions/MultiExpression";
 import { Dictionary } from "typescript-collections";
 import { AutoColorSet } from "../MusicalScore/Graphical/DrawingEnums";
 import { GraphicalMusicPage } from "../MusicalScore/Graphical/GraphicalMusicPage";
@@ -737,7 +737,7 @@ export class OpenSheetMusicDisplay {
         // minNewSystems + 1 systems total); otherwise this batch only grew the current last system. Extend the
         // prefix by a batch span and retry until enough systems appear or the sheet ends. minNewSystems is 1 in
         // measures mode (the batch's other complete systems are drawn too) and `targetNewSystems` in systems mode.
-        // Then also until the wedges and octave shifts reaching into the systems to draw end in a complete system (see
+        // Then also until the octave shifts reaching into the systems to draw end in a complete system (see
         // lazySpannerEndInLastSystem()), without drawing the systems this adds.
         let systems: MusicSystem[] = this.lazyLaidOutSystems();
         const minNewSystems: number = targetNewSystems ?? 1;
@@ -901,13 +901,12 @@ export class OpenSheetMusicDisplay {
     }
 
     /**
-     * Lazy rendering: where the furthest wedge or octave shift ends that reaches into the systems a batch draws and ends in the
-     * last system of its layout, or beyond. Such a wedge or octave shift needs a longer layout: their parts depend on the system
-     * they end in, e.g. a wedge's parts after the first are placed at its last system's bottom line, and an octave shift ends at
-     * a note there. The last system still grows (and is stretched once complete), and the end can be beyond the layout, which
-     * cuts it off there, so the systems drawn now would be drawn with other parts. They aren't drawn again. A wedge or octave
-     * shift without an end is ignored, and so is a verbal continuous dynamic like "cresc.", which is drawn at its start only (see
-     * GraphicalContinuousDynamicExpression.IsVerbal).
+     * Lazy rendering: where the furthest octave shift ends that reaches into the systems a batch draws and ends in the last
+     * system of its layout, or beyond. Such an octave shift needs a longer layout: its parts depend on the system it ends in,
+     * e.g. it ends at a note there. The last system still grows (and is stretched once complete), and the end can be beyond the
+     * layout, which cuts it off there, so the systems drawn now would be drawn with other parts. They aren't drawn again. An
+     * octave shift without an end is ignored. A wedge doesn't need a longer layout: its part in a system depends only on that
+     * system and the wedge's first one (see MusicSheetCalculator.calculateGraphicalContinuousDynamic()).
      * @param systems the systems of the layout, in order
      * @param drawToIdxExcl the index of the first system the batch doesn't draw
      * @returns the source-measure index of the furthest end in the last system or beyond, or -1 if there is none
@@ -920,12 +919,9 @@ export class OpenSheetMusicDisplay {
         for (let measureIndex: number = 0; measureIndex < firstUndrawnMeasureIndex; measureIndex++) {
             for (const staffExpressions of this.sheet.SourceMeasures[measureIndex].StaffLinkedExpressions) {
                 for (const multiExpression of staffExpressions) {
-                    const wedge: ContinuousDynamicExpression = multiExpression.StartingContinuousDynamic;
-                    const isVerbal: boolean = wedge?.Label?.length > 0;
-                    for (const end of [isVerbal ? undefined : wedge?.EndMultiExpression, multiExpression.OctaveShiftStart?.ParentEndMultiExpression]) {
-                        if (end) {
-                            endIndex = Math.max(endIndex, end.SourceMeasureParent.measureListIndex);
-                        }
+                    const end: MultiExpression = multiExpression.OctaveShiftStart?.ParentEndMultiExpression;
+                    if (end) {
+                        endIndex = Math.max(endIndex, end.SourceMeasureParent.measureListIndex);
                     }
                 }
             }

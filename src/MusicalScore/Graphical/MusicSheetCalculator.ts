@@ -1760,11 +1760,10 @@ export abstract class MusicSheetCalculator {
 
         // First staff wedge always starts at the given position and the last and inbetween wedges always start at the begin of measure
         //   TODO: rename upper / lower to first / last, now that we can have inbetween wedges, though this creates a huge diff, and this should be clear now.
-        let lowerStartX: number = endStaffLine.Measures[0].beginInstructionsWidth - this.rules.WedgeHorizontalMargin - 2;
+        let lowerStartX: number = this.getWedgeStartAfterSystemBreak(endStaffLine);
         let upperStartX: number = startPosInStaffline.x;
         if (startIsClipped) {
-            // where its part after a system break starts: like its last part if it ends in this staffline, else like an inbetween one
-            upperStartX = sameStaffLine && !endIsClipped ? lowerStartX : 0;
+            upperStartX = this.getWedgeStartAfterSystemBreak(staffLine);
         }
         let upperEndX: number = 0;
         let lowerEndX: number = 0;
@@ -1834,6 +1833,8 @@ export abstract class MusicSheetCalculator {
         // the Height of the Expression's placement
         let idealY: number = 0;
         let endIdealY: number = 0;
+        // the ideal y of the parts in the stafflines after the first, before each is checked against its staffline's sky or bottom line
+        let splitIdealY: number = 0;
 
         if (placement === PlacementEnum.Below) {
             // can be a single Staff Instrument or an Instrument with 2 Staves
@@ -1864,6 +1865,7 @@ export abstract class MusicSheetCalculator {
                 // Set the value for the splitted y position to the ideal position before we check and modify it with
                 // the skybottom calculator detection
                 endIdealY = idealY;
+                splitIdealY = idealY;
             }
             // must check BottomLine for possible collisions within the Length of the Expression
             // find the corresponding max value for the given Length
@@ -1952,6 +1954,7 @@ export abstract class MusicSheetCalculator {
             idealY += this.rules.WedgeOpeningLength / 2;
             if (!sameStaffLine) {
                 endIdealY = idealY;
+                splitIdealY = idealY;
             }
 
             // must check SkyLine for possible collisions within the Length of the Expression
@@ -2046,15 +2049,18 @@ export abstract class MusicSheetCalculator {
             }
             graphicalContinuousDynamic.calcPsi();
 
-            // inbetween wedges
+            // inbetween wedges: placed like the last wedge, starting where it does, at the ideal y unless their own staffline's notes
+            //   etc. reach further there
             for (let i: number = 0; i < inbetweenWedges.length; i++) {
                 const inbetweenWedge: GraphicalContinuousDynamicExpression = inbetweenWedges[i];
                 const inbetweenStaffline: StaffLine = inbetweenWedge.ParentStaffLine;
-                let betweenIdealY: number = endIdealY;
+                const inbetweenStartX: number = this.getWedgeStartAfterSystemBreak(inbetweenStaffline);
+                const inbetweenEndX: number = inbetweenStaffline.PositionAndShape.Size.width;
+                let betweenIdealY: number = splitIdealY;
 
                 if (placement === PlacementEnum.Below) {
                     const maxBottomLineValueForExpressionLength: number =
-                    endStaffLine.SkyBottomLineCalculator.getBottomLineMaxInRange(lowerStartX, upperEndX);
+                        inbetweenStaffline.SkyBottomLineCalculator.getBottomLineMaxInRange(inbetweenStartX, inbetweenEndX);
                     if (maxBottomLineValueForExpressionLength > betweenIdealY) {
                         betweenIdealY = maxBottomLineValueForExpressionLength;
                     }
@@ -2062,16 +2068,17 @@ export abstract class MusicSheetCalculator {
                     betweenIdealY += this.rules.WedgeVerticalMargin;
                 } else if (placement === PlacementEnum.Above) {
                     const minSkyLineValueForExpressionLength: number =
-                        inbetweenStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(lowerStartX, lowerEndX);
-                    if (minSkyLineValueForExpressionLength < endIdealY) {
+                        inbetweenStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(inbetweenStartX, inbetweenEndX);
+                    if (minSkyLineValueForExpressionLength < betweenIdealY) {
                         betweenIdealY = minSkyLineValueForExpressionLength;
                     }
                     betweenIdealY -= this.rules.WedgeOpeningLength / 2;
+                    betweenIdealY -= this.rules.WedgeVerticalMargin;
                 }
 
                 // for crescendo, we want the same look as on the last staffline: not starting with an intersection / starting wedge,
                 //   for diminuendo the same look as on the first staffline: not ending in an intersection / looking finished
-                inbetweenWedge.createInbetweenLines(0, inbetweenStaffline.PositionAndShape.Size.width, betweenIdealY);
+                inbetweenWedge.createInbetweenLines(inbetweenStartX, inbetweenEndX, betweenIdealY);
                 inbetweenWedge.calcPsi();
             }
 
@@ -2082,6 +2089,16 @@ export abstract class MusicSheetCalculator {
             }
         }
         this.dynamicExpressionMap.set(endAbsoluteTimestamp.RealValue, graphicalContinuousDynamic.PositionAndShape);
+    }
+
+    /**
+     * Where a wedge that goes on from the previous system starts in the given staffline (its part after a system break): over the
+     * end of the clef, key and time signature at the staffline's start.
+     * @param staffLine the staffline
+     * @returns the x relative to the staffline
+     */
+    private getWedgeStartAfterSystemBreak(staffLine: StaffLine): number {
+        return staffLine.Measures[0].beginInstructionsWidth - this.rules.WedgeHorizontalMargin - 2;
     }
 
     /**
