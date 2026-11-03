@@ -44,33 +44,30 @@ describe("VexFlow Measure - Secondary Voice Stem Direction (issue #1719)", () =>
    }
 
    it("Should force a lone secondary (linked) voice stem-down by default (AutoStemSecondaryVoicesWhenAloneInMeasure off)",
-      (done: Mocha.Done) => {
+      () => {
       const gms: GraphicalMusicSheet = graphicalMusicSheet(false);
       const secondaryVoiceEntry: GraphicalVoiceEntry = loneVoiceEntry(gms, 1); // measure 2, voice 7
       expect(secondaryVoiceEntry.parentVoiceEntry.WantedStemDirection).to.equal(
          StemDirectionType.Down,
          "by default a secondary voice keeps its stems down, the usual signal for a secondary voice");
-      done();
    });
 
-   it("Should not force a lone secondary (linked) voice stem-down with AutoStemSecondaryVoicesWhenAloneInMeasure", (done: Mocha.Done) => {
+   it("Should not force a lone secondary (linked) voice stem-down with AutoStemSecondaryVoicesWhenAloneInMeasure", () => {
       const gms: GraphicalMusicSheet = graphicalMusicSheet(true);
       const secondaryVoiceEntry: GraphicalVoiceEntry = loneVoiceEntry(gms, 1); // measure 2, voice 7
       expect(secondaryVoiceEntry.parentVoiceEntry.WantedStemDirection).to.equal(
          StemDirectionType.Undefined,
          "a linked voice alone in its measure must keep an undefined (auto) stem, not forced Down");
-      done();
    });
 
    it("Should stem the lone secondary voice identically to the identical main-voice measure with the rule enabled",
-      (done: Mocha.Done) => {
+      () => {
       const gms: GraphicalMusicSheet = graphicalMusicSheet(true);
       const mainVoiceEntry: GraphicalVoiceEntry = loneVoiceEntry(gms, 0);      // measure 1, voice 1
       const secondaryVoiceEntry: GraphicalVoiceEntry = loneVoiceEntry(gms, 1); // measure 2, voice 7
       expect(secondaryVoiceEntry.parentVoiceEntry.WantedStemDirection).to.equal(
          mainVoiceEntry.parentVoiceEntry.WantedStemDirection,
          "identical notes should get the same stem treatment whether in the main or a secondary voice");
-      done();
    });
 
    // The calculation sets WantedStemDirection only where it forces a direction. Before the fix, a new calculation started from

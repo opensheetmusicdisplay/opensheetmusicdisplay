@@ -49,7 +49,7 @@ describe("XML interface", () => {
         });
     }
 
-    it("test IXmlElement", (done: Mocha.Done) => {
+    it("test IXmlElement", () => {
         // Test name attribute
         expect(documentElement.name).to.equal("score-partwise");
         // Test element method
@@ -59,10 +59,9 @@ describe("XML interface", () => {
             .element("identification")
             .element("encoding")
             .element("software").value).to.equal("Example Software name");
-        done();
     });
 
-    it("test IXmlAttribute", (done: Mocha.Done) => {
+    it("test IXmlAttribute", () => {
         // Test attributes method
         expect(
             documentElement.element("credit").attributes()[0].name
@@ -74,6 +73,5 @@ describe("XML interface", () => {
         expect(creditWords.attributes().length).to.equal(2);
         // Test value attribute
         expect(creditWords.attribute("justify").value).to.equal("center");
-        done();
     });
 });

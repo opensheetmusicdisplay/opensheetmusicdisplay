@@ -9,8 +9,7 @@
     "sourceMap": true,
     "strict": false,
     "strictPropertyInitialization": false,
-    "typeRoots": ["./node_modules/@types"],
-    "types": ["mocha", "node"],
+    "types": ["vitest/globals", "node"],
   },
   "include": ["./test/", "./src"],
   "exclude": [

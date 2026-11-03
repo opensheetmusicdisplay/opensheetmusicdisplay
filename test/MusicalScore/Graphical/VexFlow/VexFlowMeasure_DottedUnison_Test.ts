@@ -39,7 +39,7 @@ describe("VexFlow Measure - Dotted Unison Alignment", () => {
       return staffEntry.graphicalVoiceEntries as VexFlowVoiceEntry[];
    }
 
-   it("Should overlap a unison whose two voices differ only in dot count", (done: Mocha.Done) => {
+   it("Should overlap a unison whose two voices differ only in dot count", () => {
       const measure: VexFlowMeasure = firstMeasure();
       // Beat 1: voice 1 (dotted quarter G4) and voice 2 (quarter G4) form a unison.
       // Same notehead shape, only the dots differ -> the noteheads should share one
@@ -50,7 +50,6 @@ describe("VexFlow Measure - Dotted Unison Alignment", () => {
          expect(xShift(gve)).to.equal(0,
             "a unison differing only in dots should share its horizontal position (no stagger x-shift)");
       }
-      done();
    });
 
 });

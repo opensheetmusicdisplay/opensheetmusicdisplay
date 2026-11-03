@@ -19,22 +19,20 @@ import { AccidentalEnum, Pitch } from "../../../src/Common/DataObjects/Pitch";
 describe("OpenSheetMusicDisplay Main Export", () => {
     let container1: HTMLElement;
 
-    it("no container", (done: Mocha.Done) => {
+    it("no container", () => {
         expect(() => {
             return new OpenSheetMusicDisplay(undefined);
         }).to.throw(/container/);
-        done();
     });
 
-    it("container", (done: Mocha.Done) => {
+    it("container", () => {
         const div: HTMLElement = TestUtils.getDivElement(document);
         expect(() => {
             return new OpenSheetMusicDisplay(div);
         }).to.not.throw(Error);
-        done();
     });
 
-    it("multiple instances", () => {
+    it("multiple instances", async () => {
         const musicSheetFragmentContainer: HTMLElement = TestUtils.getDivElement(document);
         const fullMusicSheetContainer: HTMLElement = TestUtils.getDivElement(document);
 
@@ -64,128 +62,82 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         const musicSheet: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
         const musicSheetXML: string = new XMLSerializer().serializeToString(musicSheet);
 
-        return musicSheetFragment.load(musicSheetXML)
-                            .then(() => {
-                                musicSheetFragment.render();
+        await musicSheetFragment.load(musicSheetXML);
+        musicSheetFragment.render();
 
-                                return fullMusicSheet.load(musicSheetXML);
-                            })
-                            .then(() => {
-                                fullMusicSheet.render();
+        await fullMusicSheet.load(musicSheetXML);
+        fullMusicSheet.render();
 
-                                // Verify that the music sheet fragment has its options set correctly.
-                                expect(musicSheetFragment.Sheet.Rules.RenderComposer).to.equal(musicSheetFragmentOptions.drawComposer);
-                                expect(musicSheetFragment.Sheet.Rules.RenderFingerings).to.equal(musicSheetFragmentOptions.drawFingerings);
-                                expect(musicSheetFragment.Sheet.Rules.RenderLyricist).to.equal(musicSheetFragmentOptions.drawLyricist);
-                                expect(musicSheetFragment.Sheet.Rules.RenderPartAbbreviations).to.equal(musicSheetFragmentOptions.drawPartAbbreviations);
-                                expect(musicSheetFragment.Sheet.Rules.RenderPartNames).to.equal(musicSheetFragmentOptions.drawPartNames);
-                                expect(musicSheetFragment.Sheet.Rules.RenderSubtitle).to.equal(musicSheetFragmentOptions.drawSubtitle);
-                                expect(musicSheetFragment.Sheet.Rules.RenderTitle).to.equal(musicSheetFragmentOptions.drawTitle);
-                                expect(musicSheetFragment.Sheet.Rules.MaxMeasureToDrawIndex).to.equal(musicSheetFragmentOptions.drawUpToMeasureNumber - 1);
+        // Verify that the music sheet fragment has its options set correctly.
+        expect(musicSheetFragment.Sheet.Rules.RenderComposer).to.equal(musicSheetFragmentOptions.drawComposer);
+        expect(musicSheetFragment.Sheet.Rules.RenderFingerings).to.equal(musicSheetFragmentOptions.drawFingerings);
+        expect(musicSheetFragment.Sheet.Rules.RenderLyricist).to.equal(musicSheetFragmentOptions.drawLyricist);
+        expect(musicSheetFragment.Sheet.Rules.RenderPartAbbreviations).to.equal(musicSheetFragmentOptions.drawPartAbbreviations);
+        expect(musicSheetFragment.Sheet.Rules.RenderPartNames).to.equal(musicSheetFragmentOptions.drawPartNames);
+        expect(musicSheetFragment.Sheet.Rules.RenderSubtitle).to.equal(musicSheetFragmentOptions.drawSubtitle);
+        expect(musicSheetFragment.Sheet.Rules.RenderTitle).to.equal(musicSheetFragmentOptions.drawTitle);
+        expect(musicSheetFragment.Sheet.Rules.MaxMeasureToDrawIndex).to.equal(musicSheetFragmentOptions.drawUpToMeasureNumber - 1);
 
-                                // Verify that the full music sheet has its options set correctly.
-                                expect(fullMusicSheet.Sheet.Rules.RenderComposer).to.not.equal(musicSheetFragmentOptions.drawComposer);
-                                expect(fullMusicSheet.Sheet.Rules.RenderFingerings).to.not.equal(musicSheetFragmentOptions.drawFingerings);
-                                expect(fullMusicSheet.Sheet.Rules.RenderLyricist).to.not.equal(musicSheetFragmentOptions.drawLyricist);
-                                expect(fullMusicSheet.Sheet.Rules.RenderPartAbbreviations).to.not.equal(musicSheetFragmentOptions.drawPartAbbreviations);
-                                expect(fullMusicSheet.Sheet.Rules.RenderPartNames).to.not.equal(musicSheetFragmentOptions.drawPartNames);
-                                expect(fullMusicSheet.Sheet.Rules.RenderSubtitle).to.not.equal(musicSheetFragmentOptions.drawSubtitle);
-                                expect(fullMusicSheet.Sheet.Rules.RenderTitle).to.not.equal(musicSheetFragmentOptions.drawTitle);
-                                expect(fullMusicSheet.Sheet.Rules.MaxMeasureToDrawIndex).to.equal(fullMusicSheetOptions.drawUpToMeasureNumber - 1);
-                            });
+        // Verify that the full music sheet has its options set correctly.
+        expect(fullMusicSheet.Sheet.Rules.RenderComposer).to.not.equal(musicSheetFragmentOptions.drawComposer);
+        expect(fullMusicSheet.Sheet.Rules.RenderFingerings).to.not.equal(musicSheetFragmentOptions.drawFingerings);
+        expect(fullMusicSheet.Sheet.Rules.RenderLyricist).to.not.equal(musicSheetFragmentOptions.drawLyricist);
+        expect(fullMusicSheet.Sheet.Rules.RenderPartAbbreviations).to.not.equal(musicSheetFragmentOptions.drawPartAbbreviations);
+        expect(fullMusicSheet.Sheet.Rules.RenderPartNames).to.not.equal(musicSheetFragmentOptions.drawPartNames);
+        expect(fullMusicSheet.Sheet.Rules.RenderSubtitle).to.not.equal(musicSheetFragmentOptions.drawSubtitle);
+        expect(fullMusicSheet.Sheet.Rules.RenderTitle).to.not.equal(musicSheetFragmentOptions.drawTitle);
+        expect(fullMusicSheet.Sheet.Rules.MaxMeasureToDrawIndex).to.equal(fullMusicSheetOptions.drawUpToMeasureNumber - 1);
     });
 
-    it("load MXL from string", (done: Mocha.Done) => {
+    it("load MXL from string", async () => {
         const mxl: string = TestUtils.getMXL("Mozart_Clarinet_Quintet_Excerpt.mxl");
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
-        opensheetmusicdisplay.load(mxl).then(
-            (_: {}) => {
-                opensheetmusicdisplay.render();
-                done();
-            },
-            done
-        );
+        await opensheetmusicdisplay.load(mxl);
+        opensheetmusicdisplay.render();
     });
 
-    it("load invalid MXL from string", (done: Mocha.Done) => {
+    it("load invalid MXL from string", async () => {
         const mxl: string = "\x50\x4b\x03\x04";
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
         const logged: string[] = TestUtils.catchLogs();
-        opensheetmusicdisplay.load(mxl).then(
-            (_: {}) => {
-                done(new Error("Corrupted MXL appears to be loaded correctly"));
-            },
-            (exc: Error) => {
-                if (exc.message.toLowerCase().match(/invalid/)) {
-                    expect(logged.length, "errors logged").to.be.greaterThan(0);
-                    expect(logged.filter((message: string) => !message.includes("Corrupted zip")), "other messages").to.deep.equal([]);
-                    done();
-                } else {
-                    done(new Error("Unexpected error: " + exc.message));
-                }
-            }
-        ).catch(done);
+        await expect(opensheetmusicdisplay.load(mxl), "corrupted MXL").rejects.toThrow(/invalid/i);
+        expect(logged.length, "errors logged").to.be.greaterThan(0);
+        expect(logged.filter((message: string) => !message.includes("Corrupted zip")), "other messages").to.deep.equal([]);
     });
 
-    it("load XML string", (done: Mocha.Done) => {
+    it("load XML string", async () => {
         const score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
         const xml: string = new XMLSerializer().serializeToString(score);
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
-        opensheetmusicdisplay.load(xml).then(
-            (_: {}) => {
-                opensheetmusicdisplay.render();
-                done();
-            },
-            done
-        );
+        await opensheetmusicdisplay.load(xml);
+        opensheetmusicdisplay.render();
     });
 
-    it("load XML Document", (done: Mocha.Done) => {
+    it("load XML Document", async () => {
         const score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
-        opensheetmusicdisplay.load(score).then(
-            (_: {}) => {
-                opensheetmusicdisplay.render();
-                done();
-            },
-            done
-        );
+        await opensheetmusicdisplay.load(score);
+        opensheetmusicdisplay.render();
     });
 
-    it("load missing file by URL", (done: Mocha.Done) => {
+    it("load missing file by URL", async () => {
         // e.g. a typo in the path: the test server answers 404, like any web server
         const url: string = "base/test/data/does_not_exist.musicxml";
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
-        opensheetmusicdisplay.load(url).then(
-            (_: {}) => {
-                done(new Error("A missing file appears to be loaded correctly"));
-            },
-            (exc: Error) => {
-                if (exc.message.match(/404/)) {
-                    done();
-                } else {
-                    done(new Error("Unexpected error: " + exc.message));
-                }
-            }
-        );
+        await expect(opensheetmusicdisplay.load(url), "a missing file").rejects.toThrow(/404/);
     });
 
-    it("load MXL Document by URL", (done: Mocha.Done) => {
+    it("load MXL Document by URL", async () => {
         const url: string = "base/test/data/Mozart_Clarinet_Quintet_Excerpt.mxl";
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
-        opensheetmusicdisplay.load(url).then(
-            (_: {}) => {
-                opensheetmusicdisplay.render();
-                done();
-            },
-            done
-        );
+        await opensheetmusicdisplay.load(url);
+        opensheetmusicdisplay.render();
     });
 
     it("uses tempTitle as the title of a score without one, also for a Blob, an MXL file or a URL", async () => {
@@ -255,93 +207,60 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         expect(xmlReads, "calls of OnXMLRead").to.equal(contents.length);
     });
 
-    it("load invalid URL", (done: Mocha.Done) => {
+    it("load invalid URL", async () => {
         const url: string = "https://www.afjkhfjkauu2ui3z2uiu.com";
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
-        opensheetmusicdisplay.load(url).then(
-            (_: {}) => {
-                done(new Error("Invalid URL appears to be loaded correctly"));
-            },
-            (exc: Error) => {
-                if (exc.message.toLowerCase().match(/url/)) {
-                    done();
-                } else {
-                    done(new Error("Unexpected error: " + exc.message));
-                }
-            }
-        );
+        await expect(opensheetmusicdisplay.load(url), "an invalid URL").rejects.toThrow(/url/i);
     });
 
-    it("load invalid XML string", (done: Mocha.Done) => {
+    it("load invalid XML string", async () => {
         const xml: string = "<?xml";
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
         const logged: string[] = TestUtils.catchLogs();
-        opensheetmusicdisplay.load(xml).then(
-            (_: {}) => {
-                done(new Error("Corrupted XML appears to be loaded correctly"));
-            },
-            (exc: Error) => {
-                if (exc.message.toLowerCase().match(/partwise/)) {
-                    expect(logged).to.deep.equal(["Could not parse MusicXML, no valid partwise element found"]);
-                    done();
-                } else {
-                    done(new Error("Unexpected error: " + exc.message));
-                }
-            }
-        ).catch(done);
+        await expect(opensheetmusicdisplay.load(xml), "corrupted XML").rejects.toThrow(/partwise/i);
+        expect(logged).to.deep.equal(["Could not parse MusicXML, no valid partwise element found"]);
     });
 
-    it("render without loading", (done: Mocha.Done) => {
+    it("render without loading", () => {
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
         expect(() => {
             return opensheetmusicdisplay.render();
         }).to.throw(/load/);
-        done();
     });
 
-    before((): void => {
+    beforeAll((): void => {
         // Create the container for the "test width" test
         container1 = TestUtils.getDivElement(document);
     });
-    after((): void => {
+    afterAll((): void => {
         // Destroy the container for the "test width" test
         document.body.removeChild(container1);
     });
 
-    it("test width 500", (done: Mocha.Done) => {
+    it("test width 500", async () => {
         const div: HTMLElement = container1;
         div.style.width = "500px";
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
         const score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
-        opensheetmusicdisplay.load(score).then(
-            (_: {}) => {
-                opensheetmusicdisplay.render();
-                expect(div.offsetWidth).to.equal(500);
-                done();
-            },
-            done
-        ).catch(done);
+        await opensheetmusicdisplay.load(score);
+        opensheetmusicdisplay.render();
+        expect(div.offsetWidth).to.equal(500);
     });
 
-    it("test width 200", (done: Mocha.Done) => {
+    it("test width 200", async () => {
         const div: HTMLElement = container1;
         div.style.width = "200px";
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
         const score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
         const logged: string[] = TestUtils.catchLogs();
-        opensheetmusicdisplay.load(score).then(
-            (_: {}) => {
-                opensheetmusicdisplay.render();
-                expect(div.offsetWidth).to.equal(200);
-                // too narrow for the first measure, in each of its two staves
-                expect(logged).to.deep.equal(Array(2).fill("SkyBottomLineCalculator: width not > 0 in measure 1"));
-                done();
-            },
-            done
-        ).catch(done);
+        await opensheetmusicdisplay.load(score);
+        opensheetmusicdisplay.render();
+        expect(div.offsetWidth).to.equal(200);
+        // too narrow for the first measure, in each of its two staves
+        expect(logged).to.deep.equal(Array(2).fill("SkyBottomLineCalculator: width not > 0 in measure 1"));
     });
 
     /**
@@ -374,15 +293,13 @@ describe("OpenSheetMusicDisplay Main Export", () => {
 
     describe("cursor with hidden instrument", () => {
         let osmd: OpenSheetMusicDisplay;
-        beforeEach(() => {
+        beforeEach(async () => {
             const div: HTMLElement = TestUtils.getDivElement(document);
             osmd = TestUtils.createOpenSheetMusicDisplay(div);
             const score: Document =
                 TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
-            return osmd.load(score)
-                .then(() => {
-                    osmd.render();
-                });
+            await osmd.load(score);
+            osmd.render();
         });
 
         it("should move cursor after instrument is hidden", () => {
@@ -399,19 +316,14 @@ describe("OpenSheetMusicDisplay Main Export", () => {
     describe("cursor", () => {
         let opensheetmusicdisplay: OpenSheetMusicDisplay;
         let div: HTMLElement;
-        beforeEach((done: Mocha.Done) => {
+        beforeEach(async () => {
             // a container of its own: "test width 200" leaves container1 too narrow for a measure
             div = TestUtils.getDivElement(document);
             opensheetmusicdisplay = TestUtils.createOpenSheetMusicDisplay(div);
             const score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
-            opensheetmusicdisplay.load(score).then(
-                (_: {}) => {
-                    opensheetmusicdisplay.render();
-                    opensheetmusicdisplay.cursors[0].show();
-                    done();
-                },
-                done
-            ).catch(done);
+            await opensheetmusicdisplay.load(score);
+            opensheetmusicdisplay.render();
+            opensheetmusicdisplay.cursors[0].show();
         });
         afterEach((): void => {
             div.remove();
@@ -539,17 +451,12 @@ describe("OpenSheetMusicDisplay Main Export", () => {
     describe("cursor with notehead none (invisible notes)", () => {
         let osmd: OpenSheetMusicDisplay;
 
-        beforeEach((done: Mocha.Done) => {
+        beforeEach(async () => {
             const div: HTMLElement = TestUtils.getDivElement(document);
             osmd = TestUtils.createOpenSheetMusicDisplay(div);
             const score: Document = TestUtils.getScore("test_cursor_skip_notehead_none.musicxml");
-            osmd.load(score).then(
-                (_: {}) => {
-                    osmd.render();
-                    done();
-                },
-                done
-            ).catch(done);
+            await osmd.load(score);
+            osmd.render();
         });
 
         it("should skip entries where all notes have notehead none when SkipInvisibleNotes is true", () => {

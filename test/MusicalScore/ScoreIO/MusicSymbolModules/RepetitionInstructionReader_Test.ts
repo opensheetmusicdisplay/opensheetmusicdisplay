@@ -227,7 +227,7 @@ describe("RepetitionInstructionReader", () => {
         const path: string = "test/data/test_words_voice_tacet_on_ds_1687.musicxml";
         let sheet: MusicSheet;
 
-        before((): void => {
+        beforeAll((): void => {
             const doc: Document = ((window as any).__xml__)[path];
             expect(doc, "sample file is loaded").to.not.equal(undefined);
             const score: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);

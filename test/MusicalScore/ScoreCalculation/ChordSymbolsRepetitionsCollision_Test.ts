@@ -103,7 +103,7 @@ describe("Chord symbol and repetition instruction collision avoidance", () => {
         let graphicalSheet: GraphicalMusicSheet;
         let staffLines: StaffLine[];
 
-        before((): void => {
+        beforeAll((): void => {
             graphicalSheet = buildGraphicalMusicSheet(filename);
             staffLines = [];
             for (const page of graphicalSheet.MusicPages) {
@@ -145,7 +145,7 @@ describe("Chord symbol and repetition instruction collision avoidance", () => {
         let measures: VexFlowMeasure[];
         let staffLine: StaffLine;
 
-        before((): void => {
+        beforeAll((): void => {
             graphicalSheet = buildGraphicalMusicSheet(filename);
             measures = graphicalSheet.MeasureList.map(
                 (measuresOfAllStaves: VexFlowMeasure[]): VexFlowMeasure => measuresOfAllStaves[0]);

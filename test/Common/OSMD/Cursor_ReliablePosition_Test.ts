@@ -82,7 +82,7 @@ describe("Cursor reliable position", () => {
                 prevX = x;
                 prevSystemIndex = systemIndex;
             }
-        }).timeout(10000);
+        });
     }
 
     it("tablature sample: stepping the cursor never places it off-canvas", async () => {
@@ -104,5 +104,5 @@ describe("Cursor reliable position", () => {
             steps++;
         }
         expect(steps, "the cursor stepped through the whole sample").to.be.greaterThan(4).and.to.be.lessThan(maxSteps);
-    }).timeout(10000);
+    });
 });

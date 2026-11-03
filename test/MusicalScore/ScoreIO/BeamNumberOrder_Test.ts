@@ -16,13 +16,13 @@ import { VoiceEntry } from "../../../src/MusicalScore/VoiceData/VoiceEntry";
 describe("Beam elements listed number 2 before number 1", () => {
     let container: HTMLElement;
     let osmd: OpenSheetMusicDisplay;
-    before(async () => {
+    beforeAll(async () => {
         container = TestUtils.getDivElement(document);
         osmd = TestUtils.createOpenSheetMusicDisplay(container);
         await osmd.load(TestUtils.getScore("test_beam_number_order.musicxml"));
         osmd.render();
     });
-    after(() => {
+    afterAll(() => {
         osmd.clear();
         container.remove();
     });
