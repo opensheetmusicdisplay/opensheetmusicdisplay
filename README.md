@@ -106,6 +106,8 @@ Features already available in early access for [Github Sponsors](https://github.
   * Kept in layers (e.g. one per person) that can be shown or hidden, and saved and loaded as XML files
   * Added and edited in the included menu, or in your own UI via the API
 
+<img alt="Annotations in three layers (teacher, singer, pianist) on a Beethoven song, and the layers tab of the annotations menu" title="Annotations in three layers, and the annotations menu" src="https://github.com/user-attachments/assets/d121793b-bd83-4ed4-a900-3c4afc0ef0a5" width="100%">
+
 More is in the making: we're always working on OSMD improvements and additional features, just look at our release history / [changelog](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/blob/develop/CHANGELOG.md)!
 
 Besides the early access features, you can get other perks like a personal postcard from the team in Vienna. Check them out at [our GitHub sponsors page](https://github.com/sponsors/opensheetmusicdisplay).
