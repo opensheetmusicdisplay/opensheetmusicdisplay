@@ -2,8 +2,8 @@ import { OpenSheetMusicDisplay } from "../../src/OpenSheetMusicDisplay/OpenSheet
 
 /**
  * This class collects useful methods to interact with test data.
- * During tests, XML and MXL documents are preprocessed by karma,
- * and this is some helper code to retrieve them.
+ * During tests, test/Util/vitestSetup.mjs provides the XML and MXL documents of test/data
+ * (window.__xml__, window.__raw__, as karma's preprocessors did), and this is some helper code to retrieve them.
  */
 export class TestUtils {
 

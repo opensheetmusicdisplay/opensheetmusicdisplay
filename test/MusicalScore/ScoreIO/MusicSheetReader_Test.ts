@@ -378,7 +378,7 @@ describe("Music Sheet Reader", () => {
 
         function readSheet(filename: string): MusicSheet {
             const doc: Document = getSheet("test/data/" + filename);
-            expect(doc, filename + " should be preprocessed by karma").to.not.be.undefined;
+            expect(doc, filename + " should be in test/data").to.not.be.undefined;
             const fileScore: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
             return reader.createMusicSheet(fileScore, "test/data/" + filename);
         }
@@ -523,7 +523,7 @@ describe("Music Sheet Reader", () => {
 
             function wordShapes(rules?: EngravingRules): string[] {
                 const doc: Document = getSheet(samplePath);
-                expect(doc, samplePath + " should be preprocessed by karma").to.not.be.undefined;
+                expect(doc, samplePath + " should be in test/data").to.not.be.undefined;
                 const sampleScore: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
                 const sampleSheet: MusicSheet = new MusicSheetReader(undefined, rules)
                     .createMusicSheet(sampleScore, samplePath);
@@ -564,7 +564,7 @@ describe("Music Sheet Reader", () => {
 
         before((): void => {
             const doc: Document = getSheet(filename);
-            expect(doc, filename + " should be preprocessed by karma").to.not.be.undefined;
+            expect(doc, filename + " should be in test/data").to.not.be.undefined;
             const fileScore: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
             transposeSheet = new MusicSheetReader().createMusicSheet(fileScore, filename);
         });

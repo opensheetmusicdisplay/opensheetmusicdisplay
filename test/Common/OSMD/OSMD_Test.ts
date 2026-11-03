@@ -154,7 +154,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
     });
 
     it("load missing file by URL", (done: Mocha.Done) => {
-        // e.g. a typo in the path: the karma server answers 404, like any web server
+        // e.g. a typo in the path: the test server answers 404, like any web server
         const url: string = "base/test/data/does_not_exist.musicxml";
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
