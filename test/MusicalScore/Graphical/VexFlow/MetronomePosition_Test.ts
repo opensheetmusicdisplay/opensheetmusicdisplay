@@ -1,6 +1,7 @@
 import {expect} from "chai";
 import {TestUtils} from "../../../Util/TestUtils";
 import {OpenSheetMusicDisplay} from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
+import {InstantaneousTempoExpression} from "../../../../src/MusicalScore/VoiceData/Expressions/InstantaneousTempoExpression";
 import {StaffLine} from "../../../../src/MusicalScore/Graphical/StaffLine";
 import {unitInPixels} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
 
@@ -120,15 +121,27 @@ describe("Metronome position rendering", (): void => {
 
     it("keeps different printed marks and deduplicates identical note equations", async (): Promise<void> => {
         await osmd.load(score(bpm(80) + bpm(96) + bpm(80, "half") +
-            bpm(80, "quarter", "<beat-unit-dot/>") + note("C", 4, "whole")));
+            bpm(80, "quarter", "<beat-unit-dot/>") +
+            bpm(80, "quarter", "<beat-unit-dot/><beat-unit-dot/>") + note("C", 4, "whole")));
         osmd.render();
         const boxes: DOMRect[] = marks();
-        expect(boxes.length).to.equal(4);
+        expect(boxes.length).to.equal(5);
         for (let i: number = 0; i < boxes.length; i++) {
             for (let j: number = i + 1; j < boxes.length; j++) {
                 expect(separate(boxes[i], boxes[j])).to.equal(true);
             }
         }
+
+        const renderedMarks: NodeListOf<SVGGraphicsElement> = div.querySelectorAll<SVGGraphicsElement>(".vf-stavetempo");
+        expect(renderedMarks[4].querySelectorAll("path").length, "the second beat-unit dot is drawn").to.equal(
+            renderedMarks[3].querySelectorAll("path").length + 1);
+        expect(osmd.Sheet.SourceMeasures[0].TempoInBPM, "double-dotted quarter = 80").to.equal(140);
+        const doubleDotted: InstantaneousTempoExpression = osmd.Sheet.SourceMeasures[0].TempoExpressions[4].InstantaneousTempo;
+        expect(doubleDotted.dotted).to.equal(true);
+        doubleDotted.dotted = false;
+        expect(doubleDotted.TempoInQuarterNotesPerMinute).to.equal(80);
+        doubleDotted.dotted = true;
+        expect(doubleDotted.TempoInQuarterNotesPerMinute).to.equal(120);
 
         const left: string = "<metronome-note><metronome-type>quarter</metronome-type></metronome-note>";
         const equals: string = "<metronome-relation>equals</metronome-relation>";

@@ -2326,7 +2326,7 @@ export abstract class MusicSheetCalculator {
                 this.isSameMetronomeNoteGroup(first.metronomeNoteGroupLeft, second.metronomeNoteGroupLeft) &&
                 this.isSameMetronomeNoteGroup(first.metronomeNoteGroupRight, second.metronomeNoteGroupRight);
         }
-        return first.TempoInBpm === second.TempoInBpm && first.beatUnit === second.beatUnit && first.dotted === second.dotted;
+        return first.TempoInBpm === second.TempoInBpm && first.beatUnit === second.beatUnit && first.dotCount === second.dotCount;
     }
 
     private isSameMetronomeNoteGroup(first: MetronomeNoteGroup, second: MetronomeNoteGroup): boolean {

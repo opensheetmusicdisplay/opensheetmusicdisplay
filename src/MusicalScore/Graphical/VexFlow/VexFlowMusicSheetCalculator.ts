@@ -1449,7 +1449,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       vfStave.setTempo(
         {
             bpm: metronomeExpression.TempoInBpm,
-            dots: metronomeExpression.dotted,
+            dots: metronomeExpression.dotCount as any, // VexFlow accepts a count; the Stave typings declare a boolean.
             duration: vexflowDuration
         },
         yShift * unitInPixels);
