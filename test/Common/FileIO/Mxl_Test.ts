@@ -52,13 +52,18 @@ describe("MXL Tests", () => {
 
   // Test failure
   it("Corrupted file", (done: Mocha.Done) => {
+    const logged: string[] = TestUtils.catchLogs();
     MXLHelper.MXLtoIXmlElement("").then(
       (score: IXmlElement) => {
         expect(score).to.not.be.undefined;
         expect(score.name).to.equal("score-partwise");
         done(new Error("Empty zip file was loaded correctly. How is that even possible?"));
       },
-      (exc: any) => { done(); }
-    );
+      (exc: any) => {
+        expect(logged.length, "errors logged").to.be.greaterThan(0);
+        expect(logged.filter((message: string) => !message.includes("Corrupted zip")), "other messages").to.deep.equal([]);
+        done();
+      }
+    ).catch(done);
   });
 });

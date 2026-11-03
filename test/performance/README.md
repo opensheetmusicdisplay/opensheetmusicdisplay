@@ -44,7 +44,7 @@ first render (verified over the whole corpus; formerly they drifted because some
 persisted across renders, fixed by the state resets in
 `VexFlowMusicSheetCalculator.calculateMeasureXLayout()`/`clearRecreatedObjects()`).
 Captures therefore simply come from a fresh `load()` plus one render per compared mode;
-the tools and the karma test (`test/MusicalScore/Graphical/GeometricSkyBottomLine_Test.ts`) do this.
+the tools and the test (`test/MusicalScore/Graphical/GeometricSkyBottomLine_Test.ts`) do this.
 
 ## Visual A/B comparison
 
