@@ -607,24 +607,6 @@ export class SkyBottomLineCalculator {
         return this.getExtremeInTouchedSamples(this.mBottomLine, left, right, false);
     }
 
-    /**
-     * Resets a SkyLine in a range to its original value
-     * @param startIndex Start index of the range
-     * @param endIndex End index of the range (excluding)
-     */
-    public resetSkyLineInRange(startIndex: number, endIndex: number): void {
-        this.updateInRange(this.SkyLine, startIndex, endIndex);
-    }
-
-    /**
-     * Resets a bottom line in a range to its original value
-     * @param startIndex Start index of the range
-     * @param endIndex End index of the range
-     */
-    public resetBottomLineInRange(startIndex: number, endIndex: number): void {
-        this.setInRange(this.BottomLine, startIndex, endIndex);
-    }
-
     /** Replace the sky- and bottom-line arrays directly (lazy rendering reuses the
      *  previously-computed lines of stable interior systems instead of re-measuring them; see
      *  VexFlowMusicSheetCalculator.calculateSkyBottomLines). */
@@ -768,31 +750,6 @@ export class SkyBottomLineCalculator {
         return this.getMaxInRange(this.mBottomLine, startPoint, endPoint);
     }
 
-    /**
-     * Updates sky- and bottom line with a boundingBox and its children
-     * @param boundingBox Bounding box to be added
-     */
-    public updateWithBoundingBoxRecursively(boundingBox: BoundingBox): void {
-        if (boundingBox.ChildElements && boundingBox.ChildElements.length > 0) {
-            this.updateWithBoundingBoxRecursively(boundingBox);
-        } else {
-            const currentTopBorder: number = boundingBox.BorderTop + boundingBox.AbsolutePosition.y;
-            const currentBottomBorder: number = boundingBox.BorderBottom + boundingBox.AbsolutePosition.y;
-
-            if (currentTopBorder < 0) {
-                const startPoint: number = Math.floor(boundingBox.AbsolutePosition.x + boundingBox.BorderLeft);
-                const endPoint: number = Math.ceil(boundingBox.AbsolutePosition.x + boundingBox.BorderRight) ;
-
-                this.updateInRange(this.mSkyLine, startPoint, endPoint, currentTopBorder);
-            } else if (currentBottomBorder > this.StaffLineParent.StaffHeight) {
-                const startPoint: number = Math.floor(boundingBox.AbsolutePosition.x + boundingBox.BorderLeft);
-                const endPoint: number = Math.ceil(boundingBox.AbsolutePosition.x + boundingBox.BorderRight);
-
-                this.updateInRange(this.mBottomLine, startPoint, endPoint, currentBottomBorder);
-            }
-        }
-    }
-
     //#region Private methods
 
     /**
@@ -909,33 +866,6 @@ export class SkyBottomLineCalculator {
         return extreme;
     }
 
-    /**
-     * Sets the value given to the range inside the array. NOTE: will always update the value
-     * @param array Array to fill in the new value
-     * @param startIndex start index to begin with (default: 0)
-     * @param endIndex end index of array (excluding, default: array length)
-     * @param value value to fill in (default: 0)
-     */
-    private setInRange(array: number[], startIndex: number = 0, endIndex: number = array.length, value: number = 0): void {
-        startIndex = Math.floor(startIndex * this.SamplingUnit);
-        endIndex = Math.ceil(endIndex * this.SamplingUnit);
-
-        if (endIndex < startIndex) {
-            throw new Error("start index of line is greater then the end index");
-        }
-
-        if (startIndex < 0) {
-            startIndex = 0;
-        }
-
-        if (endIndex > array.length) {
-            endIndex = array.length;
-        }
-
-        for (let i: number = startIndex; i < endIndex; i++) {
-            array[i] = value;
-        }
-    }
     /**
      * Get the minimum of the selected line in the samples the given range touches and in the sample after them,
      * see getSkyLineMinInRange().
