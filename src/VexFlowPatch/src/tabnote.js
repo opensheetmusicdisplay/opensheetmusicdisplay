@@ -451,6 +451,9 @@ export class TabNote extends StemmableNote {
       }
       const tab_x = x + (note_glyph_width / 2) - (currentGlyphWidth / 2);
 
+      // VexFlowPatch: a hidden (empty) fret, e.g. OSMD's TabNote.FretVisible false, clears no gap in the string line.
+      //   Its rect and text are still drawn, for the order of the elements (see OSMD's VexFlowGraphicalNote.getTabNoteSVGs()).
+      const rectWidth = glyph.text === '' ? 0 : currentGlyphWidth + 4;
       // VexFlowPatch: fix black instead of transparent rectangles around tab notes in certain scenarios
       //   e.g. when EngravingRules.PageBackgroundColor set or image viewer displays transparent as black
       if (this.BackgroundColor) {
@@ -458,10 +461,10 @@ export class TabNote extends StemmableNote {
         ctx.setFillStyle(this.BackgroundColor);
         ctx.setLineWidth(0);
         // FIXME: Magic numbers.
-        ctx.fillRect(tab_x - 2, y - 3, currentGlyphWidth + 4, 6);
+        ctx.fillRect(tab_x - 2, y - 3, rectWidth, 6);
         ctx.restore();
       } else {
-        ctx.clearRect(tab_x - 2, y - 3, currentGlyphWidth + 4, 6);
+        ctx.clearRect(tab_x - 2, y - 3, rectWidth, 6);
       }
 
       if (glyph.code) {

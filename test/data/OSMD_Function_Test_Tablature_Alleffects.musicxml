@@ -181,7 +181,7 @@
                         <fret>1</fret>
                         <hammer-on number="1" type="stop" />
                         <bend>
-                            <bend-alter>4</bend-alter>
+                            <bend-alter>2</bend-alter>
                         </bend>
                     </technical>
                 </notations>

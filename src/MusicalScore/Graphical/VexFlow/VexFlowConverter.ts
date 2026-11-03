@@ -1151,7 +1151,7 @@ export class VexFlowConverter {
     public static CreateTabNote(gve: GraphicalVoiceEntry): VF.TabNote {
         const tabPositions: {str: number, fret: number}[] = [];
         const notes: GraphicalNote[] = gve.notes.reverse();
-        const tabPhrases: { type: number, text: string, width: number }[] = [];
+        const tabPhrases: { type: number, text: string }[] = [];
         const frac: Fraction = gve.notes[0].graphicalNoteLength;
         const isTuplet: boolean = gve.notes[0].sourceNote.NoteTuplet !== undefined;
         let duration: string = VexFlowConverter.durations(frac, isTuplet)[0];
@@ -1170,22 +1170,19 @@ export class VexFlowConverter {
                 (tabPosition as any).fret = "x";
                 isXNotehead = true;
             }
+            if (tabNote.FretVisible === false) {
+                (tabPosition as any).fret = "";
+            } else if (tabNote.FretParentheses) {
+                (tabPosition as any).fret = `(${tabPosition.fret})`;
+            }
             tabPositions.push(tabPosition);
             if (tabNote.BendArray) {
                 tabNote.BendArray.forEach( function( bend: {bendalter: number, direction: string} ): void {
-                    let phraseText: string;
-                    const phraseStep: number = bend.bendalter - tabPosition.fret;
-                    if (phraseStep > 1) {
-                        phraseText = "Full";
-                    } else if (phraseStep === 1) {
-                        phraseText = "1/2";
-                    } else {
-                        phraseText = "1/4";
-                    }
+                    if (bend.bendalter === 0) { return; }
                     if (bend.direction === "up") {
-                        tabPhrases.push({type: VF.Bend.UP, text: phraseText, width: 10});
+                        tabPhrases.push({type: VF.Bend.UP, text: VexFlowConverter.bendText(bend.bendalter)});
                     } else {
-                        tabPhrases.push({type: VF.Bend.DOWN, text: phraseText, width: 10});
+                        tabPhrases.push({type: VF.Bend.DOWN, text: ""}); // a release isn't labeled
                     }
                 });
             }
@@ -1226,11 +1223,15 @@ export class VexFlowConverter {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
         }
 
-        tabPhrases.forEach(function(phrase: { type: number, text: string, width: number }): void {
-            const bend: VF.Bend = new VF.Bend(phrase.text, phrase.type !== VF.Bend.UP);
+        if (tabPhrases.length > 0) {
+            // One Bend for all segments, so that a release continues from the preceding bend
+            //   (the legacy constructor's release flag adds an up segment of its own).
+            //   Without a width, VexFlow sizes each segment by its text (Bend.updateWidth()) like the legacy constructor;
+            //   the typings require one.
+            const bend: VF.Bend = new VF.Bend("", false, tabPhrases as { type: number, text: string, width: number }[]);
             VexFlowConverter.setVexFlowTextFontOfBend(bend, rules);
             vfnote.addModifier(bend);
-        });
+        }
 
         return vfnote;
     }
@@ -1470,6 +1471,21 @@ export class VexFlowConverter {
         if (rules.VexFlowTextFontFamily) {
             font.family = rules.VexFlowTextFontFamily;
         }
+    }
+
+    /**
+     * Returns the text of a tab bend by its interval in semitones (MusicXML's bend-alter, independent of the fret),
+     * in whole tones like in tablature: "1/4", "1/2", "3/4", "Full" (a whole tone), "1 1/4", "1 1/2", ..., "2".
+     * Rounded to quarter tones.
+     */
+    private static bendText(semitones: number): string {
+        const quarterTones: number = Math.round(Math.abs(semitones) * 2);
+        if (quarterTones === 4) {
+            return "Full";
+        }
+        const wholeTones: number = Math.floor(quarterTones / 4);
+        const fraction: string = ["", "1/4", "1/2", "3/4"][quarterTones % 4];
+        return wholeTones > 0 ? `${wholeTones} ${fraction}`.trim() : fraction;
     }
 
     /**

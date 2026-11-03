@@ -28,7 +28,7 @@ import { SlurReader } from "./MusicSymbolModules/SlurReader";
 import { Notehead } from "../VoiceData/Notehead";
 import { Arpeggio, ArpeggioType } from "../VoiceData/Arpeggio";
 import { NoteType, NoteTypeHandler } from "../VoiceData/NoteType";
-import { TabNote } from "../VoiceData/TabNote";
+import { TabNote, TabBendSegment } from "../VoiceData/TabNote";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { ReaderPluginManager } from "./ReaderPluginManager";
 import { Instrument } from "../Instrument";
@@ -481,12 +481,12 @@ export class VoiceGenerator {
     let note: Note = undefined;
     let stringNumber: number = -1; //1 to always recognize as valid tab note
     let fretNumber: number = -1; //0 to always recognize as valid tab note
-    const bends: {bendalter: number, direction: string}[] = [];
+    const bends: TabBendSegment[] = [];
     // check for guitar tabs:
+    // InstrumentReader already combines repeated notations into the first block.
     const notationNode: IXmlElement = node.element("notations");
     if (notationNode) {
-      const technicalNode: IXmlElement = notationNode.element("technical");
-      if (technicalNode) {
+      for (const technicalNode of notationNode.elements("technical")) {
         const stringNode: IXmlElement = technicalNode.element("string");
         if (stringNode) {
           stringNumber = parseInt(stringNode.value, 10);
@@ -499,10 +499,12 @@ export class VoiceGenerator {
         bendElementsArr.forEach(function (bend: IXmlElement): void {
             const bendalterNote: IXmlElement = bend.element("bend-alter");
             const releaseNode: IXmlElement = bend.element("release");
-            if (releaseNode !== undefined) {
-              bends.push({bendalter: parseInt (bendalterNote.value, 10), direction: "down"});
+            // a negative bend-alter is a release (MuseScore writes no <release/>), or a pre-bend, marked by <pre-bend/>
+            const isPreBend: boolean = bend.element("pre-bend") !== undefined;
+            if (releaseNode !== undefined || (parseFloat(bendalterNote.value) < 0 && !isPreBend)) {
+              bends.push({bendalter: parseFloat(bendalterNote.value), direction: "down"});
             } else {
-              bends.push({bendalter: parseInt (bendalterNote.value, 10), direction: "up"});
+              bends.push({bendalter: parseFloat(bendalterNote.value), direction: "up"});
             }
           });
       }
@@ -515,6 +517,8 @@ export class VoiceGenerator {
       // create TabNote
       note = new TabNote(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch, this.currentMeasure,
                          stringNumber, fretNumber, bends);
+      (note as TabNote).FretVisible = notationNode?.attribute("print-object")?.value !== "no";
+      (note as TabNote).FretParentheses = node.element("notehead")?.attribute("parentheses")?.value === "yes";
     }
 
     this.addNoteInfo(note, noteTypeXml, printObject, isCueNote, normalNotes,

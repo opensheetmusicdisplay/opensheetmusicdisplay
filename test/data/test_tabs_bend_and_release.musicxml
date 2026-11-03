@@ -161,10 +161,10 @@
                         <string>4</string>
                         <fret>2</fret>
                         <bend>
-                            <bend-alter>4</bend-alter>
+                            <bend-alter>2</bend-alter>
                         </bend>
                         <bend>
-                            <bend-alter>2</bend-alter>
+                            <bend-alter>-2</bend-alter>
                             <release></release>
                         </bend>
                     </technical>
