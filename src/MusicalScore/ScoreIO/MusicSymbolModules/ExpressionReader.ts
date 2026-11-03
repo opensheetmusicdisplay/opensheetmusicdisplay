@@ -157,7 +157,6 @@ export class ExpressionReader {
                 inSourceMeasureCurrentFraction: Fraction, inSourceMeasurePreviousFraction: Fraction = undefined,
                 dirNodes: IXmlElement[] = directionNode.elements("direction-type")): void {
         let isTempoInstruction: boolean = false;
-        let isDynamicInstruction: boolean = false;
 
         const timestampFraction: Fraction = inSourceMeasureCurrentFraction.clone();
         const offsetNode: IXmlElement = directionNode.element("offset");
@@ -193,7 +192,6 @@ export class ExpressionReader {
                 const soundOffset: IXmlElement = n.element("offset") ??
                     (offsetNode?.attribute("sound")?.value === "yes" ? offsetNode : undefined);
                 this.soundDynamicTimestamp = this.readDirectionTimestamp(soundOffset, inSourceMeasureCurrentFraction);
-                isDynamicInstruction = true;
             }
         }
         const originalDirectionTimestamp: Fraction = this.directionTimestamp;
@@ -281,7 +279,7 @@ export class ExpressionReader {
                         text, this.placement, this.staffNumber, this.soundTempo, this.currentMultiTempoExpression);
                     instantaneousTempoExpression.language = dirContentNode.attribute("xml:lang")?.value;
                     this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, "");
-                } else if (!isDynamicInstruction) {
+                } else {
                     this.interpretWords(dirContentNode, text, currentMeasure, timestampFraction);
                 }
                 continue;
