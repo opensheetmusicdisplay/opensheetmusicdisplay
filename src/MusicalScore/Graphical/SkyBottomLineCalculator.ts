@@ -630,24 +630,19 @@ export class SkyBottomLineCalculator {
     }
 
     /**
-     * Update the whole skyline with a certain value
+     * Sets every sample of the sky line to the value
      * @param value value to be set
      */
     public setSkyLineWithValue(value: number): void {
-        // (assigning to the forEach parameter changed nothing)
-        for (let i: number = 0; i < this.SkyLine.length; i++) {
-            this.SkyLine[i] = value;
-        }
+        this.SkyLine.fill(value);
     }
 
     /**
-     * Update the whole bottomline with a certain value
+     * Sets every sample of the bottom line to the value
      * @param value value to be set
      */
     public setBottomLineWithValue(value: number): void {
-        for (let i: number = 0; i < this.BottomLine.length; i++) {
-            this.BottomLine[i] = value;
-        }
+        this.BottomLine.fill(value);
     }
 
     public getLeftIndexForPointX(x: number, length: number): number {
