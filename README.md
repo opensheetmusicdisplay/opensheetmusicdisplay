@@ -94,16 +94,18 @@ There are however limited editing features like making notes invisible, coloring
 <!--img src="https://user-images.githubusercontent.com/33069673/104042293-99ccfa80-51da-11eb-9dc9-fac075a33224.png" height="200" alt="OSMD on Github Sponsors"--><img src="https://user-images.githubusercontent.com/33069673/109203612-a9150100-77a4-11eb-9b91-6692850dccab.png" style="max-width: 100%; max-height: 100vh; width: auto; margin: auto;">
 </a><br>
 
-It would be great if free software were sustainable on its own. But to keep on improving and developing OpenSheetMusicDisplay we need your support. Your monthly sponsorship subscription - especially if you are already actively using OSMD - would mean everything to us - it’s a stable way of enabling us to continue our work, and improve and expand OSMD.<br>
-Features already available in early access:
+It would be great if free software were sustainable on its own. But to keep on improving and developing OpenSheetMusicDisplay we need your support. Your monthly sponsorship subscription - especially if you are already actively using OSMD - would mean everything to us - it’s a stable way of enabling us to continue our work, and improve and expand OSMD.
+
+Features already available in early access for [Github Sponsors](https://github.com/sponsors/opensheetmusicdisplay):
 * OSMD Audio Player
-* Native modules + example projects (React Native, Kotlin/Android, Swift/iOS) - NEW!
+* Native modules + example projects (React Native, Kotlin/Android, Swift/iOS)
 * Jianpu Display (Numbered Musical Notation), with playback
+* Annotations (text comments and music symbols, e.g. dynamics or fermatas, on the score) - NEW!
+  * Anchored to a beat on their staff, so they move with the music when the layout changes (width, zoom, page format, parts shown)
+  * Kept in layers (e.g. one per person) that can be shown or hidden, and saved and loaded as XML files
+  * Added and edited in the included menu, or in your own UI via the API
 
-Features in the making, potentially available in future:
-
-* Annotations (Add custom text, music symbols, etc. to the score and export to and import from XML)
-* and more (we're always working on OSMD improvements or additional features, just look at our release history / [changelog](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/blob/develop/CHANGELOG.md)!)
+More is in the making: we're always working on OSMD improvements and additional features, just look at our release history / [changelog](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/blob/develop/CHANGELOG.md)!
 
 Besides the early access features, you can get other perks like a personal postcard from the team in Vienna. Check them out at [our GitHub sponsors page](https://github.com/sponsors/opensheetmusicdisplay).
 
