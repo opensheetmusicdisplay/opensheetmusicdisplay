@@ -6,6 +6,7 @@
 //   first use, and base/test/data/ URLs work as in karma.
 // Browsers: TEST_BROWSERS, comma-separated: firefox and chrome, the installed ones. Default: firefox, as with karma.
 // CI set: names in src and VexFlow are mangled, like in the minified build, which karma tested then (see mangleNames()).
+// The config comes first, the functions it calls after it: function declarations, which JavaScript hoists.
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
@@ -14,11 +15,56 @@ import { playwright } from "@vitest/browser-playwright";
 import { minifySync, parseSync } from "rolldown/utils";
 import { defineConfig } from "vitest/config";
 
-const testData = path.join(import.meta.dirname, "test", "data");
+export default defineConfig({
+    plugins: [serveTestData(), ...(process.env.CI ? [mangleNames()] : [])],
+    define: {
+        global: "globalThis", // OSMD_ClearDispose_Test.ts uses Node's name, which webpack 5 provides
+    },
+    optimizeDeps: {
+        // listed, so that they're pre-bundled before the first test file runs (found later, they'd reload the page)
+        include: ["jszip", "loglevel", "typescript-collections"],
+        exclude: ["vexflow"],
+    },
+    test: {
+        include: ["test/**/*.ts"],
+        exclude: ["test/Util/**"],
+        globals: true,
+        setupFiles: ["test/Util/vitestSetup.mjs"],
+        testTimeout: 20000, // the mocha timeout under karma
+        // no reporters set: on GitHub Actions (GITHUB_ACTIONS=true), Vitest's defaults are "default" and "github-actions",
+        //   which shows failures as annotations in a PR's diff. --reporter=github-actions alone would replace "default":
+        //   no test counts, durations or failure details in the log.
+        // one page per worker for all its test files, like karma's one page: with a page per file (Vitest's default),
+        //   Firefox took 78 s instead of 13 s for the 117 files, importing OSMD's ~450 modules again for each file
+        isolate: false,
+        // 2 pages at once, on every machine: about as fast as more pages, with much less memory. Measured in 2026-11 with
+        //   the 861 tests on a laptop with 24 CPU threads (Windows, one run each; time, and the memory peak of Vitest and
+        //   the browser together):
+        //     pages                                    Firefox           Chrome
+        //     1                                        17.6 s, 1.7 GB    12.5 s, 1.7 GB
+        //     2                                        12.3 s, 2.4 GB     8.2 s, 2.3 GB
+        //     4                                        10.8 s, 3.4 GB     6.4 s, 3.0 GB
+        //     23, Vitest's default (CPU threads - 1)   16.1 s, 5.8 GB     7.1 s, 4.6 GB
+        //   For one run: --maxWorkers=<pages>
+        maxWorkers: 2,
+        // localhost: Firefox took 4 s to reach the server (IPv6 first?), 127.0.0.1 0.2 s
+        api: { host: "127.0.0.1" },
+        browser: {
+            enabled: true,
+            provider: playwright(),
+            headless: true,
+            instances: browserInstances(),
+            // karma's FirefoxHeadless page size on Windows: the default 414 x 896 would break systems much earlier
+            viewport: { width: 1366, height: 683 },
+            screenshotFailures: false,
+        },
+    },
+});
 
 /** Serves test/data under base/test/data/, like karma (e.g. "base/test/data/x.mxl" in OSMD_Test.ts), relative to any
  *  page, and answers 404 for a missing file, as a web server does. */
 function serveTestData() {
+    const testData = path.join(import.meta.dirname, "test", "data");
     return {
         name: "osmd-test-data",
         configureServer(server) {
@@ -71,6 +117,19 @@ function mangleNames() {
     };
 }
 
+/** The browsers in TEST_BROWSERS (comma-separated: firefox, chrome; default: firefox), the installed ones: moz-firefox
+ *  drives Firefox through WebDriver BiDi (Playwright's own Firefox build needs patches). */
+function browserInstances() {
+    const instances = {
+        firefox: {
+            browser: "firefox",
+            provider: playwright({ launchOptions: { channel: "moz-firefox", executablePath: linuxFirefox() } }),
+        },
+        chrome: { browser: "chromium", name: "chrome", provider: playwright({ launchOptions: { channel: "chrome" } }) },
+    };
+    return (process.env.TEST_BROWSERS || "firefox").split(",").map((name) => instances[name.trim()]);
+}
+
 /** The installed Firefox on Linux, the first firefox on the PATH, as karma-firefox-launcher takes it: there, Playwright's
  *  moz-firefox channel looks only for /snap/bin/firefox, and GitHub's Ubuntu runners have /usr/bin/firefox.
  *  @returns {string | undefined} The path, undefined elsewhere (the channel finds it) or if there's none. */
@@ -81,59 +140,3 @@ function linuxFirefox() {
     return (process.env.PATH || "").split(path.delimiter).map((folder) => path.join(folder, "firefox"))
         .find((file) => fs.existsSync(file));
 }
-
-// the installed browsers: moz-firefox drives Firefox through WebDriver BiDi (Playwright's own Firefox build needs patches)
-const browserInstances = {
-    firefox: {
-        browser: "firefox",
-        provider: playwright({ launchOptions: { channel: "moz-firefox", executablePath: linuxFirefox() } }),
-    },
-    chrome: { browser: "chromium", name: "chrome", provider: playwright({ launchOptions: { channel: "chrome" } }) },
-};
-const browsers = (process.env.TEST_BROWSERS || "firefox").split(",").map((name) => name.trim());
-
-export default defineConfig({
-    plugins: [serveTestData(), ...(process.env.CI ? [mangleNames()] : [])],
-    define: {
-        global: "globalThis", // OSMD_ClearDispose_Test.ts uses Node's name, which webpack 5 provides
-    },
-    optimizeDeps: {
-        // listed, so that they're pre-bundled before the first test file runs (found later, they'd reload the page)
-        include: ["jszip", "loglevel", "typescript-collections"],
-        exclude: ["vexflow"],
-    },
-    test: {
-        include: ["test/**/*.ts"],
-        exclude: ["test/Util/**"],
-        globals: true,
-        setupFiles: ["test/Util/vitestSetup.mjs"],
-        testTimeout: 20000, // the mocha timeout under karma
-        // no reporters set: on GitHub Actions (GITHUB_ACTIONS=true), Vitest's defaults are "default" and "github-actions",
-        //   which shows failures as annotations in a PR's diff. --reporter=github-actions alone would replace "default":
-        //   no test counts, durations or failure details in the log.
-        // one page per worker for all its test files, like karma's one page: with a page per file (Vitest's default),
-        //   Firefox took 78 s instead of 13 s for the 117 files, importing OSMD's ~450 modules again for each file
-        isolate: false,
-        // 2 pages at once, on every machine: about as fast as more pages, with much less memory. Measured in 2026-11 with
-        //   the 861 tests on a laptop with 24 CPU threads (Windows, one run each; time, and the memory peak of Vitest and
-        //   the browser together):
-        //     pages                                    Firefox           Chrome
-        //     1                                        17.6 s, 1.7 GB    12.5 s, 1.7 GB
-        //     2                                        12.3 s, 2.4 GB     8.2 s, 2.3 GB
-        //     4                                        10.8 s, 3.4 GB     6.4 s, 3.0 GB
-        //     23, Vitest's default (CPU threads - 1)   16.1 s, 5.8 GB     7.1 s, 4.6 GB
-        //   For one run: --maxWorkers=<pages>
-        maxWorkers: 2,
-        // localhost: Firefox took 4 s to reach the server (IPv6 first?), 127.0.0.1 0.2 s
-        api: { host: "127.0.0.1" },
-        browser: {
-            enabled: true,
-            provider: playwright(),
-            headless: true,
-            instances: browsers.map((name) => browserInstances[name]),
-            // karma's FirefoxHeadless page size on Windows: the default 414 x 896 would break systems much earlier
-            viewport: { width: 1366, height: 683 },
-            screenshotFailures: false,
-        },
-    },
-});
