@@ -103,16 +103,20 @@ describe("Tempo direction timing", (): void => {
     });
 
     it("applies a sound tempo without a printed tempo at its position, without drawing or raising a tempo mark", async (): Promise<void> => {
-        // a sound tempo of 0 is ignored
-        await osmd.load(score(`<direction><direction-type><dynamics><p/></dynamics></direction-type><sound tempo="120"/></direction>
-          ${note("C")}${metronome("quarter", 60)}<sound tempo="90"/>${note("D")}
-          ${note("E")}${metronome("quarter", 60)}<sound tempo="0"/>${note("F")}`));
-        osmd.render();
+        /** The gap between the first tempo mark and the staff below it, after rendering the measure with or without the sound 90. */
+        async function gapBelowFirstMark(sound: string): Promise<number> {
+            // a sound tempo of 0 is ignored
+            await osmd.load(score(`<direction><direction-type><dynamics><p/></dynamics></direction-type><sound tempo="120"/></direction>
+              ${note("C")}${metronome("quarter", 60)}${sound}${note("D")}
+              ${note("E")}${metronome("quarter", 60)}<sound tempo="0"/>${note("F")}`));
+            osmd.render();
+            return div.querySelector(".vf-stave").getBoundingClientRect().top - div.querySelector(".vf-stavetempo").getBoundingClientRect().bottom;
+        }
+        const gap: number = await gapBelowFirstMark('<sound tempo="90"/>');
         expect(bpms()).to.deep.equal([120, 90, 90, 60]);
         expect(osmd.Sheet.getExpressionsStartTempoInBPM()).to.equal(120);
-        const marks: DOMRect[] = Array.from(div.querySelectorAll(".vf-stavetempo")).map(mark => mark.getBoundingClientRect());
-        expect(marks.length, "no generated mark at the start").to.equal(2);
-        expect(marks[0].top, "the sound does not raise the mark at its time").to.be.closeTo(marks[1].top, 0.01);
+        expect(div.querySelectorAll(".vf-stavetempo").length, "no generated mark at the start").to.equal(2);
+        expect(gap, "the sound does not raise the mark at its time").to.be.closeTo(await gapBelowFirstMark(""), 0.01);
     });
 
     it("activates a sound change between notes and restores tempo on reverse traversal", async (): Promise<void> => {
