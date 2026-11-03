@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
-<!-- A beam over a sixteenth triplet whose notes list <beam number="2"> before <beam number="1"> (m1, as the 81sabo
-     generator writes Haydn, Oboe Concerto Hob.VIIg:C1 I m239), and the same music with number 1 first (m2). -->
+<!-- A beam over a sixteenth triplet whose notes list <beam number="2"> before <beam number="1"> (m1, as some exports
+     write it), and the same music with number 1 first (m2). -->
 <score-partwise version="4.0">
   <part-list><score-part id="P1"><part-name>Oboe</part-name></score-part></part-list>
   <part id="P1">
