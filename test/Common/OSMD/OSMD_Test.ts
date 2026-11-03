@@ -112,18 +112,21 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         const mxl: string = "\x50\x4b\x03\x04";
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+        const logged: string[] = TestUtils.catchLogs();
         opensheetmusicdisplay.load(mxl).then(
             (_: {}) => {
                 done(new Error("Corrupted MXL appears to be loaded correctly"));
             },
             (exc: Error) => {
                 if (exc.message.toLowerCase().match(/invalid/)) {
+                    expect(logged.length, "errors logged").to.be.greaterThan(0);
+                    expect(logged.filter((message: string) => !message.includes("Corrupted zip")), "other messages").to.deep.equal([]);
                     done();
                 } else {
                     done(new Error("Unexpected error: " + exc.message));
                 }
             }
-        );
+        ).catch(done);
     });
 
     it("load XML string", (done: Mocha.Done) => {
@@ -274,18 +277,20 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         const xml: string = "<?xml";
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+        const logged: string[] = TestUtils.catchLogs();
         opensheetmusicdisplay.load(xml).then(
             (_: {}) => {
                 done(new Error("Corrupted XML appears to be loaded correctly"));
             },
             (exc: Error) => {
                 if (exc.message.toLowerCase().match(/partwise/)) {
+                    expect(logged).to.deep.equal(["Could not parse MusicXML, no valid partwise element found"]);
                     done();
                 } else {
                     done(new Error("Unexpected error: " + exc.message));
                 }
             }
-        );
+        ).catch(done);
     });
 
     it("render without loading", (done: Mocha.Done) => {
@@ -326,10 +331,13 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         div.style.width = "200px";
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
         const score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
+        const logged: string[] = TestUtils.catchLogs();
         opensheetmusicdisplay.load(score).then(
             (_: {}) => {
                 opensheetmusicdisplay.render();
                 expect(div.offsetWidth).to.equal(200);
+                // too narrow for the first measure, in each of its two staves
+                expect(logged).to.deep.equal(Array(2).fill("SkyBottomLineCalculator: width not > 0 in measure 1"));
                 done();
             },
             done
