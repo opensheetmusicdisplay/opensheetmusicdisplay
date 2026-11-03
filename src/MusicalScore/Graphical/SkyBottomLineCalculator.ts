@@ -738,10 +738,13 @@ export class SkyBottomLineCalculator {
     }
 
     /**
-     * This method returns the maximum value of the bottom line around a specific
-     * bounding box. Will return undefined if the bounding box is not valid or inside staffline
-     * @param boundingBox Bounding box where the maximum should be retrieved from
-     * @returns Maximum value inside bounding box boundaries or undefined if not possible
+     * Returns the BottomLine's maximum under a bounding box: in the samples from its left to its right border, rounded
+     * outward to whole units, and in the sample after them, like getBottomLineMaxInRange(). Only the box's x range counts,
+     * not how far up or down it reaches.
+     * The box's AbsolutePosition has to be relative to the staffline, as while the lines are calculated (calculateLines()
+     * calls calculateAbsolutePositionsRecursive(0, 0) on each measure's PositionAndShape).
+     * @param boundingBox Bounding box under which the maximum is read
+     * @returns the BottomLine's maximum in that range
      */
     public getBottomLineMaxInBoundingBox(boundingBox: BoundingBox): number {
         //TODO: Actually it should be the margin. But that one is not implemented
