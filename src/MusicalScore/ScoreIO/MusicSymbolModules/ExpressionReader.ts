@@ -156,6 +156,7 @@ export class ExpressionReader {
                 inSourceMeasureCurrentFraction: Fraction, inSourceMeasurePreviousFraction: Fraction = undefined,
                 dirNodes: IXmlElement[] = directionNode.elements("direction-type")): void {
         let isTempoInstruction: boolean = false;
+        const tempoExpressionCount: number = currentMeasure.TempoExpressions.length;
 
         const timestampFraction: Fraction = inSourceMeasureCurrentFraction.clone();
         const offsetNode: IXmlElement = directionNode.element("offset");
@@ -163,7 +164,7 @@ export class ExpressionReader {
           const offsetValue: number = Number.parseInt(offsetNode.value, 10);
           timestampFraction.Add(new Fraction(offsetValue, 4 * this.divisions));
         }
-        const n: IXmlElement = directionNode.element("sound");
+        const n: IXmlElement = directionNode.name === "sound" ? directionNode : directionNode.element("sound");
         if (n) {
             const tempoAttr: IXmlAttribute = n.attribute("tempo");
             const dynAttr: IXmlAttribute = n.attribute("dynamics");
@@ -295,6 +296,11 @@ export class ExpressionReader {
                 this.interpretRehearsalMark(text, currentMeasure, inSourceMeasureCurrentFraction, currentMeasure.MeasureNumber);
                 continue;
             }
+        }
+        if (this.explicitSoundTempo > 0 && currentMeasure.TempoExpressions.length === tempoExpressionCount) {
+            // no tempo text or metronome mark was read: the sound tempo changes playback without a printed tempo
+            this.directionTimestamp = this.soundTimestamp;
+            this.createNewTempoExpressionIfNeeded(currentMeasure);
         }
     }
     /** Usually called at end of last measure. */
