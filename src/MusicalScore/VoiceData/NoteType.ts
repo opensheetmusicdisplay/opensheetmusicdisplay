@@ -89,17 +89,20 @@ export class NoteTypeHandler {
 
     /** How many quarter notes a metronome beat unit lasts, used to convert a metronome mark's
      *  per-minute value (which is relative to its beat unit) into quarter notes per minute for
-     *  playback. E.g. "half" -> 2, "quarter" -> 1, "eighth" -> 0.5; a dot multiplies by 1.5.
-     *  Falls back to a quarter note (1, or 1.5 if dotted) for an unknown/missing beat unit so
+     *  playback. E.g. "half" -> 2, "quarter" -> 1, "eighth" -> 0.5. A dot adds half of the beat unit's length and each
+     *  further dot half of what the dot before it adds, e.g. 1.5 for a dotted quarter and 1.75 for a double-dotted one.
+     *  Falls back to a quarter note (with its dots) for an unknown/missing beat unit so
      *  playback tempo stays sane. */
-    public static beatUnitInQuarters(beatUnit: string, dotted: boolean = false): number {
+    public static beatUnitInQuarters(beatUnit: string, dots: number = 0): number {
+        // the dots add 1/2 + 1/4 + ... of the length, 1 - 1/2^dots in all
+        const dotFactor: number = 2 - Math.pow(0.5, dots);
         let beatUnitDuration: Fraction;
         try {
             beatUnitDuration = NoteTypeHandler.getNoteDurationFromType(beatUnit);
         } catch {
-            return dotted ? 1.5 : 1;
+            return dotFactor;
         }
         // a quarter note is 1/4, so the factor relative to a quarter is duration / (1/4) = RealValue * 4
-        return beatUnitDuration.RealValue * 4 * (dotted ? 1.5 : 1);
+        return beatUnitDuration.RealValue * 4 * dotFactor;
     }
 }

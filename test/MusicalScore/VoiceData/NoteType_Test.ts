@@ -58,4 +58,13 @@ describe("NoteType", () => {
                                          NoteType.EIGHTH, NoteType.EIGHTH, NoteType.EIGHTH, NoteType.QUARTER]);
         done();
     });
+
+    // converts a metronome mark's per-minute into quarter notes per minute (InstantaneousTempoExpression.TempoInQuarterNotesPerMinute)
+    it("gives the length of a metronome beat unit with its dots in quarter notes", (): void => {
+        expect(NoteTypeHandler.beatUnitInQuarters("half")).to.equal(2);
+        expect(NoteTypeHandler.beatUnitInQuarters("quarter", 1)).to.equal(1.5);
+        expect(NoteTypeHandler.beatUnitInQuarters("quarter", 2)).to.equal(1.75);
+        expect(NoteTypeHandler.beatUnitInQuarters("eighth", 2)).to.equal(0.875);
+        expect(NoteTypeHandler.beatUnitInQuarters("unknown", 1), "an unknown beat unit counts as a quarter").to.equal(1.5);
+    });
 });

@@ -49,7 +49,11 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
         this.setTempoAndTempoType(soundTempo);
     }
 
+    /** The number of dots of a metronome mark's beat unit (MusicXML `<beat-unit-dot>`), e.g. 2 for double-dotted
+     *  quarter = 80. 0 for a tempo expression without a beat unit.
+     */
     public dotCount: number = 0;
+    /** Whether a metronome mark's beat unit has one or more dots (dotCount > 0). Setting it sets one dot or none. */
     public get dotted(): boolean {
         return this.dotCount > 0;
     }
@@ -361,14 +365,14 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
         this.tempoInBpm = value;
     }
     /** The tempo in quarter notes per minute, the unit of a `<sound tempo>` and of playback: TempoInBpm, converted by the
-     *  beat unit for a metronome mark with a per-minute, e.g. 60 for half = 30, 90 for dotted quarter = 60 and 60 for
-     *  eighth = 120.
+     *  beat unit and its dots for a metronome mark with a per-minute, e.g. 60 for half = 30, 90 for dotted quarter = 60,
+     *  140 for double-dotted quarter = 80 and 60 for eighth = 120.
      */
     public get TempoInQuarterNotesPerMinute(): number {
         if (this.beatUnit === undefined) {
             return this.tempoInBpm;
         }
-        return this.tempoInBpm * NoteTypeHandler.beatUnitInQuarters(this.beatUnit) * (2 - Math.pow(0.5, this.dotCount));
+        return this.tempoInBpm * NoteTypeHandler.beatUnitInQuarters(this.beatUnit, this.dotCount);
     }
     public get ParentMultiTempoExpression(): MultiTempoExpression {
         return this.parentMultiTempoExpression;
