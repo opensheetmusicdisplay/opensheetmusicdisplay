@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<!-- Schumann, Myrthen op. 25 no. 1 (Widmung), measure 42, left hand, reduced (Breitkopf, Werke Serie 13): one open
+     C flat 3 head serves two voices, the half note of the lower voice (stem down) and the first eighth of an arpeggio
+     in the upper voice (beamed, stem up). As MuseScore writes it, the eighth is hidden (print-object="no"), and it comes
+     first in the measure with the flat. The half note has to draw the flat right in front of the shared head, and the
+     eighth's stem rises from that head to its beam. -->
+<score-partwise version="3.1">
+  <work>
+    <work-title>test_unison_hidden_eighth_accidental_myrthen_widmung_measure42</work-title>
+  </work>
+  <part-list><score-part id="P1"><part-name/></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <key><fifths>-4</fifths><mode>major</mode></key>
+        <time><beats>2</beats><beat-type>4</beat-type></time>
+        <clef><sign>F</sign><line>4</line></clef>
+      </attributes>
+      <!-- voice 1: the arpeggio, its first eighth hidden on the half note's head -->
+      <note print-object="no">
+        <pitch><step>C</step><alter>-1</alter><octave>3</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>eighth</type><accidental>flat</accidental>
+        <stem>up</stem><beam number="1">begin</beam>
+      </note>
+      <note>
+        <pitch><step>A</step><alter>-1</alter><octave>3</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>eighth</type><stem>up</stem><beam number="1">continue</beam>
+      </note>
+      <note>
+        <pitch><step>C</step><alter>-1</alter><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>eighth</type><accidental>flat</accidental>
+        <stem>up</stem><beam number="1">continue</beam>
+      </note>
+      <note>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>eighth</type><accidental>natural</accidental>
+        <stem>up</stem><beam number="1">end</beam>
+      </note>
+      <backup><duration>4</duration></backup>
+      <!-- voice 2: the sustained half note, which owns the head, without an accidental of its own in the XML -->
+      <note>
+        <pitch><step>C</step><alter>-1</alter><octave>3</octave></pitch>
+        <duration>4</duration><voice>2</voice><type>half</type><stem>down</stem>
+      </note>
+    </measure>
+  </part>
+</score-partwise>
