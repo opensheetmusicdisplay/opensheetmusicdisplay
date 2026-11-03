@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 import { BoundingBox } from "../../../src/MusicalScore/Graphical/BoundingBox";
 import { RectangleF2D } from "../../../src/Common/DataObjects/RectangleF2D";
 

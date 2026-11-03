@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 import { Notehead, NoteHeadShape } from "../../../src/MusicalScore/VoiceData/Notehead";
 
 describe("Notehead", () => {

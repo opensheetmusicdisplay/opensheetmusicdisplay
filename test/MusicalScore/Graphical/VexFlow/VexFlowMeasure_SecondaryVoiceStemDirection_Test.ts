@@ -9,7 +9,7 @@ import {GraphicalStaffEntry} from "../../../../src/MusicalScore/Graphical/Graphi
 import {GraphicalVoiceEntry} from "../../../../src/MusicalScore/Graphical/GraphicalVoiceEntry";
 import {StemDirectionType} from "../../../../src/MusicalScore/VoiceData/VoiceEntry";
 import {OpenSheetMusicDisplay} from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
-import {expect} from "chai";
+import {expect} from "vitest";
 
 describe("VexFlow Measure - Secondary Voice Stem Direction (issue #1719)", () => {
 

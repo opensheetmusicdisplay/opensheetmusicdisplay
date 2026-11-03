@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 import { Pitch, NoteEnum, AccidentalEnum } from "../../../src/Common/DataObjects/Pitch";
 
 describe("Pitch Unit Tests:", () => {

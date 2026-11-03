@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { IXmlElement } from "../../../src/Common/FileIO/Xml";
 import { TestUtils } from "../../Util/TestUtils";

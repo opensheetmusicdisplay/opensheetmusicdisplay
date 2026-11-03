@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 import {IXmlElement} from "../../../src/Common/FileIO/Xml";
 import {TestUtils} from "../../Util/TestUtils";
 import {OpenSheetMusicDisplay} from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";

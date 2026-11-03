@@ -8,7 +8,7 @@ import {TestUtils} from "../../../Util/TestUtils";
 import {VexFlowMeasure} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMeasure";
 import {VexFlowVoiceEntry} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowVoiceEntry";
 import {GraphicalStaffEntry} from "../../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
-import {expect} from "chai";
+import {expect} from "vitest";
 
 describe("Crossing voices - lower note with upwards stem, higher note with downwards stem", () => {
 

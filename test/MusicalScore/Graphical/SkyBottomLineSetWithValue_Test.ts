@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 import { EngravingRules } from "../../../src/MusicalScore/Graphical/EngravingRules";
 import { SkyBottomLineCalculator } from "../../../src/MusicalScore/Graphical/SkyBottomLineCalculator";
 import { StaffLine } from "../../../src/MusicalScore/Graphical/StaffLine";

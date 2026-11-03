@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 import { SvgVexFlowBackend } from "../../../../src/MusicalScore/Graphical/VexFlow/SvgVexFlowBackend";
 import { EngravingRules } from "../../../../src/MusicalScore/Graphical/EngravingRules";
 import { GraphicalMusicPage } from "../../../../src/MusicalScore/Graphical/GraphicalMusicPage";

@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 /**
  * Created by Oliver on 16.03.2016.
  */

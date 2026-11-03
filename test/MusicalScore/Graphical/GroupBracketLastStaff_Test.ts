@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { MusicSystem } from "../../../src/MusicalScore/Graphical/MusicSystem";
 import { BoundingBox } from "../../../src/MusicalScore/Graphical/BoundingBox";

@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from "vitest";
 import { MusicSystem } from "../../../../src/MusicalScore/Graphical/MusicSystem";
 import { VexFlowPedal } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowPedal";
 import { Staff } from "../../../../src/MusicalScore/VoiceData/Staff";
