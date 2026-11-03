@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0">
+  <work>
+    <work-title>test_tabs_multibend</work-title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name print-object="no">Guitar</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef>
+          <sign>TAB</sign>
+          <line>5</line>
+        </clef>
+        <staff-details>
+          <staff-lines>6</staff-lines>
+          <staff-tuning line="1">
+            <tuning-step>E</tuning-step>
+            <tuning-octave>2</tuning-octave>
+          </staff-tuning>
+          <staff-tuning line="2">
+            <tuning-step>A</tuning-step>
+            <tuning-octave>2</tuning-octave>
+          </staff-tuning>
+          <staff-tuning line="3">
+            <tuning-step>D</tuning-step>
+            <tuning-octave>3</tuning-octave>
+          </staff-tuning>
+          <staff-tuning line="4">
+            <tuning-step>G</tuning-step>
+            <tuning-octave>3</tuning-octave>
+          </staff-tuning>
+          <staff-tuning line="5">
+            <tuning-step>B</tuning-step>
+            <tuning-octave>3</tuning-octave>
+          </staff-tuning>
+          <staff-tuning line="6">
+            <tuning-step>E</tuning-step>
+            <tuning-octave>4</tuning-octave>
+          </staff-tuning>
+        </staff-details>
+      </attributes>
+      <!-- bend-alter is the interval of each bend in semitones, negative for a release.
+           Each bend is labeled with the total bend from the unbent note, a release with what remains (none when back). -->
+      <!-- a half step, then another half step: 1/2, Full -->
+      <note>
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <stem>none</stem>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>7</fret>
+            <bend>
+              <bend-alter>1</bend-alter>
+            </bend>
+            <bend>
+              <bend-alter>1</bend-alter>
+            </bend>
+          </technical>
+        </notations>
+      </note>
+      <!-- bend, release, bend: Full, (released), Full -->
+      <note>
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <stem>none</stem>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>7</fret>
+            <bend>
+              <bend-alter>2</bend-alter>
+            </bend>
+            <bend>
+              <bend-alter>-2</bend-alter>
+              <release/>
+            </bend>
+            <bend>
+              <bend-alter>2</bend-alter>
+            </bend>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <measure number="2">
+      <!-- a whole step, released by a half step: Full, 1/2 -->
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <stem>none</stem>
+        <notations>
+          <technical>
+            <string>2</string>
+            <fret>8</fret>
+            <bend>
+              <bend-alter>2</bend-alter>
+            </bend>
+            <bend>
+              <bend-alter>-1</bend-alter>
+              <release/>
+            </bend>
+          </technical>
+        </notations>
+      </note>
+      <!-- the same, bent back up by a half step and released: Full, 1/2, Full, (released) -->
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <stem>none</stem>
+        <notations>
+          <technical>
+            <string>2</string>
+            <fret>8</fret>
+            <bend>
+              <bend-alter>2</bend-alter>
+            </bend>
+            <bend>
+              <bend-alter>-1</bend-alter>
+              <release/>
+            </bend>
+            <bend>
+              <bend-alter>1</bend-alter>
+            </bend>
+            <bend>
+              <bend-alter>-2</bend-alter>
+              <release/>
+            </bend>
+          </technical>
+        </notations>
+      </note>
+      <barline location="right">
+        <bar-style>light-heavy</bar-style>
+      </barline>
+    </measure>
+  </part>
+</score-partwise>

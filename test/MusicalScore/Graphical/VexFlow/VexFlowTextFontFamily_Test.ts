@@ -68,7 +68,7 @@ describe("VexFlowTextFontFamily", (): void => {
 
         // A bend reserves its text width plus 3px, with the text in the middle (VexFlow's Bend.updateWidth()),
         //   so the texts of two consecutive bends are 3px apart. Compared by the text advance, which is what is measured.
-        // Use two labelled upward segments: releases are intentionally unlabelled.
+        // Two upward segments, labeled with the total bend: "1/2", then "1 1/2".
         await osmd.load(`<?xml version="1.0"?><score-partwise version="4.0">
             <part-list><score-part id="P1"><part-name>Guitar</part-name></score-part></part-list>
             <part id="P1"><measure number="1"><attributes><divisions>1</divisions>
@@ -76,11 +76,11 @@ describe("VexFlowTextFontFamily", (): void => {
             <staff-details><staff-lines>6</staff-lines></staff-details></attributes>
             <note><pitch><step>E</step><octave>3</octave></pitch><duration>4</duration><type>whole</type>
             <notations><technical><string>4</string><fret>2</fret>
-            <bend><bend-alter>3</bend-alter></bend><bend><bend-alter>1</bend-alter></bend>
+            <bend><bend-alter>1</bend-alter></bend><bend><bend-alter>2</bend-alter></bend>
             </technical></notations></note></measure></part></score-partwise>`);
         osmd.render();
-        const first: SVGTextElement = text("1 1/2");
-        const gap: number = Number(text("1/2").getAttribute("x")) - Number(first.getAttribute("x")) - first.getComputedTextLength();
+        const first: SVGTextElement = text("1/2");
+        const gap: number = Number(text("1 1/2").getAttribute("x")) - Number(first.getAttribute("x")) - first.getComputedTextLength();
         expect(gap).to.be.closeTo(3, 0.2);
     });
 });
