@@ -904,10 +904,10 @@ export class OpenSheetMusicDisplay {
      * Lazy rendering: where the furthest wedge or octave shift ends that reaches into the systems a batch draws and ends in the
      * last system of its layout, or beyond. Such a wedge or octave shift needs a longer layout: their parts depend on the system
      * they end in, e.g. a wedge's parts after the first are placed at its last system's bottom line, and an octave shift ends at
-     * a note there. The last system still grows (and is stretched once complete), and the end can be beyond the layout, where a
-     * wedge isn't calculated at all, so the systems drawn now would be drawn with other or without these parts. They aren't
-     * drawn again. A wedge or octave shift without an end is ignored, and so is a verbal continuous dynamic like "cresc.",
-     * which is drawn at its start only (see GraphicalContinuousDynamicExpression.IsVerbal).
+     * a note there. The last system still grows (and is stretched once complete), and the end can be beyond the layout, which
+     * cuts it off there, so the systems drawn now would be drawn with other parts. They aren't drawn again. A wedge or octave
+     * shift without an end is ignored, and so is a verbal continuous dynamic like "cresc.", which is drawn at its start only (see
+     * GraphicalContinuousDynamicExpression.IsVerbal).
      * @param systems the systems of the layout, in order
      * @param drawToIdxExcl the index of the first system the batch doesn't draw
      * @returns the source-measure index of the furthest end in the last system or beyond, or -1 if there is none

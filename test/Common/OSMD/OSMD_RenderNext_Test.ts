@@ -315,6 +315,9 @@ describe("OpenSheetMusicDisplay incremental rendering of the endless page in bat
         // a crescendo through 4 systems, and an 8vb that ends in a system where the bass staff has no notes yet. The batches
         //   drew the systems before such a wedge's or octave shift's end without it: the batch's layout didn't reach the end.
         //   (Now the layout of the first batch reaches the end of the crescendo, in the last system, so it is the only batch.)
+        // The batch's first layout ends before the crescendo does: the crescendo was left without lines there, which logged
+        //   "Not enough lines for SkyBottomLine calculation". Now it's drawn to the end of that layout, like at a system break.
+        const messages: string[] = TestUtils.catchLogs();
         osmd.setOptions({ newSystemFromXML: true });
         for (const [sampleFilename, measures] of [["test_wedge_multiline_crescendo.musicxml", 2],
                                                  ["test_grace_notes_only_measure_spanners.musicxml", 1]] as [string, number][]) {
@@ -324,6 +327,7 @@ describe("OpenSheetMusicDisplay incremental rendering of the endless page in bat
             renderNextUntilDone({ measures });
             expect(drawnPages(), sampleFilename).to.deep.equal(pagesInOneBatch);
         }
+        expect(messages, "nothing logged").to.deep.equal([]);
     });
 
     it("lays out all batches at the width of the first one, and draws the stems and beams exactly where one batch draws them", async () => {

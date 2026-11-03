@@ -1371,15 +1371,43 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         this.calculateGraphicalContinuousDynamic(graphicalContinuousDynamic, dynamicStartPosition);
         graphicalContinuousDynamic.updateSkyBottomLine();
         } catch (e) {
-          // TODO this sometimes fails when the measure range to draw doesn't include all the dynamic's measures, method needs to be adjusted
-          //   see calculateGraphicalContinuousDynamic(), also in MusicSheetCalculator.
-
+          // a wedge whose calculation fails isn't drawn, instead of failing the whole render
+          //   (see calculateGraphicalContinuousDynamic(), also in MusicSheetCalculator)
         }
       } else if (graphicalContinuousDynamic.IsVerbal) {
         this.calculateGraphicalVerbalContinuousDynamic(graphicalContinuousDynamic, dynamicStartPosition);
       } else {
         log.warn("This continuous dynamic is not covered. measure" + multiExpression.SourceMeasureParent.MeasureNumber);
       }
+    }
+  }
+
+  /**
+   * Calculates a wedge that starts before the drawing range (EngravingRules.MinMeasureToDrawIndex, e.g. drawFromMeasureNumber) and
+   * ends in it or after it: from the start of the first measure drawn on, like after a system break (see
+   * MusicSheetCalculator.calculateGraphicalContinuousDynamic()). The dynamic at its start isn't drawn.
+   * @param wedge the wedge (not a verbal one like "cresc.")
+   * @param firstMeasureIndex the index of the first measure drawn
+   * @param staffIndex the index of the wedge's staff
+   */
+  protected calculateWedgeStartingBeforeDrawingRange(wedge: ContinuousDynamicExpression, firstMeasureIndex: number, staffIndex: number): void {
+    const startMeasure: GraphicalMeasure = this.graphicalMusicSheet.MeasureList[firstMeasureIndex][staffIndex];
+    const staffLine: StaffLine = startMeasure.ParentStaffLine;
+    if (!staffLine) {
+      return;
+    }
+    const graphicalContinuousDynamic: VexFlowContinuousDynamicExpression = new VexFlowContinuousDynamicExpression(
+      wedge,
+      staffLine,
+      startMeasure.parentSourceMeasure);
+    graphicalContinuousDynamic.StartMeasure = startMeasure;
+    graphicalContinuousDynamic.IsSoftAccent = wedge.IsStartOfSoftAccent;
+    try {
+      // (the start position isn't used: a cut-off start begins where the part of a wedge after a system break does)
+      this.calculateGraphicalContinuousDynamic(graphicalContinuousDynamic, new PointF2D(0, 0));
+      graphicalContinuousDynamic.updateSkyBottomLine();
+    } catch (e) {
+      // a wedge whose calculation fails isn't drawn, instead of failing the whole render, see calculateDynamicExpressionsForMultiExpression()
     }
   }
 
