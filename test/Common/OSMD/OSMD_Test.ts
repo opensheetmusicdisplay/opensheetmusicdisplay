@@ -390,8 +390,10 @@ describe("OpenSheetMusicDisplay Main Export", () => {
     });
     describe("cursor", () => {
         let opensheetmusicdisplay: OpenSheetMusicDisplay;
+        let div: HTMLElement;
         beforeEach((done: Mocha.Done) => {
-            const div: HTMLElement = container1;
+            // a container of its own: "test width 200" leaves container1 too narrow for a measure
+            div = TestUtils.getDivElement(document);
             opensheetmusicdisplay = TestUtils.createOpenSheetMusicDisplay(div);
             const score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
             opensheetmusicdisplay.load(score).then(
@@ -402,6 +404,9 @@ describe("OpenSheetMusicDisplay Main Export", () => {
                 },
                 done
             ).catch(done);
+        });
+        afterEach((): void => {
+            div.remove();
         });
 
         describe("next() and previous()", () => {
