@@ -169,9 +169,8 @@ export class ExpressionReader {
             const tempoAttr: IXmlAttribute = n.attribute("tempo");
             const dynAttr: IXmlAttribute = n.attribute("dynamics");
             if (tempoAttr) {
-                const tempoText: string = tempoAttr.value.replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, "");
-                const tempo: number = Number(tempoText);
-                if (/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(tempoText) && Number.isFinite(tempo) && tempo >= 0) {
+                const tempo: number = ExpressionReader.readDecimal(tempoAttr.value);
+                if (Number.isFinite(tempo) && tempo >= 0) {
                     this.soundTempo = tempo;
                 } else {
                     log.info("invalid xml tempo: " + tempoAttr.value);
@@ -884,13 +883,22 @@ export class ExpressionReader {
     private readDirectionTimestamp(offset: IXmlElement, sourceTimestamp: Fraction): Fraction {
         const timestamp: Fraction = sourceTimestamp.clone();
         if (offset) {
-            const value: string = offset.value.trim();
-            const divisions: number = Number(value);
-            if (/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(value) && Number.isFinite(divisions)) {
+            const divisions: number = ExpressionReader.readDecimal(offset.value);
+            if (Number.isFinite(divisions)) {
                 timestamp.Add(new Fraction(divisions, 4 * this.divisions));
             }
         }
         return timestamp;
+    }
+
+    /** Returns the number of a MusicXML decimal, e.g. of an `<offset>` or a `<sound tempo>`: an optional sign and digits
+     *  with an optional decimal point, e.g. "142.5", "-0.5", "+120." or ".5", with or without surrounding XML whitespace
+     *  (spaces, tabs, line breaks). Returns NaN for any other text, e.g. "1e3", "120,5" or "", and an infinite number for
+     *  a decimal too large for a number.
+     */
+    private static readDecimal(text: string): number {
+        const decimal: string = text.replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, "");
+        return /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(decimal) ? Number(decimal) : NaN;
     }
 
     private createNewTempoExpressionIfNeeded(currentMeasure: SourceMeasure): void {
