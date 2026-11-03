@@ -151,7 +151,7 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
                         if (sourceStaffEntry) {
                             let verses: number = 0;
                             for (const voiceEntry of sourceStaffEntry.VoiceEntries) {
-                                verses += voiceEntry.LyricsEntries.keys.length;
+                                verses += voiceEntry.LyricsEntries.keys().length;
                             }
                             lyricVerses = Math.max(lyricVerses, verses);
                         }
