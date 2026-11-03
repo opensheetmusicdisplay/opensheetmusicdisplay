@@ -51,6 +51,21 @@ describe("Tablature bends", () => {
         expect(notes.map(note => bendLabels(note).map(label => label.textContent).join())).to.deep.equal(bends.map(b => b[2]));
     });
 
+    it("labels each bend of a note with how far the string is bent after it, also a release that doesn't go all the way back", async () => {
+        const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div, {autoResize: false, backend: "svg"});
+        await osmd.load(TestUtils.getScore("test_tabs_multibend.musicxml"));
+        osmd.render();
+        const labels: string[][] = osmd.GraphicSheet.MeasureList.flatMap(measures => measures[0].staffEntries).map(staffEntry =>
+            bendLabels(staffEntry.graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote).map(label => label.textContent));
+        // like Guitar Pro and MuseScore; a release back to the unbent note isn't labeled
+        expect(labels).to.deep.equal([
+            ["1/2", "Full"], // a half step, then another half step
+            ["Full", "Full"], // bend, release, bend
+            ["Full", "1/2"], // a whole step, released by a half step
+            ["Full", "1/2", "Full"], // the same, bent back up by a half step and released
+        ]);
+    });
+
     it("draws a bend and its release as one curve, labeled at the bend, a pre-bend as a bend, and two bends side by side", async () => {
         const notes: VexFlowGraphicalNote[] = await renderTab(div, [
             tabNote(7, bend(2) + bend(-2, "release")),
@@ -58,7 +73,7 @@ describe("Tablature bends", () => {
             tabNote(7, bend(1) + bend(1)),
             tabNote(7, bend(-2, "pre-bend")), // a pre-bend as MuseScore writes it
         ]);
-        expect(notes.map(note => bendLabels(note).map(label => label.textContent))).to.deep.equal([["Full"], [], ["1/2", "1/2"], ["Full"]]);
+        expect(notes.map(note => bendLabels(note).map(label => label.textContent))).to.deep.equal([["Full"], [], ["1/2", "Full"], ["Full"]]);
         // curves: drawn as paths without a fill (one per segment), the arrowheads and labels are filled
         const curves: number[] = notes.map(note => note.getModifierSVGs().filter(svg => svg.getAttribute("fill") === "none").length);
         expect(curves, "curves of each note").to.deep.equal([2, 1, 2, 1]);

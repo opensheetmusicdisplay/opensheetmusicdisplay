@@ -1177,12 +1177,18 @@ export class VexFlowConverter {
             }
             tabPositions.push(tabPosition);
             if (tabNote.BendArray) {
+                // Like Guitar Pro and MuseScore, a bend is labeled with how far the string is bent after it, from the unbent note:
+                //   a half step and another half step are "1/2" and "Full", a release that leaves a half step is "1/2".
+                let bentSemitones: number = 0;
                 tabNote.BendArray.forEach( function( bend: {bendalter: number, direction: string} ): void {
                     if (bend.bendalter === 0) { return; }
                     if (bend.direction === "up") {
-                        tabPhrases.push({type: VF.Bend.UP, text: VexFlowConverter.bendText(bend.bendalter)});
+                        bentSemitones += Math.abs(bend.bendalter);
+                        tabPhrases.push({type: VF.Bend.UP, text: VexFlowConverter.bendText(bentSemitones)});
                     } else {
-                        tabPhrases.push({type: VF.Bend.DOWN, text: ""}); // a release isn't labeled
+                        bentSemitones -= Math.abs(bend.bendalter);
+                        // a release back to the unbent note isn't labeled
+                        tabPhrases.push({type: VF.Bend.DOWN, text: bentSemitones > 0 ? VexFlowConverter.bendText(bentSemitones) : ""});
                     }
                 });
             }
@@ -1474,9 +1480,9 @@ export class VexFlowConverter {
     }
 
     /**
-     * Returns the text of a tab bend by its interval in semitones (MusicXML's bend-alter, independent of the fret),
-     * in whole tones like in tablature: "1/4", "1/2", "3/4", "Full" (a whole tone), "1 1/4", "1 1/2", ..., "2".
-     * Rounded to quarter tones.
+     * Returns the text of a tab bend that leaves the string bent by the given semitones from the unbent note (the note's bends
+     * so far minus its releases, independent of the fret), in whole tones like in tablature:
+     * "1/4", "1/2", "3/4", "Full" (a whole tone), "1 1/4", "1 1/2", ..., "2". Rounded to quarter tones.
      */
     private static bendText(semitones: number): string {
         const quarterTones: number = Math.round(Math.abs(semitones) * 2);
