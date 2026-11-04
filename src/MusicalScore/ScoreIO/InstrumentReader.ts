@@ -404,19 +404,15 @@ export class InstrumentReader {
                                                         isGraceNote, graceNoteSlash, graceSlur);
             // we previously excluded rest notes from a voice's voice entry (!restNote && !isGraceNote),
             //   but there seems to be no reason to. Rest notes also belong to a voice line. See #1612
+          } else if (isChord && !isGraceNote) {
+            // a chord note on another staff than the chord's previous note, e.g. of a piano chord split between the hands'
+            //   staves, belongs to the chord's voice entry on its own staff, not to the previous note's one: it was drawn on
+            //   that note's staff, with ledger lines
+            this.currentVoiceGenerator.continueChordInStaffEntry(this.currentStaffEntry);
           }
           if (!isGraceNote && !isChord) {
             previousFraction = currentFraction.clone();
             currentFraction.Add(noteDuration);
-          }
-          if (
-            isChord &&
-            this.currentStaffEntry !== undefined &&
-            this.currentStaffEntry.ParentStaff !== this.currentStaff
-          ) {
-            this.currentStaffEntry = this.currentVoiceGenerator.checkForStaffEntryLink(
-              this.inSourceMeasureInstrumentIndex + noteStaff - 1, this.currentStaff, this.currentStaffEntry, this.currentMeasure
-            );
           }
           const beginOfMeasure: boolean = (
             this.currentStaffEntry !== undefined &&
