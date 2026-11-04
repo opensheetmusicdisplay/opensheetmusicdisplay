@@ -78,6 +78,11 @@ drawText(): draw the * of a pedal released and pressed again at its last note (C
   render_options.change_release_margin away from it (getChangeReleaseXShift(), custom addition)
 drawBracketed(): where the next pedal marking draws its Ped. sign at the last note (ChangeEndBeforeSign), end the line with
   its hook render_options.change_release_margin left of that sign instead of the change notch (custom addition)
+drawBracketed(): an open end (a pedal going on in the next system) goes on to the end of the stave (end_x), not only to
+  the end of its last note (custom addition)
+drawBracketed(), drawText(): for a pedal going on from the system before (ContinuationSign), draw (Ped.), the Ped. sign in
+  the parentheses of cautionary accidentals, at the stave's note start, the line after it (drawContinuationSign(),
+  getContinuationSignWidth(), custom addition)
 
 renderer.js (vexflow4: need to check if possible):
 CanvasContext: getContext(): use willReadFrequently option for marginal performance potential,

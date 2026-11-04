@@ -639,6 +639,11 @@ export class EngravingRules {
      * pedal that starts with the Ped. sign (a pedal change, drawn as * Ped., or as the end of the pedal line, its hook, then
      * Ped.), in units (1.0 = distance between two staff lines). Default 0.5. */
     public PedalReleaseSignMarginToPedSign: number;
+    /** Whether to draw (Ped.), the Ped. sign in parentheses, at the start of a system where a pedal that starts with the
+     * Ped. sign (drawn with signs, or the Ped. sign and then the line) goes on from the system before, to confirm that it is
+     * still pressed (as recommended by Elaine Gould, Behind Bars, p. 332). Default false: MusicXML doesn't encode such a sign,
+     * the line or the signs of the pedal show it anyway, and (Ped.) takes space at the system's start. */
+    public RenderPedalContinuationSign: boolean;
     public RenderWavyLines: boolean;
     public DynamicExpressionMaxDistance: number;
     public DynamicExpressionSpacer: number;
@@ -1188,6 +1193,7 @@ export class EngravingRules {
         this.RenderPedals = true;
         this.PedalSignMarginToBottomLine = 0.5;
         this.PedalReleaseSignMarginToPedSign = 0.5;
+        this.RenderPedalContinuationSign = false;
         this.RenderWavyLines = true;
         this.ArticulationPlacementFromXML = true;
         this.BreathMarkDistance = 0.8;
