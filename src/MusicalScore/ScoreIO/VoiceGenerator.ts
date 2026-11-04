@@ -72,6 +72,8 @@ export class VoiceGenerator {
   private openTupletNumber: number = 0;
   /** The last tremolo between (two) notes started in this voice, awaiting its stop note. */
   private openTremoloBetweenNotes: TremoloBetweenNotes;
+  /** The beam of the chord whose part on another staff continueChordInStaffEntry() just created: the part's first note joins it. */
+  private chordPartBeam: Beam;
 
   public get GetVoice(): Voice {
     return this.voice;
@@ -94,10 +96,34 @@ export class VoiceGenerator {
    */
   public createVoiceEntry(musicTimestamp: Fraction, parentStaffEntry: SourceStaffEntry, addToVoice: boolean,
                           isGrace: boolean = false, graceNoteSlash: boolean = false, graceSlur: boolean = false): void {
+    this.chordPartBeam = undefined;
     this.currentVoiceEntry = new VoiceEntry(musicTimestamp.clone(), this.voice, parentStaffEntry, isGrace, graceNoteSlash, graceSlur);
     if (addToVoice) {
       this.voice.VoiceEntries.push(this.currentVoiceEntry);
     }
+  }
+
+  /**
+   * Continues the current chord with a note on another staff than the chord's previous note (<chord/> with another
+   * <staff>), e.g. a piano chord split between the staves of the two hands: makes the chord's voice entry in the staff
+   * entry of that staff the current one, creating it if needed. So each staff draws its part of the chord, with a stem of
+   * its own (a stem from one staff to the other isn't drawn), and a new part's first note joins the chord's beam.
+   * Does nothing for a note on the staff of the chord's previous note.
+   * @param staffEntry The staff entry of the note's staff at the chord's timestamp.
+   */
+  public continueChordInStaffEntry(staffEntry: SourceStaffEntry): void {
+    const chordVoiceEntry: VoiceEntry = this.currentVoiceEntry;
+    if (!chordVoiceEntry || chordVoiceEntry.ParentSourceStaffEntry === staffEntry ||
+        chordVoiceEntry.Timestamp.RealValue !== staffEntry.Timestamp?.RealValue) {
+      return;
+    }
+    const part: VoiceEntry = staffEntry.VoiceEntries.find((voiceEntry: VoiceEntry) => voiceEntry.ParentVoice === this.voice && !voiceEntry.IsGrace);
+    if (part) {
+      this.currentVoiceEntry = part;
+      return;
+    }
+    this.createVoiceEntry(chordVoiceEntry.Timestamp, staffEntry, true);
+    this.chordPartBeam = chordVoiceEntry.Notes[0]?.NoteBeam;
   }
 
   /**
@@ -549,6 +575,11 @@ export class VoiceGenerator {
     }
     if (node.elements("beam") && !chord) {
       this.createBeam(node, note);
+    } else if (chord && this.chordPartBeam) {
+      // the first note of a chord's part on another staff (continueChordInStaffEntry()): in the chord's beam, so that its
+      //   staff beams the chords' parts too. Not in the beam's note list, whose positions SecondaryBreakIndices refer to.
+      note.NoteBeam = this.chordPartBeam;
+      this.chordPartBeam = undefined;
     }
     return note;
   }
