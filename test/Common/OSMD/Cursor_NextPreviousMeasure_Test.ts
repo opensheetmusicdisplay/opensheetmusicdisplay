@@ -107,8 +107,11 @@ describe("Cursor.nextMeasure() and previousMeasure()", () => {
     it("go to the first visible beat of a measure that starts with a hidden rest, " +
         "and the cursor is drawn at the start of a piece that starts with one", async () => {
         await load("test_cursor_hidden_rest_at_measure_start.musicxml");
-        // after reset(), the iterator is at the hidden rest, which has no note to draw the cursor at:
-        //   it is drawn at the beginning of the first measure, as before the first note (it used to be drawn at the measure's end)
+        // after reset(), the iterator is at the hidden rest, which has no note to draw the cursor at: update() draws it at
+        //   the beginning of the first measure, as before the first note (it used to draw it at the measure's end).
+        //   update() is called here because osmd-extended's reset() draws the cursor by timestamp instead
+        //   (at the hidden rest's own position).
+        cursor.update();
         /** The x position (in units) the cursor marks: the standard cursor is 3 units wide, centered on it. */
         const cursorX: () => number = (): number => parseFloat(cursor.cursorElement.style.left) / (10 * osmd.Zoom) + 1.5;
         const firstMeasureStart: number = osmd.GraphicSheet.MeasureList[0][0].PositionAndShape.AbsolutePosition.x;
