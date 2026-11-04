@@ -793,9 +793,6 @@ import { IntervalTransposeCalculator } from '../src/Plugins/Transpose/IntervalTr
         if (paramDarkMode) {
             openSheetMusicDisplay.setOptions({darkMode: true});
         }
-        // TODO after selectSampleOnChange, the resize handler triggers immediately,
-        //   so we render twice at the start of the demo.
-        //   maybe delay the first osmd render, e.g. when window ready?
         if (paramOpenUrl) {
             if (openSheetMusicDisplay.getLogLevel() < 2) { // debug or trace
                 console.log("[OSMD] selectSampleOnChange with " + paramOpenUrl);
