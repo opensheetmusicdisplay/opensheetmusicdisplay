@@ -682,6 +682,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestPedalLineAndSign = sampleFilename.startsWith("test_pedal_line_and_sign");
     // pedal lines without the start or end hook (resume, discontinue), into the next system, see test_pedal_resume_discontinue
     const isTestPedalResumeDiscontinue = sampleFilename.startsWith("test_pedal_resume_discontinue");
+    // pedal lines pressed at a hidden whole-measure rest, low notes before it, a system per case, see test_pedal_at_whole_measure_rest
+    const isTestPedalAtWholeMeasureRest = sampleFilename.startsWith("test_pedal_at_whole_measure_rest");
     const isTestCopyrightBelowLastSystem = sampleFilename.includes("copyright_below_last_system");
     const isTestFirstPageCreditWords = sampleFilename.startsWith("test_first_page_credit_words");
     const isTestOptimizeExtremeLedgerBeams = sampleFilename.includes("test_beam_intersecting_ledger_lines") && !process.argv.includes("--native-vexflow");
@@ -711,7 +713,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         drawMeasureNumbersOnlyAtSystemStart: isTestMeasureNumbersOnlyAtSystemStart,
         newSystemFromXML: isFunctionTestSystemAndPageBreaks || isTestMeasureNumbersOnlyAtSystemStart || isTestGraceNotesOnlyMeasure ||
             isTestLyricsDashContinuedInNextSystem || isTestTabTiesAcrossSystemBreaks || isTestHiddenStaffClefKeyTime ||
-            isTestMultipleRestMeasuresXmlBreaks || isTestPedalSignsBelowBeams || isTestPedalLineAndSign || isTestPedalResumeDiscontinue,
+            isTestMultipleRestMeasuresXmlBreaks || isTestPedalSignsBelowBeams || isTestPedalLineAndSign || isTestPedalResumeDiscontinue ||
+            isTestPedalAtWholeMeasureRest,
         newSystemFromNewPageInXML: isTestPageBreakImpliesSystemBreak,
         newPageFromXML: isFunctionTestSystemAndPageBreaks || isTestMultipleRestMeasuresXmlBreaks,
         pageBackgroundColor: "#FFFFFF", // reset by drawingparameters default
