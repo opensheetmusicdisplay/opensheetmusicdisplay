@@ -137,5 +137,23 @@
       </direction>
       <note><pitch><step>E</step><octave>3</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
     </measure>
+    <measure number="11">
+      <direction placement="below">
+        <direction-type><pedal type="start" line="yes" sign="yes"/></direction-type>
+      </direction>
+      <note><pitch><step>C</step><octave>3</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>up</stem></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+      <direction placement="below">
+        <direction-type><pedal type="stop" line="yes"/></direction-type>
+      </direction>
+      <direction placement="below">
+        <direction-type><pedal type="start" line="yes" sign="yes"/></direction-type>
+      </direction>
+      <note><pitch><step>G</step><octave>3</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+      <direction placement="below">
+        <direction-type><pedal type="stop" line="yes"/></direction-type>
+      </direction>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+    </measure>
   </part>
 </score-partwise>

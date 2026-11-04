@@ -381,6 +381,8 @@ describe("ExpressionReader", () => {
             "m8: sign", // line="no" sign="yes"
             "m9: sign + line", // line="yes" sign="yes", into the next system
             "m10: line (change)", // its change, line="yes": a line goes on, no Ped. sign
+            "m11: sign + line",
+            "m11: sign + line (change)", // released and pressed again at one note (a stop and a start), with the Ped. sign
         ]);
     });
 

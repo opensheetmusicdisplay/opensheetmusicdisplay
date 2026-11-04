@@ -151,7 +151,9 @@ export class VexFlowPedal extends GraphicalPedal {
         // discontinued: the line ends where a released one draws its end hook, without the hook
         //   (an open end, of a line going on in the next system, goes on to the end of the note instead)
         (pedalMarking as any).EndsWithoutHook = this.getPedal.EndsWithoutHook;
-        // with signs, released and pressed again at the end note (ChangeEnd): the * this far left of the next pedal's Ped. sign
+        // pressed again at the end note by a pedal that starts with the Ped. sign: a line ends with its hook left of that sign
+        (pedalMarking as any).ChangeEndBeforeSign = this.ChangeEnd && this.getPedal.ParentEndMultiExpression?.PedalStart?.IsSign === true;
+        // released and pressed again at the end note (ChangeEnd): the * or the hook this far left of the next pedal's Ped. sign
         (pedalMarking as any).render_options.change_release_margin =
             this.getPedal.ParentStartMultiExpression.SourceMeasureParent.Rules.PedalReleaseSignMarginToPedSign * 10;
         return pedalMarking;

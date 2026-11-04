@@ -635,9 +635,9 @@ export class EngravingRules {
      * (1.0 = distance between two staff lines). Default 0.5.
      * Only applies where the sign would otherwise be higher: by default, the signs are 3 units below the staff. */
     public PedalSignMarginToBottomLine: number;
-    /** The distance between the * and the Ped. sign where a pedal drawn with signs is released and pressed again at one note
-     * (a pedal change, drawn as * Ped.: the * left of the Ped. sign), in units (1.0 = distance between two staff lines).
-     * Default 0.5. */
+    /** The distance between the release mark and the Ped. sign where a pedal is released and pressed again at one note by a
+     * pedal that starts with the Ped. sign (a pedal change, drawn as * Ped., or as the end of the pedal line, its hook, then
+     * Ped.), in units (1.0 = distance between two staff lines). Default 0.5. */
     public PedalReleaseSignMarginToPedSign: number;
     public RenderWavyLines: boolean;
     public DynamicExpressionMaxDistance: number;
