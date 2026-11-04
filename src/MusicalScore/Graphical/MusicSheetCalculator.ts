@@ -67,7 +67,7 @@ import { ContinuousTempoExpression } from "../VoiceData/Expressions/ContinuousEx
 import { FontStyles } from "../../Common/Enums/FontStyles";
 import { AbstractTempoExpression } from "../VoiceData/Expressions/AbstractTempoExpression";
 import { GraphicalInstantaneousDynamicExpression } from "./GraphicalInstantaneousDynamicExpression";
-import { ContDynamicEnum } from "../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
+import { ContDynamicEnum, ContinuousDynamicExpression } from "../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { GraphicalContinuousDynamicExpression } from "./GraphicalContinuousDynamicExpression";
 import { FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSMDOptions";
 import { IStafflineNoteCalculator } from "../Interfaces/IStafflineNoteCalculator";
@@ -1591,6 +1591,11 @@ export abstract class MusicSheetCalculator {
         return;
     }
 
+    /** Calculates a wedge that starts before the drawing range and ends in it or after it, see calculateWedgesStartingBeforeDrawingRange(). */
+    protected calculateWedgeStartingBeforeDrawingRange(wedge: ContinuousDynamicExpression, firstMeasureIndex: number, staffIndex: number): void {
+        return;
+    }
+
 
     /**
      * This method calculates the RelativePosition of a single verbal GraphicalContinuousDynamic.
@@ -1635,11 +1640,23 @@ export abstract class MusicSheetCalculator {
         // const staffIndex: number = musicSystem.StaffLines.indexOf(staffLine);
 
         // We know we have an end measure because otherwise we won't be called
-        const endMeasure: GraphicalMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(
+        let endMeasure: GraphicalMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(
             graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.SourceMeasureParent, staffIndex);
         if (!endMeasure) {
             log.warn("MusicSheetCalculator.calculateGraphicalContinuousDynamic: No endMeasure found");
             return;
+        }
+        // The range of measures to draw (EngravingRules.MinMeasureToDrawIndex and MaxMeasureToDrawIndex, e.g. drawFromMeasureNumber
+        //   and drawUpToMeasureNumber, or the layout of a batch of OpenSheetMusicDisplay.renderNext()) can cut off the wedge's start
+        //   or end. Then it is drawn like a wedge going on before or after a system break: from the start of the first measure drawn
+        //   (see calculateWedgesStartingBeforeDrawingRange()) or to the end of the last one, like a cut-off octave shift (see
+        //   VexFlowMusicSheetCalculator.calculateSingleOctaveShift()). The measure indices tell whether it is cut off: a measure that
+        //   isn't drawn can still have the ParentStaffLine of an earlier layout of more measures.
+        const startIsClipped: boolean =
+            graphicalContinuousDynamic.ContinuousDynamic.StartMultiExpression.SourceMeasureParent.measureListIndex < this.rules.MinMeasureToDrawIndex;
+        const endIsClipped: boolean = endMeasure.parentSourceMeasure.measureListIndex > this.rules.MaxMeasureToDrawIndex;
+        if (endIsClipped) {
+            endMeasure = this.graphicalMusicSheet.getLastGraphicalMeasureFromIndex(staffIndex, true); // the last measure drawn
         }
 
         graphicalContinuousDynamic.EndMeasure = endMeasure;
@@ -1657,58 +1674,65 @@ export abstract class MusicSheetCalculator {
         }
 
         const endAbsoluteTimestamp: Fraction = Fraction.createFromFraction(graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.AbsoluteTimestamp);
-        const container: VerticalGraphicalStaffEntryContainer = this.graphicalMusicSheet.GetVerticalContainerFromTimestamp(endAbsoluteTimestamp);
-        const parentMeasure: GraphicalMeasure = container.getFirstNonNullStaffEntry().parentMeasure;
-        const endOfMeasure: number = parentMeasure.PositionAndShape.AbsolutePosition.x + parentMeasure.PositionAndShape.BorderRight;
-        let maxNoteLength: Fraction = new Fraction(0, 0, 0);
-        for (const staffEntry of container.StaffEntries) {
-            if (staffEntry?.sourceStaffEntry.ParentStaff !== staffLine.ParentStaff) {
-                // note: null check handles rare cases of undefined staffEntries, e.g. in test_wedge_cresc_dim_simultaneous_quartet.musicxml
-                continue;
-                // don't let notes in other staffs (not the wedge's staff) affect the wedge length (see #1477)
-            }
-            const currentMaxLength: Fraction = staffEntry?.sourceStaffEntry?.calculateMaxNoteLength(false);
-            if ( currentMaxLength?.gt(maxNoteLength) ) {
-                maxNoteLength = currentMaxLength;
-            }
-        }
-        const useStaffEntryBorderLeft: boolean = !isSoftAccent &&
-            graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo;
-        const endPosInStaffLine: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
-            endAbsoluteTimestamp, staffIndex, endStaffLine, isPartOfMultiStaffInstrument, 0,
-            useStaffEntryBorderLeft);
-
-        const beginOfNextNote: Fraction = Fraction.plus(endAbsoluteTimestamp, maxNoteLength);
-        const placementFraction: Fraction = beginOfNextNote.clone();
-        const endOffsetFraction: Fraction = graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.EndOffsetFraction;
-        if (endOffsetFraction && this.rules.UseEndOffsetForExpressions) {
-            placementFraction.Add(graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.EndOffsetFraction);
-        }
-        // TODO for the last note of the piece (wedge ending after last note), this timestamp is incorrect, being after the last note
-        //   but there's a workaround in getRelativePositionInStaffLineFromTimestamp() via the variable endAfterRightStaffEntry
-        const nextNotePosInStaffLine: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
-            placementFraction, staffIndex, endStaffLine, isPartOfMultiStaffInstrument, 0,
-            graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo);
         const wedgePadding: number = this.rules.SoftAccentWedgePadding;
-        const staffEntryWidth: number = container.getFirstNonNullStaffEntry().PositionAndShape.Size.width; // staff entry widths for whole notes is too long
         const sizeFactor: number = this.rules.SoftAccentSizeFactor;
-        //const standardWidth: number = 2;
+        let staffEntryWidth: number = 0; // of the staff entry at the end, for a soft accent
+        let endPosInStaffLine: PointF2D;
+        if (endIsClipped) {
+            // it goes on after the last measure drawn: to the end of that measure, which ends its staffline
+            endPosInStaffLine = new PointF2D(endStaffLine.PositionAndShape.Size.width, 0);
+        } else {
+            const container: VerticalGraphicalStaffEntryContainer = this.graphicalMusicSheet.GetVerticalContainerFromTimestamp(endAbsoluteTimestamp);
+            const parentMeasure: GraphicalMeasure = container.getFirstNonNullStaffEntry().parentMeasure;
+            const endOfMeasure: number = parentMeasure.PositionAndShape.AbsolutePosition.x + parentMeasure.PositionAndShape.BorderRight;
+            let maxNoteLength: Fraction = new Fraction(0, 0, 0);
+            for (const staffEntry of container.StaffEntries) {
+                if (staffEntry?.sourceStaffEntry.ParentStaff !== staffLine.ParentStaff) {
+                    // note: null check handles rare cases of undefined staffEntries, e.g. in test_wedge_cresc_dim_simultaneous_quartet.musicxml
+                    continue;
+                    // don't let notes in other staffs (not the wedge's staff) affect the wedge length (see #1477)
+                }
+                const currentMaxLength: Fraction = staffEntry?.sourceStaffEntry?.calculateMaxNoteLength(false);
+                if ( currentMaxLength?.gt(maxNoteLength) ) {
+                    maxNoteLength = currentMaxLength;
+                }
+            }
+            const useStaffEntryBorderLeft: boolean = !isSoftAccent &&
+                graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo;
+            endPosInStaffLine = this.getRelativePositionInStaffLineFromTimestamp(
+                endAbsoluteTimestamp, staffIndex, endStaffLine, isPartOfMultiStaffInstrument, 0,
+                useStaffEntryBorderLeft);
 
-        //If the next note position is not on the next staffline
-        //extend close to the next note
-        if (isSoftAccent) {
-            //startPosInStaffline.x -= 1;
-            startPosInStaffline.x -= staffEntryWidth / 2 * sizeFactor + wedgePadding;
-            endPosInStaffLine.x = startPosInStaffline.x + staffEntryWidth / 2 * sizeFactor;
-        } else if (nextNotePosInStaffLine.x > endPosInStaffLine.x && nextNotePosInStaffLine.x < endOfMeasure) {
-            endPosInStaffLine.x += (nextNotePosInStaffLine.x - endPosInStaffLine.x) / this.rules.WedgeEndDistanceBetweenTimestampsFactor;
-        } else { //Otherwise extend to the end of the measure
-            endPosInStaffLine.x = endOfMeasure - this.rules.WedgeHorizontalMargin;
+            const beginOfNextNote: Fraction = Fraction.plus(endAbsoluteTimestamp, maxNoteLength);
+            const placementFraction: Fraction = beginOfNextNote.clone();
+            const endOffsetFraction: Fraction = graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.EndOffsetFraction;
+            if (endOffsetFraction && this.rules.UseEndOffsetForExpressions) {
+                placementFraction.Add(graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.EndOffsetFraction);
+            }
+            // TODO for the last note of the piece (wedge ending after last note), this timestamp is incorrect, being after the last note
+            //   but there's a workaround in getRelativePositionInStaffLineFromTimestamp() via the variable endAfterRightStaffEntry
+            const nextNotePosInStaffLine: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
+                placementFraction, staffIndex, endStaffLine, isPartOfMultiStaffInstrument, 0,
+                graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo);
+            staffEntryWidth = container.getFirstNonNullStaffEntry().PositionAndShape.Size.width; // staff entry widths for whole notes is too long
+            //const standardWidth: number = 2;
+
+            //If the next note position is not on the next staffline
+            //extend close to the next note
+            if (isSoftAccent) {
+                //startPosInStaffline.x -= 1;
+                startPosInStaffline.x -= staffEntryWidth / 2 * sizeFactor + wedgePadding;
+                endPosInStaffLine.x = startPosInStaffline.x + staffEntryWidth / 2 * sizeFactor;
+            } else if (nextNotePosInStaffLine.x > endPosInStaffLine.x && nextNotePosInStaffLine.x < endOfMeasure) {
+                endPosInStaffLine.x += (nextNotePosInStaffLine.x - endPosInStaffLine.x) / this.rules.WedgeEndDistanceBetweenTimestampsFactor;
+            } else { //Otherwise extend to the end of the measure
+                endPosInStaffLine.x = endOfMeasure - this.rules.WedgeHorizontalMargin;
+            }
         }
 
         const startCollideBox: BoundingBox =
             this.dynamicExpressionMap.get(graphicalContinuousDynamic.ContinuousDynamic.StartMultiExpression.AbsoluteTimestamp.RealValue);
-        if (startCollideBox) {
+        if (startCollideBox && !startIsClipped) { // (a cut-off start's dynamic isn't drawn)
             if ((startCollideBox.DataObject as any).ParentStaffLine === staffLine) {
                 // TODO the dynamicExpressionMap doesn't distinguish between staffLines, so we may react to a different staffline otherwise
                 //   so the more fundamental solution would be to fix dynamicExpressionMap mapping across stafflines.
@@ -1728,16 +1752,19 @@ export abstract class MusicSheetCalculator {
         // if ContinuousDynamicExpression is given from wedge
         let endGraphicalContinuousDynamic: GraphicalContinuousDynamicExpression = undefined;
 
-        // last length check
-        if (sameStaffLine && endPosInStaffLine.x - startPosInStaffline.x < this.rules.WedgeMinLength && !isSoftAccent) {
+        // last length check (not for a part of a wedge that the measures drawn cut off, like the parts at a system break)
+        if (sameStaffLine && !startIsClipped && !endIsClipped &&
+            endPosInStaffLine.x - startPosInStaffline.x < this.rules.WedgeMinLength && !isSoftAccent) {
             endPosInStaffLine.x = startPosInStaffline.x + this.rules.WedgeMinLength;
         }
 
         // First staff wedge always starts at the given position and the last and inbetween wedges always start at the begin of measure
         //   TODO: rename upper / lower to first / last, now that we can have inbetween wedges, though this creates a huge diff, and this should be clear now.
-        const upperStartX: number = startPosInStaffline.x;
-        let lowerStartX: number = endStaffLine.Measures[0].beginInstructionsWidth - this.rules.WedgeHorizontalMargin - 2;
-        //TODO fix this when a range of measures to draw is given that doesn't include all the dynamic's measures (e.g. for crescendo)
+        let lowerStartX: number = this.getWedgeStartAfterSystemBreak(endStaffLine);
+        let upperStartX: number = startPosInStaffline.x;
+        if (startIsClipped) {
+            upperStartX = this.getWedgeStartAfterSystemBreak(staffLine);
+        }
         let upperEndX: number = 0;
         let lowerEndX: number = 0;
 
@@ -1750,7 +1777,8 @@ export abstract class MusicSheetCalculator {
 
             // get all stafflines between start measure and end measure, and add wedges for them.
             //   This would be less lines of code if there was already a list of stafflines for the sheet.
-            const stafflinesCovered: StaffLine[] = [staffLine, endStaffLine]; // start and end staffline already get a wedge
+            //   (The last staffline drawn gets an inbetween wedge when the wedge goes on after it.)
+            const stafflinesCovered: StaffLine[] = endIsClipped ? [staffLine] : [staffLine, endStaffLine]; // start and end staffline already get a wedge
             const startMeasure: GraphicalMeasure = graphicalContinuousDynamic.StartMeasure;
             let nextMeasure: GraphicalMeasure = startMeasure;
             let iterations: number = 0; // safety measure against infinite loop
@@ -1780,12 +1808,15 @@ export abstract class MusicSheetCalculator {
             }
 
             // last wedge at endMeasure
-            endGraphicalContinuousDynamic = new GraphicalContinuousDynamicExpression(
-                graphicalContinuousDynamic.ContinuousDynamic, endStaffLine, endMeasure.parentSourceMeasure);
-            endGraphicalContinuousDynamic.IsSplittedPart = true;
+            if (!endIsClipped) {
+                endGraphicalContinuousDynamic = new GraphicalContinuousDynamicExpression(
+                    graphicalContinuousDynamic.ContinuousDynamic, endStaffLine, endMeasure.parentSourceMeasure);
+                endGraphicalContinuousDynamic.IsSplittedPart = true;
+            }
             graphicalContinuousDynamic.IsSplittedPart = true;
         } else {
             upperEndX = endPosInStaffLine.x;
+            graphicalContinuousDynamic.IsSplittedPart = startIsClipped || endIsClipped;
         }
         if (isSoftAccent) {
             // secondGraphicalContinuousDynamic = new GraphicalContinuousDynamicExpression(
@@ -1802,6 +1833,8 @@ export abstract class MusicSheetCalculator {
         // the Height of the Expression's placement
         let idealY: number = 0;
         let endIdealY: number = 0;
+        // the ideal y of the parts in the stafflines after the first, before each is checked against its staffline's sky or bottom line
+        let splitIdealY: number = 0;
 
         if (placement === PlacementEnum.Below) {
             // can be a single Staff Instrument or an Instrument with 2 Staves
@@ -1832,6 +1865,7 @@ export abstract class MusicSheetCalculator {
                 // Set the value for the splitted y position to the ideal position before we check and modify it with
                 // the skybottom calculator detection
                 endIdealY = idealY;
+                splitIdealY = idealY;
             }
             // must check BottomLine for possible collisions within the Length of the Expression
             // find the corresponding max value for the given Length
@@ -1920,6 +1954,7 @@ export abstract class MusicSheetCalculator {
             idealY += this.rules.WedgeOpeningLength / 2;
             if (!sameStaffLine) {
                 endIdealY = idealY;
+                splitIdealY = idealY;
             }
 
             // must check SkyLine for possible collisions within the Length of the Expression
@@ -1993,23 +2028,39 @@ export abstract class MusicSheetCalculator {
             graphicalContinuousDynamic.calcPsi();
         } else if (sameStaffLine && !isSoftAccent) {
             // either create crescendo or decrescendo lines, same principle / parameters.
-            graphicalContinuousDynamic.createLines(upperStartX, upperEndX, idealY);
+            //   A wedge that the measures drawn cut off looks like its part after a system break, before one, or between two.
+            if (startIsClipped && endIsClipped) {
+                graphicalContinuousDynamic.createInbetweenLines(upperStartX, upperEndX, idealY);
+            } else if (startIsClipped) {
+                graphicalContinuousDynamic.createSecondHalfLines(upperStartX, upperEndX, idealY);
+            } else if (endIsClipped) {
+                graphicalContinuousDynamic.createFirstHalfLines(upperStartX, upperEndX, idealY);
+            } else {
+                graphicalContinuousDynamic.createLines(upperStartX, upperEndX, idealY);
+            }
             graphicalContinuousDynamic.calcPsi();
         } else {
             // two+ different Wedges
-            // first wedge
-            graphicalContinuousDynamic.createFirstHalfLines(upperStartX, upperEndX, idealY);
+            // first wedge (like an inbetween wedge where the measures drawn cut off its start)
+            if (startIsClipped) {
+                graphicalContinuousDynamic.createInbetweenLines(upperStartX, upperEndX, idealY);
+            } else {
+                graphicalContinuousDynamic.createFirstHalfLines(upperStartX, upperEndX, idealY);
+            }
             graphicalContinuousDynamic.calcPsi();
 
-            // inbetween wedges
+            // inbetween wedges: placed like the last wedge, starting where it does, at the ideal y unless their own staffline's notes
+            //   etc. reach further there
             for (let i: number = 0; i < inbetweenWedges.length; i++) {
                 const inbetweenWedge: GraphicalContinuousDynamicExpression = inbetweenWedges[i];
                 const inbetweenStaffline: StaffLine = inbetweenWedge.ParentStaffLine;
-                let betweenIdealY: number = endIdealY;
+                const inbetweenStartX: number = this.getWedgeStartAfterSystemBreak(inbetweenStaffline);
+                const inbetweenEndX: number = inbetweenStaffline.PositionAndShape.Size.width;
+                let betweenIdealY: number = splitIdealY;
 
                 if (placement === PlacementEnum.Below) {
                     const maxBottomLineValueForExpressionLength: number =
-                    endStaffLine.SkyBottomLineCalculator.getBottomLineMaxInRange(lowerStartX, upperEndX);
+                        inbetweenStaffline.SkyBottomLineCalculator.getBottomLineMaxInRange(inbetweenStartX, inbetweenEndX);
                     if (maxBottomLineValueForExpressionLength > betweenIdealY) {
                         betweenIdealY = maxBottomLineValueForExpressionLength;
                     }
@@ -2017,28 +2068,37 @@ export abstract class MusicSheetCalculator {
                     betweenIdealY += this.rules.WedgeVerticalMargin;
                 } else if (placement === PlacementEnum.Above) {
                     const minSkyLineValueForExpressionLength: number =
-                        inbetweenStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(lowerStartX, lowerEndX);
-                    if (minSkyLineValueForExpressionLength < endIdealY) {
+                        inbetweenStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(inbetweenStartX, inbetweenEndX);
+                    if (minSkyLineValueForExpressionLength < betweenIdealY) {
                         betweenIdealY = minSkyLineValueForExpressionLength;
                     }
                     betweenIdealY -= this.rules.WedgeOpeningLength / 2;
+                    betweenIdealY -= this.rules.WedgeVerticalMargin;
                 }
 
-                if (graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
-                    inbetweenWedge.createSecondHalfCrescendoLines(0, inbetweenStaffline.PositionAndShape.Size.width, betweenIdealY);
-                    // for crescendo, we want the same look as on the last staffline: not starting with an intersection / starting wedge
-                } else {
-                    inbetweenWedge.createFirstHalfDiminuendoLines(0, inbetweenStaffline.PositionAndShape.Size.width, betweenIdealY);
-                    // for diminuendo, we want the same look as on the first staffline: not ending in an intersection / looking finished
-                }
+                // for crescendo, we want the same look as on the last staffline: not starting with an intersection / starting wedge,
+                //   for diminuendo the same look as on the first staffline: not ending in an intersection / looking finished
+                inbetweenWedge.createInbetweenLines(inbetweenStartX, inbetweenEndX, betweenIdealY);
                 inbetweenWedge.calcPsi();
             }
 
-            // last wedge
-            endGraphicalContinuousDynamic.createSecondHalfLines(lowerStartX, lowerEndX, endIdealY);
-            endGraphicalContinuousDynamic.calcPsi();
+            // last wedge (none where the measures drawn cut off the end: the last staffline drawn has an inbetween wedge)
+            if (endGraphicalContinuousDynamic) {
+                endGraphicalContinuousDynamic.createSecondHalfLines(lowerStartX, lowerEndX, endIdealY);
+                endGraphicalContinuousDynamic.calcPsi();
+            }
         }
         this.dynamicExpressionMap.set(endAbsoluteTimestamp.RealValue, graphicalContinuousDynamic.PositionAndShape);
+    }
+
+    /**
+     * Where a wedge that goes on from the previous system starts in the given staffline (its part after a system break): over the
+     * end of the clef, key and time signature at the staffline's start.
+     * @param staffLine the staffline
+     * @returns the x relative to the staffline
+     */
+    private getWedgeStartAfterSystemBreak(staffLine: StaffLine): number {
+        return staffLine.Measures[0].beginInstructionsWidth - this.rules.WedgeHorizontalMargin - 2;
     }
 
     /**
@@ -4295,6 +4355,9 @@ export abstract class MusicSheetCalculator {
     private calculateDynamicExpressions(): void {
         const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length - 1, this.rules.MaxMeasureToDrawIndex);
         const minIndex: number = Math.min(this.rules.MinMeasureToDrawIndex, this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length);
+        if (minIndex <= maxIndex) {
+            this.calculateWedgesStartingBeforeDrawingRange(minIndex);
+        }
         for (let i: number = minIndex; i <= maxIndex; i++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
             //Reset, beginning of new measure
@@ -4320,6 +4383,34 @@ export abstract class MusicSheetCalculator {
             }
         }
         this.dynamicExpressionMap.clear();
+    }
+
+    /**
+     * Calculates the wedges that start before the drawing range (EngravingRules.MinMeasureToDrawIndex, e.g. drawFromMeasureNumber)
+     * and end in it or after it: they are drawn from the start of its first measure, like after a system break (see
+     * calculateGraphicalContinuousDynamic()). A verbal one like "cresc." is drawn at its start only, so not at all then.
+     * @param firstMeasureIndex the index of the first measure drawn
+     */
+    private calculateWedgesStartingBeforeDrawingRange(firstMeasureIndex: number): void {
+        const firstMeasures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[firstMeasureIndex];
+        if (!firstMeasures) {
+            return;
+        }
+        for (let i: number = 0; i < firstMeasureIndex; i++) {
+            const staffLinkedExpressions: MultiExpression[][] = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i].StaffLinkedExpressions;
+            for (let staffIndex: number = 0; staffIndex < staffLinkedExpressions.length; staffIndex++) {
+                if (!firstMeasures[staffIndex]?.ParentStaff.isVisible()) {
+                    continue;
+                }
+                for (const multiExpression of staffLinkedExpressions[staffIndex]) {
+                    const wedge: ContinuousDynamicExpression = multiExpression.StartingContinuousDynamic;
+                    if (wedge?.StartMultiExpression === multiExpression && !(wedge.Label?.length > 0) &&
+                        wedge.EndMultiExpression?.SourceMeasureParent.measureListIndex >= firstMeasureIndex) {
+                        this.calculateWedgeStartingBeforeDrawingRange(wedge, firstMeasureIndex, staffIndex);
+                    }
+                }
+            }
+        }
     }
 
     private calculateOctaveShifts(): void {

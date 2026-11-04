@@ -295,6 +295,19 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
         }
     }
 
+    /** Wrapper for createSecondHalfCrescendoLines and createFirstHalfDiminuendoLines, see createFirstHalfLines: the lines of a
+     *  part of a wedge that goes on before and after it, e.g. in a system between the wedge's first and last one. A crescendo
+     *  looks like its part in its last system then, not starting at a point, and a diminuendo like its part in its first system,
+     *  not ending at a point, so that the wedge doesn't look finished.
+     */
+    public createInbetweenLines(startX: number, endX: number, y: number): void {
+        if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
+            this.createSecondHalfCrescendoLines(startX, endX, y);
+        } else if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
+            this.createFirstHalfDiminuendoLines(startX, endX, y);
+        }
+    }
+
     /** Wrapper for createCrescendoLines and createDiminuendoLines, see createFirstHalfLines. */
     public createLines(startX: number, endX: number, y: number,
         wedgeOpeningLength: number = this.rules.WedgeOpeningLength, wedgeLineWidth: number = this.rules.WedgeLineWidth
