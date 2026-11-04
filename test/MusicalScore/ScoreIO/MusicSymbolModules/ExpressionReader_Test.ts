@@ -383,4 +383,25 @@ describe("ExpressionReader", () => {
             "m10: line (change)", // its change, line="yes": a line goes on, no Ped. sign
         ]);
     });
+
+    it("reads a pedal of type \"resume\" as a line without the start hook, and \"discontinue\" as its end without the end hook", () => {
+        const sheet: MusicSheet = readSheet("test/data/test_pedal_resume_discontinue.musicxml");
+        /** "m<measure>.<quarter>" of a pedal's start or end */
+        const at: (expression: MultiExpression) => string = expression =>
+            `m${expression.SourceMeasureParent.MeasureNumber}.${expression.Timestamp.RealValue * 4 + 1}`;
+        // "<start>-<end>: line" or "sign + line" (the Ped. sign, then the line), and the hooks it goes without
+        const pedals: string[] = sheet.SourceMeasures.flatMap((measure): string[] => measure.StaffLinkedExpressions[0]
+            .map((expression: MultiExpression): Pedal => expression.PedalStart)
+            .filter((pedal: Pedal): boolean => pedal !== undefined)
+            .map((pedal: Pedal): string => `${at(pedal.ParentStartMultiExpression)}-${at(pedal.ParentEndMultiExpression)}: ` +
+                (pedal.IsSign ? "sign + " : "") + (pedal.IsLine ? "line" : "") +
+                (pedal.BeginsWithoutHook ? ", no start hook" : "") + (pedal.EndsWithoutHook ? ", no end hook" : "")));
+        // (both types were ignored: no pedal started with resume, and a pedal ended with discontinue went on)
+        expect(pedals).to.deep.equal([
+            "m1.1-m1.4: sign + line, no start hook", // resume line="yes" sign="yes" (MuseScore 4.2-4.7.1's Ped. + line), stop
+            "m2.1-m2.4: line, no start hook", // resume, stop
+            "m3.1-m3.4: line, no end hook", // start, discontinue
+            "m4.1-m5.4: line, no start hook, no end hook", // resume, into the next system, discontinue
+        ]);
+    });
 });

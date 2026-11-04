@@ -243,3 +243,87 @@ describe("Pedal line and sign attributes", () => {
         }
     });
 });
+
+/**
+ * Pedal lines without the hook at their start (MusicXML type="resume") or end (type="discontinue"), a bass staff, a pedal per
+ * measure, the one of m4 into the next system: m1 resume line="yes" sign="yes" (MuseScore 4.2-4.7.1's Ped. + line pedal) and
+ * stop, m2 resume and stop, m3 start and discontinue, m4-m5 resume and discontinue. Both types were ignored: the pedals
+ * started with resume weren't drawn, and the one ended with discontinue went on.
+ */
+describe("Pedal lines resumed and discontinued", () => {
+    const sampleFilename: string = "test_pedal_resume_discontinue.musicxml";
+    let container: HTMLElement;
+    let osmd: OpenSheetMusicDisplay;
+
+    beforeEach(async () => {
+        container = TestUtils.getDivElement(document);
+        osmd = TestUtils.createOpenSheetMusicDisplay(container);
+        osmd.setOptions({ newSystemFromXML: true }); // the sample's system break
+        await osmd.load(TestUtils.getScore(sampleFilename));
+        osmd.render();
+    });
+    afterEach(() => {
+        container.remove();
+    });
+
+    /** A drawn pedal (in one system): the measure it starts in, its parts, and where its line starts and ends, in units */
+    interface DrawnPedal {
+        measure: number;
+        parts: string;
+        lineLeft: number;
+        lineRight: number;
+    }
+
+    /** The drawn pedals, by the measure they start in (whose staff is the last one above them) */
+    function drawnPedals(): DrawnPedal[] {
+        const measures: GraphicalMeasure[] = osmd.GraphicSheet.MeasureList.map(staffMeasures => staffMeasures[0]);
+        const staffTop: (measure: GraphicalMeasure) => number = measure => measure.ParentStaffLine.PositionAndShape.AbsolutePosition.y;
+        const pedals: DrawnPedal[] = [];
+        for (const marking of Array.from(container.querySelectorAll("g.vf-pedalmarking, path.vf-pedalmarking"))) {
+            const paths: SVGGraphicsElement[] = marking.tagName === "path" ? [marking as SVGGraphicsElement] :
+                Array.from(marking.querySelectorAll("path"));
+            // (a line going on from the system before, or resumed, starts with a move to its start: no box)
+            const boxes: { box: DOMRect, stroke: boolean }[] = paths.map(path => ({ box: path.getBBox(), stroke: path.getAttribute("fill") === "none" }))
+                .filter(shape => shape.box.width > 0 || shape.box.height > 0);
+            const units: (pixels: number) => number = pixels => pixels / unitInPixels;
+            const strokes: DOMRect[] = boxes.filter(shape => shape.stroke).map(shape => shape.box);
+            // the lines are strokes, the Ped. sign a filled glyph; a start hook is drawn on its own, the end hook with the line
+            const line: DOMRect = strokes.reduce((widest, box) => box.width > widest.width ? box : widest);
+            const ped: boolean = boxes.some(shape => !shape.stroke);
+            const startHook: boolean = strokes.some(box => units(box.width) < 0.1 && units(box.height) > 0.5);
+            const endHook: boolean = units(line.height) > 0.5;
+            const left: number = units(Math.min(...boxes.map(shape => shape.box.x)));
+            const top: number = units(Math.min(...boxes.map(shape => shape.box.y)));
+            const systemTop: number = Math.max(...measures.map(staffTop).filter(y => y < top));
+            const measure: GraphicalMeasure = measures.filter(m => staffTop(m) === systemTop && m.PositionAndShape.AbsolutePosition.x <= left)
+                .pop();
+            const parts: string = [ped ? "Ped." : undefined, startHook ? "start hook" : undefined, "line", endHook ? "end hook" : undefined]
+                .filter(part => part !== undefined).join(" + ");
+            pedals.push({ measure: measure.MeasureNumber, parts, lineLeft: units(Math.min(...strokes.map(box => box.x))),
+                          lineRight: units(Math.max(...strokes.map(box => box.x + box.width))) });
+        }
+        return pedals;
+    }
+
+    it("draws a resumed line without the start hook and a discontinued line without the end hook", () => {
+        expect(drawnPedals().map(pedal => `m${pedal.measure}: ${pedal.parts}`)).to.deep.equal([
+            "m1: Ped. + line + end hook", // resume line="yes" sign="yes", stop
+            "m2: line + end hook", // resume, stop
+            "m3: start hook + line", // start, discontinue
+            "m4: line", // resume, into the next system
+            "m5: line", // discontinue
+        ]);
+    });
+
+    it("starts a resumed line where a start draws its hook, and ends a discontinued line where a stop draws its hook", () => {
+        const pedals: DrawnPedal[] = drawnPedals();
+        const resumed: DrawnPedal = pedals.find(pedal => pedal.measure === 2); // resume, stop
+        const discontinued: DrawnPedal = pedals.find(pedal => pedal.measure === 3); // start, discontinue
+        /** the x of the quarter (0-3) of the measure, where the pedals of m2 and m3 start (0) and end (3) */
+        const noteX: (measure: number, quarter: number) => number = (measure, quarter) =>
+            osmd.GraphicSheet.MeasureList[measure - 1][0].staffEntries[quarter].PositionAndShape.AbsolutePosition.x;
+        expect(resumed.lineLeft - noteX(2, 0), "the line's start from its note").to.be.closeTo(discontinued.lineLeft - noteX(3, 0), 0.05);
+        // (not at the end of the end note, like a line going on in the next system)
+        expect(discontinued.lineRight - noteX(3, 3), "the line's end from its note").to.be.closeTo(resumed.lineRight - noteX(2, 3), 0.05);
+    });
+});

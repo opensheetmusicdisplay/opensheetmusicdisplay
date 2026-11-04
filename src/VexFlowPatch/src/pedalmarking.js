@@ -96,6 +96,7 @@ export class PedalMarking extends Element {
     this.EndsStave = false; // VexFlowPatch
     this.ChangeBegin = false;
     this.ChangeEnd = false;
+    this.EndsWithoutHook = false; // VexFlowPatch: the bracket styles end without the end hook (where they would draw it)
     this.notes = notes;
     this.style = PedalMarking.TEXT;
     this.line = 0;
@@ -306,7 +307,7 @@ export class PedalMarking extends Element {
         ctx.moveTo(prev_x, prev_y);
         ctx.lineTo(x + x_shift, y);
         if (pedal.style !== PedalMarking.Styles.BRACKET_OPEN_END && pedal.style !== PedalMarking.Styles.MIXED_OPEN_END &&
-            pedal.style !== PedalMarking.Styles.BRACKET_OPEN_BOTH) {
+            pedal.style !== PedalMarking.Styles.BRACKET_OPEN_BOTH && !this.EndsWithoutHook) {
             if(this.ChangeEnd){
               x += 5;
             }

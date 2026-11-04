@@ -435,8 +435,10 @@ export class ExpressionReader {
                         sign = false;
                         line = true;
                     }
-                    switch (pedalNode.attribute("type").value) {
+                    const pedalType: string = pedalNode.attribute("type").value;
+                    switch (pedalType) {
                         case "start":
+                        case "resume": // a line without the start hook, e.g. after the Ped. sign (MuseScore 4.2-4.7.1's Ped. + line pedal)
                             //ignore duplicate tags (causes issues when pedals aren't terminated)
                             // if (!this.openPedal || !this.openPedal.ParentStartMultiExpression.AbsoluteTimestamp.Equals(endTimestamp)) {
                             //     this.createNewMultiExpressionIfNeeded(currentMeasure, -1);
@@ -448,6 +450,7 @@ export class ExpressionReader {
                             }
                             this.createNewMultiExpressionIfNeeded(currentMeasure, -1);
                             this.openPedal = new Pedal(line, sign);
+                            this.openPedal.BeginsWithoutHook = pedalType === "resume";
                             this.getMultiExpression.PedalStart = this.openPedal;
                             this.openPedal.ParentStartMultiExpression = this.getMultiExpression;
                             const releasedPedal: Pedal = this.getMultiExpression.PedalEnd;
@@ -459,7 +462,9 @@ export class ExpressionReader {
                             }
                         break;
                         case "stop":
+                        case "discontinue": // a line end without the end hook
                             if (this.openPedal) {
+                                this.openPedal.EndsWithoutHook = pedalType === "discontinue";
                                 this.endOpenPedal(currentMeasure, endTimestamp);
                             }
                         break;
