@@ -177,7 +177,8 @@ describe("Pedal signs below beams", () => {
  * The line and sign attributes of pedals, a bass staff, a system per line attribute (none, "yes", "no"), each with a pedal per
  * measure for the values of the sign attribute, then a pedal with line="yes" sign="yes" from m9 into the next system, changed
  * there (m10). line="yes" sign="yes" draws the Ped. sign, then the line; it was read as a line only. In m11, two such pedals
- * meet: released and pressed again at one note (a stop and a start), as MuseScore writes pedals that meet.
+ * meet: released and pressed again at one note (a stop and a start), as MuseScore writes pedals that meet. At the system break
+ * between m9 and m10, the line ended at m9's last note and went on from m10's first note, without (Ped.).
  */
 describe("Pedal line and sign attributes", () => {
     const sampleFilename: string = "test_pedal_line_and_sign.musicxml";
@@ -220,9 +221,15 @@ describe("Pedal line and sign attributes", () => {
             const measure: GraphicalMeasure = measures.filter(m => staffTop(m) === systemTop && m.PositionAndShape.AbsolutePosition.x <= left)
                 .pop();
             const width: number = box.width / unitInPixels;
-            // the lines are strokes, the signs filled glyphs, the Ped. about 3 units wide, the * about 1.7
-            const kind: string = element.getAttribute("fill") === "none" ? "line" : width > 2.5 ? "Ped." : "*";
+            // the lines are strokes, the signs filled glyphs, the Ped. about 3 units wide, the * about 1.7, a parenthesis 0.4
+            const kind: string = element.getAttribute("fill") === "none" ? "line" : width > 2.5 ? "Ped." : width < 1 ? "parenthesis" : "*";
             shapes.push({ kind, measure: measure.MeasureNumber, left, right: left + width, bottom: (box.y + box.height) / unitInPixels });
+        }
+        // a Ped. right after a parenthesis: (Ped.), confirming at a system's start that the pedal goes on from the system before
+        for (const ped of shapes.filter(shape => shape.kind === "Ped.")) {
+            if (shapes.some(shape => shape.kind === "parenthesis" && shape.right <= ped.left && ped.left - shape.right < 0.5)) {
+                ped.kind = "(Ped.)";
+            }
         }
         return shapes;
     }
@@ -255,6 +262,40 @@ describe("Pedal line and sign attributes", () => {
         expect(lines[0].right, "the first line ends left of the second Ped. sign").to.be.lessThan(peds[1].left);
         expect(peds[1].left - lines[0].right, "PedalReleaseSignMarginToPedSign left of it")
             .to.be.closeTo(osmd.EngravingRules.PedalReleaseSignMarginToPedSign, 0.1);
+    });
+
+    /** The pedal shapes of m10 (at the start of a system, where m9's pedal goes on), from left to right */
+    function shapesOfM10(): PedalShape[] {
+        return pedalShapes().filter(shape => shape.measure === 10).sort((a, b) => a.left - b.left);
+    }
+
+    /** The x of m10's first note */
+    function firstNoteOfM10(): number {
+        return osmd.GraphicSheet.MeasureList[9][0].staffEntries[0].PositionAndShape.AbsolutePosition.x;
+    }
+
+    it("runs a pedal line going on in the next system to the end of the system, and on from the start of the next one", () => {
+        const m9: GraphicalMeasure = osmd.GraphicSheet.MeasureList[8][0];
+        const line9: PedalShape = pedalShapes().find(shape => shape.kind === "line" && shape.measure === 9);
+        // (it ended at the end of m9's last note)
+        expect(line9.right, "m9: the line to the end of its system")
+            .to.be.closeTo(m9.PositionAndShape.AbsolutePosition.x + m9.PositionAndShape.Size.width, 0.1);
+        const inM10: PedalShape[] = shapesOfM10();
+        expect(inM10.every(shape => shape.kind === "line"), "m10: lines only (RenderPedalContinuationSign is false by default)")
+            .to.equal(true);
+        // (it started at m10's first note)
+        expect(inM10[0].left, "m10: the line from the start of the system, before the first note").to.be.lessThan(firstNoteOfM10() - 1);
+    });
+
+    it("draws (Ped.) there, then the line, with RenderPedalContinuationSign", () => {
+        const lineLeft: number = shapesOfM10()[0].left;
+        osmd.EngravingRules.RenderPedalContinuationSign = true;
+        osmd.render();
+        const inM10: PedalShape[] = shapesOfM10();
+        expect(inM10.slice(0, 4).map(shape => shape.kind), "m10: (Ped.), then the line")
+            .to.deep.equal(["parenthesis", "(Ped.)", "parenthesis", "line"]);
+        expect(inM10[0].left, "(Ped.) from where the line starts without it").to.be.closeTo(lineLeft, 0.1);
+        expect(inM10[3].left - inM10[2].right, "the line right after it").to.be.within(0, 1);
     });
 });
 

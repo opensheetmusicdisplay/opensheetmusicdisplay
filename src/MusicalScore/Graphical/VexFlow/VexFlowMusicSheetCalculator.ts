@@ -2087,6 +2087,27 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           graphicalPedal.CalculateBoundingBox();
           this.calculatePedalSkyBottomLine(graphicalPedal, startStaffLine);
 
+          if (this.rules.RenderPedalContinuationSign) {
+            // the systems in between, where the pedal is held throughout: no signs but (Ped.) at their start
+            for (let i: number = startStaffLine.ParentMusicSystem.Id + 1; i < endStaffLine.ParentMusicSystem.Id; i++) {
+              const staffline: StaffLine = this.musicSystems[i]?.StaffLines.find(line => line.ParentStaff.idInMusicSheet === staffIndex);
+              const firstNoteInBetween: GraphicalStaffEntry = staffline ? this.findBoundaryNoteEntry(staffline.Measures) : undefined;
+              if (!firstNoteInBetween) {
+                continue; // nothing on this staff in this system
+              }
+              const pedalInBetween: VexFlowPedal = new VexFlowPedal(pedal, staffline.Measures[0].PositionAndShape);
+              pedalInBetween.setStartNote(firstNoteInBetween);
+              pedalInBetween.setEndNote(this.findBoundaryNoteEntry(staffline.Measures, true));
+              pedalInBetween.setEndMeasure(staffline.Measures.last());
+              pedalInBetween.DepressText = " ";
+              pedalInBetween.ReleaseText = " ";
+              pedalInBetween.ContinuesFromSystemBefore = true;
+              staffline.Pedals.push(pedalInBetween);
+              pedalInBetween.CalculateBoundingBox();
+              this.calculatePedalSkyBottomLine(pedalInBetween, staffline);
+            }
+          }
+
           const nextPedalFirstMeasure: GraphicalMeasure = endStaffLine.Measures[0];
           // pedal starts on the first measure
           const nextPedal: VexFlowPedal = new VexFlowPedal(pedal, nextPedalFirstMeasure.PositionAndShape);
@@ -2103,6 +2124,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           endStaffLine.Pedals.push(nextPedal);
           nextPedal.CalculateBoundingBox();
           nextPedal.DepressText = " ";
+          nextPedal.ContinuesFromSystemBefore = true;
+          nextPedal.ReleasedAtSystemStart = !endIsClipped && firstNote === endStaffEntry;
           if (endIsClipped) {
             nextPedal.ReleaseText = " ";
           }
@@ -2173,6 +2196,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                 break;
               }
               nextPedal.setEndNote(lastNote);
+              nextPedal.ContinuesFromSystemBefore = true;
+              nextPedal.ReleasedAtSystemStart = !nextOpenEnd && firstNote === lastNote;
               graphicalPedal.setEndMeasure(endMeasure);
               nextPedalStaffline.Pedals.push(nextPedal);
               nextPedal.CalculateBoundingBox();
@@ -2490,11 +2515,20 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       let startX: number = vfPedal.startVfVoiceEntry.PositionAndShape.AbsolutePosition.x - pedalMarkingMarginXOffset;
       const startsWithSign: boolean = pedalMarking.style === PEDAL_STYLES_ENUM.MIXED ||
         pedalMarking.style === PEDAL_STYLES_ENUM.MIXED_OPEN_END;
-      if (startsWithSign || pedalMarking.style === PEDAL_STYLES_ENUM.TEXT) {
+      if (vfPedal.ContinuesFromSystemBefore) {
+        // going on from the system before: from the stave's note start, after its clef, key and time signature
+        //   (PedalMarking.BeginsStave), with (Ped.) there if it has the sign (PedalMarking.drawContinuationSign())
+        const firstMeasure: GraphicalMeasure = vfPedal.startVfVoiceEntry.parentStaffEntry.parentMeasure;
+        const stave: Vex.Flow.Stave = (firstMeasure as VexFlowMeasure).getVFStave();
+        startX = firstMeasure.PositionAndShape.AbsolutePosition.x + (stave.getNoteStartX() - stave.getX()) / 10;
+      } else if (startsWithSign || pedalMarking.style === PEDAL_STYLES_ENUM.TEXT) {
         //Accomodate the Ped. sign
         startX -= 1;
       }
       const signs: number[][] = [];
+      if (pedalMarking.ContinuationSign) {
+        signs.push([startX, startX + pedalMarking.getContinuationSignWidth() / 10]);
+      }
       //We have the two seperate symbols, with two bounding boxes
       if (vfPedal.EndSymbolPositionAndShape) {
         if (vfPedal.DepressText !== " ") {
@@ -2528,8 +2562,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         switch (pedalMarking.style) {
           case PEDAL_STYLES_ENUM.BRACKET_OPEN_END:
           case PEDAL_STYLES_ENUM.BRACKET_OPEN_BOTH:
-          case PEDAL_STYLES_ENUM.MIXED_OPEN_END:
-            stopX = endBbox.AbsolutePosition.x + endBbox.BorderRight - pedalMarkingMarginXOffset;
+          case PEDAL_STYLES_ENUM.MIXED_OPEN_END: {
+            // going on in the next system: to the end of the system, before courtesy signatures (PedalMarking.drawBracketed())
+            const lastMeasure: GraphicalMeasure = endVfVoiceEntry?.parentStaffEntry.parentMeasure;
+            stopX = lastMeasure ?
+              lastMeasure.PositionAndShape.AbsolutePosition.x + lastMeasure.PositionAndShape.Size.width - (lastMeasure.endInstructionsWidth ?? 0) :
+              endBbox.AbsolutePosition.x + endBbox.BorderRight - pedalMarkingMarginXOffset;
+          }
           break;
           default:
             stopX = endBbox.AbsolutePosition.x + endBbox.BorderLeft - pedalMarkingMarginXOffset;

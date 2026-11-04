@@ -8,6 +8,7 @@ import { MusicSymbol } from "../MusicSymbol";
 import { GraphicalMeasure } from "../GraphicalMeasure";
 import { VexFlowMeasure } from "./VexFlowMeasure";
 import { Fraction } from "../../../Common/DataObjects/Fraction";
+import { EngravingRules } from "../EngravingRules";
 /**
  * The vexflow adaptation of a pedal marking
  */
@@ -27,6 +28,11 @@ export class VexFlowPedal extends GraphicalPedal {
     public endMeasure: GraphicalMeasure;
     public ChangeBegin: boolean = false;
     public ChangeEnd: boolean = false;
+    /** Whether this part of the pedal goes on from the system before: it starts at the stave's note start (after its clef,
+     *  key and time signature), with (Ped.) for a pedal that starts with the Ped. sign (see EngravingRules.RenderPedalContinuationSign). */
+    public ContinuesFromSystemBefore: boolean = false;
+    /** Whether the pedal goes on from the system before and is released at the first note of this system: no (Ped.) */
+    public ReleasedAtSystemStart: boolean = false;
     private line: number = -3;
 
     public EndSymbolPositionAndShape: BoundingBox = undefined;
@@ -143,19 +149,24 @@ export class VexFlowPedal extends GraphicalPedal {
         ){
             (pedalMarking as any).EndsStave = true;
         }
-        if (this.getPedal.BeginsStave) {
+        if (this.getPedal.BeginsStave || this.ContinuesFromSystemBefore) {
+            // at a whole-measure rest, or going on from the system before: from the stave's note start
             (pedalMarking as any).BeginsStave = true;
         }
+        const rules: EngravingRules = this.getPedal.ParentStartMultiExpression.SourceMeasureParent.Rules;
+        // going on from the system before, a pedal that starts with the Ped. sign: (Ped.) at the start, to confirm it's still pressed
+        //   (not for a pedal that the file never releases, drawn to the end of the score: e.g. Dichterliebe01's first pedal)
+        (pedalMarking as any).ContinuationSign = this.ContinuesFromSystemBefore && !this.ReleasedAtSystemStart && this.getPedal.IsSign &&
+            this.getPedal.ParentEndMultiExpression !== undefined && rules.RenderPedalContinuationSign;
         (pedalMarking as any).ChangeBegin = this.ChangeBegin;
         (pedalMarking as any).ChangeEnd = this.ChangeEnd;
         // discontinued: the line ends where a released one draws its end hook, without the hook
-        //   (an open end, of a line going on in the next system, goes on to the end of the note instead)
+        //   (an open end, of a line going on in the next system, goes on to the end of the system instead)
         (pedalMarking as any).EndsWithoutHook = this.getPedal.EndsWithoutHook;
         // pressed again at the end note by a pedal that starts with the Ped. sign: a line ends with its hook left of that sign
         (pedalMarking as any).ChangeEndBeforeSign = this.ChangeEnd && this.getPedal.ParentEndMultiExpression?.PedalStart?.IsSign === true;
         // released and pressed again at the end note (ChangeEnd): the * or the hook this far left of the next pedal's Ped. sign
-        (pedalMarking as any).render_options.change_release_margin =
-            this.getPedal.ParentStartMultiExpression.SourceMeasureParent.Rules.PedalReleaseSignMarginToPedSign * 10;
+        (pedalMarking as any).render_options.change_release_margin = rules.PedalReleaseSignMarginToPedSign * 10;
         return pedalMarking;
     }
 
