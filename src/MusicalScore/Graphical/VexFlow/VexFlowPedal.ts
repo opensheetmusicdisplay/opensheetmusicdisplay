@@ -58,6 +58,8 @@ export class VexFlowPedal extends GraphicalPedal {
             break;
             case MusicSymbol.PEDAL_BRACKET:
             default:
+                // a resumed line (see Pedal.BeginsWithoutHook) starts like one going on from the system before
+                openBegin = openBegin || pedal.BeginsWithoutHook;
                 if (openBegin && openEnd) {
                     this.vfStyle = (Vex.Flow.PedalMarking.Styles as any).BRACKET_OPEN_BOTH;
                 } else if (openBegin) {
@@ -146,6 +148,9 @@ export class VexFlowPedal extends GraphicalPedal {
         }
         (pedalMarking as any).ChangeBegin = this.ChangeBegin;
         (pedalMarking as any).ChangeEnd = this.ChangeEnd;
+        // discontinued: the line ends where a released one draws its end hook, without the hook
+        //   (an open end, of a line going on in the next system, goes on to the end of the note instead)
+        (pedalMarking as any).EndsWithoutHook = this.getPedal.EndsWithoutHook;
         // with signs, released and pressed again at the end note (ChangeEnd): the * this far left of the next pedal's Ped. sign
         (pedalMarking as any).render_options.change_release_margin =
             this.getPedal.ParentStartMultiExpression.SourceMeasureParent.Rules.PedalReleaseSignMarginToPedSign * 10;
