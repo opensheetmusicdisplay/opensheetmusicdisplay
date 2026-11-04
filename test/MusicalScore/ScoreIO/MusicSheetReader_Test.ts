@@ -252,15 +252,15 @@ describe("Music Sheet Reader", () => {
                             expect(tremoloInfo.tremoloBetweenNotes, "start and stop notes are linked").to.not.be.undefined;
                             expect(tremoloInfo.tremoloBetweenNotes.strokes).to.equal(3);
                             if (tremoloInfo.tremoloBetweenNotesStart) {
-                                expect(tremoloInfo.tremoloBetweenNotes.startNote).to.equal(note);
+                                expect(tremoloInfo.tremoloBetweenNotes.startNote === note, "the start note is the tremolo's startNote").to.equal(true);
                                 openTremoloStartNote = note;
                             } else {
                                 expect(tremoloInfo.tremoloBetweenNotesStop, "note is start or stop note").to.be.true;
-                                expect(tremoloInfo.tremoloBetweenNotes.stopNote).to.equal(note);
-                                expect(tremoloInfo.tremoloBetweenNotes.startNote,
-                                       "stop note is linked to the previous start note in the same voice").to.equal(openTremoloStartNote);
-                                // start and stop note share the same TremoloBetweenNotes object:
-                                expect(openTremoloStartNote.TremoloInfo.tremoloBetweenNotes).to.equal(tremoloInfo.tremoloBetweenNotes);
+                                expect(tremoloInfo.tremoloBetweenNotes.stopNote === note, "the stop note is the tremolo's stopNote").to.equal(true);
+                                expect(tremoloInfo.tremoloBetweenNotes.startNote === openTremoloStartNote,
+                                       "stop note is linked to the previous start note in the same voice").to.equal(true);
+                                expect(openTremoloStartNote.TremoloInfo.tremoloBetweenNotes === tremoloInfo.tremoloBetweenNotes,
+                                       "start and stop note share the same TremoloBetweenNotes object").to.equal(true);
                                 tremoloCount++;
                             }
                         }
@@ -325,8 +325,10 @@ describe("Music Sheet Reader", () => {
             expect(tiedNotes[0].Pitch.getHalfTone()).to.equal(tiedNotes[1].Pitch.getHalfTone());
             expect(tiedNotes[0].Pitch.FundamentalNote).to.not.equal(tiedNotes[1].Pitch.FundamentalNote);
             expect(tiedNotes[0].NoteTie).to.not.be.undefined;
-            expect(tiedNotes[1].NoteTie).to.equal(tiedNotes[0].NoteTie);
-            expect(tiedNotes[0].NoteTie.Notes).to.deep.equal(tiedNotes);
+            expect(tiedNotes[1].NoteTie === tiedNotes[0].NoteTie, "both notes have the same tie").to.equal(true);
+            const tieNotes: Note[] = tiedNotes[0].NoteTie.Notes;
+            expect(tieNotes.length, "notes of the tie").to.equal(2);
+            expect(tieNotes[0] === tiedNotes[0] && tieNotes[1] === tiedNotes[1], "the tie's notes are the two tied notes, in order").to.equal(true);
             expect(Object.keys(enharmonicTieSheet.Staves[0].openTieDict)).to.be.empty;
         });
     });

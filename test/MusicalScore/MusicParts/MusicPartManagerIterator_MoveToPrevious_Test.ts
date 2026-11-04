@@ -195,7 +195,7 @@ describe("MusicPartManagerIterator enrolled timestamp when moving backwards", ()
             osmd.cursor.next();
         }
         expect(visited).to.deep.equal(expectedPositions());
-        expect(osmd.cursor.Iterator, "the cursor keeps its iterator").to.equal(iterator);
+        expect(osmd.cursor.Iterator === iterator, "the cursor keeps its iterator").to.equal(true);
 
         // at the end, update() shows the end of the last measure (moving the iterator back and forth for its position)
         //   - each time it is called

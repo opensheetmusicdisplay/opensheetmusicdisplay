@@ -52,8 +52,9 @@ describe("Multiple rest measures", () => {
         const timeSignatures: string[] = Array.from(container.querySelectorAll(".vf-timesignature"))
             .filter(time => !time.closest(".vf-multirest")).map(time => time.closest(".vf-measure").id);
         expect(timeSignatures, "4/4 in measure 1, 3/4 in measure 5").to.deep.equal(["osmd-m0-0", "osmd-m4-0"]);
-        expect(osmd.GraphicSheet.findGraphicalMeasure(3, 0)).to.equal(osmd.GraphicSheet.MeasureList[2][0]);
-        expect(osmd.GraphicSheet.findGraphicalMeasure(5, 0)).to.equal(osmd.GraphicSheet.MeasureList[4][0]);
+        const sheet: GraphicalMusicSheet = osmd.GraphicSheet;
+        expect(sheet.findGraphicalMeasure(3, 0) === sheet.MeasureList[2][0], "measure 4: the multiple rest measure of measures 3-4").to.equal(true);
+        expect(sheet.findGraphicalMeasure(5, 0) === sheet.MeasureList[4][0], "measure 6: the multiple rest measure of measures 5-6").to.equal(true);
     });
 
     it("resolves explicit rest members to their representative measure and preserves fallback lookups", async () => {
@@ -69,13 +70,16 @@ describe("Multiple rest measures", () => {
         expect(measures[restStart].filter(Boolean)).to.have.length(staffCount);
         for (let index: number = restStart; index < restStart + restLength; index++) {
             for (let staff: number = 0; staff < staffCount; staff++) {
-                expect(graphic.findGraphicalMeasure(index, staff), `measure ${index + 1}, staff ${staff}`).to.equal(measures[restStart][staff]);
+                expect(graphic.findGraphicalMeasure(index, staff) === measures[restStart][staff], `measure ${index + 1}, staff ${staff}`).to.equal(true);
             }
         }
         for (let staff: number = 0; staff < staffCount; staff++) {
-            expect(graphic.findGraphicalMeasure(restStart - 1, staff)).to.equal(measures[restStart - 1][staff]);
-            expect(graphic.findGraphicalMeasure(restStart + restLength, staff)).to.equal(measures[restStart + restLength][staff]);
-            expect(graphic.findGraphicalMeasure(measures.length, staff)).to.equal(measures[24][staff]);
+            expect(graphic.findGraphicalMeasure(restStart - 1, staff) === measures[restStart - 1][staff],
+                   `the measure before the rest, staff ${staff}`).to.equal(true);
+            expect(graphic.findGraphicalMeasure(restStart + restLength, staff) === measures[restStart + restLength][staff],
+                   `the measure after the rest, staff ${staff}`).to.equal(true);
+            expect(graphic.findGraphicalMeasure(measures.length, staff) === measures[24][staff],
+                   `an index past the end: the last measure, staff ${staff}`).to.equal(true);
         }
         expect(graphic.findGraphicalMeasure(-1, 0)).to.equal(undefined);
         expect(graphic.findGraphicalMeasure(22, staffCount)).to.equal(undefined);

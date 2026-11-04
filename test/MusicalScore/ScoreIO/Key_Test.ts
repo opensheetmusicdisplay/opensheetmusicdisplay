@@ -315,7 +315,7 @@ describe("Mid-measure keys", (): void => {
     expect(entries[0].Timestamp.RealValue).to.equal(0.5);
     const key: KeyInstruction = entries[0].Instructions[0] as KeyInstruction;
     expect(key.Key).to.equal(1);
-    expect(key.Parent).to.equal(entries[0]);
+    expect(key.Parent === entries[0], "the key's parent is the staff entry").to.equal(true);
   });
 
   it("uses C before the first explicit key and ignores a same-key redeclaration", (): void => {

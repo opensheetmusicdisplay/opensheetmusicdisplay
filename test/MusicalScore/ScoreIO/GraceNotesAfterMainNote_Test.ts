@@ -54,11 +54,11 @@ describe("Grace notes after the main note (#1706)", () => {
     function expectAttachedGraceNote(grace: VoiceEntry, main: VoiceEntry, description: string): void {
         expect(grace.IsGrace, `${description} is a grace note`).to.equal(true);
         expect(grace.GraceAfterMainNote, `${description} is marked as coming after its main note`).to.equal(true);
-        expect(grace.ParentVoice, `${description} stays in the voice of the main note`).to.equal(main.ParentVoice);
-        expect(grace.ParentSourceStaffEntry, `${description} is in the staff entry of the main note`).to.equal(main.ParentSourceStaffEntry);
+        expect(grace.ParentVoice === main.ParentVoice, `${description} stays in the voice of the main note`).to.equal(true);
+        expect(grace.ParentSourceStaffEntry === main.ParentSourceStaffEntry, `${description} is in the staff entry of the main note`).to.equal(true);
         expect(grace.Timestamp.Equals(main.Timestamp), `${description} has the timestamp of the main note`).to.equal(true);
         for (const note of grace.Notes) {
-            expect(note.ParentStaffEntry, `${description}: its note is in the staff entry of the main note too`).to.equal(main.ParentSourceStaffEntry);
+            expect(note.ParentStaffEntry === main.ParentSourceStaffEntry, `${description}: its note is in the staff entry of the main note too`).to.equal(true);
         }
     }
 
@@ -292,9 +292,9 @@ describe("Grace notes after the main note (#1706)", () => {
                 expect(staffLines.map(staffLine => staffLine.WavyLines.length), "trills").to.deep.equal(segmentsPerSystem);
                 const m4Bass: VexFlowVoiceEntry = osmd.GraphicSheet.MeasureList[5][1].staffEntries[0].graphicalVoiceEntries[0] as VexFlowVoiceEntry;
                 const lastSystem: StaffLine = staffLines[4];
-                expect((lastSystem.Pedals[0] as VexFlowPedal).startNote, "pedal line from m.4").to.equal(m4Bass.vfStaveNote);
-                expect((lastSystem.OctaveShifts[0] as VexFlowOctaveShift).startNote, "8vb from m.4").to.equal(m4Bass.vfStaveNote);
-                expect((lastSystem.WavyLines[0] as VexFlowVibratoBracket).startNote, "trill from m.4").to.equal(m4Bass.vfStaveNote);
+                expect((lastSystem.Pedals[0] as VexFlowPedal).startNote === m4Bass.vfStaveNote, "pedal line from m.4").to.equal(true);
+                expect((lastSystem.OctaveShifts[0] as VexFlowOctaveShift).startNote === m4Bass.vfStaveNote, "8vb from m.4").to.equal(true);
+                expect((lastSystem.WavyLines[0] as VexFlowVibratoBracket).startNote === m4Bass.vfStaveNote, "trill from m.4").to.equal(true);
             });
 
             it("draws a pedal marked with signs, also when a system starts with the grace notes", async () => {
