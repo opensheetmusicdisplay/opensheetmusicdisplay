@@ -15,7 +15,7 @@ import {Staff} from "../VoiceData/Staff";
 import {VoiceEntry} from "../VoiceData/VoiceEntry";
 import {LyricsEntry} from "../VoiceData/Lyrics/LyricsEntry";
 import {LyricWord} from "../VoiceData/Lyrics/LyricsWord";
-import {InstrumentalGroup} from "../InstrumentalGroup";
+import {GroupSymbol, InstrumentalGroup} from "../InstrumentalGroup";
 import {SubInstrument} from "../SubInstrument";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
@@ -1329,6 +1329,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                         if (groupAbbreviation) {
                             iG.Abbreviation = groupAbbreviation.value;
                         }
+                        iG.GroupSymbol = this.readGroupSymbol(node.element("group-symbol"));
                         iG.PrintName = canAssignGroupNames;
                         iG.PrintAbbreviation = canAssignGroupNames;
                         const nameDisplay: IXmlElement = node.element("group-name-display");
@@ -1351,8 +1352,12 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                                 const hasMultipleParts: boolean = this.countInstrumentsInGroup(currentGroup) > 1;
                                 currentGroup.PrintName = currentGroup.PrintName && hasMultipleParts;
                                 currentGroup.PrintAbbreviation = currentGroup.PrintAbbreviation && hasMultipleParts;
-                                if (currentGroup.InstrumentalGroups.length === 1) {
-                                    const instr: InstrumentalGroup = currentGroup.InstrumentalGroups[0];
+                                // a group around a single part or group is left out, except around a group with another symbol:
+                                //   e.g. a bracket around a square bracket of the same parts (Gould's secondary bracket) keeps both
+                                const onlyChild: InstrumentalGroup = currentGroup.InstrumentalGroups.length === 1 ?
+                                    currentGroup.InstrumentalGroups[0] : undefined;
+                                if (onlyChild && (onlyChild instanceof Instrument || onlyChild.GroupSymbol === currentGroup.GroupSymbol)) {
+                                    const instr: InstrumentalGroup = onlyChild;
                                     if (currentGroup.Parent) {
                                         currentGroup.Parent.InstrumentalGroups.push(instr);
                                         this._removeFromArray(currentGroup.Parent.InstrumentalGroups, currentGroup);
@@ -1375,6 +1380,22 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
 
         return instrumentDict;
+    }
+
+    /** The MusicXML group-symbol of a part-group: none if not given (MusicXML 4.0, group-symbol), and for an unknown value. */
+    private readGroupSymbol(groupSymbol: IXmlElement): GroupSymbol {
+        switch (groupSymbol?.value?.trim()) {
+            case "brace":
+                return GroupSymbol.Brace;
+            case "line":
+                return GroupSymbol.Line;
+            case "bracket":
+                return GroupSymbol.Bracket;
+            case "square":
+                return GroupSymbol.Square;
+            default:
+                return GroupSymbol.None;
+        }
     }
 
     private countInstrumentsInGroup(group: InstrumentalGroup): number {
