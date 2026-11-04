@@ -98,7 +98,7 @@ export class DrawingParameters {
         this.drawHighlights = false;
         this.drawErrors = false;
         this.drawSelectionStartSymbol = false;
-        this.drawSelectionStartSymbol = false;
+        this.drawSelectionEndSymbol = false;
         this.drawCursors = false;
         this.drawActivitySymbols = false;
         this.drawScrollIndicator = false;
