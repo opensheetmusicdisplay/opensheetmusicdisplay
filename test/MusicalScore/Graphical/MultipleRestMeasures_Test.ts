@@ -81,8 +81,8 @@ describe("Multiple rest measures", () => {
             expect(graphic.findGraphicalMeasure(measures.length, staff) === measures[24][staff],
                    `an index past the end: the last measure, staff ${staff}`).to.equal(true);
         }
-        expect(graphic.findGraphicalMeasure(-1, 0)).to.equal(undefined);
-        expect(graphic.findGraphicalMeasure(22, staffCount)).to.equal(undefined);
+        expect(graphic.findGraphicalMeasure(-1, 0) === undefined, "measure index -1").to.equal(true);
+        expect(graphic.findGraphicalMeasure(22, staffCount) === undefined, "a staff index past the last staff").to.equal(true);
     });
 
     it("draws the measure that a <multiple-rest> begins as wide as the other rest measures " +

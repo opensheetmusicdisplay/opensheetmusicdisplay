@@ -59,7 +59,7 @@ describe("Slur with an unattached end", () => {
         const gSlurs: GraphicalSlur[] = graphicalSlursStartingAt(noteAt(1, -1));
         expect(gSlurs.length).to.equal(1);
         const gSlur: GraphicalSlur = gSlurs[0];
-        expect(gSlur.slur.EndNote, "no end note").to.equal(undefined);
+        expect(gSlur.slur.EndNote === undefined, "no end note").to.equal(true);
         expect(gSlur.slur.HasUnattachedEnd).to.equal(true);
         expect(gSlur.placement, "opposite to the stem (up)").to.equal(PlacementEnum.Below);
         const endX: number = measureEndX(1);
@@ -72,7 +72,7 @@ describe("Slur with an unattached end", () => {
         const gSlurs: GraphicalSlur[] = graphicalSlursStartingAt(noteAt(2, -1));
         expect(gSlurs.length).to.equal(1);
         const gSlur: GraphicalSlur = gSlurs[0];
-        expect(gSlur.slur.EndNote).to.equal(undefined);
+        expect(gSlur.slur.EndNote === undefined, "no end note").to.equal(true);
         expect(gSlur.placement, "opposite to the stem (down)").to.equal(PlacementEnum.Above);
         expect(gSlur.bezierEndPt.x, "doesn't reach the lines of the repeat sign").to.be.at.most(measureEndX(2) - 0.5 + 0.001);
         expect(gSlur.bezierEndPt.x - gSlur.bezierStartPt.x, "long enough to be seen as a slur").to.be.greaterThan(1.5);
@@ -82,7 +82,7 @@ describe("Slur with an unattached end", () => {
         const note: Note = noteAt(3, 0);
         expect(note.NoteSlurs.length).to.equal(1);
         expect(note.NoteSlurs[0].StartNote === note, "the slur starts at the note").to.equal(true);
-        expect(note.NoteSlurs[0].EndNote).to.equal(undefined);
+        expect(note.NoteSlurs[0].EndNote === undefined, "no end note").to.equal(true);
         expect(note.NoteSlurs[0].HasUnattachedEnd).to.equal(true);
         expect(graphicalSlursStartingAt(note).length, "not drawn").to.equal(0);
     });
@@ -91,7 +91,7 @@ describe("Slur with an unattached end", () => {
         for (const note of [noteAt(1, -1), noteAt(2, -1), noteAt(3, 0), noteAt(5, -1)]) {
             expect(note.NoteSlurs.length, "only its own slur, no slur from the previous one ends here").to.equal(1);
             expect(note.NoteSlurs[0].StartNote === note, "its slur starts at the note").to.equal(true);
-            expect(note.NoteSlurs[0].EndNote).to.equal(undefined);
+            expect(note.NoteSlurs[0].EndNote === undefined, "no end note").to.equal(true);
         }
     });
 
@@ -105,7 +105,7 @@ describe("Slur with an unattached end", () => {
     it("reads a stop written before the start the same way, if it ends no earlier slur", () => {
         const gSlurs: GraphicalSlur[] = graphicalSlursStartingAt(noteAt(5, -1));
         expect(gSlurs.length).to.equal(1);
-        expect(gSlurs[0].slur.EndNote).to.equal(undefined);
+        expect(gSlurs[0].slur.EndNote === undefined, "no end note").to.equal(true);
         expect(gSlurs[0].bezierEndPt.x).to.be.within(measureEndX(5) - graphicalMeasure(5).endInstructionsWidth - 0.001, measureEndX(5));
     });
 

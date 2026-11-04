@@ -54,10 +54,10 @@ describe("GetClickedObject", () => {
 
         // above the title: nothing, not even the page, whose box is that of its objects
         const inTheMargin: PointF2D = new PointF2D(1, 1);
-        expect(sheet.getClickedObject(inTheMargin)).to.equal(undefined);
-        expect(sheet.getClickedObjectOfType(inTheMargin, GraphicalStaffEntry)).to.equal(undefined);
-        expect(sheet.tryGetTimestampFromPosition(inTheMargin)).to.equal(undefined);
-        expect(sheet.GetClickableLabel(inTheMargin)).to.equal(undefined);
+        expect(sheet.getClickedObject(inTheMargin) === undefined, "getClickedObject()").to.equal(true);
+        expect(sheet.getClickedObjectOfType(inTheMargin, GraphicalStaffEntry) === undefined, "getClickedObjectOfType()").to.equal(true);
+        expect(sheet.tryGetTimestampFromPosition(inTheMargin) === undefined, "tryGetTimestampFromPosition()").to.equal(true);
+        expect(sheet.GetClickableLabel(inTheMargin) === undefined, "GetClickableLabel()").to.equal(true);
     });
 
     it("searches only the given page (a page format: each page has its own coordinates)", async () => {

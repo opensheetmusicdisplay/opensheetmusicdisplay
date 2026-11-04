@@ -88,7 +88,7 @@ describe("Grace notes after the main note (#1706)", () => {
         // the bass staff is unaffected
         expect(measure.VerticalSourceStaffEntryContainers[0].StaffEntries[1].VoiceEntries.length).to.equal(1);
         expect(measure.VerticalSourceStaffEntryContainers[1].StaffEntries[1].VoiceEntries.length).to.equal(1);
-        expect(measure.VerticalSourceStaffEntryContainers[1].StaffEntries[0], "no treble staff entry at 1/4").to.equal(undefined);
+        expect(measure.VerticalSourceStaffEntryContainers[1].StaffEntries[0] === undefined, "no treble staff entry at 1/4").to.equal(true);
     });
 
     it("leaves grace notes before a following main note where they are (in the staff entry of that note, not marked)", async () => {

@@ -84,8 +84,8 @@ describe("Measure numbers only at system start", () => {
         const systems: MusicSystem[] = await renderSystems("test_measure_numbers_only_at_system_start_pickup_courtesy_key.musicxml",
             { newSystemFromXML: true }, undefined, 2);
         const firstSystem: MusicSystem = systems[0];
-        expect(firstSystem.StaffLines[0].Measures.last().parentSourceMeasure, "courtesy measure has no source measure")
-            .to.equal(undefined);
+        expect(firstSystem.StaffLines[0].Measures.last().parentSourceMeasure === undefined, "courtesy measure has no source measure")
+            .to.equal(true);
         expect(measureNumberTexts(firstSystem), "the pickup system has no measure number").to.deep.equal([]);
     });
 
