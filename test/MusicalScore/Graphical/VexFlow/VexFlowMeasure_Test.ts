@@ -1429,8 +1429,8 @@ describe("VexFlow Measure", () => {
          (gve: GraphicalVoiceEntry) => !gve.parentVoiceEntry.IsGrace) as VexFlowVoiceEntry;
       expect(graceGve !== undefined && mainGve !== undefined, "the grace note and the half note share a staff entry").to.equal(true);
       expect((graceGve.notes[0].sourceNote as TabNote).FretNumber, "the grace note is on fret 1").to.equal(1);
-      expect(graceGve.parentVoiceEntry.ParentVoice, "the grace note and the half note are in the same voice")
-         .to.equal(mainGve.parentVoiceEntry.ParentVoice);
+      expect(graceGve.parentVoiceEntry.ParentVoice === mainGve.parentVoiceEntry.ParentVoice,
+         "the grace note and the half note are in the same voice").to.equal(true);
 
       // the grace note is a Vexflow GraceTabNote (fret number drawn at a smaller scale) ...
       const vfGraceNote: any = graceGve.vfStaveNote;
@@ -1440,7 +1440,8 @@ describe("VexFlow Measure", () => {
       const graceNoteGroups: any[] = (mainGve.vfStaveNote as any).modifiers.filter(
          (modifier: any) => modifier.getCategory() === "gracenotegroups");
       expect(graceNoteGroups.length, "the main note carries one GraceNoteGroup").to.equal(1);
-      expect(graceNoteGroups[0].getGraceNotes(), "which holds the grace note").to.deep.equal([vfGraceNote]);
+      const graceNotes: any[] = graceNoteGroups[0].getGraceNotes();
+      expect(graceNotes.length === 1 && graceNotes[0] === vfGraceNote, "which holds the grace note").to.equal(true);
 
       // the SVG contains all three fret numbers, the grace note's in a smaller font and left of its main note
       const fretNumbers: { text: string, fontSize: string, x: number }[] = drawnFretNumbers(div);

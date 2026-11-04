@@ -83,7 +83,7 @@ describe("Clef changes without a note of their staff at their time (#1836)", () 
         const measure: SourceMeasure = osmd.Sheet.SourceMeasures[1];
         expect(clefNames(measure.LastInstructionsStaffEntries[lowerStaff]?.Instructions ?? []), "m.2, lower staff: clef at the end")
             .to.deep.equal(["G2"]);
-        expect(measure.LastInstructionsStaffEntries[upperStaff], "m.2, upper staff: no clef at the end").to.equal(undefined);
+        expect(measure.LastInstructionsStaffEntries[upperStaff] === undefined, "m.2, upper staff: no clef at the end").to.equal(true);
         expect(noteClefs(osmd, 1, lowerStaff), "m.2, lower staff: C3 and G2 in the bass clef").to.deep.equal(["F4", "F4"]);
         expect(noteClefs(osmd, 2, lowerStaff), "m.3, lower staff: E4 in the treble clef").to.deep.equal(["G2"]);
     });

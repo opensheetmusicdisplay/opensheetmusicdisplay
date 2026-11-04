@@ -150,7 +150,7 @@ describe("Slides in a part with a standard and a tab staff", () => {
         }
         expect(glissandi.length, "three slides in each staff").to.equal(6);
         for (const glissando of glissandi) {
-            expect(glissando.StartNote.ParentStaff, "start and end note in the same staff").to.equal(glissando.EndNote.ParentStaff);
+            expect(glissando.StartNote.ParentStaff === glissando.EndNote.ParentStaff, "start and end note in the same staff").to.equal(true);
         }
     });
 
