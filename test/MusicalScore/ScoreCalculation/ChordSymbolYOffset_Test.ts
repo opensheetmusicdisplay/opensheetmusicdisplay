@@ -41,6 +41,9 @@ interface ChordSymbolLabelBox {
     lowestSkyLine: number;
     /** The highest bottom line value over the label (below the staff), i.e. where the least space is reserved below the staff. */
     highestBottomLine: number;
+    /** The y of the text's baseline where MusicSheetDrawer.drawLabel() draws it: 1 text height under the top of a box 1.2 text heights
+     *  high, whose bottom is the label's position above the staff (text alignment LeftBottom), its top below the staff (LeftTop). */
+    baseline: number;
 }
 
 /**
@@ -72,13 +75,16 @@ function chordSymbolLabelBoxes(graphicalSheet: GraphicalMusicSheet): ChordSymbol
                                 lowestSkyLine = Math.max(lowestSkyLine, sbc.SkyLine[i]);
                                 highestBottomLine = Math.min(highestBottomLine, sbc.BottomLine[i]);
                             }
+                            const placement: PlacementEnum = chordContainer.GetChordSymbolContainer.Placement;
+                            const fontHeight: number = chordContainer.GraphicalLabel.Label.fontHeight;
                             boxes.push({
                                 text: chordContainer.GraphicalLabel.Label.text,
-                                placement: chordContainer.GetChordSymbolContainer.Placement,
+                                placement,
                                 top: y + labelBox.BorderTop,
                                 bottom: y + labelBox.BorderBottom,
                                 lowestSkyLine,
                                 highestBottomLine,
+                                baseline: placement === PlacementEnum.Below ? y + fontHeight : y - 0.2 * fontHeight,
                             });
                         }
                     }
@@ -133,12 +139,16 @@ describe("Chord symbol y offset (EngravingRules.ChordSymbolYOffset)", () => {
     }
 
     it("moves the staff down by the distance added to the chord symbols", () => {
+        // without the minimum distance to the staff, which would keep the chord symbols over the whole rests at least that high
+        //   (ChordSymbolMinimumBaselineAboveStaff, tested below), so that only ChordSymbolYOffset decides
         const xml: Document = TestUtils.getScore("test_chord_whole_rest_overlap.musicxml");
         const defaultY: number = firstStaffLineY(buildGraphicalMusicSheet(xml, (rules: EngravingRules): void => {
             rules.ChordSymbolYOffset = 0.1;
+            rules.ChordSymbolMinimumBaselineAboveStaff = 0;
         }));
         const fartherY: number = firstStaffLineY(buildGraphicalMusicSheet(xml, (rules: EngravingRules): void => {
             rules.ChordSymbolYOffset = 2.1;
+            rules.ChordSymbolMinimumBaselineAboveStaff = 0;
         }));
         // (the y positions of the systems are rounded to pixels, 0.1 units)
         expect(fartherY - defaultY, "the staff 2 units lower").to.be.closeTo(2, 0.1);
@@ -216,15 +226,83 @@ describe("Chord symbols on one note", () => {
     });
 
     it("places the chord symbols of a note at the same distance to the staff without the y alignment (ChordSymbolYAlignment false)", () => {
-        // a note in the staff: the sky line under the chord symbols is the top staff line, so that they are at the same height
+        // a note in the staff: the sky line under the chord symbols is the top staff line, so that they are at the same height.
+        //   Without the minimum distance to the staff (ChordSymbolMinimumBaselineAboveStaff), which would lift them all to it.
         const boxes: ChordSymbolLabelBox[] = chordSymbolLabelBoxes(buildGraphicalMusicSheet(chordSymbolsOnOneNote("B", 4, "above"),
             (rules: EngravingRules): void => {
                 rules.ChordSymbolYAlignment = false;
+                rules.ChordSymbolMinimumBaselineAboveStaff = 0;
             }));
         expect(boxes.map(box => box.text), "chord symbols").to.deep.equal(["C", "Am", "G7"]);
         for (const box of boxes) {
             expect(box.top, `top of ${box.text}`).to.be.closeTo(boxes[0].top, 0.000001);
         }
         expectSpaceReservedForChordSymbols(boxes, 3);
+    });
+});
+
+describe("Chord symbol minimum distance to the staff (EngravingRules.ChordSymbolMinimumBaselineAboveStaff, ...BelowStaff)", () => {
+    // Chord symbols are placed above what is under them (ChordSymbolYOffset). Over a whole rest, that's the top staff line, so their
+    //   baseline was only about 0.6 units above the staff. The minimum distance places their baseline at least that far from the staff.
+
+    // test_chord_whole_rest_overlap: 4 chord symbols over whole rests, nothing above the staff under them.
+    it("places chord symbols over whole rests with their baseline 1.5 units above the staff by default", () => {
+        const boxes: ChordSymbolLabelBox[] = chordSymbolLabelBoxes(
+            buildGraphicalMusicSheet(TestUtils.getScore("test_chord_whole_rest_overlap.musicxml")));
+        for (const box of boxes) {
+            expect(-box.baseline, `baseline of ${box.text} above the staff`).to.be.closeTo(1.5, 0.000001);
+        }
+        expectSpaceReservedForChordSymbols(boxes, 4);
+    });
+
+    it("places chord symbols over whole rests with their baseline ChordSymbolMinimumBaselineAboveStaff above the staff", () => {
+        const boxes: ChordSymbolLabelBox[] = chordSymbolLabelBoxes(buildGraphicalMusicSheet(
+            TestUtils.getScore("test_chord_whole_rest_overlap.musicxml"), (rules: EngravingRules): void => {
+                rules.ChordSymbolMinimumBaselineAboveStaff = 2.5;
+            }));
+        for (const box of boxes) {
+            expect(-box.baseline, `baseline of ${box.text} above the staff`).to.be.closeTo(2.5, 0.000001);
+        }
+        expectSpaceReservedForChordSymbols(boxes, 4);
+    });
+
+    it("places chord symbols over whole rests closer to the staff without the minimum (ChordSymbolMinimumBaselineAboveStaff 0)", () => {
+        const boxes: ChordSymbolLabelBox[] = chordSymbolLabelBoxes(buildGraphicalMusicSheet(
+            TestUtils.getScore("test_chord_whole_rest_overlap.musicxml"), (rules: EngravingRules): void => {
+                rules.ChordSymbolMinimumBaselineAboveStaff = 0;
+            }));
+        for (const box of boxes) {
+            expect(-box.baseline, `baseline of ${box.text} above the staff`).to.be.below(1);
+        }
+        expectSpaceReservedForChordSymbols(boxes, 4);
+    });
+
+    it("places chord symbols over a high note above the note, where the minimum doesn't matter", () => {
+        // A6: the chord symbols are placed above the note head (ChordSymbolYOffset), far above the minimum distance
+        const xml: Document = chordSymbolsOnOneNote("A", 6, "above");
+        const boxes: ChordSymbolLabelBox[] = chordSymbolLabelBoxes(buildGraphicalMusicSheet(xml));
+        const boxesWithoutMinimum: ChordSymbolLabelBox[] = chordSymbolLabelBoxes(buildGraphicalMusicSheet(xml, (rules: EngravingRules): void => {
+            rules.ChordSymbolMinimumBaselineAboveStaff = 0;
+        }));
+        expect(boxes.length, "chord symbols").to.equal(3);
+        for (let i: number = 0; i < boxes.length; i++) {
+            expect(-boxes[i].baseline, `baseline of ${boxes[i].text} above the staff`).to.be.above(3);
+            expect(boxes[i].baseline, `baseline of ${boxes[i].text}`).to.be.closeTo(boxesWithoutMinimum[i].baseline, 0.000001);
+        }
+    });
+
+    // test_chord_symbol_numeral_placement_below: a roman numeral (I) below the second staff of a piano.
+    it("places chord symbols below the staff with their baseline ChordSymbolMinimumBaselineBelowStaff below it", () => {
+        const xml: Document = TestUtils.getScore("test_chord_symbol_numeral_placement_below.musicxml");
+        const defaultBoxes: ChordSymbolLabelBox[] = chordSymbolLabelBoxes(buildGraphicalMusicSheet(xml));
+        const boxes: ChordSymbolLabelBox[] = chordSymbolLabelBoxes(buildGraphicalMusicSheet(xml, (rules: EngravingRules): void => {
+            rules.ChordSymbolMinimumBaselineBelowStaff = 3.5;
+        }));
+        expect(boxes[0]?.placement, "placement").to.equal(PlacementEnum.Below);
+        // the bottom line of the (5-line) staff is 4 units under its top line
+        expect(boxes[0].baseline - 4, "baseline of the numeral below the staff").to.be.closeTo(3.5, 0.000001);
+        // no minimum below the staff by default: there the numeral is closer to the staff
+        expect(defaultBoxes[0].baseline - 4, "baseline of the numeral below the staff by default").to.be.below(3);
+        expectSpaceReservedForChordSymbols(boxes, 1);
     });
 });

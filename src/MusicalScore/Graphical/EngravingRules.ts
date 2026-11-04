@@ -171,6 +171,15 @@ export class EngravingRules {
      * No effect for now: the chord symbols of a note are placed next to each other, each with ChordSymbolYOffset like a single one.
      */
     public ChordSymbolYPadding: number;
+    /** The minimum distance from the top staff line up to the baseline of a chord symbol above the staff, in units (staff spaces).
+     *  Chord symbols are placed above what is under them (ChordSymbolYOffset), and at least this high, e.g. over a whole rest or
+     *  over notes inside the staff. Default 1.5 (MuseScore uses 2.5). 0: no minimum.
+     */
+    public ChordSymbolMinimumBaselineAboveStaff: number;
+    /** The minimum distance from the bottom staff line down to the baseline of a chord symbol below the staff, in units (staff spaces),
+     *  like ChordSymbolMinimumBaselineAboveStaff. Default 0: no minimum (MuseScore uses 3.5).
+     */
+    public ChordSymbolMinimumBaselineBelowStaff: number;
     public ChordSymbolYAlignment: boolean;
     public ChordSymbolYAlignmentScope: string;
     /** Offset to start of measure (barline) when chord symbol is on whole measure rest.
@@ -933,6 +942,8 @@ export class EngravingRules {
         this.ChordOverlapAllowedIntoNextMeasure = 0;
         this.ChordSymbolYOffset = 0.1;
         this.ChordSymbolYPadding = 0.0;
+        this.ChordSymbolMinimumBaselineAboveStaff = 1.5;
+        this.ChordSymbolMinimumBaselineBelowStaff = 0;
         this.ChordSymbolYAlignment = true;
         this.ChordSymbolYAlignmentScope = "staffline"; // "measure" or "staffline"
         this.ChordSymbolWholeMeasureRestXOffset = 0;
