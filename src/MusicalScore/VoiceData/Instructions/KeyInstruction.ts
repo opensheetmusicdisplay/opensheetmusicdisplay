@@ -1,8 +1,6 @@
 import {AbstractNotationInstruction} from "./AbstractNotationInstruction";
 import {SourceStaffEntry} from "../SourceStaffEntry";
 import {NoteEnum} from "../../../Common/DataObjects/Pitch";
-import {AccidentalEnum} from "../../../Common/DataObjects/Pitch";
-import {Pitch} from "../../../Common/DataObjects/Pitch";
 
 /**
  * A [[KeyInstruction]] is a key signature denoting which notes are to be sharpened or flattened.
@@ -82,17 +80,6 @@ export class KeyInstruction extends AbstractNotationInstruction {
             return true;
         }
         return false;
-    }
-
-    public getAlterationForPitch(pitch: Pitch): AccidentalEnum {
-        if (this.keyType > 0 && this.alteratedNotes.indexOf(pitch.FundamentalNote) <= this.keyType) {
-        // if (this.keyType > 0 && this.alteratedNotes.indexOf(pitch.FundamentalNote) > -1) {
-            return AccidentalEnum.SHARP;
-        // } else if (this.keyType < 0 && this.alteratedNotes.indexOf(pitch.FundamentalNote) > -1) {
-        } else if (this.keyType < 0 && this.alteratedNotes.indexOf(pitch.FundamentalNote) <= Math.abs(this.keyType)) {
-            return AccidentalEnum.FLAT;
-        }
-        return AccidentalEnum.NONE;
     }
 
     public ToString(): string {
