@@ -74,6 +74,9 @@ export class VoiceGenerator {
   private openTremoloBetweenNotes: TremoloBetweenNotes;
   /** The beam of the chord whose part on another staff continueChordInStaffEntry() just created: the part's first note joins it. */
   private chordPartBeam: Beam;
+  /** The tuplet of the chord whose part on another staff continueChordInStaffEntry() created, if its first note is in one: the
+   *  part's notes join it, also after the first note stopped it (see handleTimeModificationNode()). */
+  private chordPartTuplet: Tuplet;
 
   public get GetVoice(): Voice {
     return this.voice;
@@ -97,6 +100,7 @@ export class VoiceGenerator {
   public createVoiceEntry(musicTimestamp: Fraction, parentStaffEntry: SourceStaffEntry, addToVoice: boolean,
                           isGrace: boolean = false, graceNoteSlash: boolean = false, graceSlur: boolean = false): void {
     this.chordPartBeam = undefined;
+    this.chordPartTuplet = undefined;
     this.currentVoiceEntry = new VoiceEntry(musicTimestamp.clone(), this.voice, parentStaffEntry, isGrace, graceNoteSlash, graceSlur);
     if (addToVoice) {
       this.voice.VoiceEntries.push(this.currentVoiceEntry);
@@ -107,8 +111,8 @@ export class VoiceGenerator {
    * Continues the current chord with a note on another staff than the chord's previous note (<chord/> with another
    * <staff>), e.g. a piano chord split between the staves of the two hands: makes the chord's voice entry in the staff
    * entry of that staff the current one, creating it if needed. So each staff draws its part of the chord, with a stem of
-   * its own (a stem from one staff to the other isn't drawn), and a new part's first note joins the chord's beam.
-   * Does nothing for a note on the staff of the chord's previous note.
+   * its own (a stem from one staff to the other isn't drawn), and a new part's first note joins the chord's beam, its notes
+   * the chord's tuplet. Does nothing for a note on the staff of the chord's previous note.
    * @param staffEntry The staff entry of the note's staff at the chord's timestamp.
    */
   public continueChordInStaffEntry(staffEntry: SourceStaffEntry): void {
@@ -124,6 +128,7 @@ export class VoiceGenerator {
     }
     this.createVoiceEntry(chordVoiceEntry.Timestamp, staffEntry, true);
     this.chordPartBeam = chordVoiceEntry.Notes[0]?.NoteBeam;
+    this.chordPartTuplet = chordVoiceEntry.Notes[0]?.NoteTuplet;
   }
 
   /**
@@ -1103,9 +1108,10 @@ export class VoiceGenerator {
       }
 
     } else if (this.currentVoiceEntry.Notes.length > 0) {
-      const firstNote: Note = this.currentVoiceEntry.Notes[0];
-      if (firstNote.NoteTuplet) {
-        const tuplet: Tuplet = firstNote.NoteTuplet;
+      // a chord's note after the tuplet's stop note: in the tuplet of the chord's first note. In a part of the chord on another
+      //   staff (continueChordInStaffEntry()), the voice entry's first note is the part's own, without the tuplet.
+      const tuplet: Tuplet = this.chordPartTuplet ?? this.currentVoiceEntry.Notes[0].NoteTuplet;
+      if (tuplet) {
         const notes: Note[] = CollectionUtil.last(tuplet.Notes);
         notes.push(this.currentNote);
         this.linkNoteToTuplet(this.currentNote, tuplet);

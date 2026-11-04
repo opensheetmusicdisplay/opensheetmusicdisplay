@@ -4,6 +4,7 @@ import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSh
 import { Pitch } from "../../../src/Common/DataObjects/Pitch";
 import { Note } from "../../../src/MusicalScore/VoiceData/Note";
 import { SourceStaffEntry } from "../../../src/MusicalScore/VoiceData/SourceStaffEntry";
+import { Tuplet } from "../../../src/MusicalScore/VoiceData/Tuplet";
 import { VoiceEntry } from "../../../src/MusicalScore/VoiceData/VoiceEntry";
 
 /**
@@ -11,7 +12,8 @@ import { VoiceEntry } from "../../../src/MusicalScore/VoiceData/VoiceEntry";
  * between the staves of the two hands, was read into the previous note's voice entry and drawn on its staff, with ledger
  * lines. (The reader's branch for these notes, VoiceGenerator.checkForStaffEntryLink(), could never run: it checked whether
  * the staff entry just looked up for the note's staff was on another staff.) Now the note belongs to the chord's voice entry
- * on its own staff, so each staff draws its part of the chord, and a part on the other staff is beamed like its chord.
+ * on its own staff, so each staff draws its part of the chord, and a part on the other staff is beamed like its chord and
+ * is in its tuplet.
  *
  * Fixture: m1 a whole note chord C5 / E3; m2 quarter note chords, the first note on staff 1, or on staff 2 (beat 3);
  * m3 beamed eighth note chords and a half note chord; m4 a triplet of beamed eighth note chords and a dotted half.
@@ -74,5 +76,45 @@ describe("Chord notes on another staff", () => {
         expect(staff2.map((note: Note, i: number) => note.NoteBeam !== undefined && note.NoteBeam === staff1[i].NoteBeam), "same beam as the chord")
             .to.deep.equal([true, true, true, true, false]);
         expect(staff1[0].NoteBeam === staff1[2].NoteBeam, "one beam per pair").to.equal(false);
+    });
+
+    /** The notes of each of m4's triplet chords (C5 / E3, D5 / F3, E5 / G3) that are in the triplet, e.g. "E3 C5": the notes
+     *  with the triplet as NoteTuplet and in NoteTuplets, in the triplet's group of notes of the chord's first note. */
+    function tripletChordNotesInTuplet(display: OpenSheetMusicDisplay): string[] {
+        const chords: Note[][] = display.Sheet.SourceMeasures[3].VerticalSourceStaffEntryContainers.slice(0, 3)
+            .map(verticalContainer => verticalContainer.StaffEntries.flatMap((staffEntry: SourceStaffEntry) =>
+                staffEntry?.VoiceEntries.flatMap((voiceEntry: VoiceEntry) => voiceEntry.Notes) ?? []));
+        const triplet: Tuplet = chords[0][0].NoteTuplet;
+        expect(triplet.Notes.length, "a group of notes per chord").to.equal(3);
+        return chords.map((chord: Note[]) => {
+            const group: Note[] = triplet.Notes.find((notes: Note[]) => notes.includes(chord[0]));
+            return pitchesOf(chord.filter((note: Note) => note.NoteTuplet === triplet && note.NoteTuplets.includes(triplet) &&
+                group?.includes(note)));
+        });
+    }
+
+    it("puts a chord's part on the other staff into the chord's tuplet, also after the tuplet's stop note", () => {
+        // the triplet starts at C5 and stops at E5, on staff 1. G3 took the tuplet of its voice entry's first note, which for a
+        //   part is G3 itself, so it wasn't in the triplet: staff 2's bracket ended at F3.
+        expect(tripletChordNotesInTuplet(osmd)).to.deep.equal(["E3 C5", "F3 D5", "G3 E5"]);
+    });
+
+    it("puts a part's second note into the chord's tuplet too", async () => {
+        // the sample with B3 after G3: the chord E5 / G3 B3
+        const xml: Document = TestUtils.getScore("test_chord_notes_cross_staff.musicxml").cloneNode(true) as Document;
+        const g3: Element = Array.from(xml.querySelectorAll("measure[number='4'] note")).find((note: Element) =>
+            note.querySelector("step")?.textContent === "G" && note.querySelector("octave")?.textContent === "3");
+        const b3: Element = g3.cloneNode(true) as Element;
+        b3.querySelector("step").textContent = "B";
+        g3.after(b3);
+        const variantContainer: HTMLElement = TestUtils.getDivElement(document);
+        const variant: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(variantContainer);
+        try {
+            await variant.load(xml);
+            expect(tripletChordNotesInTuplet(variant)).to.deep.equal(["E3 C5", "F3 D5", "G3 B3 E5"]);
+        } finally {
+            variant.clear();
+            variantContainer.remove();
+        }
     });
 });
