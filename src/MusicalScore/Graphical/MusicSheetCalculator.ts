@@ -1293,8 +1293,7 @@ export abstract class MusicSheetCalculator {
                         if (!staffEntry.graphicalChordContainers || staffEntry.graphicalChordContainers.length === 0) {
                             continue;
                         }
-                        for (let i: number = 0; i < staffEntry.graphicalChordContainers.length; i++) {
-                            const graphicalChordContainer: GraphicalChordSymbolContainer = staffEntry.graphicalChordContainers[i];
+                        for (const graphicalChordContainer of staffEntry.graphicalChordContainers) {
                             const gps: BoundingBox = graphicalChordContainer.PositionAndShape;
                             const parentBbox: BoundingBox = gps.Parent; // usually the staffEntry (bbox), but sometimes measure (for whole measure rests)
                             const start: number = gps.BorderMarginLeft + parentBbox.AbsolutePosition.x + gps.RelativePosition.x;
@@ -1329,13 +1328,10 @@ export abstract class MusicSheetCalculator {
                                                                   skybottomcalculator.getSkyLineMinInRange(collisionStart, collisionEnd));
                                 }
                             }
-                            let yShift: number = 0;
-                            if (i === 0) {
-                                yShift += this.rules.ChordSymbolYOffset;
-                                yShift += 0.1; // above is a bit closer to the notes than below ones for some reason
-                            } else {
-                                yShift += this.rules.ChordSymbolYPadding;
-                            }
+                            // the same distance to what is under them for all chord symbols of the staff entry:
+                            //   they are placed next to each other (VexFlowGraphicalSymbolFactory.createChordSymbols()), not stacked
+                            let yShift: number = this.rules.ChordSymbolYOffset;
+                            yShift += 0.1; // above is a bit closer to the notes than below ones for some reason
                             if (placement !== PlacementEnum.Below) {
                                 yShift *= -1;
                             }

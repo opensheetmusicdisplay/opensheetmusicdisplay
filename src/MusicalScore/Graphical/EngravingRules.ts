@@ -167,6 +167,9 @@ export class EngravingRules {
     public ChordSymbolXSpacing: number;
     public ChordOverlapAllowedIntoNextMeasure: number;
     public ChordSymbolYOffset: number;
+    /** Meant for the y distance between alternate chord symbols placed above each other on a note (not implemented yet, see #897).
+     * No effect for now: the chord symbols of a note are placed next to each other, each with ChordSymbolYOffset like a single one.
+     */
     public ChordSymbolYPadding: number;
     public ChordSymbolYAlignment: boolean;
     public ChordSymbolYAlignmentScope: string;
