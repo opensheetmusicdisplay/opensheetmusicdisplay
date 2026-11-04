@@ -1232,14 +1232,16 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                     for (let idx2: number = 0, len2: number = partElements.length; idx2 < len2; ++idx2) {
                         const partElement: IXmlElement = partElements[idx2];
                         try {
+                            // trimmed like the title: a line break at the end (e.g. "Voice" with its closing tag on the next
+                            //   line) gave the label an empty second line, which drew the text above its staff's center
                             if (partElement.name === "part-name") {
-                                instrument.Name = partElement.value;
+                                instrument.Name = this.trimString(partElement.value);
                                 if (partElement.attribute("print-object") &&
                                    partElement.attribute("print-object").value === "no") {
                                     instrument.NameLabel.print = false;
                                 }
                             } else if (partElement.name === "part-abbreviation") {
-                                instrument.PartAbbreviation = partElement.value;
+                                instrument.PartAbbreviation = this.trimString(partElement.value);
                                 if (partElement.attribute("print-object")?.value === "no") {
                                     instrument.PartAbbreviationPrintObject = false;
                                 }
