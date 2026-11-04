@@ -1336,6 +1336,20 @@ export abstract class MusicSheetCalculator {
                                 yShift *= -1;
                             }
                             const gLabel: GraphicalLabel = graphicalChordContainer.GraphicalLabel;
+                            // the minimum distance to the staff (ChordSymbolMinimumBaselineAboveStaff/BelowStaff), e.g. over a whole rest:
+                            //   place the chord symbol as if what is under it reached up (down) to where the label has its baseline at that distance.
+                            //   MusicSheetDrawer.drawLabel() draws the text in a box 1.2 text heights high, the baseline 1 text height under its top.
+                            //   With the default ChordSymbolTextAlignmentTop/Bottom, the label's position is the box bottom above the staff, its top below.
+                            if (placement === PlacementEnum.Below) {
+                                if (this.rules.ChordSymbolMinimumBaselineBelowStaff > 0) {
+                                    const minimumLabelY: number = staffLine.StaffHeight + this.rules.ChordSymbolMinimumBaselineBelowStaff -
+                                        gLabel.Label.fontHeight;
+                                    chordMaximumOffset = Math.max(chordMaximumOffset, minimumLabelY - yShift);
+                                }
+                            } else if (this.rules.ChordSymbolMinimumBaselineAboveStaff > 0) {
+                                const minimumLabelY: number = -this.rules.ChordSymbolMinimumBaselineAboveStaff + 0.2 * gLabel.Label.fontHeight;
+                                chordMinimumOffset = Math.min(chordMinimumOffset, minimumLabelY - yShift);
+                            }
                             // update the sky (bottom) line up to the label where it is drawn, with its yShift (e.g. a larger ChordSymbolYOffset):
                             //   to the top (bottom) of its text, without its margin, like for fingerings. With the default ChordSymbolYOffset,
                             //   the yShift is as large as the margin, so that's where the offset plus BorderMarginTop (BorderMarginBottom) is,
