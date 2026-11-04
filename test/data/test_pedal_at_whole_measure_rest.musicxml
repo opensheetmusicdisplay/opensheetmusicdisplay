@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0">
+  <work>
+    <work-title>test_pedal_at_whole_measure_rest</work-title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>3</beats><beat-type>4</beat-type></time>
+        <clef><sign>F</sign><line>4</line></clef>
+      </attributes>
+      <direction placement="below">
+        <direction-type><pedal type="start" line="yes"/></direction-type>
+      </direction>
+      <note print-object="no"><rest measure="yes"/><duration>6</duration><voice>1</voice></note>
+      <direction placement="below">
+        <direction-type><pedal type="stop" line="yes"/></direction-type>
+      </direction>
+      <backup><duration>6</duration></backup>
+      <note><pitch><step>B</step><octave>1</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>up</stem></note>
+      <note><chord/><pitch><step>B</step><octave>2</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>up</stem></note>
+      <note><pitch><step>D</step><octave>3</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><chord/><pitch><step>F</step><octave>3</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><chord/><pitch><step>A</step><octave>3</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>D</step><octave>3</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><chord/><pitch><step>F</step><octave>3</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><chord/><pitch><step>A</step><octave>3</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+    </measure>
+    <measure number="2">
+      <print new-system="yes"/>
+      <direction placement="below">
+        <direction-type><pedal type="start" line="yes" sign="yes"/></direction-type>
+      </direction>
+      <note print-object="no"><rest measure="yes"/><duration>6</duration><voice>1</voice></note>
+      <direction placement="below">
+        <direction-type><pedal type="stop" line="yes" sign="yes"/></direction-type>
+      </direction>
+      <backup><duration>6</duration></backup>
+      <note><pitch><step>B</step><octave>1</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>up</stem></note>
+      <note><chord/><pitch><step>B</step><octave>2</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>up</stem></note>
+      <note><pitch><step>D</step><octave>3</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><chord/><pitch><step>F</step><octave>3</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><chord/><pitch><step>A</step><octave>3</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>D</step><octave>3</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><chord/><pitch><step>F</step><octave>3</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><chord/><pitch><step>A</step><octave>3</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+    </measure>
+    <measure number="3">
+      <print new-system="yes"/>
+      <direction placement="below">
+        <direction-type><pedal type="start" line="yes"/></direction-type>
+      </direction>
+      <note print-object="no"><rest measure="yes"/><duration>6</duration><voice>1</voice></note>
+      <backup><duration>6</duration></backup>
+      <note><pitch><step>C</step><octave>2</octave></pitch><duration>1</duration><voice>2</voice><type>eighth</type><stem>down</stem><beam number="1">begin</beam></note>
+      <note><pitch><step>C</step><octave>2</octave></pitch><duration>1</duration><voice>2</voice><type>eighth</type><stem>down</stem><beam number="1">end</beam></note>
+      <note><pitch><step>C</step><octave>2</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><pitch><step>C</step><octave>3</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><chord/><pitch><step>E</step><octave>3</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+      <note><chord/><pitch><step>G</step><octave>3</octave></pitch><duration>2</duration><voice>2</voice><type>quarter</type><stem>down</stem></note>
+    </measure>
+    <measure number="4">
+      <print new-system="yes"/>
+      <note><pitch><step>C</step><octave>3</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>up</stem></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+      <direction placement="below">
+        <direction-type><pedal type="stop" line="yes"/></direction-type>
+      </direction>
+      <note><pitch><step>G</step><octave>3</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><stem>down</stem></note>
+    </measure>
+  </part>
+</score-partwise>

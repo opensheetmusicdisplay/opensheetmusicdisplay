@@ -2515,12 +2515,19 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       let startX: number = vfPedal.startVfVoiceEntry.PositionAndShape.AbsolutePosition.x - pedalMarkingMarginXOffset;
       const startsWithSign: boolean = pedalMarking.style === PEDAL_STYLES_ENUM.MIXED ||
         pedalMarking.style === PEDAL_STYLES_ENUM.MIXED_OPEN_END;
-      if (vfPedal.ContinuesFromSystemBefore) {
-        // going on from the system before: from the stave's note start, after its clef, key and time signature
-        //   (PedalMarking.BeginsStave), with (Ped.) there if it has the sign (PedalMarking.drawContinuationSign())
+      if (vfPedal.ContinuesFromSystemBefore ||
+        pedalMarking.BeginsStave && pedalMarking.style !== PEDAL_STYLES_ENUM.TEXT) {
+        // from the stave's note start, after its clef, key and time signature (PedalMarking.BeginsStave): going on from the
+        //   system before, with (Ped.) there if it has the sign (PedalMarking.drawContinuationSign()), or a line pressed at a rest
+        //   at the start of the measure (Pedal.BeginsStave), e.g. a whole-measure rest, which is centered in the measure, like the
+        //   hidden one MuseScore 3 writes in the first voice when the notes are in the second (the sign style draws at the rest)
         const firstMeasure: GraphicalMeasure = vfPedal.startVfVoiceEntry.parentStaffEntry.parentMeasure;
         const stave: Vex.Flow.Stave = (firstMeasure as VexFlowMeasure).getVFStave();
         startX = firstMeasure.PositionAndShape.AbsolutePosition.x + (stave.getNoteStartX() - stave.getX()) / 10;
+        if (startsWithSign) {
+          // its Ped. sign there, as at a note
+          startX -= 1;
+        }
       } else if (startsWithSign || pedalMarking.style === PEDAL_STYLES_ENUM.TEXT) {
         //Accomodate the Ped. sign
         startX -= 1;

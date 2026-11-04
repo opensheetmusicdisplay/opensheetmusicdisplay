@@ -382,3 +382,102 @@ describe("Pedal lines resumed and discontinued", () => {
         expect(discontinued.lineRight - noteX(3, 3), "the line's end from its note").to.be.closeTo(resumed.lineRight - noteX(2, 3), 0.05);
     });
 });
+
+/**
+ * Pedals pressed at a hidden whole-measure rest of voice 1, with the notes in voice 2 (as MuseScore 3 writes a staff whose music
+ * is in its second voice), a bass staff, a system per pedal: m1 a line, a note below the second ledger line first; m2 the same
+ * with line="yes" sign="yes" (Ped. + line); m3 a line into the next system, beamed eighths with down stems first. Such a line is
+ * drawn from the start of the measure (as at a whole-measure rest of the only voice), but it was placed below what is under the
+ * staff only from the rest on, which is centered in the measure: it ran through the notes before the rest.
+ */
+describe("Pedal lines at whole-measure rests", () => {
+    const sampleFilename: string = "test_pedal_at_whole_measure_rest.musicxml";
+    let container: HTMLElement;
+    let osmd: OpenSheetMusicDisplay;
+
+    beforeEach(async () => {
+        container = TestUtils.getDivElement(document);
+        osmd = TestUtils.createOpenSheetMusicDisplay(container);
+        osmd.setOptions({ newSystemFromXML: true }); // the sample's system breaks: a system per pedal
+        await osmd.load(TestUtils.getScore(sampleFilename));
+        osmd.render();
+    });
+    afterEach(() => {
+        container.remove();
+    });
+
+    /** A drawn shape's box, in units, its top and bottom relative to the top staff line of its system */
+    interface Box {
+        left: number;
+        right: number;
+        top: number;
+        bottom: number;
+        filled: boolean;
+    }
+
+    /**
+     * The boxes of the drawn shapes (paths) matching a selector in a system, from left to right, without the transparent shapes
+     * of hidden notes (the rests of voice 1).
+     * @param selector e.g. "path.vf-beam"
+     * @param systemIndex the system, by its index on the page
+     */
+    function boxesInSystem(selector: string, systemIndex: number): Box[] {
+        const staffTops: number[] = osmd.GraphicSheet.MusicPages[0].MusicSystems
+            .map(system => system.StaffLines[0].PositionAndShape.AbsolutePosition.y);
+        const boxes: Box[] = [];
+        for (const element of Array.from(container.querySelectorAll(selector)) as SVGGraphicsElement[]) {
+            const fill: string = element.getAttribute("fill");
+            if ((fill !== "none" ? fill : element.getAttribute("stroke")) === "#00000000") {
+                continue; // a hidden note (print-object="no"), drawn transparent
+            }
+            const box: DOMRect = element.getBBox();
+            if (box.width === 0 && box.height === 0) {
+                continue; // a line continued from the system before starts with a move to its start
+            }
+            const top: number = box.y / unitInPixels;
+            const bottom: number = (box.y + box.height) / unitInPixels;
+            // the system whose staff is the last one starting above the shape's middle (a stem can reach above the staff)
+            const index: number = staffTops.filter(staffTop => staffTop < (top + bottom) / 2).length - 1;
+            if (index === systemIndex) {
+                boxes.push({ left: box.x / unitInPixels, right: (box.x + box.width) / unitInPixels, top: top - staffTops[index],
+                    bottom: bottom - staffTops[index], filled: element.getAttribute("fill") !== "none" });
+            }
+        }
+        return boxes.sort((a, b) => a.left - b.left);
+    }
+
+    /** The drawn notes (their heads, stems etc.) and beams in a system, from left to right */
+    function notesInSystem(systemIndex: number): Box[] {
+        return boxesInSystem(".vf-stavenote path, path.vf-stavenote, .vf-beam path, path.vf-beam", systemIndex);
+    }
+
+    /** The lowest point of the notes (with their stems) and beams drawn in an x range of a system, relative to its top staff line */
+    function bottomOfNotesAbove(shape: Box, systemIndex: number): number {
+        return Math.max(...notesInSystem(systemIndex)
+            .filter(box => box.left < shape.right && box.right > shape.left)
+            .map(box => box.bottom));
+    }
+
+    it("places a line pressed at a whole-measure rest below the notes before the rest", () => {
+        for (const systemIndex of [0, 2]) {
+            const paths: Box[] = boxesInSystem(".vf-pedalmarking path, path.vf-pedalmarking", systemIndex);
+            // the line, with its end hook if it has one (the start hook is drawn on its own)
+            const line: Box = paths.reduce((widest, box) => box.right - box.left > widest.right - widest.left ? box : widest);
+            const notesBottom: number = bottomOfNotesAbove(line, systemIndex);
+            const firstNoteLeft: number = notesInSystem(systemIndex)[0].left;
+            expect(notesBottom, `system ${systemIndex + 1}: notes far below the staff (its bottom line at 4)`).to.be.greaterThan(6.5);
+            expect(line.left, `system ${systemIndex + 1}: the line from the start of the measure`).to.be.lessThan(firstNoteLeft);
+            // (it was 2 units below the staff, through the notes)
+            expect(line.bottom, `system ${systemIndex + 1}: the line below the notes`).to.be.greaterThan(notesBottom);
+            expect(line.bottom - notesBottom, `system ${systemIndex + 1}: close to them`).to.be.lessThan(1.5);
+        }
+    });
+
+    it("places the Ped. sign of a pedal pressed at a whole-measure rest below the notes before the rest", () => {
+        const ped: Box = boxesInSystem(".vf-pedalmarking path, path.vf-pedalmarking", 1).find(box => box.filled);
+        const notesBottom: number = bottomOfNotesAbove(ped, 1);
+        expect(notesBottom, "a note far below the staff above the sign").to.be.greaterThan(6.5);
+        // (it was drawn on that note)
+        expect(ped.top, "the sign below the note").to.be.greaterThan(notesBottom);
+    });
+});
