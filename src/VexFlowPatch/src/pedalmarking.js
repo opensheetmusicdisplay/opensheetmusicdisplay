@@ -116,7 +116,20 @@ export class PedalMarking extends Element {
       bracket_line_width: 1,
       glyph_point_size: 40,
       color: 'black',
+      change_release_margin: 5, // VexFlowPatch: see getChangeReleaseXShift()
     };
+  }
+
+  // VexFlowPatch: how far the * of a pedal released and pressed again at its last note (ChangeEnd, in the text style) is moved
+  //   from where a release draws it: left of the Ped. sign that the next pedal marking draws at that note, its right edge
+  //   render_options.change_release_margin away from the Ped. sign's left edge.
+  getChangeReleaseXShift() {
+    const point = this.render_options.glyph_point_size;
+    const depress = PedalMarking.GLYPHS.pedal_depress;
+    const release = PedalMarking.GLYPHS.pedal_release;
+    const depress_left = depress.x_shift + new Glyph(depress.code, point).getMetrics().x_min;
+    const release_right = release.x_shift + new Glyph(release.code, point).getMetrics().x_max;
+    return depress_left - this.render_options.change_release_margin - release_right;
   }
 
   setEndStave(stave) { // VexFlowPatch addition
@@ -343,7 +356,9 @@ export class PedalMarking extends Element {
           text_width = ctx.measureText(pedal.custom_release_text).width;
           ctx.fillText(pedal.custom_release_text, x - (text_width / 2), y);
         } else {
-          drawPedalGlyph('pedal_release', ctx, x, y, point);
+          // VexFlowPatch: pressed again at this note (the next pedal marking draws its Ped. sign here): the * left of it
+          const release_x = pedal.ChangeEnd ? x + pedal.getChangeReleaseXShift() : x;
+          drawPedalGlyph('pedal_release', ctx, release_x, y, point);
         }
       }
     });

@@ -74,6 +74,8 @@ pedalmarking.js (custom addition):
 Add rendering options for pedals that break across systems.
 draw(): draw the marks and brackets in a group, class vf-pedalmarking (custom addition), which a pedal marking of one shape
   is merged into and one without shapes doesn't get (see svgcontext.js)
+drawText(): draw the * of a pedal released and pressed again at its last note (ChangeEnd) left of the Ped. sign there,
+  render_options.change_release_margin away from it (getChangeReleaseXShift(), custom addition)
 
 renderer.js (vexflow4: need to check if possible):
 CanvasContext: getContext(): use willReadFrequently option for marginal performance potential,
