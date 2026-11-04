@@ -454,9 +454,9 @@ export class ExpressionReader {
                             this.getMultiExpression.PedalStart = this.openPedal;
                             this.openPedal.ParentStartMultiExpression = this.getMultiExpression;
                             const releasedPedal: Pedal = this.getMultiExpression.PedalEnd;
-                            if (releasedPedal?.IsSign && !releasedPedal.IsLine && this.openPedal.IsSign && !this.openPedal.IsLine) {
-                                // sign pedals released and pressed again at one note (a stop and a start at one timestamp): a pedal
-                                //   change, drawn as * Ped. (the * left of the Ped. sign)
+                            if (releasedPedal && this.openPedal.IsSign) {
+                                // released and pressed again at one note (a stop and a start at one timestamp) with the Ped. sign: a
+                                //   pedal change, drawn as * Ped. or as the end of a pedal line, then Ped. (left of the Ped. sign)
                                 releasedPedal.ChangeEnd = true;
                                 this.openPedal.ChangeBegin = true;
                             }

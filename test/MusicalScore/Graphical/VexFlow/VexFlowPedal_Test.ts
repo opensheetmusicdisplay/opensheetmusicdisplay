@@ -176,7 +176,8 @@ describe("Pedal signs below beams", () => {
 /**
  * The line and sign attributes of pedals, a bass staff, a system per line attribute (none, "yes", "no"), each with a pedal per
  * measure for the values of the sign attribute, then a pedal with line="yes" sign="yes" from m9 into the next system, changed
- * there (m10). line="yes" sign="yes" draws the Ped. sign, then the line; it was read as a line only.
+ * there (m10). line="yes" sign="yes" draws the Ped. sign, then the line; it was read as a line only. In m11, two such pedals
+ * meet: released and pressed again at one note (a stop and a start), as MuseScore writes pedals that meet.
  */
 describe("Pedal line and sign attributes", () => {
     const sampleFilename: string = "test_pedal_line_and_sign.musicxml";
@@ -231,9 +232,9 @@ describe("Pedal line and sign attributes", () => {
         const measuresWith: (kind: string) => number[] = kind =>
             [...new Set(shapes.filter(shape => shape.kind === kind).map(shape => shape.measure))].sort((a, b) => a - b);
         // (m5 and m9 had no Ped. sign; m10 continues m9's pedal into its system and changes it: no Ped. sign there)
-        expect(measuresWith("Ped."), "the measures with a Ped. sign").to.deep.equal([2, 5, 7, 8, 9]);
+        expect(measuresWith("Ped."), "the measures with a Ped. sign").to.deep.equal([2, 5, 7, 8, 9, 11]);
         expect(measuresWith("*"), "the measures with a * sign").to.deep.equal([2, 7, 8]);
-        expect(measuresWith("line"), "the measures with a line").to.deep.equal([1, 3, 4, 5, 6, 9, 10]);
+        expect(measuresWith("line"), "the measures with a line").to.deep.equal([1, 3, 4, 5, 6, 9, 10, 11]);
         for (const measure of [5, 9]) {
             const ped: PedalShape = shapes.find(shape => shape.kind === "Ped." && shape.measure === measure);
             const line: PedalShape = shapes.find(shape => shape.kind === "line" && shape.measure === measure);
@@ -241,6 +242,19 @@ describe("Pedal line and sign attributes", () => {
             expect(line.left - ped.right, `m${measure}: close to it`).to.be.lessThan(1);
             expect(line.bottom, `m${measure}: at the sign's bottom`).to.be.closeTo(ped.bottom, 0.1);
         }
+    });
+
+    it("ends the line with its hook left of the Ped. sign where the pedal is released and pressed again at one note", () => {
+        const byLeft: (a: PedalShape, b: PedalShape) => number = (a, b) => a.left - b.left;
+        const shapes: PedalShape[] = pedalShapes().filter(shape => shape.measure === 11);
+        const peds: PedalShape[] = shapes.filter(shape => shape.kind === "Ped.").sort(byLeft);
+        const lines: PedalShape[] = shapes.filter(shape => shape.kind === "line").sort(byLeft);
+        expect(peds.length, "a Ped. sign per pedal").to.equal(2);
+        expect(lines.length, "a line per pedal").to.equal(2);
+        // (the hook was drawn inside the second Ped. sign)
+        expect(lines[0].right, "the first line ends left of the second Ped. sign").to.be.lessThan(peds[1].left);
+        expect(peds[1].left - lines[0].right, "PedalReleaseSignMarginToPedSign left of it")
+            .to.be.closeTo(osmd.EngravingRules.PedalReleaseSignMarginToPedSign, 0.1);
     });
 });
 

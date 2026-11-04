@@ -76,6 +76,8 @@ draw(): draw the marks and brackets in a group, class vf-pedalmarking (custom ad
   is merged into and one without shapes doesn't get (see svgcontext.js)
 drawText(): draw the * of a pedal released and pressed again at its last note (ChangeEnd) left of the Ped. sign there,
   render_options.change_release_margin away from it (getChangeReleaseXShift(), custom addition)
+drawBracketed(): where the next pedal marking draws its Ped. sign at the last note (ChangeEndBeforeSign), end the line with
+  its hook render_options.change_release_margin left of that sign instead of the change notch (custom addition)
 
 renderer.js (vexflow4: need to check if possible):
 CanvasContext: getContext(): use willReadFrequently option for marginal performance potential,
