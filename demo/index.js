@@ -141,9 +141,6 @@ import { IntervalTransposeCalculator } from '../src/Plugins/Transpose/IntervalTr
     var autobeamOptionStashedValue = false;
     var autoCustomColoringOptionNeedsReset = false;
     var autoCustomColoringOptionStashedValue = false;
-    var drawPartNamesOptionStashedValue = true;
-    var drawPartAbbreviationsStashedValue = true;
-    var drawPartNamesOptionNeedsReset = false;
     var pageBreaksOptionStashedValue = false;
     var pageBreaksOptionNeedsReset = false;
     var systemBreaksOptionStashedValue = false; // reset handled by pageBreaksOptionNeedsReset
@@ -1024,15 +1021,6 @@ import { IntervalTransposeCalculator } from '../src/Plugins/Transpose/IntervalTr
         else if (pageBreaksOptionNeedsReset) {
             openSheetMusicDisplay.setOptions({ newPageFromXML: pageBreaksOptionStashedValue, newSystemFromXML: systemBreaksOptionStashedValue });
             pageBreaksOptionNeedsReset = false;
-        }
-        if (!isCustom && str.includes("Schubert_An_die_Musik")) { // TODO weird layout bug here with part names. but shouldn't be in score anyways
-            drawPartNamesOptionStashedValue = openSheetMusicDisplay.EngravingRules.RenderPartNames;
-            drawPartAbbreviationsStashedValue = openSheetMusicDisplay.EngravingRules.RenderPartAbbreviations;
-            openSheetMusicDisplay.setOptions({ drawPartNames: false, drawPartAbbreviations: false }); // TODO sets osmd.drawingParameters.DrawPartNames! also check EngravingRules.RenderPartAbbreviations, was false
-            drawPartNamesOptionNeedsReset = true;
-        } else if (drawPartNamesOptionNeedsReset) {
-            openSheetMusicDisplay.setOptions({ drawPartNames: drawPartNamesOptionStashedValue, drawPartAbbreviations: drawPartAbbreviationsStashedValue });
-            drawPartNamesOptionNeedsReset = false;
         }
 
         // ── Music Braille sample hooks (see the "Music Braille" section at the bottom of this file) ──
