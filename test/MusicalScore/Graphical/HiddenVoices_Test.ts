@@ -147,6 +147,43 @@ describe("Hidden voices (Voice.Visible)", (): void => {
         expect(lyrics(), "only the alto's own lyrics, with RenderLyricsOfHiddenVoices false").to.deep.equal(["with"]);
     });
 
+    it("draws no tremolo strokes of hidden notes: of a hidden voice laid out with HiddenVoicesKeepLayout, or print-object=\"no\"", async (): Promise<void> => {
+        /** One staff: voice 1 a tremolo between two half notes (3 strokes) and a buzz roll, voice 2 whole notes. */
+        function tremoloSample(printObject: boolean): string {
+            const hidden: string = printObject ? "" : ' print-object="no"';
+            const note: (step: string, type: string, tremolo: string, duration: number) => string =
+                (step: string, type: string, tremolo: string, duration: number): string =>
+                    `<note${hidden}><pitch><step>${step}</step><octave>5</octave></pitch><duration>${duration}</duration><voice>1</voice>` +
+                    `<type>${type}</type><notations><ornaments>${tremolo}</ornaments></notations></note>`;
+            const voice2: string = "<backup><duration>4</duration></backup><note><pitch><step>G</step><octave>4</octave></pitch>" +
+                "<duration>4</duration><voice>2</voice><type>whole</type></note>";
+            return "<?xml version=\"1.0\"?><score-partwise version=\"4.0\"><part-list><score-part id=\"P1\"><part-name>P</part-name>" +
+                "</score-part></part-list><part id=\"P1\"><measure number=\"1\"><attributes><divisions>1</divisions><time><beats>4</beats>" +
+                "<beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>" +
+                note("C", "half", "<tremolo type=\"start\">3</tremolo>", 2) + note("E", "half", "<tremolo type=\"stop\">3</tremolo>", 2) +
+                `${voice2}</measure><measure number="2">` + note("D", "whole", "<tremolo type=\"unmeasured\">0</tremolo>", 4) +
+                `${voice2}</measure></part></score-partwise>`;
+        }
+        /** The strokes drawn by OSMD: between the two notes of a tremolo, and of a buzz roll. */
+        const strokes: () => number = (): number => div.querySelectorAll("g.osmd-tremolo").length;
+
+        osmd.EngravingRules.HiddenVoicesKeepLayout = true;
+        await osmd.load(tremoloSample(true));
+        osmd.render();
+        expect(strokes(), "voice 1 shown: the 3 strokes between its notes and the buzz roll").to.equal(4);
+        osmd.Sheet.Instruments[0].Voices[0].Visible = false;
+        osmd.render();
+        expect(strokes(), "voice 1 hidden").to.equal(0);
+
+        await osmd.load(tremoloSample(false));
+        osmd.render();
+        expect(strokes(), "voice 1 print-object=\"no\"").to.equal(0);
+        osmd.EngravingRules.RenderHiddenNotes = true;
+        osmd.updateGraphic();
+        osmd.render();
+        expect(strokes(), "voice 1 print-object=\"no\", drawn with RenderHiddenNotes").to.equal(4);
+    });
+
     it("hides the instrument only when all its voices are hidden, and render() creates the graphic again after a change", (): void => {
         const instrument: Instrument = osmd.Sheet.Instruments[0];
         osmd.render();

@@ -347,7 +347,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     protected drawBuzzRolls(staffEntry: GraphicalStaffEntry, newBuzzRollId): number {
         for (const gve of staffEntry.graphicalVoiceEntries) {
             for (const note of gve.notes) {
-                if (note.sourceNote.TremoloInfo?.tremoloUnmeasured) {
+                // not for a note that isn't drawn: hidden (print-object="no") or of a hidden voice, see Note.isVisible()
+                if (note.sourceNote.TremoloInfo?.tremoloUnmeasured && note.sourceNote.isVisible()) {
                     const thickness: number = this.rules.TremoloBuzzRollThickness;
                     const baseLength: number = 0.9;
                     const baseHeight: number = 0.5;
@@ -412,6 +413,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      *  e.g. two alternating half notes with 3 strokes between them, often seen in orchestral string parts.
      *  (Vexflow doesn't support these tremolos, so we draw them ourselves here.)
      *  Also updates the SkyLine/BottomLine where the strokes exceed it.
+     *  Not where a note isn't drawn (see Note.isVisible()): the strokes are left out with it, like those of a single-note
+     *  tremolo, which Vexflow draws in the style of its notehead (transparent then).
      */
     protected drawTremolosBetweenNotes(measure: VexFlowMeasure): void {
         if (measure.isTabMeasure) {
@@ -426,6 +429,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                         continue;
                         // only draw when reaching the stop note (second note): at this point, both notes have been drawn
                         //   and have their final positions, even if the start note is in a previously drawn measure.
+                    }
+                    if (tremolo.startNote?.isVisible() === false || !gNote.sourceNote.isVisible()) {
+                        continue; // a note isn't drawn: hidden (print-object="no") or of a hidden voice, see Note.isVisible()
                     }
                     try {
                         strokeId = this.drawTremoloBetweenTwoNotes(tremolo, gNote as VexFlowGraphicalNote, measure, strokeId);
