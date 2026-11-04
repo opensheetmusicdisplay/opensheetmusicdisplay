@@ -110,11 +110,6 @@ function checkSample (osmd, sampleFilename) {
     const sheet = osmd.Sheet;
     const graphic = osmd.GraphicSheet;
     const manager = sheet.MusicPartManager;
-    if (!manager.timestamps) {
-        // public OSMD doesn't initialize the enrolled->sheet timestamp mapping on load
-        // (nothing there uses it); absoluteEnrolledToSheetTimestamp needs it
-        manager.init();
-    }
     const result = {
         sample: sampleFilename,
         measures: sheet.SourceMeasures.length,
