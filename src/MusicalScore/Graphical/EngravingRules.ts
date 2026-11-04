@@ -631,6 +631,10 @@ export class EngravingRules {
     public RenderTimeSignaturesForSamplesWithoutTimeSignature: boolean;
     public RenderFirstTempoExpression: boolean;
     public RenderPedals: boolean;
+    /** The minimum distance between a pedal sign (Ped. or *) and what is above it, e.g. a beam below the staff, in units
+     * (1.0 = distance between two staff lines). Default 0.5.
+     * Only applies where the sign would otherwise be higher: by default, the signs are 3 units below the staff. */
+    public PedalSignMarginToBottomLine: number;
     public RenderWavyLines: boolean;
     public DynamicExpressionMaxDistance: number;
     public DynamicExpressionSpacer: number;
@@ -1178,6 +1182,7 @@ export class EngravingRules {
         this.RenderTimeSignaturesForSamplesWithoutTimeSignature = false;
         this.RenderFirstTempoExpression = true;
         this.RenderPedals = true;
+        this.PedalSignMarginToBottomLine = 0.5;
         this.RenderWavyLines = true;
         this.ArticulationPlacementFromXML = true;
         this.BreathMarkDistance = 0.8;

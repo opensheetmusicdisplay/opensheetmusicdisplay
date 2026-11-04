@@ -676,6 +676,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestHiddenStaffClefKeyTime = sampleFilename.startsWith("test_hidden_staff_clef_key_time");
     // multiple rest measures ending at the system and page breaks of the file, see test_multiple_rest_measures_auto_xml_breaks
     const isTestMultipleRestMeasuresXmlBreaks = sampleFilename.startsWith("test_multiple_rest_measures_auto_xml_breaks");
+    // pedal signs under beams far below the staff, one system per case, see test_pedal_signs_below_beams: systems as in the file
+    const isTestPedalSignsBelowBeams = sampleFilename.startsWith("test_pedal_signs_below_beams");
     const isTestCopyrightBelowLastSystem = sampleFilename.includes("copyright_below_last_system");
     const isTestFirstPageCreditWords = sampleFilename.startsWith("test_first_page_credit_words");
     const isTestOptimizeExtremeLedgerBeams = sampleFilename.includes("test_beam_intersecting_ledger_lines") && !process.argv.includes("--native-vexflow");
@@ -705,7 +707,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         drawMeasureNumbersOnlyAtSystemStart: isTestMeasureNumbersOnlyAtSystemStart,
         newSystemFromXML: isFunctionTestSystemAndPageBreaks || isTestMeasureNumbersOnlyAtSystemStart || isTestGraceNotesOnlyMeasure ||
             isTestLyricsDashContinuedInNextSystem || isTestTabTiesAcrossSystemBreaks || isTestHiddenStaffClefKeyTime ||
-            isTestMultipleRestMeasuresXmlBreaks,
+            isTestMultipleRestMeasuresXmlBreaks || isTestPedalSignsBelowBeams,
         newSystemFromNewPageInXML: isTestPageBreakImpliesSystemBreak,
         newPageFromXML: isFunctionTestSystemAndPageBreaks || isTestMultipleRestMeasuresXmlBreaks,
         pageBackgroundColor: "#FFFFFF", // reset by drawingparameters default

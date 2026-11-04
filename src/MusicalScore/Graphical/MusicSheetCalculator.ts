@@ -871,6 +871,11 @@ export abstract class MusicSheetCalculator {
         measureIndex: number, staffIndex: number): void;
 
     /**
+     * Updates the bottom lines with the space the pedals take, after all of them are placed by calculateSinglePedal().
+     */
+    protected abstract updateBottomLinesWithPedals(): void;
+
+    /**
      * Calculate a single Wavy Line for a [[MultiExpression]].
      * @param sourceMeasure
      * @param multiExpression
@@ -4447,6 +4452,7 @@ export abstract class MusicSheetCalculator {
                 }
             }
         }
+        this.updateBottomLinesWithPedals();
     }
 
     private calculateWavyLines(): void {
