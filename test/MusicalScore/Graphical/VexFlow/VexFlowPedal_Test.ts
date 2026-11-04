@@ -1,4 +1,5 @@
 import { expect } from "vitest";
+import { GraphicalMeasure } from "../../../../src/MusicalScore/Graphical/GraphicalMeasure";
 import { MusicSystem } from "../../../../src/MusicalScore/Graphical/MusicSystem";
 import { unitInPixels } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
 import { VexFlowPedal } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowPedal";
@@ -169,5 +170,76 @@ describe("Pedal signs below beams", () => {
         // (only the space under the Ped., which this part of the pedal doesn't draw, was checked)
         expect(signs[0].top, "the sign is below the beam").to.be.greaterThan(beamBottom);
         expect(signs[0].top - beamBottom, "the sign is close to the beam").to.be.lessThan(1);
+    });
+});
+
+/**
+ * The line and sign attributes of pedals, a bass staff, a system per line attribute (none, "yes", "no"), each with a pedal per
+ * measure for the values of the sign attribute, then a pedal with line="yes" sign="yes" from m9 into the next system, changed
+ * there (m10). line="yes" sign="yes" draws the Ped. sign, then the line; it was read as a line only.
+ */
+describe("Pedal line and sign attributes", () => {
+    const sampleFilename: string = "test_pedal_line_and_sign.musicxml";
+    let container: HTMLElement;
+    let osmd: OpenSheetMusicDisplay;
+
+    beforeEach(async () => {
+        container = TestUtils.getDivElement(document);
+        osmd = TestUtils.createOpenSheetMusicDisplay(container);
+        osmd.setOptions({ newSystemFromXML: true }); // the sample's system breaks
+        await osmd.load(TestUtils.getScore(sampleFilename));
+        osmd.render();
+    });
+    afterEach(() => {
+        container.remove();
+    });
+
+    /** A drawn pedal shape: "Ped.", "*" or "line" (a piece of a line, with its hooks), the measure it starts in, its box in units */
+    interface PedalShape {
+        kind: string;
+        measure: number;
+        left: number;
+        right: number;
+        bottom: number;
+    }
+
+    /** The drawn pedal shapes, by the measure they start in (whose staff is the last one above them) */
+    function pedalShapes(): PedalShape[] {
+        const measures: GraphicalMeasure[] = osmd.GraphicSheet.MeasureList.map(staffMeasures => staffMeasures[0]);
+        const staffTop: (measure: GraphicalMeasure) => number = measure => measure.ParentStaffLine.PositionAndShape.AbsolutePosition.y;
+        const shapes: PedalShape[] = [];
+        for (const element of Array.from(container.querySelectorAll(".vf-pedalmarking path, path.vf-pedalmarking")) as SVGGraphicsElement[]) {
+            const box: DOMRect = element.getBBox();
+            if (box.width === 0 && box.height === 0) {
+                continue; // a line continued from the system before starts with a move to its start
+            }
+            const left: number = box.x / unitInPixels;
+            const top: number = box.y / unitInPixels;
+            const systemTop: number = Math.max(...measures.map(staffTop).filter(y => y < top));
+            const measure: GraphicalMeasure = measures.filter(m => staffTop(m) === systemTop && m.PositionAndShape.AbsolutePosition.x <= left)
+                .pop();
+            const width: number = box.width / unitInPixels;
+            // the lines are strokes, the signs filled glyphs, the Ped. about 3 units wide, the * about 1.7
+            const kind: string = element.getAttribute("fill") === "none" ? "line" : width > 2.5 ? "Ped." : "*";
+            shapes.push({ kind, measure: measure.MeasureNumber, left, right: left + width, bottom: (box.y + box.height) / unitInPixels });
+        }
+        return shapes;
+    }
+
+    it("draws the Ped. sign, then the line, for line=\"yes\" sign=\"yes\", only where the pedal is pressed", () => {
+        const shapes: PedalShape[] = pedalShapes();
+        const measuresWith: (kind: string) => number[] = kind =>
+            [...new Set(shapes.filter(shape => shape.kind === kind).map(shape => shape.measure))].sort((a, b) => a - b);
+        // (m5 and m9 had no Ped. sign; m10 continues m9's pedal into its system and changes it: no Ped. sign there)
+        expect(measuresWith("Ped."), "the measures with a Ped. sign").to.deep.equal([2, 5, 7, 8, 9]);
+        expect(measuresWith("*"), "the measures with a * sign").to.deep.equal([2, 7, 8]);
+        expect(measuresWith("line"), "the measures with a line").to.deep.equal([1, 3, 4, 5, 6, 9, 10]);
+        for (const measure of [5, 9]) {
+            const ped: PedalShape = shapes.find(shape => shape.kind === "Ped." && shape.measure === measure);
+            const line: PedalShape = shapes.find(shape => shape.kind === "line" && shape.measure === measure);
+            expect(line.left, `m${measure}: the line starts right of the Ped. sign`).to.be.greaterThan(ped.right);
+            expect(line.left - ped.right, `m${measure}: close to it`).to.be.lessThan(1);
+            expect(line.bottom, `m${measure}: at the sign's bottom`).to.be.closeTo(ped.bottom, 0.1);
+        }
     });
 });

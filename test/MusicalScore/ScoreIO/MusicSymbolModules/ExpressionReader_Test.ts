@@ -16,6 +16,7 @@ import { RepetitionInstructionEnum } from "../../../../src/MusicalScore/VoiceDat
 import { Fraction } from "../../../../src/Common/DataObjects/Fraction";
 import { DynamicsContainer } from "../../../../src/MusicalScore/VoiceData/HelperObjects/DynamicsContainer";
 import { MusicPartManagerIterator } from "../../../../src/MusicalScore/MusicParts/MusicPartManagerIterator";
+import { Pedal } from "../../../../src/MusicalScore/VoiceData/Expressions/ContinuousExpressions/Pedal";
 
 describe("ExpressionReader", () => {
     /** Reads a test/data sample into a MusicSheet, optionally with custom rules. */
@@ -357,5 +358,29 @@ describe("ExpressionReader", () => {
             expect(dynamics.map((dynamic: InstantaneousDynamicExpression): number => dynamic.SoundDynamic))
                 .to.deep.equal([89, 31, 54, 106]);
         });
+    });
+
+    it("reads the line and the sign of a pedal for each combination of its line and sign attributes, also both", () => {
+        const sheet: MusicSheet = readSheet("test/data/test_pedal_line_and_sign.musicxml");
+        // "m<measure>: sign" (the Ped. and * signs), "line", or "sign + line" (the Ped. sign, then the line), by where a pedal starts
+        const pedals: string[] = sheet.SourceMeasures.flatMap((measure): string[] => measure.StaffLinkedExpressions[0]
+            .map((expression: MultiExpression): Pedal => expression.PedalStart)
+            .filter((pedal: Pedal): boolean => pedal !== undefined)
+            .map((pedal: Pedal): string => `m${measure.MeasureNumber}: ` +
+                [pedal.IsSign ? "sign" : undefined, pedal.IsLine ? "line" : undefined].filter(part => part !== undefined).join(" + ") +
+                (pedal.ChangeBegin ? " (change)" : "")));
+        // MusicXML: the sign is "yes" by default with line="no", "no" with line="yes"
+        expect(pedals).to.deep.equal([
+            "m1: line", // no line or sign attribute
+            "m2: sign", // sign="yes"
+            "m3: line", // sign="no"
+            "m4: line", // line="yes"
+            "m5: sign + line", // line="yes" sign="yes" (was read as a line only)
+            "m6: line", // line="yes" sign="no"
+            "m7: sign", // line="no"
+            "m8: sign", // line="no" sign="yes"
+            "m9: sign + line", // line="yes" sign="yes", into the next system
+            "m10: line (change)", // its change, line="yes": a line goes on, no Ped. sign
+        ]);
     });
 });
