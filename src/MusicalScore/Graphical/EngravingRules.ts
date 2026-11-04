@@ -585,10 +585,17 @@ export class EngravingRules {
     /** Whether to render part-group names and abbreviations. Requires RenderPartNames. Default true. */
     public RenderPartGroupNames: boolean;
     public RenderPartAbbreviations: boolean;
-    /** Whether to render part abbreviations on systems with only one staff.
+    /** Whether to render part abbreviations on later systems with only one staff (the first system shows the part name,
+     *  or its abbreviation when the name leaves too little room, see FitPartLabelsToMeasures).
      *  Requires RenderPartNames and RenderPartAbbreviations. Default false.
      */
     public RenderPartAbbreviationsForSingleStaff: boolean;
+    /** Whether a system's part names or abbreviations give way when they leave its measures too little room, e.g. in a
+     *  narrow container, where the notes of the first measure would be drawn past the end of the staff:
+     *  the first system then shows the part names on two lines, else the part abbreviations, else no labels,
+     *  and later systems leave out their abbreviations. Default true.
+     */
+    public FitPartLabelsToMeasures: boolean;
     /** Internal cache-gate for lazy (renderAppend) rendering: when true, the lazy reuse caches (skyline)
      *  are active. Set by OpenSheetMusicDisplay.renderAppend() and forced false by a normal render(), so
      *  the caches never affect a non-lazy render. Not a user toggle. */
@@ -1151,6 +1158,7 @@ export class EngravingRules {
         this.RenderPartGroupNames = true;
         this.RenderPartAbbreviations = true;
         this.RenderPartAbbreviationsForSingleStaff = false;
+        this.FitPartLabelsToMeasures = true;
         this.LazyConsistentGraphic = false;
         this.RenderSystemLabelsAfterFirstPage = true;
         this.RenderFingerings = true;

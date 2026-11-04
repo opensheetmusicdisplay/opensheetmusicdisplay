@@ -261,8 +261,9 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         await opensheetmusicdisplay.load(score);
         opensheetmusicdisplay.render();
         expect(div.offsetWidth).to.equal(200);
-        // too narrow for the first measure, in each of its two staves
-        expect(logged).to.deep.equal(Array(2).fill("SkyBottomLineCalculator: width not > 0 in measure 1"));
+        // the part names "Piano (right)" and "Piano (left)" give way to the first measure (EngravingRules.FitPartLabelsToMeasures):
+        //   before, they left its two staves no width ("SkyBottomLineCalculator: width not > 0 in measure 1" for each)
+        expect(logged).to.deep.equal([]);
     });
 
     /**

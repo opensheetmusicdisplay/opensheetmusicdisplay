@@ -5,7 +5,7 @@ import {RhythmInstruction} from "../VoiceData/Instructions/RhythmInstruction";
 import {KeyInstruction} from "../VoiceData/Instructions/KeyInstruction";
 import {ClefInstruction} from "../VoiceData/Instructions/ClefInstruction";
 import {SourceMeasure} from "../VoiceData/SourceMeasure";
-import {MusicSystem} from "./MusicSystem";
+import {MusicSystem, SystemLabelsEnum} from "./MusicSystem";
 import {BoundingBox} from "./BoundingBox";
 import {Staff} from "../VoiceData/Staff";
 import {Instrument} from "../Instrument";
@@ -285,6 +285,10 @@ export class MusicSystemBuilder {
         graphicalMeasures: GraphicalMeasure[], measureStartLine: SystemLinesEnum, measureEndLine: SystemLinesEnum,
         totalMeasureWidth: number, currentMeasureBeginInstructionsWidth: number, currentVarWidth: number, currentMeasureEndInstructionsWidth: number
     ): void {
+        if (this.currentSystemParams.systemMeasures.length === 0) {
+            // before the system's first measure, so that the room the labels give up can take more measures
+            this.fitLabelsToMeasures(currentMeasureBeginInstructionsWidth + currentMeasureEndInstructionsWidth, currentVarWidth);
+        }
         this.currentSystemParams.systemMeasures.push({beginLine: measureStartLine, endLine: measureEndLine});
         this.setMeasureWidth(
             graphicalMeasures, totalMeasureWidth, currentMeasureBeginInstructionsWidth, currentMeasureEndInstructionsWidth
@@ -294,6 +298,48 @@ export class MusicSystemBuilder {
         this.currentSystemParams.currentSystemFixWidth += currentMeasureBeginInstructionsWidth + currentMeasureEndInstructionsWidth;
         this.currentSystemParams.currentSystemVarWidth += currentVarWidth;
         this.currentSystemParams.systemMeasureIndex++;
+    }
+
+    /**
+     * Replaces the current system's labels when they leave its measures too little room (EngravingRules.FitPartLabelsToMeasures),
+     * e.g. in a narrow container, where the part names pushed the first measure past the staff end: the first system then
+     * shows the part names on two lines, else the part abbreviations, else no labels, and later systems no abbreviations.
+     * Labels leave too little room when the notes get less than their minimum width and less than 3/4 of the room they would
+     * have without labels. So labels may take up to a quarter of the room of a measure wider than the system anyway,
+     * e.g. a dense measure alone in a system.
+     * @param fixWidth the width of the measures that isn't stretched: clefs, key and time signatures, barlines
+     * @param varWidth the minimum width of the measures' notes, which is stretched to fill the system
+     */
+    protected fitLabelsToMeasures(fixWidth: number, varWidth: number): void {
+        const system: MusicSystem = this.currentSystemParams.currentSystem;
+        if (!this.rules.FitPartLabelsToMeasures || system.MaxLabelLength === 0 || varWidth <= 0 ||
+            this.labelsLeaveMeasuresRoom(fixWidth, varWidth)) {
+            return;
+        }
+        const isFirstSystem: boolean = this.musicSystems.length === 1;
+        const labelsTypes: SystemLabelsEnum[] = isFirstSystem
+            ? [SystemLabelsEnum.NamesOnTwoLines, SystemLabelsEnum.Abbreviations, SystemLabelsEnum.None]
+            : [SystemLabelsEnum.None];
+        for (const labelsType of labelsTypes) {
+            system.createMusicSystemLabel(this.rules.InstrumentLabelTextHeight, this.rules.SystemLabelsRightMargin,
+                                          this.rules.LabelMarginBorderFactor, isFirstSystem, labelsType);
+            if (system.MaxLabelLength > 0 && this.labelsLeaveMeasuresRoom(fixWidth, varWidth)) {
+                break;
+            }
+        }
+        this.currentSystemParams.maxLabelLength = system.MaxLabelLength;
+    }
+
+    /**
+     * Whether the current system's labels leave its measures enough room (see fitLabelsToMeasures()): the notes get at least
+     * their minimum width, or at least 3/4 of the room they would have without labels.
+     * @param fixWidth the width of the measures that isn't stretched
+     * @param varWidth the minimum width of the measures' notes
+     */
+    private labelsLeaveMeasuresRoom(fixWidth: number, varWidth: number): boolean {
+        const notesRoom: number = this.currentSystemParams.currentSystem.StaffLines[0].PositionAndShape.Size.width - fixWidth;
+        const notesRoomWithoutLabels: number = this.getFullPageSystemWidth() - fixWidth;
+        return notesRoom >= Math.min(varWidth, 0.75 * notesRoomWithoutLabels);
     }
 
     /**
@@ -1079,6 +1125,9 @@ export class MusicSystemBuilder {
      * @param systemEndsPart
      */
     protected stretchMusicSystem(systemEndsPart: boolean): void {
+        // the labels may give way once more, now with all of the system's measures and the instructions added at its end
+        //   (e.g. a courtesy key signature)
+        this.fitLabelsToMeasures(this.currentSystemParams.currentSystemFixWidth, this.currentSystemParams.currentSystemVarWidth);
         let scalingFactor: number = this.calculateXScalingFactor(
             this.currentSystemParams.currentSystemFixWidth, this.currentSystemParams.currentSystemVarWidth
         );
