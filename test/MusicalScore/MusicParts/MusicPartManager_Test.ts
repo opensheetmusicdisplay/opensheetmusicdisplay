@@ -4,6 +4,7 @@ import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSh
 import { Fraction } from "../../../src/Common/DataObjects/Fraction";
 import { MusicPartManager, TimestampTransform } from "../../../src/MusicalScore/MusicParts/MusicPartManager";
 import { MusicPartManagerIterator } from "../../../src/MusicalScore/MusicParts/MusicPartManagerIterator";
+import { PartListEntry } from "../../../src/MusicalScore/MusicSource/PartListEntry";
 
 /**
  * The mapping between enrolled timestamps (the time line with the repetitions played out) and sheet timestamps (the position
@@ -66,11 +67,13 @@ describe("MusicPartManager after loading", () => {
     it("getCurrentRepetitionTimestampTransform() returns the transform of the last jump at or before a timestamp", () => {
         const secondPass: TimestampTransform = manager.getCurrentRepetitionTimestampTransform(new Fraction(3, 1));
         expect([secondPass.$from.RealValue, secondPass.to.RealValue], "m2, start of the second pass").to.deep.equal([3, 1]);
-        expect(manager.getCurrentRepetitionTimestampTransform(new Fraction(15, 4)), "m2, end of the second pass").to.equal(secondPass);
+        // === instead of to.equal(): if it failed, to.equal() would print both transforms, with the whole sheet (curRepetition)
+        expect(manager.getCurrentRepetitionTimestampTransform(new Fraction(15, 4)) === secondPass,
+               "m2, end of the second pass: the same transform").to.equal(true);
 
         const afterEnding: TimestampTransform = manager.getCurrentRepetitionTimestampTransform(new Fraction(4, 1));
         expect([afterEnding.$from.RealValue, afterEnding.to.RealValue], "m4, start").to.deep.equal([4, 3]);
-        expect(manager.getCurrentRepetitionTimestampTransform(new Fraction(9, 2)), "m4").to.equal(afterEnding);
+        expect(manager.getCurrentRepetitionTimestampTransform(new Fraction(9, 2)) === afterEnding, "m4: the same transform").to.equal(true);
 
         const firstPass: TimestampTransform = manager.getCurrentRepetitionTimestampTransform(new Fraction(11, 4));
         expect(firstPass.to.RealValue - firstPass.$from.RealValue, "m3, first pass: sheet timestamp - enrolled timestamp").to.equal(0);
@@ -79,6 +82,9 @@ describe("MusicPartManager after loading", () => {
     /** The repeat of m2-m3, and the repetition of the whole piece that OSMD adds when no repetition spans it (played once). */
     it("Parts lists the sheet's repetitions", () => {
         expect(osmd.Sheet.Repetitions.length).to.equal(2);
-        expect(manager.Parts).to.have.ordered.members(osmd.Sheet.Repetitions);
+        // their indexes: a failing to.have.ordered.members() would print both lists, with the whole sheet
+        const repetitions: PartListEntry[] = osmd.Sheet.Repetitions;
+        expect(manager.Parts.map((part: PartListEntry): number => repetitions.indexOf(part)), "the sheet's repetitions, in order")
+            .to.deep.equal([0, 1]);
     });
 });
