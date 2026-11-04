@@ -235,8 +235,9 @@ export class OpenSheetMusicDisplay {
     /**
      * (Re-)creates the graphic sheet from the music sheet, and puts the cursors back to the start.
      * Needed e.g. after changing a rule that applies when the graphic is created, like EngravingRules.RenderHiddenNotes.
-     * A changed transposition (osmd.Sheet.Transpose, Instrument.Transpose, osmd.TransposeCalculator) doesn't need it:
-     * render() creates the graphic again then, and keeps the cursors where they are.
+     * A changed transposition (osmd.Sheet.Transpose, Instrument.Transpose, osmd.TransposeCalculator) or a voice shown or
+     * hidden (Voice.Visible, Instrument.Visible) doesn't need it: render() creates the graphic again then, and keeps the
+     * cursors where they are.
      */
     public updateGraphic(): void {
         this.createGraphic();
@@ -257,6 +258,13 @@ export class OpenSheetMusicDisplay {
         if (this.drawingParameters.DrawingParametersEnum === DrawingParametersEnum.leadsheet) {
             this.graphic.LeadSheet = true;
         }
+    }
+
+    /** Whether the graphic has to be created again before it's rendered: after a change of the transposition or of the
+     *  visible voices, which apply when it's created (see GraphicalMusicSheet.TranspositionChanged and VoiceVisibilityChanged).
+     */
+    private graphicOutdated(): boolean {
+        return this.graphic.TranspositionChanged || this.graphic.VoiceVisibilityChanged;
     }
 
     /** Lazy rendering (LazyConsistentGraphic): number of systems already drawn into the shared
@@ -292,8 +300,9 @@ export class OpenSheetMusicDisplay {
     private lazyScrollTarget: HTMLElement | Window | undefined;
 
     /** Render the loaded music sheet to the container.
-     *  A changed transposition (osmd.Sheet.Transpose, Instrument.Transpose, osmd.TransposeCalculator) is applied without
-     *  updateGraphic(): render() creates the graphic again then, see GraphicalMusicSheet.TranspositionChanged.
+     *  A changed transposition (osmd.Sheet.Transpose, Instrument.Transpose, osmd.TransposeCalculator) or a voice shown or hidden
+     *  (Voice.Visible, Instrument.Visible) is applied without updateGraphic(): render() creates the graphic again then,
+     *  see GraphicalMusicSheet.TranspositionChanged and VoiceVisibilityChanged.
      */
     public render(): void {
         if (!this.graphic) {
@@ -301,8 +310,9 @@ export class OpenSheetMusicDisplay {
         }
         // The notes and chord symbols are transposed when the graphic is created, the key signatures in each layout (reCalculate()):
         //   after a change of the transposition, create the graphic again, otherwise only the key signatures would be transposed.
+        //   The notes of hidden voices are left out when the graphic is created too.
         //   Unlike updateGraphic(), this keeps the cursors where they are (enableOrDisableCursors() below creates them on the new graphic).
-        if (this.graphic.TranspositionChanged) {
+        if (this.graphicOutdated()) {
             this.createGraphic();
         }
         // A full render() supersedes any incremental render in progress: abandon it and restore the
@@ -447,16 +457,16 @@ export class OpenSheetMusicDisplay {
         const lastSheetMeasureIndex: number = this.sheet.SourceMeasures.length - 1;
         const totalMeasures: number = this.visualMeasureCount(0, this.sheet.SourceMeasures.length);
 
-        // As in render(): create the graphic again after a change of the transposition.
-        const transpositionChanged: boolean = this.graphic.TranspositionChanged;
-        if (transpositionChanged) {
+        // As in render(): create the graphic again after a change of the transposition or of the visible voices.
+        const graphicOutdated: boolean = this.graphicOutdated();
+        if (graphicOutdated) {
             this.createGraphic();
         }
         const begin: boolean = !this.lazyIncrementalActive;
         if (begin) {
             this.beginIncrementalRendering();
-        } else if (transpositionChanged) {
-            this.lazyNextSourceIndex = 0; // start the session over: the systems drawn show the previous transposition
+        } else if (graphicOutdated) {
+            this.lazyNextSourceIndex = 0; // start the session over: the systems drawn show the previous transposition or voices
         }
         if (this.lazyNextSourceIndex > lastSheetMeasureIndex) {
             return {
@@ -471,7 +481,7 @@ export class OpenSheetMusicDisplay {
         const toMeasureIndex: number = targetNewSystems !== undefined
             ? fromMeasureIndex
             : this.visualBatchEndIndex(fromMeasureIndex, batchMeasures);
-        this.lazyNextSourceIndex = this.renderAppend(fromMeasureIndex, toMeasureIndex, begin || transpositionChanged, targetNewSystems);
+        this.lazyNextSourceIndex = this.renderAppend(fromMeasureIndex, toMeasureIndex, begin || graphicOutdated, targetNewSystems);
 
         const done: boolean = this.lazyNextSourceIndex > lastSheetMeasureIndex;
         const renderedMeasures: number = done ? totalMeasures : this.visualMeasureCount(0, this.lazyNextSourceIndex);

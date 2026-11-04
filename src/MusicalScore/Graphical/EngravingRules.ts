@@ -522,6 +522,20 @@ export class EngravingRules {
      *  notes of a chord are hidden notes, and with ColorBeams the beams of such notes. Needs ColoringEnabled.
      *  Set it to "" to draw hidden notes in the colors of visible notes. Set by OSMDOptions.hiddenNotesColor. */
     public HiddenNotesColor: string;
+    /** Whether hidden voices (Voice.Visible false) keep the layout of the full score: their notes are laid out like hidden notes
+     *  (print-object="no"), taking up their space and keeping the stem directions of the other voices, but they aren't drawn.
+     *  E.g. for an exercise where a missing voice is filled in, or to show voices one by one without the notes moving.
+     *  Default false: the other voices are laid out as if the hidden voices weren't there, e.g. for a singer's part of a hymn,
+     *  the alto with stems by pitch instead of the stems down it has next to the soprano, spaced by its own notes only.
+     *  To change this rule after load(), call osmd.updateGraphic() before the next render(). */
+    public HiddenVoicesKeepLayout: boolean;
+    /** Whether to draw the lyrics of hidden voices (Voice.Visible false). Default true.
+     *  Without HiddenVoicesKeepLayout, they're drawn under the visible notes that start at the same time on the staff, where
+     *  these have no lyrics of that verse themselves: e.g. a hymn's lyrics, given with the soprano, under the alto when only
+     *  the alto is shown. A syllable where no visible note starts is left out.
+     *  With HiddenVoicesKeepLayout, they stay under the hidden notes.
+     *  To change this rule after load(), call osmd.updateGraphic() before the next render(). */
+    public RenderLyricsOfHiddenVoices: boolean;
     public ColoringMode: ColoringMode;
     public ColoringEnabled: boolean;
     public ColorStemsLikeNoteheads: boolean;
@@ -1143,6 +1157,8 @@ export class EngravingRules {
         this.RenderGlissandi = true;
         this.RenderHiddenNotes = false;
         this.HiddenNotesColor = "#A0A0A0CC";
+        this.HiddenVoicesKeepLayout = false;
+        this.RenderLyricsOfHiddenVoices = true;
         this.ColoringMode = ColoringMode.XML;
         this.ColoringEnabled = true;
         this.ColorStemsLikeNoteheads = false;

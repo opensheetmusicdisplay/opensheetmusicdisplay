@@ -676,6 +676,11 @@ export class SourceMeasure {
                     visibleLyrics = true;
                 }
                 for (const voiceEntry of staffEntry.VoiceEntries) {
+                    // ignore the notes of a hidden voice that is left out of the layout, as if it weren't there
+                    //   (see Voice.isHiddenInShownInstrument() and EngravingRules.HiddenVoicesKeepLayout)
+                    if (!this.rules?.HiddenVoicesKeepLayout && voiceEntry.ParentVoice.isHiddenInShownInstrument()) {
+                        continue;
+                    }
                     // a multiple rest measure would hide a fermata on a rest (a pause bar)
                     if (voiceEntry.Articulations.some((articulation: Articulation): boolean =>
                         articulation.articulationEnum === ArticulationEnum.fermata || articulation.articulationEnum === ArticulationEnum.invertedfermata)) {

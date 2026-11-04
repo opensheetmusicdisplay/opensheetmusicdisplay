@@ -54,7 +54,7 @@ describe("Cursor on a page that isn't drawn", () => {
     it("render() with no instrument visible draws no page and doesn't throw; the cursor is created on the first page drawn (#1892)", async () => {
         const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(container, { autoResize: false });
         await osmd.load(TestUtils.getScore("test_rest_positioning_piano_two_voices.musicxml"));
-        // hiding the instrument's first voice (Voice.Visible) does the same: Instrument.Visible is the Visible of its first voice
+        // hides all its voices (Voice.Visible): an instrument is shown while one of its voices is
         osmd.Sheet.Instruments[0].Visible = false;
         osmd.render(); // threw a TypeError when restoring the state of the cursor, which wasn't created without a page
         expect(osmd.Drawer.Backends.length, "drawn pages, no instrument visible").to.equal(0);

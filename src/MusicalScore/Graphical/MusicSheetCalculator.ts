@@ -500,8 +500,11 @@ export abstract class MusicSheetCalculator {
         throw new Error(this.abstractNotImplementedErrorMessage);
     }
 
+    /** Creates the graphical lyrics of the voice entry at the staff entry.
+     *  @param onlyNewVerses true to leave out the verses that the staff entry has lyrics of already, e.g. for the lyrics of a hidden
+     *  voice under the visible notes, see handleLyricsOfLeftOutVoices() */
     protected handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry,
-                                     openLyricWords: LyricWord[]): void {
+                                     openLyricWords: LyricWord[], onlyNewVerses: boolean = false): void {
         throw new Error(this.abstractNotImplementedErrorMessage);
     }
 
@@ -2482,9 +2485,15 @@ export abstract class MusicSheetCalculator {
                                octaveShiftValue: OctaveEnum, staffIndex: number,
                                linkedNotes: Note[] = undefined,
                                sourceStaffEntry: SourceStaffEntry = undefined): OctaveEnum {
+        // The MusicXML's stems up or down were set for the voices together, so they don't apply in a measure where a voice is left
+        //   out of the layout as if it weren't there: e.g. a hymn's alto alone gets stems by pitch, not down as under the soprano.
+        const stemDirectionXmlApplies: boolean =
+            voiceEntry.StemDirectionXml !== StemDirectionType.Up && voiceEntry.StemDirectionXml !== StemDirectionType.Down ||
+            !this.leftOutVoicePresentInMeasure(voiceEntry);
         if (voiceEntry.StemDirectionXml !== StemDirectionType.Undefined &&
             this.rules.SetWantedStemDirectionByXml &&
-            voiceEntry.StemDirectionXml !== undefined) {
+            voiceEntry.StemDirectionXml !== undefined &&
+            stemDirectionXmlApplies) {
                 voiceEntry.WantedStemDirection = voiceEntry.StemDirectionXml;
         } else {
             this.calculateStemDirectionFromVoices(voiceEntry);
@@ -2568,7 +2577,11 @@ export abstract class MusicSheetCalculator {
         if (voiceEntry.TechnicalInstructions.length > 0) {
             this.handleVoiceEntryTechnicalInstructions(voiceEntry.TechnicalInstructions, voiceEntry, graphicalStaffEntry);
         }
-        if (voiceEntry.LyricsEntries.size() > 0) {
+        // The lyrics of a voice left out of the layout are drawn under the visible notes (see handleLyricsOfLeftOutVoices()), not
+        //   here, where it's only laid out to carry e.g. a chord symbol (see voiceEntriesToLayOut()). A hidden voice laid out with
+        //   EngravingRules.HiddenVoicesKeepLayout keeps them at its hidden notes, unless RenderLyricsOfHiddenVoices is false.
+        if (voiceEntry.LyricsEntries.size() > 0 && !this.isLeftOutOfLayout(voiceEntry.ParentVoice) &&
+            (this.rules.RenderLyricsOfHiddenVoices || !voiceEntry.ParentVoice.isHiddenInShownInstrument())) {
             this.handleVoiceEntryLyrics(voiceEntry, graphicalStaffEntry, openLyricWords);
         }
         if (voiceEntry.OrnamentContainer) {
@@ -2601,7 +2614,7 @@ export abstract class MusicSheetCalculator {
     protected maxInstrNameLabelLength(): number {
         let maxLabelLength: number = 0.0;
         for (const instrument of this.graphicalMusicSheet.ParentMusicSheet.Instruments) {
-            if (instrument.NameLabel?.print && instrument.Voices.length > 0 && instrument.Voices[0].Visible) {
+            if (instrument.NameLabel?.print && instrument.Visible) {
                 let renderedLabel: Label = instrument.NameLabel;
                 if (!this.rules.RenderPartNames) {
                     renderedLabel = new Label("", renderedLabel.textAlignment, renderedLabel.font);
@@ -3166,7 +3179,8 @@ export abstract class MusicSheetCalculator {
                 const hasStem: boolean = note.TypeLength?.RealValue < 1 && voiceEntry.StemDirectionXml !== StemDirectionType.None;
                 // put ties of second voices (e.g. 2 for right hand, 6 left hand) below by default
                 //   TODO could be more precise but also more complex by checking lower notes, other notes, etc.
-                if (voiceId === 2 || voiceId === 6) {
+                //   Not where the voice is laid out without the voice above it, which is hidden (see isLeftOutOfLayout()).
+                if ((voiceId === 2 || voiceId === 6) && !this.leftOutVoicePresentInMeasure(voiceEntry)) {
                     tie.TieDirection = PlacementEnum.Below;
                 } else if (hasStem && this.otherVoicePresentInMeasure(voiceEntry, true)) {
                     // Where two parts share a staff, a tie curves on its stem side, away from the other part: upwards in
@@ -3395,6 +3409,10 @@ export abstract class MusicSheetCalculator {
             // is there a SourceStaffEntry at this Index
             if (sourceStaffEntry) {
                 // a SourceStaffEntry exists
+                const laidOutVoiceEntries: VoiceEntry[] = this.voiceEntriesToLayOut(sourceStaffEntry);
+                if (laidOutVoiceEntries.length === 0 && sourceStaffEntry.VoiceEntries.length > 0) {
+                    continue; // only voices left out of the layout start here (hidden, see isLeftOutOfLayout()): as if they weren't there
+                }
                 // is there an inStaff ClefInstruction? -> update activeClef
                 for (let idx: number = 0, len: number = sourceStaffEntry.Instructions.length; idx < len; ++idx) {
                     const abstractNotationInstruction: AbstractNotationInstruction = sourceStaffEntry.Instructions[idx];
@@ -3431,6 +3449,9 @@ export abstract class MusicSheetCalculator {
                 // for each visible Voice create the corresponding GraphicalNotes
                 for (let idx: number = 0, len: number = sourceStaffEntry.VoiceEntries.length; idx < len; ++idx) {
                     const voiceEntry: VoiceEntry = sourceStaffEntry.VoiceEntries[idx];
+                    if (!laidOutVoiceEntries.includes(voiceEntry)) {
+                        continue; // its voice is left out of the layout, see voiceEntriesToLayOut()
+                    }
                     if (voiceEntry.GraceAfterMainNote) {
                         graceEntriesAfterMainNote.push({ voiceEntry, graphicalStaffEntry, sourceStaffEntry, linkedNotes });
                         continue; // handled after all other entries of the measure, see below
@@ -3453,6 +3474,7 @@ export abstract class MusicSheetCalculator {
                         linkedNotes, sourceStaffEntry
                     );
                 }
+                this.handleLyricsOfLeftOutVoices(sourceStaffEntry, laidOutVoiceEntries, graphicalStaffEntry, openLyricWords);
                 // SourceStaffEntry has inStaff ClefInstruction -> create graphical clef
                 for (const instruction of sourceStaffEntry.Instructions) {
                     if (instruction instanceof ClefInstruction) {
@@ -3531,7 +3553,9 @@ export abstract class MusicSheetCalculator {
                     //   but it should only happen when the first measure of the piece is empty.
                     staff.Voices.push(newVoice);
                 }
-                const voiceEntry: VoiceEntry = new VoiceEntry(new Fraction(0, 1), staff.Voices[0], sourceStaffEntry);
+                // the rest of the staff's first voice that is laid out: a hidden voice's rest wouldn't be drawn (see isLeftOutOfLayout())
+                const restVoice: Voice = staff.Voices.find((voice: Voice): boolean => !this.isLeftOutOfLayout(voice)) ?? staff.Voices[0];
+                const voiceEntry: VoiceEntry = new VoiceEntry(new Fraction(0, 1), restVoice, sourceStaffEntry);
                 let duration: Fraction = sourceMeasure.Duration;
                 if (duration.RealValue === 0) {
                     duration = sourceMeasure.ActiveTimeSignature.clone();
@@ -3599,7 +3623,11 @@ export abstract class MusicSheetCalculator {
             graphicalNote.sourceNote.TransposedPitch = undefined;
         }
         graphicalNote.sourceNote.halfTone = pitch.getHalfTone();
-        accidentalCalculator.checkAccidental(graphicalNote, pitch);
+        // A note of a hidden voice (see Voice.isHiddenInShownInstrument()) gets no accidental, and doesn't alter the notes after it
+        //   in the measure: the visible notes draw the accidentals they need, e.g. the alto the sharp drawn at the hidden soprano.
+        if (!graphicalNote.sourceNote.ParentVoiceEntry.ParentVoice.isHiddenInShownInstrument()) {
+            accidentalCalculator.checkAccidental(graphicalNote, pitch);
+        }
     }
 
     // private createStaffEntryForTieNote(measure: StaffMeasure, absoluteTimestamp: Fraction, openTie: Tie): GraphicalStaffEntry {
@@ -4682,7 +4710,7 @@ export abstract class MusicSheetCalculator {
                 return;
             }
         } else {
-            if (voiceEntry.ParentVoice instanceof LinkedVoice) {
+            if (this.isSecondaryVoice(voiceEntry)) {
                 // Linked (secondary) voice: stem down. With AutoStemSecondaryVoicesWhenAloneInMeasure, a secondary
                 //   voice that is the only voice with entries in this measure on this staff has no voice to avoid and
                 //   keeps WantedStemDirection undefined, i.e. gets pitch-based stems (#1719). Checking only the same
@@ -4693,8 +4721,10 @@ export abstract class MusicSheetCalculator {
                 }
             } else {
                 // if this voiceEntry belongs to the mainVoice:
-                // check first that there are also more voices present:
-                if (voiceEntry.ParentSourceStaffEntry.VoiceEntries.length > 1) {
+                // check first that there are also more voices present (not counting those left out of the layout):
+                const voiceEntries: VoiceEntry[] = voiceEntry.ParentSourceStaffEntry.VoiceEntries;
+                if (voiceEntries.length > 1 && voiceEntries.some((entry: VoiceEntry): boolean =>
+                    entry !== voiceEntry && !this.isLeftOutOfLayout(entry.ParentVoice))) {
                     // as this voiceEntry belongs to the mainVoice: stem Up
                     voiceEntry.WantedStemDirection = StemDirectionType.Up;
                 }
@@ -4705,10 +4735,29 @@ export abstract class MusicSheetCalculator {
 
     /** Whether a voice other than the given entry's has an entry (note or rest) in the same measure on the same staff,
      *  with onlyVisible one with a note or rest that is drawn (Note.isVisible()), e.g. not of a voice only for playback
-     *  (print-object="no").
+     *  (print-object="no"). A voice left out of the layout (hidden, see isLeftOutOfLayout()) doesn't count.
      *  A voice with most of its entries of the measure on another staff doesn't count: it only crosses into this staff,
      *  e.g. the top notes of a left-hand arpeggio in the right hand's staff (Dichterliebe m.9). */
     private otherVoicePresentInMeasure(voiceEntry: VoiceEntry, onlyVisible: boolean = false): boolean {
+        return this.otherVoiceHasEntryInMeasure(voiceEntry, (otherVoiceEntry: VoiceEntry): boolean =>
+            !this.isLeftOutOfLayout(otherVoiceEntry.ParentVoice) &&
+            (!onlyVisible || otherVoiceEntry.Notes.some((note: Note) => note.isVisible())));
+    }
+
+    /** Whether a voice left out of the layout (hidden, see isLeftOutOfLayout()) has an entry in the same measure on the same staff
+     *  as the given entry, so that the given entry's voice is laid out without it there, e.g. as the only voice of the staff.
+     *  Like in otherVoicePresentInMeasure(), a voice with most of its entries of the measure on another staff doesn't count. */
+    private leftOutVoicePresentInMeasure(voiceEntry: VoiceEntry): boolean {
+        if (!voiceEntry.ParentSourceStaffEntry.ParentStaff.Voices.some((voice: Voice): boolean => this.isLeftOutOfLayout(voice))) {
+            return false; // nothing left out on the staff: the common case, without looking through the measure
+        }
+        return this.otherVoiceHasEntryInMeasure(voiceEntry, (otherVoiceEntry: VoiceEntry): boolean =>
+            this.isLeftOutOfLayout(otherVoiceEntry.ParentVoice));
+    }
+
+    /** Whether a voice other than the given entry's has an entry that fulfills the condition in the same measure on the same staff,
+     *  except a voice with most of its entries of the measure on another staff (see otherVoicePresentInMeasure()). */
+    private otherVoiceHasEntryInMeasure(voiceEntry: VoiceEntry, condition: (otherVoiceEntry: VoiceEntry) => boolean): boolean {
         const staffEntry: SourceStaffEntry = voiceEntry.ParentSourceStaffEntry;
         const staffIndex: number = staffEntry.ParentStaff.idInMusicSheet;
         const measure: SourceMeasure = staffEntry.VerticalContainerParent.ParentMeasure;
@@ -4718,14 +4767,69 @@ export abstract class MusicSheetCalculator {
                 continue;
             }
             for (const otherVoiceEntry of otherStaffEntry.VoiceEntries) {
-                if (otherVoiceEntry.ParentVoice !== voiceEntry.ParentVoice &&
-                    (!onlyVisible || otherVoiceEntry.Notes.some((note: Note) => note.isVisible())) &&
+                if (otherVoiceEntry.ParentVoice !== voiceEntry.ParentVoice && condition(otherVoiceEntry) &&
                     !this.voiceMostlyOnOtherStaves(otherVoiceEntry.ParentVoice, measure, staffIndex)) {
                     return true;
                 }
             }
         }
         return false;
+    }
+
+    /** Whether the notes of the voice are left out of the layout, as if they weren't there: a voice hidden in its shown instrument
+     *  (Voice.isHiddenInShownInstrument()), unless EngravingRules.HiddenVoicesKeepLayout lays it out like hidden notes. */
+    private isLeftOutOfLayout(voice: Voice): boolean {
+        return !this.rules.HiddenVoicesKeepLayout && voice.isHiddenInShownInstrument();
+    }
+
+    /** Whether the entry's voice gets the stems of a secondary voice (down where other voices are), not those of the main voice
+     *  (up): a linked voice (LinkedVoice, not the first voice of its staff, e.g. a hymn's alto under the soprano), unless all the
+     *  voices before it on the staff are left out of the layout (see isLeftOutOfLayout()): then it's the first voice drawn there,
+     *  e.g. the alto with the soprano hidden. */
+    private isSecondaryVoice(voiceEntry: VoiceEntry): boolean {
+        const voice: Voice = voiceEntry.ParentVoice;
+        if (!(voice instanceof LinkedVoice)) {
+            return false;
+        }
+        const staffVoices: Voice[] = voiceEntry.ParentSourceStaffEntry.ParentStaff.Voices;
+        const index: number = staffVoices.indexOf(voice);
+        return index <= 0 || staffVoices.slice(0, index).some((staffVoice: Voice): boolean => !this.isLeftOutOfLayout(staffVoice));
+    }
+
+    /** The voice entries of the source staff entry to lay out: all except those of voices left out of the layout (hidden, see
+     *  isLeftOutOfLayout()). Where only such voices start, none, so that the staff entry is left out too, unless it has more to
+     *  draw than notes, like a chord symbol or a clef or key change: then their entries are laid out to carry it, but not drawn
+     *  (Note.isVisible() is false for them), like hidden notes (print-object="no"). */
+    private voiceEntriesToLayOut(sourceStaffEntry: SourceStaffEntry): VoiceEntry[] {
+        const voiceEntries: VoiceEntry[] = sourceStaffEntry.VoiceEntries;
+        if (!voiceEntries.some((voiceEntry: VoiceEntry): boolean => this.isLeftOutOfLayout(voiceEntry.ParentVoice))) {
+            return voiceEntries;
+        }
+        const laidOut: VoiceEntry[] = voiceEntries.filter((voiceEntry: VoiceEntry): boolean => !this.isLeftOutOfLayout(voiceEntry.ParentVoice));
+        const hasMoreThanNotes: boolean = sourceStaffEntry.Instructions.length > 0 || sourceStaffEntry.Link !== undefined ||
+            this.rules.RenderChordSymbols && sourceStaffEntry.ChordContainers?.length > 0;
+        return laidOut.length === 0 && hasMoreThanNotes ? voiceEntries : laidOut;
+    }
+
+    /** Draws the lyrics of the voices that are left out of the layout at the staff entry (hidden, see voiceEntriesToLayOut()) under
+     *  the visible notes that start there, for the verses that these have no lyrics of themselves: e.g. a hymn's lyrics, given with
+     *  the soprano, under the alto when only the alto is shown (EngravingRules.RenderLyricsOfHiddenVoices). Where no visible note
+     *  starts, the syllable is left out. */
+    private handleLyricsOfLeftOutVoices(sourceStaffEntry: SourceStaffEntry, laidOutVoiceEntries: VoiceEntry[],
+                                        graphicalStaffEntry: GraphicalStaffEntry, openLyricWords: LyricWord[]): void {
+        if (!this.rules.RenderLyricsOfHiddenVoices || laidOutVoiceEntries.length === sourceStaffEntry.VoiceEntries.length) {
+            return; // nothing left out here, or the left-out entries are laid out to carry e.g. a chord symbol, but no visible note
+        }
+        const visibleNoteStartsHere: boolean = laidOutVoiceEntries.some((voiceEntry: VoiceEntry): boolean =>
+            !voiceEntry.IsGrace && voiceEntry.Notes.some((note: Note): boolean => !note.isRest() && note.isVisible()));
+        if (!visibleNoteStartsHere) {
+            return;
+        }
+        for (const voiceEntry of sourceStaffEntry.VoiceEntries) {
+            if (!voiceEntry.IsGrace && voiceEntry.LyricsEntries.size() > 0 && !laidOutVoiceEntries.includes(voiceEntry)) {
+                this.handleVoiceEntryLyrics(voiceEntry, graphicalStaffEntry, openLyricWords, true);
+            }
+        }
     }
 
     /** Whether the voice has more entries in the measure on other staves than on the staff with the given index. */

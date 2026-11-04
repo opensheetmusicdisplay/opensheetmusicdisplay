@@ -3002,8 +3002,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     (graphicalNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure).handleBeam(graphicalNote, beam);
   }
 
-  protected handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricWords: LyricWord[]): void {
+  protected handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricWords: LyricWord[],
+                                   onlyNewVerses: boolean = false): void {
     voiceEntry.LyricsEntries.forEach((key: string, lyricsEntry: LyricsEntry) => {
+      if (onlyNewVerses && graphicalStaffEntry.LyricsEntries.some((entry: GraphicalLyricEntry): boolean =>
+        entry.LyricsEntry.VerseNumber === lyricsEntry.VerseNumber)) {
+        return; // the staff entry has a lyric of this verse already
+      }
       const graphicalLyricEntry: GraphicalLyricEntry = new GraphicalLyricEntry(lyricsEntry,
                                                                                graphicalStaffEntry,
                                                                                this.rules.LyricsHeight,
@@ -3119,6 +3124,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     return parentMeasure?.NotesAreAbbreviated === true;
   }
 
+  /** Whether the note belongs to a hidden voice of a shown instrument (Voice.isHiddenInShownInstrument()), which isn't drawn:
+   *  then neither is a slur or glissando from or to it. */
+  private isInHiddenVoice(note: Note): boolean {
+    return note?.ParentVoiceEntry?.ParentVoice?.isHiddenInShownInstrument() === true;
+  }
+
   protected calculateSlurs(): void {
     const openSlursDict: { [staffId: number]: GraphicalSlur[] } = {};
     for (const graphicalMeasure of this.graphicalMusicSheet.MeasureList[0]) { //let i: number = 0; i < this.graphicalMusicSheet.MeasureList[0].length; i++) {
@@ -3178,6 +3189,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                     }
                     // Hidden endpoints must not contribute a slur curve to the skyline.
                     if (this.measureRepeatHidesNote(slur.StartNote) && this.measureRepeatHidesNote(slur.EndNote)) {
+                      continue;
+                    }
+                    if (this.isInHiddenVoice(slur.StartNote) || this.isInHiddenVoice(slur.EndNote)) {
                       continue;
                     }
                     // add new VexFlowSlur to List
@@ -3331,6 +3345,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                   }
                   // Hidden endpoints must not contribute a glissando to the staff line.
                   if (this.measureRepeatHidesNote(gliss.StartNote) && this.measureRepeatHidesNote(gliss.EndNote)) {
+                    continue;
+                  }
+                  if (this.isInHiddenVoice(gliss.StartNote) || this.isInHiddenVoice(gliss.EndNote)) {
                     continue;
                   }
                   // add new VexFlowGlissando to List
