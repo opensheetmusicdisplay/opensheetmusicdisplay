@@ -202,7 +202,8 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     }
 
     /** Whether the note is visible: false after setVisible(false), which hides its notehead (unless
-     * VisibilityOptions.applyToNotehead is false), and for a note hidden in the score, e.g. by print-object="no" (see Note.isVisible()).
+     * VisibilityOptions.applyToNotehead is false), and for a note hidden in the score, e.g. by print-object="no", or of a hidden
+     * voice (Voice.Visible false), see Note.isVisible().
      * Like setVisible(), this works on the drawn SVG: a new render draws the notes hidden with setVisible() visible again.
      * It's true for a note that isn't drawn at all, e.g. of a hidden instrument (Instrument.Visible false).
      */

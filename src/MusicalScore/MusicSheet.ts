@@ -628,7 +628,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         const visInstruments: Instrument[] = [];
         for (let idx: number = 0, len: number = this.Instruments.length; idx < len; ++idx) {
             const instrument: Instrument = this.Instruments[idx];
-            if (instrument.Voices.length > 0 && instrument.Voices[0].Visible) {
+            if (instrument.Visible) {
                 visInstruments.push(instrument);
             }
         }

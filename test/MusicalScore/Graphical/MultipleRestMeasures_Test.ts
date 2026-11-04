@@ -161,6 +161,29 @@ describe("Multiple rest measures", () => {
         expect(container.querySelectorAll(".vf-multirest").length, "multiple rest measures drawn").to.equal(0);
     });
 
+    it("generates multiple rest measures where only a hidden voice plays, with render() alone (Voice.Visible)", async () => {
+        const attributes: string = "<attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>" +
+            "<clef><sign>G</sign><line>2</line></clef></attributes>";
+        const note: (voice: number) => string = (voice: number): string =>
+            `<note><pitch><step>D</step><octave>5</octave></pitch><duration>4</duration><voice>${voice}</voice><type>whole</type></note>`;
+        const rest: string = "<note><rest/><duration>4</duration><voice>2</voice></note>";
+        // one staff: voice 1 plays in measures 1-5, voice 2 rests in measures 2-4, e.g. the second of two flutes sharing a staff
+        const measures: string = [note(2), rest, rest, rest, note(2)].map((voice2: string, index: number): string =>
+            `<measure number="${index + 1}">${index === 0 ? attributes : ""}${note(1)}<backup><duration>4</duration></backup>${voice2}</measure>`)
+            .join("");
+        await osmd.load(`<?xml version="1.0"?><score-partwise version="4.0"><part-list>
+            <score-part id="P1"><part-name>Flutes</part-name></score-part></part-list><part id="P1">${measures}</part></score-partwise>`);
+        osmd.render();
+        expect(multipleRestMeasureCounts(), "both voices shown").to.deep.equal([0, 0, 0, 0, 0]);
+        osmd.Sheet.Instruments[0].Voices[0].Visible = false;
+        osmd.render(); // creates the graphic again for the changed voices, without updateGraphic()
+        expect(multipleRestMeasureCounts(), "voice 1 hidden: voice 2's measures 2-4 as a multiple rest measure").to.deep.equal([0, 3, 0, 0, 0]);
+        osmd.EngravingRules.HiddenVoicesKeepLayout = true;
+        osmd.updateGraphic();
+        osmd.render();
+        expect(multipleRestMeasureCounts(), "voice 1 hidden, keeping its layout (HiddenVoicesKeepLayout)").to.deep.equal([0, 0, 0, 0, 0]);
+    });
+
     it("draws the clef change after a multiple rest measure at its end, or at the end of its last measure without " +
         "RenderMultipleRestMeasures, also when updateGraphic() follows changing the rule, and the notes after it in that clef", async () => {
         /** [measure group id, number of clefs drawn] per drawn measure, a multiple rest measure has its first measure's id */

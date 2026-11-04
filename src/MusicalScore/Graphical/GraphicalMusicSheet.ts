@@ -28,6 +28,7 @@ import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { GraphicalObject } from "./GraphicalObject";
 import { ClassType } from "../Interfaces/AClassHierarchyTrackable";
 import { ITransposeCalculator } from "../Interfaces/ITransposeCalculator";
+import { Voice } from "../VoiceData/Voice";
 // import { VexFlowMusicSheetDrawer } from "./VexFlow/VexFlowMusicSheetDrawer";
 // import { SvgVexFlowBackend } from "./VexFlow/SvgVexFlowBackend"; // causes build problem with npm start
 
@@ -68,6 +69,8 @@ export class GraphicalMusicSheet {
     private preparedTransposition: number[] = [];
     /** The transpose calculator the graphical notes and chord symbols were created with (see Initialize()). */
     private preparedTransposeCalculator: ITransposeCalculator;
+    /** Whether each voice was visible when the graphical notes were created (see Initialize()), the voices of each instrument in order. */
+    private preparedVoiceVisibility: boolean[] = [];
 
     public get ParentMusicSheet(): MusicSheet {
         return this.musicSheet;
@@ -202,7 +205,8 @@ export class GraphicalMusicSheet {
     }
 
     /** Empties the lists of graphical objects for creating them from the music sheet (MusicSheetCalculator.prepareGraphicalMusicSheet()),
-     *  and remembers the transposition they are created with, see {@link TranspositionChanged}.
+     *  and remembers the transposition and the visible voices they are created with, see {@link TranspositionChanged} and
+     *  {@link VoiceVisibilityChanged}.
      */
     public Initialize(): void {
         this.verticalGraphicalStaffEntryContainers = [];
@@ -210,6 +214,7 @@ export class GraphicalMusicSheet {
         this.measureList = [];
         this.preparedTransposition = this.currentTransposition();
         this.preparedTransposeCalculator = MusicSheetCalculator.transposeCalculator;
+        this.preparedVoiceVisibility = this.currentVoiceVisibility();
     }
 
     /** Whether the transposition changed since the graphical notes and chord symbols were created:
@@ -231,6 +236,22 @@ export class GraphicalMusicSheet {
     /** The halftones the sheet is transposed by: MusicSheet.Transpose, followed by each instrument's Transpose. */
     private currentTransposition(): number[] {
         return [this.musicSheet.Transpose, ...this.musicSheet.Instruments.map((instrument: Instrument): number => instrument.Transpose)];
+    }
+
+    /** Whether a voice was shown or hidden (Voice.Visible, also set by Instrument.Visible) since the graphical notes were created.
+     *  The notes of hidden voices are left out when they are created, or created invisible with EngravingRules.HiddenVoicesKeepLayout,
+     *  and the multiple rest measures follow the visible voices, so osmd.render() creates the graphic again when this changed.
+     */
+    public get VoiceVisibilityChanged(): boolean {
+        const visibility: boolean[] = this.currentVoiceVisibility();
+        return visibility.length !== this.preparedVoiceVisibility.length ||
+            visibility.some((visible: boolean, index: number): boolean => visible !== this.preparedVoiceVisibility[index]);
+    }
+
+    /** Whether each voice is visible (Voice.Visible), the voices of each instrument in order. */
+    private currentVoiceVisibility(): boolean[] {
+        return this.musicSheet.Instruments.flatMap((instrument: Instrument): boolean[] =>
+            instrument.Voices.map((voice: Voice): boolean => voice.Visible));
     }
 
     public reCalculate(): void {

@@ -1839,8 +1839,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     !voiceEntry.parentVoiceEntry?.GraceAfterMainNote && vfse !== staffEntryWithClef) {
                     staffEntryWithClef = vfse;
                     // the clef is drawn with the style of a hidden note's notehead: transparent, or with RenderHiddenNotes in
-                    //   HiddenNotesColor (VexFlowVoiceEntry.color())
-                    if (voiceEntry.notes[0] && !voiceEntry.notes[0].sourceNote.PrintObject) {
+                    //   HiddenNotesColor (VexFlowVoiceEntry.color()); the notes of a hidden voice are transparent too
+                    const clefNote: Note = voiceEntry.notes[0]?.sourceNote;
+                    if (clefNote && (!clefNote.PrintObject || !clefNote.isVisible())) {
                         const clefColor: string = this.rules.DefaultColorMusic || "#000000";
                         // need to cast to any because ClefNote actually extends Note, which extends Tickable, which extends Element,
                         //   which has setStyle. But in our definitions, Tickable doesn't implement anything, so it doesn't have setStyle.
