@@ -598,17 +598,24 @@ export class BoundingBox {
         } while (hasBeenMoved); // as long as the element is moved
     }
 
-    public getClickedObjectOfType<T>(clickPosition: PointF2D): T {
-        const obj: object = this.dataObject;
-        if (this.pointLiesInsideBorders(clickPosition) && (<T>obj)) {
-            return (obj as T);
-        }
-        for (let idx: number = 0, len: number = this.childElements.length; idx < len; ++idx) {
-            const psi: BoundingBox = this.childElements[idx];
-            const innerObject: T = psi.getClickedObjectOfType<T>(clickPosition);
+    /**
+     * Returns the object of the class whose bounding box contains the position, e.g. of a click: of this bounding box or
+     * its descendants, the innermost one, e.g. without a class, at a lyric, its label rather than its staff entry, measure
+     * or page. The generic type T doesn't select the object (types don't exist at runtime), classOrName does.
+     * @param clickPosition The position in units
+     * @param classOrName The class of the object, e.g. GraphicalStaffEntry, or its name, which is unreliable in minified builds
+     *   (see isInstanceOfClass()). By default, any graphical object.
+     */
+    public getClickedObjectOfType<T>(clickPosition: PointF2D, classOrName: ClassType | string = GraphicalObject): T {
+        // the children first: the page's box contains all the others
+        for (const child of this.childElements) {
+            const innerObject: T = child.getClickedObjectOfType<T>(clickPosition, classOrName);
             if (innerObject) {
-                return (innerObject as T);
+                return innerObject;
             }
+        }
+        if (this.dataObject && (this.dataObject as GraphicalObject).isInstanceOfClass(classOrName) && this.pointLiesInsideBorders(clickPosition)) {
+            return this.dataObject as T;
         }
         return undefined;
     }
