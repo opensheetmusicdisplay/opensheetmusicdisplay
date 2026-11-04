@@ -31,6 +31,12 @@ export default defineConfig({
         globals: true,
         setupFiles: ["test/Util/vitestSetup.mjs"],
         testTimeout: 20000, // the mocha timeout under karma
+        // the diff a failing comparison prints (to.equal(), deep.equal(), toEqual(), members(), ...): values 4 levels deep,
+        //   not 20 (Vitest's default). Two different OSMD objects lead to most of the sheet in 20 levels: two graphical
+        //   measures of a 4-measure sample printed 1.4 MB (21,600 lines), 600 lines now. Data nested up to 4 levels (e.g. an
+        //   array of objects of arrays of objects) prints in full, as before. For objects, expect(a === b, "the same
+        //   measure").to.equal(true) prints only the message, also with b undefined (to.equal(undefined) prints the object)
+        diff: { maxDepth: 4 },
         // no reporters set: on GitHub Actions (GITHUB_ACTIONS=true), Vitest's defaults are "default" and "github-actions",
         //   which shows failures as annotations in a PR's diff. --reporter=github-actions alone would replace "default":
         //   no test counts, durations or failure details in the log.
