@@ -252,12 +252,9 @@ export class GraphicalMusicSheet {
         }
     }
 
-    public getClickedObject<T>(positionOnMusicSheet: PointF2D): T {
-        for (let idx: number = 0, len: number = this.MusicPages.length; idx < len; ++idx) {
-            const graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
-            return graphicalMusicPage.PositionAndShape.getClickedObjectOfType<T>(positionOnMusicSheet);
-        }
-        return undefined;
+    /** Returns the object of the class at the position, e.g. of a click, or undefined: the same as getClickedObjectOfType(). */
+    public getClickedObject<T>(positionOnMusicSheet: PointF2D, classOrName?: ClassType<T> | string, page?: GraphicalMusicPage): T {
+        return this.getClickedObjectOfType<T>(positionOnMusicSheet, classOrName, page);
     }
 
     /**
@@ -787,29 +784,14 @@ export class GraphicalMusicSheet {
         return new PointF2D(sp.x, sp.y);
     }
 
-    public GetClickableLabel(clickPosition: PointF2D): GraphicalLabel {
-        const initialSearchAreaX: number = 4;
-        const initialSearchAreaY: number = 4;
-        // Prepare search area
-        const region: BoundingBox = new BoundingBox();
-        region.BorderLeft = clickPosition.x - initialSearchAreaX;
-        region.BorderTop = clickPosition.y - initialSearchAreaY;
-        region.BorderRight = clickPosition.x + initialSearchAreaX;
-        region.BorderBottom = clickPosition.y + initialSearchAreaY;
-        region.AbsolutePosition = new PointF2D(0, 0);
-        for (let idx: number = 0, len: number = this.MusicPages.length; idx < len; ++idx) {
-            const graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
-            const entries: GraphicalLabel[] = graphicalMusicPage.PositionAndShape.getObjectsInRegion<GraphicalLabel>(region);
-            if (entries.length !== 1) {
-                continue;
-            } else {
-                for (let idx2: number = 0, len2: number = entries.length; idx2 < len2; ++idx2) {
-                    const clickedLabel: GraphicalLabel = entries[idx2];
-                    return clickedLabel;
-                }
-            }
-        }
-        return undefined;
+    /**
+     * Returns the label at the position, e.g. of a click (whose bounding box contains it), e.g. a lyric or the title, or undefined.
+     * @param clickPosition The position in units
+     * @param page The page to search, e.g. the one clicked on: each page has its own coordinates, so the position is on every page.
+     *   By default, all pages.
+     */
+    public GetClickableLabel(clickPosition: PointF2D, page?: GraphicalMusicPage): GraphicalLabel {
+        return this.getClickedObjectOfType(clickPosition, GraphicalLabel, page);
     }
 
     /**
@@ -936,30 +918,49 @@ export class GraphicalMusicSheet {
         return entry.sourceStaffEntry;
     }
 
-    public getClickedObjectOfType<T>(positionOnMusicSheet: PointF2D): T {
-        for (let idx: number = 0, len: number = this.musicPages.length; idx < len; ++idx) {
-            const page: GraphicalMusicPage = this.musicPages[idx];
-            const o: T = page.PositionAndShape.getClickedObjectOfType<T>(positionOnMusicSheet);
-            if (o) {
-                return (o as T);
+    /**
+     * Returns the object of the class whose bounding box contains the position, e.g. of a click, or undefined:
+     * e.g. getClickedObjectOfType(position, GraphicalStaffEntry) returns the staff entry there.
+     * Of objects containing each other, the innermost one, e.g. without a class, at a lyric, its label rather than its staff entry,
+     * measure or page. For the object nearest to the position, see GetNearestObject().
+     * @param positionOnMusicSheet The position in units
+     * @param classOrName The class of the object, e.g. GraphicalStaffEntry: the type parameter T alone doesn't select it, types don't exist
+     *   at runtime. Or its name, which is unreliable in minified builds (see AClassHierarchyTrackable.isInstanceOfClass()).
+     *   By default, any graphical object.
+     * @param page The page to search, e.g. the one clicked on: each page has its own coordinates, so the position is on every page.
+     *   By default, all pages: the object on the first page that has one there.
+     */
+    public getClickedObjectOfType<T>(positionOnMusicSheet: PointF2D, classOrName?: ClassType<T> | string, page?: GraphicalMusicPage): T {
+        for (const pageToSearch of this.pagesToSearch(page)) {
+            const clickedObject: T = pageToSearch.PositionAndShape.getClickedObjectOfType<T>(positionOnMusicSheet, classOrName ?? GraphicalObject);
+            if (clickedObject) {
+                return clickedObject;
             }
         }
         return undefined;
     }
 
-    public tryGetTimestampFromPosition(positionOnMusicSheet: PointF2D): Fraction {
-        const entry: GraphicalStaffEntry = this.getClickedObjectOfType<GraphicalStaffEntry>(positionOnMusicSheet);
+    /**
+     * Returns the timestamp of the staff entry at the position, e.g. of a click (whose bounding box contains it), or undefined.
+     * For the timestamp of the nearest staff entry, see tryGetTimeStampFromPosition() (with a capital S).
+     * @param positionOnMusicSheet The position in units
+     * @param page The page to search, e.g. the one clicked on: each page has its own coordinates, so the position is on every page.
+     *   By default, all pages.
+     */
+    public tryGetTimestampFromPosition(positionOnMusicSheet: PointF2D, page?: GraphicalMusicPage): Fraction {
+        const entry: GraphicalStaffEntry = this.getClickedObjectOfType(positionOnMusicSheet, GraphicalStaffEntry, page);
         if (!entry) {
             return undefined;
         }
         return entry.getAbsoluteTimestamp();
     }
 
-    public tryGetClickableLabel(positionOnMusicSheet: PointF2D): GraphicalLabel {
+    /** Returns the label at the position, e.g. of a click, or undefined: see GetClickableLabel(). */
+    public tryGetClickableLabel(positionOnMusicSheet: PointF2D, page?: GraphicalMusicPage): GraphicalLabel {
         try {
-            return this.GetClickableLabel(positionOnMusicSheet);
+            return this.GetClickableLabel(positionOnMusicSheet, page);
         } catch (ex) {
-            log.info("GraphicalMusicSheet.tryGetClickableObject", "positionOnMusicSheet: " + positionOnMusicSheet, ex);
+            log.info("GraphicalMusicSheet.tryGetClickableLabel", "positionOnMusicSheet: " + positionOnMusicSheet, ex);
         }
 
         return undefined;
