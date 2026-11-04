@@ -422,6 +422,8 @@ export class ExpressionReader {
                 try {
                     if (pedalNode.attribute("line")?.value === "yes") {
                         line = true;
+                        // sign="yes": the Ped. sign, then the line (MusicXML: with a line, the sign is no by default)
+                        sign = pedalNode.attribute("sign")?.value === "yes";
                     } else if (pedalNode.attribute("line")?.value === "no"){
                         line = false;
                         //No line implies sign
