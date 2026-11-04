@@ -2079,11 +2079,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
       if (endStaffLine !== startStaffLine) {
         if(graphicalPedal.pedalSymbol === MusicSymbol.PEDAL_SYMBOL){
-          graphicalPedal.setEndNote(endStaffEntry);
+          // this part draws no * (" "): it ends at the last note of its system, not at the end note in another system,
+          //   which a later renderNext() batch can move after this system is drawn
+          graphicalPedal.setEndNote(this.findBoundaryNoteEntry(startStaffLine.Measures, true) ?? endStaffEntry);
           graphicalPedal.setEndMeasure(endMeasure);
           graphicalPedal.ReleaseText = " ";
           graphicalPedal.CalculateBoundingBox();
-          this.calculatePedalSkyBottomLine(graphicalPedal.startVfVoiceEntry, graphicalPedal.endVfVoiceEntry, graphicalPedal, startStaffLine);
+          this.calculatePedalSkyBottomLine(graphicalPedal, startStaffLine);
 
           const nextPedalFirstMeasure: GraphicalMeasure = endStaffLine.Measures[0];
           // pedal starts on the first measure
@@ -2104,7 +2106,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           if (endIsClipped) {
             nextPedal.ReleaseText = " ";
           }
-          this.calculatePedalSkyBottomLine(nextPedal.startVfVoiceEntry, nextPedal.endVfVoiceEntry, nextPedal, endStaffLine);
+          this.calculatePedalSkyBottomLine(nextPedal, endStaffLine);
         } else {
           let lastMeasureOfFirstShift: GraphicalMeasure = this.findLastStafflineMeasure(startStaffLine);
           if (lastMeasureOfFirstShift === undefined) { // TODO handle this case correctly (when drawUpToMeasureNumber etc set)
@@ -2174,17 +2176,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               graphicalPedal.setEndMeasure(endMeasure);
               nextPedalStaffline.Pedals.push(nextPedal);
               nextPedal.CalculateBoundingBox();
-              this.calculatePedalSkyBottomLine(nextPedal.startVfVoiceEntry, nextPedal.endVfVoiceEntry, nextPedal, nextPedalStaffline);
+              this.calculatePedalSkyBottomLine(nextPedal, nextPedalStaffline);
             }
           }
           graphicalPedal.CalculateBoundingBox();
-          this.calculatePedalSkyBottomLine(graphicalPedal.startVfVoiceEntry, graphicalPedal.endVfVoiceEntry, graphicalPedal, startStaffLine);
+          this.calculatePedalSkyBottomLine(graphicalPedal, startStaffLine);
         }
       } else {
         graphicalPedal.setEndNote(endStaffEntry);
         graphicalPedal.setEndMeasure(endMeasure);
         graphicalPedal.CalculateBoundingBox();
-        this.calculatePedalSkyBottomLine(graphicalPedal.startVfVoiceEntry, graphicalPedal.endVfVoiceEntry, graphicalPedal, startStaffLine);
+        this.calculatePedalSkyBottomLine(graphicalPedal, startStaffLine);
       }
       startStaffLine.Pedals.push(graphicalPedal);
     } else {
@@ -2410,160 +2412,162 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     parentStaffline.SkyBottomLineCalculator.updateSkyLineInRange(startX, stopX, headroom);
   }
 
-  private calculatePedalSkyBottomLine(startVfVoiceEntry: VexFlowVoiceEntry, endVfVoiceEntry: VexFlowVoiceEntry,
-    vfPedal: VexFlowPedal, parentStaffline: StaffLine): void {
-      let endBbox: BoundingBox = endVfVoiceEntry?.PositionAndShape;
-      if (!endBbox) {
-        endBbox = vfPedal.endMeasure.PositionAndShape;
-      }
-      //Just for shorthand. Easier readability below
-      const PEDAL_STYLES_ENUM: any = Vex.Flow.PedalMarking.Styles;
+  /**
+   * Places a pedal below its staff line: at the height of the other pedals of the staff line (they are drawn at one height,
+   * the lowest one any of them needs), and below what is above its signs (Ped., *) and its line, e.g. a beam below the staff.
+   * The bottom line gets the space of the pedals only after all of them are placed, see updateBottomLinesWithPedals(),
+   * so a pedal isn't pushed below the space of a pedal placed before it, e.g. one released where it is pressed.
+   */
+  private calculatePedalSkyBottomLine(vfPedal: VexFlowPedal, parentStaffline: StaffLine): void {
       const pedalMarking: any = vfPedal.getPedalMarking();
       //VF adds 3 lines to whatever the pedal line is set to.
       //VF also measures from the bottom line, whereas our bottom line is from the top staff line
       const yLineForPedalMarking: number = (pedalMarking.line + 3 + (parentStaffline.StaffLines.length - 1));
-      //VF Uses a margin offset for rendering. Take this into account
-      const pedalMarkingMarginXOffset: number = pedalMarking.render_options.text_margin_right / 10;
-      //TODO: Most of this should be in the bounding box calculation
-      let startX: number = startVfVoiceEntry.PositionAndShape.AbsolutePosition.x - pedalMarkingMarginXOffset;
-
-      if (pedalMarking.style === PEDAL_STYLES_ENUM.MIXED ||
-          pedalMarking.style === PEDAL_STYLES_ENUM.MIXED_OPEN_END ||
-          pedalMarking.style === PEDAL_STYLES_ENUM.TEXT) {
-        //Accomodate the Ped. sign
-        startX -= 1;
-      }
-      let stopX: number = undefined;
       let footroom: number = (parentStaffline.StaffLines.length - 1);
       //Find the highest foot room in our staffline
       for (const otherPedal of parentStaffline.Pedals) {
-        const vfOtherPedal: VexFlowPedal = otherPedal as VexFlowPedal;
-        const otherPedalMarking: any = vfOtherPedal.getPedalMarking();
+        const otherPedalMarking: any = (otherPedal as VexFlowPedal).getPedalMarking();
         const yLineForOtherPedalMarking: number = (otherPedalMarking.line + 3 + (parentStaffline.StaffLines.length - 1));
         footroom = Math.max(yLineForOtherPedalMarking, footroom);
       }
-      //We have the two seperate symbols, with two bounding boxes
+      const ranges: { signs: number[][], line: number[] } = this.getPedalXRanges(vfPedal, pedalMarking);
+      // VexFlow draws the Ped. and * signs above their baseline at footroom + 1 (getYForBottomText() counts the lines from
+      //   the one below the staff), the Ped. sign signHeight tall, the * sign a bit less.
+      //   So a sign's top is this far above the footroom, which has to be at least this far below the bottom line under the sign.
+      const signHeight: number = pedalMarking.render_options.glyph_point_size / 20; // 2 units
+      const signTopAboveFootroom: number = signHeight - 1 + this.rules.PedalSignMarginToBottomLine;
+      for (const [startX, stopX] of ranges.signs) {
+        footroom = Math.max(parentStaffline.SkyBottomLineCalculator.getBottomLineMaxInRange(startX, stopX) + signTopAboveFootroom, footroom);
+      }
+      if (ranges.line) {
+        // the line's hooks reach up to the footroom
+        footroom = Math.max(parentStaffline.SkyBottomLineCalculator.getBottomLineMaxInRange(ranges.line[0], ranges.line[1]), footroom);
+      }
+      if (footroom === Infinity) { // will cause Vexflow error
+        return;
+      }
       if (vfPedal.EndSymbolPositionAndShape) {
-        const symbolHalfHeight: number = pedalMarking.render_options.glyph_point_size / 20;
-        //Width of the Ped. symbol
-        stopX = startX + 3.4;
-        const startX2: number = endBbox.AbsolutePosition.x - pedalMarkingMarginXOffset;
-        //Width of * symbol
-        const stopX2: number = startX2 + 1.5;
-
-        footroom = Math.max(parentStaffline.SkyBottomLineCalculator.getBottomLineMaxInRange(startX, stopX), footroom);
-        footroom = Math.max(yLineForPedalMarking + symbolHalfHeight * 2, footroom);
-        const footroom2: number = parentStaffline.SkyBottomLineCalculator.getBottomLineMaxInRange(startX2, stopX2);
-        //If Depress text is set, means we are not rendering the begin label (we are just rendering the end one)
-        if (!vfPedal.DepressText) {
-          footroom = Math.max(footroom, footroom2);
-        }
-        vfPedal.setLine(footroom - 3 - (parentStaffline.StaffLines.length - 1));
-        parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX, stopX, footroom + symbolHalfHeight);
-        parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX2, stopX2, footroom + symbolHalfHeight);
+        // by default, a sign's top 3 units below the staff
+        footroom = Math.max(yLineForPedalMarking + signHeight * 2, footroom);
       } else {
         const bracketHeight: number = pedalMarking.render_options.bracket_height / 10;
-
-        if(pedalMarking.EndsStave){
-          if(endVfVoiceEntry){
-            stopX = endVfVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.AbsolutePosition.x +
-              endVfVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.Size.width - pedalMarkingMarginXOffset;
-
-          } else {
-            stopX = endBbox.AbsolutePosition.x + endBbox.Size.width;
-          }
-        } else {
-          switch (pedalMarking.style) {
-            case PEDAL_STYLES_ENUM.BRACKET_OPEN_END:
-            case PEDAL_STYLES_ENUM.BRACKET_OPEN_BOTH:
-            case PEDAL_STYLES_ENUM.MIXED_OPEN_END:
-              stopX = endBbox.AbsolutePosition.x + endBbox.BorderRight - pedalMarkingMarginXOffset;
-            break;
-            default:
-              stopX = endBbox.AbsolutePosition.x + endBbox.BorderLeft - pedalMarkingMarginXOffset;
-            break;
-          }
-        }
-        //Take into account in-staff clefs associated with the staff entry (they modify the bounding box position)
-        const vfClefBefore: Vex.Flow.ClefNote = (endVfVoiceEntry?.parentStaffEntry as VexFlowStaffEntry)?.vfClefBefore;
-        if (vfClefBefore) {
-          const clefWidth: number = vfClefBefore.getWidth() / 10;
-          stopX += clefWidth;
-        }
-
-        footroom = Math.max(parentStaffline.SkyBottomLineCalculator.getBottomLineMaxInRange(startX, stopX), footroom);
-        if (footroom === Infinity) { // will cause Vexflow error
-          return;
-        }
         //Whatever is currently lower - the set render height of the begin vf stave, the set render height of the end vf stave,
         //or the bottom line. Use that as the render height of both staves
         footroom = Math.max(footroom, yLineForPedalMarking + bracketHeight);
-        vfPedal.setLine(footroom - 3 - (parentStaffline.StaffLines.length - 1));
-        if (startX > stopX) { // TODO hotfix for skybottomlinecalculator after pedal no endNote fix
-          const newStart: number = stopX;
-          stopX = startX;
-          startX = newStart;
-        }
-        parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX, stopX, footroom + bracketHeight);
       }
+      vfPedal.setLine(footroom - 3 - (parentStaffline.StaffLines.length - 1));
       //If our current pedal is below the other pedals in this staffline, set them all to this height
       for (const otherPedal of parentStaffline.Pedals) {
         const vfOtherPedal: VexFlowPedal = otherPedal as VexFlowPedal;
         const otherPedalMarking: any = vfOtherPedal.getPedalMarking();
         const yLineForOtherPedalMarking: number = (otherPedalMarking.line + 3 + (parentStaffline.StaffLines.length - 1));
         //Only do these changes if current footroom is higher
-        if(footroom > yLineForOtherPedalMarking) {
-          const otherPedalMarkingMarginXOffset: number = otherPedalMarking.render_options.text_margin_right / 10;
-          let otherPedalStartX: number = vfOtherPedal.startVfVoiceEntry.PositionAndShape.AbsolutePosition.x - otherPedalMarkingMarginXOffset;
-          let otherPedalStopX: number = undefined;
+        if (footroom > yLineForOtherPedalMarking) {
           vfOtherPedal.setLine(footroom - 3 - (parentStaffline.StaffLines.length - 1));
-          let otherPedalEndBBox: BoundingBox = vfOtherPedal.endVfVoiceEntry?.PositionAndShape;
-          if (!otherPedalEndBBox) {
-            otherPedalEndBBox = vfOtherPedal.endMeasure.PositionAndShape;
-          }
-          if (vfOtherPedal.EndSymbolPositionAndShape) {
-            const otherSymbolHalfHeight: number = pedalMarking.render_options.glyph_point_size / 20;
-            //Width of the Ped. symbol
-            otherPedalStopX = otherPedalStartX + 3.4;
-            const otherPedalStartX2: number = otherPedalEndBBox.AbsolutePosition.x - otherPedalMarkingMarginXOffset;
-            //Width of * symbol
-            const otherPedalStopX2: number = otherPedalStartX2 + 1.5;
-            parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(otherPedalStartX, otherPedalStopX, footroom + otherSymbolHalfHeight);
-            parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(otherPedalStartX2, otherPedalStopX2, footroom + otherSymbolHalfHeight);
-          } else {
-            const otherPedalBracketHeight: number = otherPedalMarking.render_options.bracket_height / 10;
+        }
+      }
+  }
 
-            if(otherPedalMarking.EndsStave){
-                otherPedalStopX = otherPedalEndBBox.AbsolutePosition.x + otherPedalEndBBox.Size.width - otherPedalMarkingMarginXOffset;
-            } else {
-              switch (pedalMarking.style) {
-                case PEDAL_STYLES_ENUM.BRACKET_OPEN_END:
-                case PEDAL_STYLES_ENUM.BRACKET_OPEN_BOTH:
-                case PEDAL_STYLES_ENUM.MIXED_OPEN_END:
-                  otherPedalStopX = otherPedalEndBBox.AbsolutePosition.x + otherPedalEndBBox.BorderRight - otherPedalMarkingMarginXOffset;
-                break;
-                default:
-                  otherPedalStopX = otherPedalEndBBox.AbsolutePosition.x + otherPedalEndBBox.BorderLeft - otherPedalMarkingMarginXOffset;
-                break;
-              }
-            }
-            //Take into account in-staff clefs associated with the staff entry (they modify the bounding box position)
-            const vfOtherClefBefore: Vex.Flow.ClefNote = (vfOtherPedal.endVfVoiceEntry?.parentStaffEntry as VexFlowStaffEntry)?.vfClefBefore;
-            if (vfOtherClefBefore) {
-              const otherClefWidth: number = vfOtherClefBefore.getWidth() / 10;
-              otherPedalStopX += otherClefWidth;
-            }
-            if (otherPedalStartX > otherPedalStopX) {
-              // TODO this shouldn't happen, though this fixes the SkyBottomLineCalculator error for now (startIndex needs to be <= endIndex)
-              // switch startX and stopX
-              const otherStartX: number = otherPedalStartX;
-              otherPedalStartX = otherPedalStopX;
-              otherPedalStopX = otherStartX;
-            }
-            parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(otherPedalStartX, otherPedalStopX, footroom + otherPedalBracketHeight);
+  /**
+   * Returns the x ranges (relative to the staff line, as while the layout is calculated) in which a pedal is drawn:
+   * its Ped. and * signs, if it draws them (" " as their text: the pedal goes on from or into another system),
+   * and its line (with hooks), see VexFlow's PedalMarking.
+   * @param vfPedal The pedal
+   * @param pedalMarking Its VexFlow pedal marking, see VexFlowPedal.getPedalMarking()
+   * @returns the [start, stop] ranges of the signs, and of the line, undefined for the sign style
+   */
+  private getPedalXRanges(vfPedal: VexFlowPedal, pedalMarking: any): { signs: number[][], line: number[] } {
+      const endVfVoiceEntry: VexFlowVoiceEntry = vfPedal.endVfVoiceEntry;
+      let endBbox: BoundingBox = endVfVoiceEntry?.PositionAndShape;
+      if (!endBbox) {
+        endBbox = vfPedal.endMeasure.PositionAndShape;
+      }
+      //Just for shorthand. Easier readability below
+      const PEDAL_STYLES_ENUM: any = Vex.Flow.PedalMarking.Styles;
+      //VF Uses a margin offset for rendering. Take this into account
+      const pedalMarkingMarginXOffset: number = pedalMarking.render_options.text_margin_right / 10;
+      //TODO: Most of this should be in the bounding box calculation
+      let startX: number = vfPedal.startVfVoiceEntry.PositionAndShape.AbsolutePosition.x - pedalMarkingMarginXOffset;
+      const startsWithSign: boolean = pedalMarking.style === PEDAL_STYLES_ENUM.MIXED ||
+        pedalMarking.style === PEDAL_STYLES_ENUM.MIXED_OPEN_END;
+      if (startsWithSign || pedalMarking.style === PEDAL_STYLES_ENUM.TEXT) {
+        //Accomodate the Ped. sign
+        startX -= 1;
+      }
+      const signs: number[][] = [];
+      //We have the two seperate symbols, with two bounding boxes
+      if (vfPedal.EndSymbolPositionAndShape) {
+        if (vfPedal.DepressText !== " ") {
+          //Width of the Ped. symbol
+          signs.push([startX, startX + 3.4]);
+        }
+        if (vfPedal.ReleaseText !== " ") {
+          const startX2: number = endBbox.AbsolutePosition.x - pedalMarkingMarginXOffset;
+          //Width of * symbol
+          signs.push([startX2, startX2 + 1.5]);
+        }
+        return { signs, line: undefined };
+      }
+      if (startsWithSign) {
+        signs.push([startX, startX + 3.4]);
+      }
+      let stopX: number = undefined;
+      if(pedalMarking.EndsStave){
+        if(endVfVoiceEntry){
+          stopX = endVfVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.AbsolutePosition.x +
+            endVfVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.Size.width - pedalMarkingMarginXOffset;
+
+        } else {
+          stopX = endBbox.AbsolutePosition.x + endBbox.Size.width;
+        }
+      } else {
+        switch (pedalMarking.style) {
+          case PEDAL_STYLES_ENUM.BRACKET_OPEN_END:
+          case PEDAL_STYLES_ENUM.BRACKET_OPEN_BOTH:
+          case PEDAL_STYLES_ENUM.MIXED_OPEN_END:
+            stopX = endBbox.AbsolutePosition.x + endBbox.BorderRight - pedalMarkingMarginXOffset;
+          break;
+          default:
+            stopX = endBbox.AbsolutePosition.x + endBbox.BorderLeft - pedalMarkingMarginXOffset;
+          break;
+        }
+      }
+      //Take into account in-staff clefs associated with the staff entry (they modify the bounding box position)
+      const vfClefBefore: Vex.Flow.ClefNote = (endVfVoiceEntry?.parentStaffEntry as VexFlowStaffEntry)?.vfClefBefore;
+      if (vfClefBefore) {
+        const clefWidth: number = vfClefBefore.getWidth() / 10;
+        stopX += clefWidth;
+      }
+      if (startX > stopX) { // TODO hotfix for skybottomlinecalculator after pedal no endNote fix
+        return { signs, line: [stopX, startX] };
+      }
+      return { signs, line: [startX, stopX] };
+  }
+
+  /**
+   * Updates the bottom lines with the space the pedals take, once all of them are placed (see calculatePedalSkyBottomLine()):
+   * under a sign down to a unit below it, under a line down to the line.
+   */
+  protected updateBottomLinesWithPedals(): void {
+    for (const musicSystem of this.musicSystems) {
+      for (const staffLine of musicSystem.StaffLines) {
+        for (const pedal of staffLine.Pedals) {
+          const vfPedal: VexFlowPedal = pedal as VexFlowPedal;
+          const pedalMarking: any = vfPedal.getPedalMarking();
+          const footroom: number = pedalMarking.line + 3 + (staffLine.StaffLines.length - 1);
+          const ranges: { signs: number[][], line: number[] } = this.getPedalXRanges(vfPedal, pedalMarking);
+          // a sign's bottom is at footroom + 1, see calculatePedalSkyBottomLine()
+          const signHeight: number = pedalMarking.render_options.glyph_point_size / 20;
+          for (const [startX, stopX] of ranges.signs) {
+            staffLine.SkyBottomLineCalculator.updateBottomLineInRange(startX, stopX, footroom + signHeight);
+          }
+          if (ranges.line) {
+            const bracketHeight: number = pedalMarking.render_options.bracket_height / 10;
+            staffLine.SkyBottomLineCalculator.updateBottomLineInRange(ranges.line[0], ranges.line[1], footroom + bracketHeight);
           }
         }
       }
+    }
   }
 
   private calculateOctaveShiftSkyBottomLine(startStaffEntry: GraphicalStaffEntry, endStaffEntry: GraphicalStaffEntry,
