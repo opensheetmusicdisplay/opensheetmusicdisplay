@@ -448,6 +448,13 @@ export class ExpressionReader {
                             this.openPedal = new Pedal(line, sign);
                             this.getMultiExpression.PedalStart = this.openPedal;
                             this.openPedal.ParentStartMultiExpression = this.getMultiExpression;
+                            const releasedPedal: Pedal = this.getMultiExpression.PedalEnd;
+                            if (releasedPedal?.IsSign && !releasedPedal.IsLine && this.openPedal.IsSign && !this.openPedal.IsLine) {
+                                // sign pedals released and pressed again at one note (a stop and a start at one timestamp): a pedal
+                                //   change, drawn as * Ped. (the * left of the Ped. sign)
+                                releasedPedal.ChangeEnd = true;
+                                this.openPedal.ChangeBegin = true;
+                            }
                         break;
                         case "stop":
                             if (this.openPedal) {

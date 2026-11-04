@@ -61,7 +61,8 @@ describe("Pedal line across systems", () => {
  * CharlesGounod_Meditation m25), sign pedals released and pressed again at one note, and the * of a pedal from the system
  * before under such a beam. VexFlow draws the signs above their baseline, but they were placed as if centered on it, so a sign
  * overlapped what was above it by half its height. And a pedal was placed below the space of the pedals placed before it in
- * its staff line, so the signs of pedals released and pressed at one note went further down with each pedal.
+ * its staff line, so the signs of pedals released and pressed at one note went further down with each pedal. At that note,
+ * the * was drawn on top of the Ped. sign.
  */
 describe("Pedal signs below beams", () => {
     const sampleFilename: string = "test_pedal_signs_below_beams.musicxml";
@@ -144,6 +145,20 @@ describe("Pedal signs below beams", () => {
         expect(stars[1].top, "the * signs at one height").to.be.closeTo(stars[0].top, 0.01);
         // the * is a bit shorter than the Ped., with its top a bit lower
         expect(stars[0].top - pedSigns[0].top, "the * at the height of the Ped.").to.be.within(0, 0.5);
+    });
+
+    it("draws the * of pedals released and pressed again at one note left of the Ped. sign there", () => {
+        const signs: Box[] = signBoxes(1); // from left to right: Ped., * and Ped. at one note (the pedal change), *
+        expect(signs.length, "Ped., * and Ped. at one note, *").to.equal(4);
+        for (let i: number = 1; i < signs.length; i++) {
+            // (the * at the change was drawn on top of the Ped.)
+            expect(signs[i].left, `sign ${i + 1} right of sign ${i}, not on it`).to.be.greaterThan(signs[i - 1].right);
+        }
+        const star: Box = signs[1];
+        const ped: Box = signs[2];
+        expect(star.right - star.left, "a * first at the change (about 1.7 units wide, the Ped. 3.1)").to.be.lessThan(2.5);
+        expect(ped.left - star.right, "the * PedalReleaseSignMarginToPedSign left of the Ped.")
+            .to.be.closeTo(osmd.EngravingRules.PedalReleaseSignMarginToPedSign, 0.05);
     });
 
     it("places the * of a pedal from the system before below a beam below the staff", () => {

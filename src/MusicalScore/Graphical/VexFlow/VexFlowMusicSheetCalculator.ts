@@ -2502,7 +2502,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           signs.push([startX, startX + 3.4]);
         }
         if (vfPedal.ReleaseText !== " ") {
-          const startX2: number = endBbox.AbsolutePosition.x - pedalMarkingMarginXOffset;
+          let startX2: number = endBbox.AbsolutePosition.x - pedalMarkingMarginXOffset;
+          if (vfPedal.ChangeEnd) {
+            // pressed again at the end note: the * left of the next pedal's Ped. sign there, see PedalMarking.drawText()
+            startX2 += pedalMarking.getChangeReleaseXShift() / 10;
+          }
           //Width of * symbol
           signs.push([startX2, startX2 + 1.5]);
         }

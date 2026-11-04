@@ -146,6 +146,9 @@ export class VexFlowPedal extends GraphicalPedal {
         }
         (pedalMarking as any).ChangeBegin = this.ChangeBegin;
         (pedalMarking as any).ChangeEnd = this.ChangeEnd;
+        // with signs, released and pressed again at the end note (ChangeEnd): the * this far left of the next pedal's Ped. sign
+        (pedalMarking as any).render_options.change_release_margin =
+            this.getPedal.ParentStartMultiExpression.SourceMeasureParent.Rules.PedalReleaseSignMarginToPedSign * 10;
         return pedalMarking;
     }
 
