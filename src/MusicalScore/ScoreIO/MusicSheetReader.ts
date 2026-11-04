@@ -239,7 +239,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
         //this.musicSheet.DefaultStartTempoInBpm = this.musicSheet.SourceMeasures[0].TempoInBPM;
         this.musicSheet.userStartTempoInBPM = this.musicSheet.userStartTempoInBPM || this.musicSheet.DefaultStartTempoInBpm;
-
+        // the mapping between enrolled and sheet timestamps (absoluteEnrolledToSheetTimestamp()) and the selection
+        this.musicSheet.MusicPartManager.init();
         return this.musicSheet;
     }
 
