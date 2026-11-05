@@ -8,6 +8,7 @@ import { Glissando } from "../../../src/MusicalScore/VoiceData/Glissando";
 import { VexFlowGlissando } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowGlissando";
 import { VexFlowGraphicalNote } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
 import { StaffLine } from "../../../src/MusicalScore/Graphical/StaffLine";
+import { GraphicalMeasure } from "../../../src/MusicalScore/Graphical/GraphicalMeasure";
 
 /**
  * test_glissando_without_slur_or_slide.musicxml has a glissando on notes without a <slur> or <slide> of their own,
@@ -174,5 +175,25 @@ describe("Slides in a part with a standard and a tab staff", () => {
         for (const text of slideTexts) {
             expect(text.getAttribute("font-family"), "font of the text sl.").to.equal("Times");
         }
+    });
+
+    // With a new system at measure 2 (a print, see newSystemFromXML above), the slide from the last note of measure 1
+    //   is drawn in two parts, one in each system.
+    it("labels a slide across a system break sl. in the first system only, like a hammer-on or pull-off", async () => {
+        const score: Document = TestUtils.getScore("test_slides_standard_and_tab_staff.musicxml").cloneNode(true) as Document;
+        const measure2: Element = score.querySelector("measure[number='2']");
+        const newSystem: Element = score.createElement("print");
+        newSystem.setAttribute("new-system", "yes");
+        measure2.insertBefore(newSystem, measure2.firstChild);
+        await osmd.load(score);
+        osmd.render();
+        const tabMeasures: GraphicalMeasure[] = osmd.GraphicSheet.MeasureList.map(verticalMeasures => verticalMeasures[1]);
+        expect(tabMeasures[1].ParentMusicSystem === tabMeasures[0].ParentMusicSystem, "premise: measure 2 starts a new system").to.equal(false);
+        const slideStart: VexFlowGraphicalNote = tabMeasures[0].staffEntries[3].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote;
+        const parts: HTMLElement[] = slideStart.getGlissandoSVGs();
+        expect(parts.length, "a part in each system").to.equal(2);
+        expect(parts.map(part => part.textContent), "the label in the first system only").to.deep.equal(["sl.", ""]);
+        const slideTexts: Element[] = Array.from(container.querySelectorAll("text")).filter(text => text.textContent === "sl.");
+        expect(slideTexts.length, "a text sl. at each of the three slides of the tab staff, once").to.equal(3);
     });
 });

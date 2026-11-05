@@ -3433,6 +3433,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               slideDirection
             );
             VexFlowConverter.setVexFlowTextFontFamily((vfTie as any).font, this.rules);
+            if (!startStemmableNote) {
+              // the part of a slide continued from the previous system: only the part in the first system gets the label "sl.",
+              //   like a hammer-on or pull-off (see layoutGraphicalTie()). The Vexflow TabSlide labels each part.
+              (vfTie as any).text = undefined;
+            }
 
             const startMeasure: VexFlowMeasure = (vfStartNote?.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
             if (startMeasure) {
