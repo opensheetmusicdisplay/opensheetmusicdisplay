@@ -348,4 +348,74 @@ describe("Multiple rest measures", () => {
         const fermataMeasures: string[] = Array.from(container.querySelectorAll(".vf-modifiers")).map(modifiers => modifiers.closest(".vf-measure").id);
         expect(fermataMeasures, "the fermatas of measures 2 and 5").to.deep.equal(["osmd-m1-0", "osmd-m4-0"]);
     });
+
+    /** The ids of the measure groups drawn (osmd-m<measure index>-<staff index>), a multiple rest measure has its first measure's. */
+    function drawnMeasureGroups(): string[] {
+        return Array.from(container.querySelectorAll(".vf-measure")).map(measure => measure.id);
+    }
+
+    /**
+     * Measures 2-7 of a flute part are whole-measure rests, given as a multiple rest measure in the MusicXML (`<multiple-rest>`) or not
+     * (generated). Its measures inside the multiple rest measure have no graphical measures, so nothing was drawn when the draw range
+     * began inside it, and a draw range ending inside it drew all its measures.
+     */
+    it("draws a multiple rest measure with the measures of the draw range only, also when the range begins inside it", async () => {
+        const note: string = "<note><pitch><step>D</step><octave>5</octave></pitch><duration>4</duration><type>whole</type></note>";
+        const rest: string = "<note><rest measure=\"yes\"/><duration>4</duration></note>";
+        const attributes: string = "<attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>" +
+            "<clef><sign>G</sign><line>2</line></clef></attributes>";
+        const multipleRest: string = "<attributes><measure-style><multiple-rest>6</multiple-rest></measure-style></attributes>";
+        for (const restsInXml of ["<multiple-rest>", "generated"]) {
+            const contents: string[] = [attributes + note, (restsInXml === "generated" ? "" : multipleRest) + rest, rest, rest, rest, rest, rest, note];
+            osmd.setOptions({ drawFromMeasureNumber: 4, drawUpToMeasureNumber: 8 });
+            await osmd.load(`<?xml version="1.0"?><score-partwise version="4.0"><part-list>
+                <score-part id="P1"><part-name>Flute</part-name></score-part></part-list><part id="P1">` +
+                contents.map((content, index) => `<measure number="${index + 1}">${content}</measure>`).join("") + "</part></score-partwise>");
+            osmd.render();
+            expect(drawnMeasureGroups(), `${restsInXml}, measures 4-8: measures 4-7 as a multiple rest measure`).to.deep.equal(["osmd-m3-0", "osmd-m7-0"]);
+            expect(multipleRestMeasureCounts(), `${restsInXml}, measures 4-8`).to.deep.equal([0, 2, 0, 4, 0, 0, 0, 0]);
+            osmd.renderNext({ measures: 8 });
+            expect(osmd.IncrementalRenderingComplete, `${restsInXml}, measures 4-8, renderNext()`).to.equal(true);
+            expect(drawnMeasureGroups(), `${restsInXml}, measures 4-8, renderNext()`).to.deep.equal(["osmd-m3-0", "osmd-m7-0"]);
+
+            // the multiple rest measures are made again for another draw range (render() creates the graphic again)
+            osmd.setOptions({ drawFromMeasureNumber: 1, drawUpToMeasureNumber: 5 });
+            osmd.render();
+            expect(drawnMeasureGroups(), `${restsInXml}, measures 1-5: measures 2-5 as a multiple rest measure`).to.deep.equal(["osmd-m0-0", "osmd-m1-0"]);
+            expect(multipleRestMeasureCounts(), `${restsInXml}, measures 1-5`).to.deep.equal([0, 4, 0, 0, 0, 2, 0, 0]);
+            osmd.setOptions({ drawUpToMeasureNumber: 8 });
+            osmd.render();
+            expect(drawnMeasureGroups(), `${restsInXml}, measures 1-8`).to.deep.equal(["osmd-m0-0", "osmd-m1-0", "osmd-m7-0"]);
+            expect(multipleRestMeasureCounts(), `${restsInXml}, measures 1-8`).to.deep.equal([0, 6, 0, 0, 0, 0, 0, 0]);
+            // a draw range that doesn't divide a multiple rest measure keeps the graphic
+            const graphic: GraphicalMusicSheet = osmd.GraphicSheet;
+            osmd.setOptions({ drawFromMeasureNumber: 8 });
+            osmd.render();
+            expect(drawnMeasureGroups(), `${restsInXml}, measure 8`).to.deep.equal(["osmd-m7-0"]);
+            expect(osmd.GraphicSheet === graphic, `${restsInXml}, measure 8: the same graphic`).to.equal(true);
+        }
+    });
+
+    /**
+     * After a pickup measure (measure number 0), measure number n has the index n: measures 2-5 of a flute part are a multiple rest measure
+     * (`<multiple-rest>`), and the draw range begins with measure 3.
+     */
+    it("divides a multiple rest measure where the draw range begins after a pickup measure", async () => {
+        const note: string = "<note><pitch><step>D</step><octave>5</octave></pitch><duration>4</duration><type>whole</type></note>";
+        const pickup: string = "<note><pitch><step>D</step><octave>5</octave></pitch><duration>1</duration><type>quarter</type></note>";
+        const rest: string = "<note><rest measure=\"yes\"/><duration>4</duration></note>";
+        const attributes: string = "<attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>" +
+            "<clef><sign>G</sign><line>2</line></clef></attributes>";
+        const multipleRest: string = "<attributes><measure-style><multiple-rest>4</multiple-rest></measure-style></attributes>";
+        const contents: string[] = [attributes + pickup, note, multipleRest + rest, rest, rest, rest, note]; // measures 0-6
+        osmd.setOptions({ drawFromMeasureNumber: 3 });
+        await osmd.load(`<?xml version="1.0"?><score-partwise version="4.0"><part-list>
+            <score-part id="P1"><part-name>Flute</part-name></score-part></part-list><part id="P1">` +
+            contents.map((content, index) => `<measure number="${index}"${index === 0 ? " implicit=\"yes\"" : ""}>${content}</measure>`).join("") +
+            "</part></score-partwise>");
+        osmd.render();
+        expect(osmd.Sheet.SourceMeasures[0].ImplicitMeasure, "the pickup measure").to.equal(true);
+        expect(drawnMeasureGroups(), "measures 3-5 as a multiple rest measure, and measure 6").to.deep.equal(["osmd-m3-0", "osmd-m6-0"]);
+        expect(multipleRestMeasureCounts(), "measures 0-6").to.deep.equal([0, 0, 0, 3, 0, 0, 0]);
+    });
 });

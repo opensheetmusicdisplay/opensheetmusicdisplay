@@ -107,6 +107,11 @@ export abstract class MusicSheetCalculator {
      *  whole prefix; this lets stable interior systems reuse the lines computed in an earlier batch instead
      *  of re-measuring them. Only used when EngravingRules.LazyConsistentGraphic; cleared per lazy session. */
     protected skyBottomLineCache: Map<string, { sky: number[], bottom: number[] }> = new Map();
+    /** The first and the last measure to draw (source measure indices, limited to the sheet) when the multiple rest measures were
+     *  made, which begin and end with them, see prepareGraphicalMusicSheet() and multiRestsFitDrawRange(). */
+    private multiRestsDrawRange: [number, number] = [0, 0];
+    /** Whether a multiple rest measure was divided where the draw range of multiRestsDrawRange begins or ends. */
+    private multiRestDividedAtDrawRange: boolean = false;
 
     private abstractNotImplementedErrorMessage: string = "abstract, not implemented";
 
@@ -208,10 +213,24 @@ export abstract class MusicSheetCalculator {
         for (const staff of musicSheet.Staves) {
             staff.isTab = false;
         }
+        // The multiple rest measures begin with the first measure to draw and end with the last one (EngravingRules.MinMeasureToDrawIndex
+        //   and MaxMeasureToDrawIndex, e.g. from drawFromMeasureNumber): the layout begins with the first one, and the measures inside a
+        //   multiple rest measure have no graphical measures, so nothing was drawn when the draw range began inside one, and one going on
+        //   after the last measure to draw showed measures that aren't drawn. See also multiRestsFitDrawRange().
+        //   A first measure beyond the sheet is its last one, as in calculateMusicSystems().
+        const lastSheetMeasureIndex: number = musicSheet.SourceMeasures.length - 1;
+        this.multiRestsDrawRange = [Math.min(this.rules.MinMeasureToDrawIndex, lastSheetMeasureIndex),
+            Math.min(this.rules.MaxMeasureToDrawIndex, lastSheetMeasureIndex)];
+        this.multiRestDividedAtDrawRange = false;
+        /** The measures before which a multiple rest measure ends because of the draw range. */
+        const drawRangeBoundaries: number[] = [this.multiRestsDrawRange[0], this.multiRestsDrawRange[1] + 1];
 
         // go through all SourceMeasures (taking into account normal SourceMusicParts and Repetitions)
         for (let idx: number = 0, len: number = musicSheet.SourceMeasures.length; idx < len; ++idx) {
             const sourceMeasure: SourceMeasure = musicSheet.SourceMeasures[idx];
+            if (sourceMeasure.multipleRestMeasures > 1 && this.rules.RenderMultipleRestMeasures) {
+                this.divideMultiRestAtDrawRange(idx, drawRangeBoundaries);
+            }
             const graphicalMeasures: GraphicalMeasure[] = this.createGraphicalMeasuresForSourceMeasure(
                 sourceMeasure,
                 accidentalCalculators,
@@ -258,7 +277,13 @@ export abstract class MusicSheetCalculator {
                 const sourceMeasure: SourceMeasure = musicSheet.SourceMeasures[idx];
                 // console.log(sourceMeasure.MeasureNumber + " can be reduced: " + sourceMeasure.canBeReducedToMultiRest());
                 const canBeReduced: boolean = !sourceMeasure.isReducedToMultiRest && sourceMeasure.canBeReducedToMultiRest();
-                if (multiRestCount > 0 && (!canBeReduced || this.multiRestSequenceEndsBefore(sourceMeasure, musicSheet.SourceMeasures[idx - 1]))) {
+                const drawRangeBoundary: boolean = drawRangeBoundaries.includes(idx);
+                if (multiRestCount > 0 && canBeReduced && drawRangeBoundary) {
+                    // (also when the sequence ends here for another reason: then multiRestsFitDrawRange() makes them again needlessly)
+                    this.multiRestDividedAtDrawRange = true;
+                }
+                if (multiRestCount > 0 && (!canBeReduced || drawRangeBoundary ||
+                    this.multiRestSequenceEndsBefore(sourceMeasure, musicSheet.SourceMeasures[idx - 1]))) {
                     if (multiRestCount > 1) { //Actual multirest sequence just happened. Process
                         beginMultiRestMeasure.multipleRestMeasures = multiRestCount;
                         //regen graphical measures for this source measure
@@ -344,6 +369,46 @@ export abstract class MusicSheetCalculator {
             (this.rules.NewPageAtXMLNewPageAttribute || this.rules.NewSystemAtXMLNewPageAttribute) && sourceMeasure.printNewPageXml ||
             barline === SystemLinesEnum.DoubleThin || barline === SystemLinesEnum.ThinBold || barline === SystemLinesEnum.DoubleBold ||
             this.endsWithClefChangeInVisibleStaff(previousMeasure);
+    }
+
+    /**
+     * Divides the multiple rest measure of the MusicXML (`<multiple-rest>`) beginning with the measure where the draw range begins or ends
+     * inside it (see prepareGraphicalMusicSheet()): the measure at the first boundary inside it begins the rest of it, which is divided
+     * again there if needed. A part of one measure is drawn as the rest measure it is.
+     * @param measureIndex the first measure of the multiple rest measure
+     * @param boundaries the measures before which a multiple rest measure ends: the first measure to draw, and the one after the last one
+     */
+    private divideMultiRestAtDrawRange(measureIndex: number, boundaries: number[]): void {
+        const sourceMeasures: SourceMeasure[] = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures;
+        // the measure after its last one (a multiple rest measure of the MusicXML can be longer than the measures left)
+        const endIndex: number = Math.min(measureIndex + sourceMeasures[measureIndex].multipleRestMeasures, sourceMeasures.length);
+        const boundary: number = boundaries.find((index: number): boolean => measureIndex < index && index < endIndex);
+        if (boundary === undefined) {
+            return;
+        }
+        const partLength: (measures: number) => number = (measures: number): number => measures > 1 ? measures : 0;
+        sourceMeasures[measureIndex].multipleRestMeasures = partLength(boundary - measureIndex);
+        sourceMeasures[boundary].multipleRestMeasures = partLength(endIndex - boundary);
+        this.multiRestDividedAtDrawRange = true;
+    }
+
+    /**
+     * Whether the multiple rest measures fit the draw range from the first to the last measure to draw (source measure indices, see
+     * EngravingRules.MinMeasureToDrawIndex and MaxMeasureToDrawIndex): they begin and end with the measures to draw they were made for
+     * (see prepareGraphicalMusicSheet()), so they have to be made again (osmd.render() creates the graphic again) for a draw range
+     * that begins or ends inside one, or after one was divided for the previous draw range.
+     */
+    public multiRestsFitDrawRange(firstIndex: number, lastIndex: number): boolean {
+        const sourceMeasures: SourceMeasure[] = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures;
+        const lastSheetMeasureIndex: number = sourceMeasures.length - 1;
+        const first: number = Math.min(firstIndex, lastSheetMeasureIndex);
+        const last: number = Math.min(lastIndex, lastSheetMeasureIndex);
+        if (first === this.multiRestsDrawRange[0] && last === this.multiRestsDrawRange[1]) {
+            return true;
+        }
+        /** Whether the measure is inside a multiple rest measure, after its first one. */
+        const insideMultiRest: (index: number) => boolean = (index: number): boolean => sourceMeasures[index]?.multipleRestMeasureNumber > 1;
+        return !this.multiRestDividedAtDrawRange && !insideMultiRest(first) && !insideMultiRest(last + 1);
     }
 
     /**

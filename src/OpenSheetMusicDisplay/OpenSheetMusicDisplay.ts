@@ -251,20 +251,33 @@ export class OpenSheetMusicDisplay {
     /** Creates the graphic sheet from the music sheet: its graphical measures, notes and chord symbols, with the notes and chord
      *  symbols transposed by the current transposition (see GraphicalMusicSheet.TranspositionChanged). Unlike updateGraphic(), it
      *  leaves the cursors alone: render() and renderNext() create them again on the new graphic, where they were.
+     *  @param drawRange the first and the last measure to draw (source measure indices, see getDrawRangeIndices()): the multiple
+     *   rest measures begin and end with them (see MusicSheetCalculator.prepareGraphicalMusicSheet())
      */
-    private createGraphic(): void {
+    private createGraphic(drawRange: [number, number] = this.getDrawRangeIndices()): void {
         const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator(this.rules);
-        this.graphic = new GraphicalMusicSheet(this.sheet, calc);
+        // the rules have the draw range while the graphic is created, then their own values again (e.g. a draw range set during
+        //   incremental rendering, for the next session)
+        const rulesDrawRange: [number, number] = [this.rules.MinMeasureToDrawIndex, this.rules.MaxMeasureToDrawIndex];
+        [this.rules.MinMeasureToDrawIndex, this.rules.MaxMeasureToDrawIndex] = drawRange;
+        try {
+            this.graphic = new GraphicalMusicSheet(this.sheet, calc);
+        } finally {
+            [this.rules.MinMeasureToDrawIndex, this.rules.MaxMeasureToDrawIndex] = rulesDrawRange;
+        }
         if (this.drawingParameters.DrawingParametersEnum === DrawingParametersEnum.leadsheet) {
             this.graphic.LeadSheet = true;
         }
     }
 
     /** Whether the graphic has to be created again before it's rendered: after a change of the transposition or of the
-     *  visible voices, which apply when it's created (see GraphicalMusicSheet.TranspositionChanged and VoiceVisibilityChanged).
+     *  visible voices, which apply when it's created (see GraphicalMusicSheet.TranspositionChanged and VoiceVisibilityChanged),
+     *  or for a draw range that would divide the multiple rest measures otherwise (see MusicSheetCalculator.multiRestsFitDrawRange()).
+     *  @param drawRange the first and the last measure to draw (source measure indices, see getDrawRangeIndices())
      */
-    private graphicOutdated(): boolean {
-        return this.graphic.TranspositionChanged || this.graphic.VoiceVisibilityChanged;
+    private graphicOutdated(drawRange: [number, number]): boolean {
+        return this.graphic.TranspositionChanged || this.graphic.VoiceVisibilityChanged ||
+            !this.graphic.GetCalculator.multiRestsFitDrawRange(drawRange[0], drawRange[1]);
     }
 
     /** Lazy rendering (LazyConsistentGraphic): number of systems already drawn into the shared
@@ -302,18 +315,23 @@ export class OpenSheetMusicDisplay {
     /** Render the loaded music sheet to the container.
      *  A changed transposition (osmd.Sheet.Transpose, Instrument.Transpose, osmd.TransposeCalculator) or a voice shown or hidden
      *  (Voice.Visible, Instrument.Visible) is applied without updateGraphic(): render() creates the graphic again then,
-     *  see GraphicalMusicSheet.TranspositionChanged and VoiceVisibilityChanged.
+     *  see GraphicalMusicSheet.TranspositionChanged and VoiceVisibilityChanged. It does so too when the draw range
+     *  (drawFromMeasureNumber, drawUpToMeasureNumber) begins or ends inside a multiple rest measure, which is divided there,
+     *  or one was divided for the previous draw range (see MusicSheetCalculator.multiRestsFitDrawRange()).
      */
     public render(): void {
         if (!this.graphic) {
             throw new Error("OSMD: load() needs to be called before render()");
         }
+        // drawing range, adjusted for a pickup measure
+        const drawRange: [number, number] = this.getDrawRangeIndices();
         // The notes and chord symbols are transposed when the graphic is created, the key signatures in each layout (reCalculate()):
         //   after a change of the transposition, create the graphic again, otherwise only the key signatures would be transposed.
-        //   The notes of hidden voices are left out when the graphic is created too.
+        //   The notes of hidden voices are left out when the graphic is created too, and the multiple rest measures begin and end
+        //   with the draw range.
         //   Unlike updateGraphic(), this keeps the cursors where they are (enableOrDisableCursors() below creates them on the new graphic).
-        if (this.graphicOutdated()) {
-            this.createGraphic();
+        if (this.graphicOutdated(drawRange)) {
+            this.createGraphic(drawRange);
         }
         // A full render() supersedes any incremental render in progress: abandon it.
         this.resetIncrementalRendering();
@@ -324,8 +342,7 @@ export class OpenSheetMusicDisplay {
         // this.graphic.GetCalculator.clearSystemsAndMeasures(); // maybe?
         // this.graphic.GetCalculator.clearRecreatedObjects();
 
-        // drawing range, adjusted for a pickup measure
-        [this.rules.MinMeasureToDrawIndex, this.rules.MaxMeasureToDrawIndex] = this.getDrawRangeIndices();
+        [this.rules.MinMeasureToDrawIndex, this.rules.MaxMeasureToDrawIndex] = drawRange;
 
         // Set page width
         let width: number = this.getContainerContentWidth();
@@ -400,7 +417,7 @@ export class OpenSheetMusicDisplay {
         let firstIndex: number = this.rules.MinMeasureToDrawIndex;
         let lastIndex: number = this.rules.MaxMeasureToDrawIndex;
         // drawing range: check if pickup measure and start or end measure number > 1
-        if (this.Sheet.SourceMeasures[0].ImplicitMeasure) {
+        if (this.Sheet.SourceMeasures[0]?.ImplicitMeasure) {
             if (this.rules.MinMeasureToDrawNumber > 1) {
                 firstIndex = this.rules.MinMeasureToDrawNumber; // -1 for index, +1 for pickup
             }
@@ -471,10 +488,13 @@ export class OpenSheetMusicDisplay {
         const targetNewSystems: number = systemsOpt > 0 && !this.rules.RenderSingleHorizontalStaffline
             ? Math.max(1, Math.floor(systemsOpt)) : undefined;
 
-        // As in render(): create the graphic again after a change of the transposition or of the visible voices.
-        const graphicOutdated: boolean = this.graphicOutdated();
+        // As in render(): create the graphic again after a change of the transposition or of the visible voices, or for the draw range
+        //   of the session (that of render() for a new one) if it would divide the multiple rest measures otherwise.
+        const drawRange: [number, number] = this.lazyIncrementalActive
+            ? [this.lazyFirstMeasureIndex, this.lazyLastMeasureIndex] : this.getDrawRangeIndices();
+        const graphicOutdated: boolean = this.graphicOutdated(drawRange);
         if (graphicOutdated) {
-            this.createGraphic();
+            this.createGraphic(drawRange);
         }
         const begin: boolean = !this.lazyIncrementalActive;
         if (begin) {
