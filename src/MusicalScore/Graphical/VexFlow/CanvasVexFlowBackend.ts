@@ -138,6 +138,11 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
             }
             if (snapshot) {
                 ctx2d.drawImage(snapshot, 0, 0); // restore the previously rendered batches at the top left
+                // Release the snapshot's pixels now, not when it's garbage collected: each batch copies the whole canvas, and in
+                //   Node (node-canvas frees them only after the current task), the copies of a loop of renderNext() calls, like
+                //   renderRemaining(), piled up, e.g. to 4 GB for ActorPreludeSample on a single horizontal staffline.
+                snapshot.width = 0;
+                snapshot.height = 0;
             }
             ctx2d.restore();
         }
