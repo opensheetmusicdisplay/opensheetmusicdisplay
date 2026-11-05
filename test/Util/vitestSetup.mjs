@@ -1,8 +1,41 @@
 // Vitest setup file (vitest.config.mjs): the test data that karma's preprocessors put into the page (window.__xml__,
 //   window.__raw__, read by TestUtils and a few tests); here these read a file from the test server when a test asks
-//   for it.
+//   for it. And after each test file, it frees the OSMD instances and the containers that the file leaves.
 
-import { afterEach, inject } from "vitest";
+import { afterAll, afterEach, beforeAll, inject } from "vitest";
+import { OpenSheetMusicDisplay } from "../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
+
+// After each test file, free what it leaves: with isolate: false (vitest.config.mjs), Vitest keeps every test file's
+//   functions until the run ends, and with them the OSMD instances that the files keep in variables (e.g. one per
+//   describe()), each with its loaded sheet and its drawing; and the containers that tests added to the page stay in it.
+//   clear() releases the sheet and the drawing, dispose() the listeners, and the containers are removed. Measured in
+//   2026-11 (2 Firefox pages, 4 runs each): the 951 tests here peaked at 2.8 instead of 2.9 GB, as fast as before, and a
+//   page no longer keeps 44,000 elements in 177 containers until the end; a suite whose instances hold more per sheet
+//   (e.g. playback data) peaked at 3.2 instead of 4.1-4.7 GB, and ran 5% faster. Only the containers, without clear(),
+//   saved nothing.
+const loadedInstances = new Set();
+const load = OpenSheetMusicDisplay.prototype.load;
+OpenSheetMusicDisplay.prototype.load = function (...args) {
+    loadedInstances.add(this);
+    return load.apply(this, args);
+};
+let elementsBefore;
+beforeAll(() => {
+    elementsBefore = new Set(document.body.children);
+});
+// setup files' hooks come first, so this runs after the file's own afterAll() hooks
+afterAll(() => {
+    for (const osmd of loadedInstances) {
+        osmd.clear();
+        osmd.dispose();
+    }
+    loadedInstances.clear();
+    for (const element of [...document.body.children]) {
+        if (!elementsBefore.has(element)) {
+            element.remove();
+        }
+    }
+});
 
 /** Reads a file of test/data from the test server (base/test/data/, see vitest.config.mjs) synchronously, as the tests
  *  read window.__xml__ and window.__raw__.
