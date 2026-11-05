@@ -236,6 +236,50 @@ describe("OpenSheetMusicDisplay incremental rendering of a single horizontal sta
         expect(ids).to.deep.equal(["osmd-staffline0-0", "osmd-staffline0-1", "", "", "osmd-staffline1-0", "osmd-staffline1-1", "", "",
             "osmd-staffline2-0", "osmd-staffline2-1", "", ""]);
     });
+
+    /**
+     * Counts the pixels of a canvas that aren't fully opaque, i.e. not covered by the page background.
+     * @param canvas the canvas of a page (canvas backend)
+     * @returns the number of pixels with an alpha below 255
+     */
+    function notOpaquePixels(canvas: HTMLCanvasElement): number {
+        const data: Uint8ClampedArray = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
+        let count: number = 0;
+        for (let i: number = 3; i < data.length; i += 4) {
+            if (data[i] !== 255) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    it("fills the canvas with the page background, also the part each batch adds to the right", async () => {
+        // the canvas backend keeps the drawn batches when the next one makes the canvas wider, and used to leave the added
+        //   part transparent instead of filling it with the page background (e.g. black in dark mode)
+        osmd.setOptions({ backend: "canvas", pageBackgroundColor: "#FFFFFF" });
+        await osmd.load(TestUtils.getScore("test_Braille_Lyrics_Simple.musicxml")); // one staff, 4 measures
+        const canvasWidths: number[] = [];
+        let result: IRenderNextResult;
+        do {
+            result = osmd.renderNext({ measures: 1 });
+            const canvas: HTMLCanvasElement = container.querySelector("canvas");
+            canvasWidths.push(canvas.width);
+            expect(notOpaquePixels(canvas), `pixels without the background after batch ${canvasWidths.length}`).to.equal(0);
+        } while (!result.done && canvasWidths.length < 10);
+        expect(canvasWidths.length, "batches").to.equal(4);
+        expect(canvasWidths[3], "canvas width after the last batch").to.be.greaterThan(canvasWidths[0]);
+    });
+
+    it("fills the canvas of a page with the page background when a later batch reaches the page", async () => {
+        // until then, the canvas of the page is 0 wide, so it has nothing to keep, and it was left transparent as a whole
+        osmd.setOptions({ backend: "canvas", pageBackgroundColor: "#FFFFFF", newPageFromXML: true });
+        await osmd.load(TestUtils.getScore("test_pagebreak_implies_systembreak.musicxml")); // a page break before measure 2
+        expect(osmd.renderNext({ measures: 1 }).done, "done after the first batch").to.equal(false);
+        const canvases: HTMLCanvasElement[] = Array.from(container.querySelectorAll("canvas"));
+        expect(canvases.map((canvas: HTMLCanvasElement): boolean => canvas.width > 0), "pages drawn on").to.deep.equal([true, false]);
+        expect(osmd.renderNext({ measures: 1 }).done, "done after the second batch").to.equal(true);
+        expect(canvases.map(notOpaquePixels), "pixels without the background per page").to.deep.equal([0, 0]);
+    });
 });
 
 describe("OpenSheetMusicDisplay incremental rendering of the endless page in batches (renderNext)", () => {
