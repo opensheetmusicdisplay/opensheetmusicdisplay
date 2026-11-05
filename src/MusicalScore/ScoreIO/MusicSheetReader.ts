@@ -15,7 +15,7 @@ import {Staff} from "../VoiceData/Staff";
 import {VoiceEntry} from "../VoiceData/VoiceEntry";
 import {LyricsEntry} from "../VoiceData/Lyrics/LyricsEntry";
 import {LyricWord} from "../VoiceData/Lyrics/LyricsWord";
-import {InstrumentalGroup} from "../InstrumentalGroup";
+import {GroupSymbol, InstrumentalGroup} from "../InstrumentalGroup";
 import {SubInstrument} from "../SubInstrument";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
@@ -1332,6 +1332,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                         if (groupAbbreviation) {
                             iG.Abbreviation = groupAbbreviation.value;
                         }
+                        iG.GroupSymbol = this.readGroupSymbol(node.element("group-symbol"));
                         iG.PrintName = canAssignGroupNames;
                         iG.PrintAbbreviation = canAssignGroupNames;
                         const nameDisplay: IXmlElement = node.element("group-name-display");
@@ -1351,24 +1352,15 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                     } else {
                         if ((node.name === "part-group") && (node.attribute("type").value === "stop")) {
                             if (currentGroup) {
-                                const hasMultipleParts: boolean = this.countInstrumentsInGroup(currentGroup) > 1;
-                                currentGroup.PrintName = currentGroup.PrintName && hasMultipleParts;
-                                currentGroup.PrintAbbreviation = currentGroup.PrintAbbreviation && hasMultipleParts;
-                                if (currentGroup.InstrumentalGroups.length === 1) {
-                                    const instr: InstrumentalGroup = currentGroup.InstrumentalGroups[0];
-                                    if (currentGroup.Parent) {
-                                        currentGroup.Parent.InstrumentalGroups.push(instr);
-                                        this._removeFromArray(currentGroup.Parent.InstrumentalGroups, currentGroup);
-                                    } else {
-                                        this.musicSheet.InstrumentalGroups.push(instr);
-                                        this._removeFromArray(this.musicSheet.InstrumentalGroups, currentGroup);
-                                    }
-                                }
-                                currentGroup = currentGroup.Parent;
+                                currentGroup = this.closePartGroup(currentGroup);
                             }
                         }
                     }
                 }
+            }
+            // a part-group that is never stopped (e.g. MuseScore 3's brace before a piano part) ends with the part-list
+            while (currentGroup) {
+                currentGroup = this.closePartGroup(currentGroup);
             }
         } catch (e) {
             const errorMsg: string = ITextTranslation.translateText(
@@ -1378,6 +1370,45 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
 
         return instrumentDict;
+    }
+
+    /**
+     * Ends a part-group, at its stop or at the end of the part-list: a group around a single part or group is left out, except
+     * around a group with another symbol, e.g. a bracket around a square bracket of the same parts (Gould's secondary bracket)
+     * keeps both.
+     * @returns the group's parent, the group now open
+     */
+    private closePartGroup(group: InstrumentalGroup): InstrumentalGroup {
+        const hasMultipleParts: boolean = this.countInstrumentsInGroup(group) > 1;
+        group.PrintName = group.PrintName && hasMultipleParts;
+        group.PrintAbbreviation = group.PrintAbbreviation && hasMultipleParts;
+        const onlyChild: InstrumentalGroup = group.InstrumentalGroups.length === 1 ? group.InstrumentalGroups[0] : undefined;
+        if (onlyChild && (onlyChild instanceof Instrument || onlyChild.GroupSymbol === group.GroupSymbol)) {
+            if (group.Parent) {
+                group.Parent.InstrumentalGroups.push(onlyChild);
+                this._removeFromArray(group.Parent.InstrumentalGroups, group);
+            } else {
+                this.musicSheet.InstrumentalGroups.push(onlyChild);
+                this._removeFromArray(this.musicSheet.InstrumentalGroups, group);
+            }
+        }
+        return group.Parent;
+    }
+
+    /** The MusicXML group-symbol of a part-group: none if not given (MusicXML 4.0, group-symbol), and for an unknown value. */
+    private readGroupSymbol(groupSymbol: IXmlElement): GroupSymbol {
+        switch (groupSymbol?.value?.trim()) {
+            case "brace":
+                return GroupSymbol.Brace;
+            case "line":
+                return GroupSymbol.Line;
+            case "bracket":
+                return GroupSymbol.Bracket;
+            case "square":
+                return GroupSymbol.Square;
+            default:
+                return GroupSymbol.None;
+        }
     }
 
     private countInstrumentsInGroup(group: InstrumentalGroup): number {

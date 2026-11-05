@@ -103,6 +103,10 @@ draw(): draw the barline in a group, class vf-stavebarline (merged vexflow 4), w
 renderInitialLine false: a begin repeat barline without the line at the stave's start (custom addition, for OSMD's repeat
   at the start of a one-staff system, which replaced the barline's draw() before)
 
+staveconnector.js (custom fix):
+BRACKET: apply x_shift like BRACE (setXShift() was ignored for a bracket), so that a nested group's bracket can stand
+  a column further left (OSMD's VexFlowInstrumentBracket.Column)
+
 stavenote.js (custom addition):
 Fix stem/flag formatting. Instead of shifting notes by default, update the stem/flag rendering to render different voices aligned.
   Only offset if a note is the same voice, same note.

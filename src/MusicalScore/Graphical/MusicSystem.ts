@@ -3,7 +3,7 @@ import {Instrument} from "../Instrument";
 import {BoundingBox} from "./BoundingBox";
 import {Fraction} from "../../Common/DataObjects/Fraction";
 import {SourceMeasure} from "../VoiceData/SourceMeasure";
-import {InstrumentalGroup} from "../InstrumentalGroup";
+import {GroupSymbol, InstrumentalGroup} from "../InstrumentalGroup";
 import {TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
 import {GraphicalMusicPage} from "./GraphicalMusicPage";
 import {GraphicalLabel} from "./GraphicalLabel";
@@ -266,43 +266,51 @@ export abstract class MusicSystem extends GraphicalObject {
     }
 
     /**
-     * Create a GroupBracket for an [[InstrumentalGroup]].
+     * Create a GroupBracket for each [[InstrumentalGroup]] with a group symbol (MusicXML group-symbol: a group without one
+     * draws nothing), and for the groups nested in it, which stand a column further left (EngravingRules.GroupBracketColumnDistance).
      * @param instrumentGroups
      * @param staffHeight
-     * @param recursionDepth
+     * @param column the column of the brackets, left of the staves: 0 beside the staves, 1 for the groups nested in a bracketed
+     *   group, and so on (the brackets drawn around the groups)
      */
-    public createGroupBrackets(instrumentGroups: InstrumentalGroup[], staffHeight: number, recursionDepth: number): void {
+    public createGroupBrackets(instrumentGroups: InstrumentalGroup[], staffHeight: number, column: number): void {
         for (let idx: number = 0, len: number = instrumentGroups.length; idx < len; ++idx) {
             const instrumentGroup: InstrumentalGroup = instrumentGroups[idx];
             if (instrumentGroup.InstrumentalGroups.length < 1) {
                 continue;
             }
-            const instrument1: Instrument = this.findFirstVisibleInstrumentInInstrumentalGroup(instrumentGroup);
-            const instrument2: Instrument = this.findLastVisibleInstrumentInInstrumentalGroup(instrumentGroup);
-            if (!instrument1 || !instrument2) {
-                continue;
+            const staffLines: [StaffLine, StaffLine] = instrumentGroup.GroupSymbol !== GroupSymbol.None ?
+                this.groupBracketStaffLines(instrumentGroup) : undefined;
+            if (staffLines) {
+                this.createGroupBracket(staffLines[0], staffLines[1], column, instrumentGroup.GroupSymbol);
             }
-            // a part-group groups whole parts: from the first staff of its first part to the last staff of its last part
-            //   (e.g. both staves of a piano that ends the group), among the system's stafflines (the visible staves)
-            let firstStaffLine: StaffLine = undefined;
-            let lastStaffLine: StaffLine = undefined;
-            for (let idx2: number = 0, len2: number = this.staffLines.length; idx2 < len2; ++idx2) {
-                const staffLine: StaffLine = this.staffLines[idx2];
-                if (!firstStaffLine && staffLine.ParentStaff.ParentInstrument === instrument1) {
-                    firstStaffLine = staffLine;
-                }
-                if (staffLine.ParentStaff.ParentInstrument === instrument2) {
-                    lastStaffLine = staffLine;
-                }
-            }
-            if (firstStaffLine && lastStaffLine) {
-                this.createGroupBracket(firstStaffLine, lastStaffLine, recursionDepth);
-            }
-            if (instrumentGroup.InstrumentalGroups.length < 1) {
-                continue;
-            }
-            this.createGroupBrackets(instrumentGroup.InstrumentalGroups, staffHeight, recursionDepth + 1);
+            this.createGroupBrackets(instrumentGroup.InstrumentalGroups, staffHeight, staffLines ? column + 1 : column);
         }
+    }
+
+    /**
+     * The first and last staffline of a group's bracket in the system, or undefined if the group has no visible part:
+     * a part-group groups whole parts, so the bracket reaches from the first staff of its first part to the last staff of its
+     * last part (e.g. both staves of a piano that ends the group), among the system's stafflines (the visible staves).
+     */
+    private groupBracketStaffLines(instrumentGroup: InstrumentalGroup): [StaffLine, StaffLine] {
+        const instrument1: Instrument = this.findFirstVisibleInstrumentInInstrumentalGroup(instrumentGroup);
+        const instrument2: Instrument = this.findLastVisibleInstrumentInInstrumentalGroup(instrumentGroup);
+        if (!instrument1 || !instrument2) {
+            return undefined;
+        }
+        let firstStaffLine: StaffLine = undefined;
+        let lastStaffLine: StaffLine = undefined;
+        for (let idx2: number = 0, len2: number = this.staffLines.length; idx2 < len2; ++idx2) {
+            const staffLine: StaffLine = this.staffLines[idx2];
+            if (!firstStaffLine && staffLine.ParentStaff.ParentInstrument === instrument1) {
+                firstStaffLine = staffLine;
+            }
+            if (staffLine.ParentStaff.ParentInstrument === instrument2) {
+                lastStaffLine = staffLine;
+            }
+        }
+        return firstStaffLine && lastStaffLine ? [firstStaffLine, lastStaffLine] : undefined;
     }
 
     /**
@@ -406,6 +414,8 @@ export abstract class MusicSystem extends GraphicalObject {
         });
         if (this.maxLabelLength > 0) {
             systemLabelsRightMargin = originalSystemLabelsRightMargin;
+            // the labels keep from a bracket or brace standing further left than a part brace the distance they keep from one
+            this.maxLabelLength += this.groupBracketsReachBeyondPartBrace();
         }
         this.updateMusicSystemStaffLineXPosition(systemLabelsRightMargin);
     }
@@ -632,8 +642,53 @@ export abstract class MusicSystem extends GraphicalObject {
         // no impl here
     }
 
-    protected createGroupBracket(firstStaffLine: StaffLine, lastStaffLine: StaffLine, recursionDepth: number): void {
+    /**
+     * Creates the bracket of a part group, from the given first staffline to the last one, in the given column left of the
+     * staves (see createGroupBrackets()): VexFlow's bracket, a brace, or a thin line with right-angled hooks (square) or
+     * without them (line), as the group symbol says.
+     */
+    protected createGroupBracket(firstStaffLine: StaffLine, lastStaffLine: StaffLine, column: number, groupSymbol: GroupSymbol): void {
         // no impl here
+    }
+
+    /** How far left of the staves a group's bracket of the given symbol reaches in the given column, in units. */
+    protected groupBracketReach(groupSymbol: GroupSymbol, column: number): number {
+        return 0;
+    }
+
+    /** How far left of the staves a part's brace reaches in the given column, in units. */
+    protected partBraceReach(column: number): number {
+        return 0;
+    }
+
+    /**
+     * How much further left than a part brace beside the staves the system's group brackets and the part braces inside the
+     * groups reach, in units: a bracket nested in another group's bracket stands a column further left, as does the brace of
+     * a multi-staff part inside a bracketed group (see createGroupBrackets()). The labels move left by as much, so they keep
+     * the distance from the brackets that they keep from a part brace.
+     */
+    private groupBracketsReachBeyondPartBrace(): number {
+        let reach: number = 0;
+        const reachOfGroups: (groups: InstrumentalGroup[], column: number) => void = (groups: InstrumentalGroup[], column: number): void => {
+            for (const group of groups) {
+                if (group.InstrumentalGroups.length < 1) {
+                    continue;
+                }
+                const drawn: boolean = group.GroupSymbol !== GroupSymbol.None && this.groupBracketStaffLines(group) !== undefined;
+                if (drawn) {
+                    reach = Math.max(reach, this.groupBracketReach(group.GroupSymbol, column));
+                    const lines: StaffLine[] = this.staffLinesForGroup(group);
+                    const hasBracedPart: boolean = lines.some((line: StaffLine, index: number): boolean =>
+                        index > 0 && lines[index - 1].ParentStaff.ParentInstrument === line.ParentStaff.ParentInstrument);
+                    if (hasBracedPart) { // a part with two or more staves in the system: its brace stands a column further left
+                        reach = Math.max(reach, this.partBraceReach(column + 1));
+                    }
+                }
+                reachOfGroups(group.InstrumentalGroups, drawn ? column + 1 : column);
+            }
+        };
+        reachOfGroups(this.staffLines[0]?.ParentStaff.ParentInstrument.GetMusicSheet.InstrumentalGroups ?? [], 0);
+        return Math.max(0, reach - this.partBraceReach(0));
     }
 
     private findFirstVisibleInstrumentInInstrumentalGroup(instrumentalGroup: InstrumentalGroup): Instrument {
