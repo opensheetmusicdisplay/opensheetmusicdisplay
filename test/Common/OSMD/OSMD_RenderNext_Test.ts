@@ -201,6 +201,19 @@ describe("OpenSheetMusicDisplay incremental rendering of a single horizontal sta
         }
     });
 
+    it("draws the part of a pedal line going on in the next system with its last measure in the system, like render()", async () => {
+        // 5 measures in 2 systems (a system break from the XML before the last one), a pedal from measure 4 into measure 5. Its
+        //   part in the first system used to be drawn with the first batch, before measure 4 was drawn: in the wrong place, from
+        //   the start of the system. The batch whose window reached the x of the pedal's end in the next system drew it, instead
+        //   of the batch drawing the part's last measure.
+        osmd.setOptions({ newSystemFromXML: true });
+        await osmd.load(TestUtils.getScore("test_pedal_resume_discontinue.musicxml"));
+        osmd.render();
+        const elementsOfRender: string[] = drawnElements();
+        expect(renderNextUntilDone(1), "batches").to.equal(5);
+        expect(drawnElements()).to.deep.equal(elementsOfRender);
+    });
+
     it("draws the sky and bottom lines and the bounding boxes of the debug drawing once, like render()", async () => {
         osmd.DrawSkyLine = true;
         osmd.DrawBottomLine = true;
