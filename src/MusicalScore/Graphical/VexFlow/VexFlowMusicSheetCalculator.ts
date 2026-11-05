@@ -198,8 +198,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         byMeasure.set(measure.parentSourceMeasure, measure);
       }
     }
-    // An incremental render (OpenSheetMusicDisplay.renderNext()) lays the sheet out from its first measure to the end of the batch
-    //   and draws only complete systems, which hold all their units and the patterns before them, like in render().
+    // An incremental render (OpenSheetMusicDisplay.renderNext()) lays the sheet out from the first measure render() draws to the
+    //   end of the batch and draws only complete systems, which hold all their units and the patterns before them, like in render().
     //   (A unit reaching past the end of the batch, see tryCreateMeasureRepeat(), is in the last system, which isn't drawn yet.)
     if (!this.rules.RenderMeasureRepeats) {
       return;

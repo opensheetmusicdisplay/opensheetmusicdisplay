@@ -127,14 +127,10 @@ export class Cursor {
     const lastSheetMeasureIndex: number = this.openSheetMusicDisplay.Sheet.SourceMeasures.length - 1; // last measure in data model
     let startMeasureIndex: number = this.rules.MinMeasureToDrawIndex;
     startMeasureIndex = Math.min(startMeasureIndex, lastSheetMeasureIndex);
+    // Under incremental rendering (renderNext()), this is the session's draw range too, not the end of the measures
+    //   rendered so far: the cursor can step across all of them and is positioned lazily (update() no-ops where not yet
+    //   rendered; a later batch repositions it once that measure is drawn).
     let endMeasureIndex: number = this.rules.MaxMeasureToDrawIndex;
-    if (this.rules.LazyConsistentGraphic) {
-      // Under lazy rendering MaxMeasureToDrawIndex is only the current (growing) frontier, not a fixed
-      //   draw range, so clamp the cursor to the whole sheet: it can step across the entire score and is
-      //   positioned lazily (update() no-ops where not yet rendered; a later batch repositions it once
-      //   that measure is drawn). Playback already seeks by timestamp and is unaffected by this range.
-      endMeasureIndex = lastSheetMeasureIndex;
-    }
     endMeasureIndex = Math.min(endMeasureIndex, lastSheetMeasureIndex);
 
     if (this.openSheetMusicDisplay.Sheet && this.openSheetMusicDisplay.Sheet.SourceMeasures.length > startMeasureIndex) {
