@@ -508,6 +508,24 @@ describe("OpenSheetMusicDisplay incremental rendering of a draw range (renderNex
         }
     });
 
+    it("renders the draw range of a sheet loaded after one with a pickup measure, starting the cursor at its first measure", async () => {
+        // render() and renderNext() left the indices for a pickup measure in the rules (measure number n at index n, not n - 1),
+        //   which the next sheet took as the ones set: without a pickup measure, it was drawn from measure 3 to 4. And load() started
+        //   the cursor with the indices of the sheet before: at measure 1 of a sheet with a pickup measure.
+        osmd.setOptions({ newSystemFromXML: true, drawFromMeasureNumber: 2, drawUpToMeasureNumber: 3 });
+        const withoutPickup: string = "test_renderNext_copyright_below_last_system_1710.musicxml"; // measures 1-16
+        const withPickup: string = "test_metronome_mark_with_pickup_measure.musicxml"; // measures 0 (pickup) to 3
+        for (const sampleFilename of [withoutPickup, withPickup, withoutPickup]) {
+            const sheet: string = sampleFilename === withPickup ? "with a pickup measure" : "without a pickup measure";
+            await osmd.load(TestUtils.getScore(sampleFilename));
+            osmd.render();
+            expect(systemsLaidOut(), `render(), ${sheet}`).to.equal("2 3");
+            expect(osmd.cursor.Iterator.CurrentMeasure.MeasureNumber, `cursor, ${sheet}`).to.equal(2);
+            expect(renderNextUntilDone({ measures: 1 }), sheet).to.deep.equal(["2/2, last 3, next none"]); // one system: the first batch
+            expect(systemsLaidOut(), `renderNext(), ${sheet}`).to.equal("2 3");
+        }
+    });
+
     it("renders the last measure for a draw range beginning after the sheet, like render(), with the same range in the rules", async () => {
         osmd.setOptions({ newSystemFromXML: true, drawFromMeasureNumber: 20 }); // 16 measures
         await osmd.load(TestUtils.getScore("test_renderNext_copyright_below_last_system_1710.musicxml"));

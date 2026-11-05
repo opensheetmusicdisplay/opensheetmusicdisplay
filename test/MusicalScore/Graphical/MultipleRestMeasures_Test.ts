@@ -417,5 +417,17 @@ describe("Multiple rest measures", () => {
         expect(osmd.Sheet.SourceMeasures[0].ImplicitMeasure, "the pickup measure").to.equal(true);
         expect(drawnMeasureGroups(), "measures 3-5 as a multiple rest measure, and measure 6").to.deep.equal(["osmd-m3-0", "osmd-m6-0"]);
         expect(multipleRestMeasureCounts(), "measures 0-6").to.deep.equal([0, 0, 0, 3, 0, 0, 0]);
+
+        // Then the measures 1-6 without the pickup measure: measure 3 has the index 2 again (render() had left the index for the pickup
+        //   measure in the rules, so the multiple rest measure was divided at measure 4). load() divides it where render() draws from.
+        await osmd.load(`<?xml version="1.0"?><score-partwise version="4.0"><part-list>
+            <score-part id="P1"><part-name>Flute</part-name></score-part></part-list><part id="P1">` +
+            contents.slice(1).map((content, index) => `<measure number="${index + 1}">${index === 0 ? attributes : ""}${content}</measure>`)
+                .join("") + "</part></score-partwise>");
+        const graphicOfLoad: GraphicalMusicSheet = osmd.GraphicSheet;
+        osmd.render();
+        expect(drawnMeasureGroups(), "without the pickup measure").to.deep.equal(["osmd-m2-0", "osmd-m5-0"]);
+        expect(multipleRestMeasureCounts(), "measures 1-6").to.deep.equal([0, 0, 3, 0, 0, 0]);
+        expect(osmd.GraphicSheet === graphicOfLoad, "the graphic of load()").to.equal(true);
     });
 });
