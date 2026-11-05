@@ -1030,7 +1030,7 @@ export class OpenSheetMusicDisplay {
             }
         }
         if (measures.length === 0) {
-            return lastMeasureIndex + 1; // produced nothing (e.g. all invisible)
+            return lastMeasureIndex + 1; // nothing laid out, e.g. with no instrument visible: the first batch removed the drawing above
         }
         // Draw the measures up to source measure toMeasureIndex, but at least one. A measure without a source measure
         // (an extra instruction measure ending a system, e.g. with the next system's clef) is drawn with the one before.
@@ -1149,8 +1149,11 @@ export class OpenSheetMusicDisplay {
 
         // Set page width
         let width: number = pageWidth ?? this.getContainerContentWidth();
-        if (this.rules.RenderSingleHorizontalStaffline) {
-            width = (this.EngravingRules.PageLeftMargin + this.graphic.MusicPages[0].PositionAndShape.Size.width + this.EngravingRules.PageRightMargin)
+        // A single horizontal staffline is as wide as its page. With nothing laid out, e.g. with no instrument visible, there's no
+        //   page, and no backend to size.
+        const firstPage: GraphicalMusicPage = this.graphic.MusicPages[0];
+        if (this.rules.RenderSingleHorizontalStaffline && firstPage) {
+            width = (this.EngravingRules.PageLeftMargin + firstPage.PositionAndShape.Size.width + this.EngravingRules.PageRightMargin)
                 * 10 * this.zoom;
             // this.container.style.width = width + "px";
             // console.log("width: " + width)

@@ -511,3 +511,54 @@ describe("OpenSheetMusicDisplay incremental rendering of a draw range (renderNex
         expect(systemsLaidOut()).to.equal("2 3");
     });
 });
+
+describe("OpenSheetMusicDisplay rendering with nothing to draw (render, renderNext)", () => {
+    // With no instrument visible or a draw range without measures, nothing is laid out: there's no page, and render() removes the
+    //   previous drawing from the container.
+    let container: HTMLElement;
+    let osmd: OpenSheetMusicDisplay;
+
+    beforeEach(async (): Promise<void> => {
+        container = TestUtils.getDivElement(document);
+        osmd = TestUtils.createOpenSheetMusicDisplay(container); // autoResize: false
+        await osmd.load(TestUtils.getScore("test_renderNext_copyright_below_last_system_1710.musicxml")); // 16 measures
+    });
+
+    afterEach((): void => {
+        document.body.removeChild(container);
+    });
+
+    /** Shows or hides all instruments (Instrument.Visible). */
+    function setInstrumentsVisible(visible: boolean): void {
+        for (const instrument of osmd.Sheet.Instruments) {
+            instrument.Visible = visible;
+        }
+    }
+
+    /** The ways to leave nothing to draw in the sheet: a description, a function that leaves nothing to draw, and one that undoes it. */
+    const nothingToDrawCases: [string, () => void, () => void][] = [
+        ["no instrument visible", (): void => setInstrumentsVisible(false), (): void => setInstrumentsVisible(true)],
+        ["a draw range without measures", (): void => osmd.setOptions({ drawFromMeasureNumber: 3, drawUpToMeasureNumber: 2 }),
+            (): void => osmd.setOptions({ drawFromMeasureNumber: 1, drawUpToMeasureNumber: 16 })]
+    ];
+
+    /** Draws the sheet with render() and renders it again with renderAgain in each case of nothingToDrawCases. Checks that no page
+     *  is laid out then and that the previous drawing is removed from the container. */
+    function expectPreviousDrawingRemoved(renderAgain: (situation: string) => void): void {
+        for (const [description, leaveNothingToDraw, undo] of nothingToDrawCases) {
+            osmd.render();
+            expect(container.querySelectorAll("svg").length, `${description}: drawn before`).to.equal(1);
+            leaveNothingToDraw();
+            renderAgain(description);
+            expect(osmd.GraphicSheet.MusicPages.length, `${description}: pages laid out`).to.equal(0);
+            expect(container.children.length, `${description}: elements left in the container`).to.equal(0);
+            undo();
+        }
+    }
+
+    it("removes the previous drawing with render() on a single horizontal staffline, without a TypeError", (): void => {
+        // the drawing's width was taken from the first page
+        osmd.EngravingRules.RenderSingleHorizontalStaffline = true;
+        expectPreviousDrawingRemoved((): void => osmd.render());
+    });
+});
