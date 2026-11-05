@@ -115,4 +115,76 @@ describe("Instruction-only span endpoints", () => {
         osmd.render();
         checkCutLines(1);
     });
+
+    /**
+     * A one-staff score in 4/4 of quarters, with an 8va, a pedal line and a trill line from beat 2 of the measure at startIndex
+     * to beat 3 of the one at endIndex (SourceMeasures indices). A pickup measure of one quarter first if pickup, and a final
+     * barline at the end of the measure at finalBarlineIndex.
+     */
+    function lineScore(measureCount: number, startIndex: number, endIndex: number, pickup: boolean, finalBarlineIndex: number = -1): string {
+        const direction: (type: string, placement: string) => string = (type, placement) =>
+            `<direction placement="${placement}"><direction-type>${type}</direction-type></direction>`;
+        const note: (wavyLine?: string) => string = wavyLine => "<note><pitch><step>C</step><octave>5</octave></pitch>" +
+            "<duration>1</duration><type>quarter</type>" +
+            (wavyLine ? `<notations><ornaments><wavy-line type="${wavyLine}" number="1"/></ornaments></notations>` : "") + "</note>";
+        const measures: string[] = [];
+        for (let index: number = 0; index < measureCount; index++) {
+            let content: string = index === 0 ? "<attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type>" +
+                "</time><clef><sign>G</sign><line>2</line></clef></attributes>" : "";
+            const quarters: number = pickup && index === 0 ? 1 : 4;
+            for (let beat: number = 1; beat <= quarters; beat++) {
+                if (index === startIndex && beat === 2) {
+                    content += direction("<octave-shift type=\"down\" size=\"8\"/>", "above") + direction("<pedal type=\"start\" line=\"yes\"/>", "below");
+                    content += note("start");
+                } else if (index === endIndex && beat === 3) {
+                    content += note("stop") + direction("<octave-shift type=\"stop\" size=\"8\"/>", "above") +
+                        direction("<pedal type=\"stop\" line=\"yes\"/>", "below");
+                } else {
+                    content += note();
+                }
+            }
+            if (index === finalBarlineIndex) {
+                content += "<barline location=\"right\"><bar-style>light-heavy</bar-style></barline>";
+            }
+            const number: number = pickup ? index : index + 1;
+            measures.push(`<measure number="${number}"${pickup && index === 0 ? " implicit=\"yes\"" : ""}>${content}</measure>`);
+        }
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><score-partwise version=\"4.0\"><part-list><score-part id=\"P1\">" +
+            `<part-name></part-name></score-part></part-list><part id="P1">${measures.join("")}</part></score-partwise>`;
+    }
+
+    /** Checks that the 8va, the pedal and the trill line are drawn once, from the note at beat 2 of the measure at startIndex
+     *  (SourceMeasures index) to the last note of the one at lastIndex, the last measure drawn. */
+    function checkLinesFrom(startIndex: number, lastIndex: number): void {
+        const lines: StaffLine[] = osmd.GraphicSheet.MusicPages[0].MusicSystems.map(system => system.StaffLines[0]);
+        const noteAt: (index: number, entry: number) => VexFlowVoiceEntry = (index, entry) => {
+            const entries: GraphicalStaffEntry[] = osmd.GraphicSheet.MeasureList[index][0].staffEntries;
+            return entries[entry < 0 ? entries.length + entry : entry].graphicalVoiceEntries[0] as VexFlowVoiceEntry;
+        };
+        const kinds: ("WavyLines" | "Pedals" | "OctaveShifts")[] = ["WavyLines", "Pedals", "OctaveShifts"];
+        for (const kind of kinds) {
+            expect(lines.map(line => line[kind].length), `${kind}: drawn in the one system`).to.deep.equal([1]);
+            const segment: VexFlowVibratoBracket | VexFlowPedal | VexFlowOctaveShift =
+                lines[0][kind][0] as VexFlowVibratoBracket | VexFlowPedal | VexFlowOctaveShift;
+            expect(segment.startNote === noteAt(startIndex, 1).vfStaveNote, `${kind}: starts at beat 2 of its measure`).to.equal(true);
+            expect(segment.endNote === noteAt(lastIndex, -1).vfStaveNote, `${kind}: ends at the last note drawn`).to.equal(true);
+        }
+    }
+
+    it("compares the drawing range with measure indices, not numbers, for lines it cuts off", async () => {
+        // with a pickup, measure number n is at index n: the lines from measure 2 to 4 were cut off at the start
+        //   of measure 2 (index 2 < number 2 + 1) and not drawn when the range ended in measure 3 (index 4 > 3 + 1 was false)
+        await osmd.load(lineScore(5, 2, 4, true));
+        osmd.setOptions({drawFromMeasureNumber: 2, drawUpToMeasureNumber: 3});
+        osmd.render();
+        checkLinesFrom(2, 3);
+
+        // the measure numbers start again after a final barline with NewPartAndSystemAfterFinalBarline: measures 1, 2 || 1, 2, 3, 4
+        osmd.EngravingRules.NewPartAndSystemAfterFinalBarline = true; // (read when loading)
+        await osmd.load(lineScore(6, 3, 5, false, 1));
+        expect(osmd.Sheet.SourceMeasures.map(measure => measure.MeasureNumber), "measure numbers").to.deep.equal([1, 2, 1, 2, 3, 4]);
+        osmd.setOptions({drawFromMeasureNumber: 4, drawUpToMeasureNumber: 5}); // indices 3-4
+        osmd.render();
+        checkLinesFrom(3, 4);
+    });
 });

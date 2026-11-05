@@ -411,6 +411,30 @@ describe("OpenSheetMusicDisplay incremental rendering of the endless page in bat
         expect(drawnPages(), "drawn pages").to.deep.equal(pagesInOneBatch);
         expect(stemsAndBeams(), "stems and beams, unrounded").to.deep.equal(stemsAndBeamsInOneBatch);
     });
+
+    it("reuses the sky and bottom lines of a system only for the same measures, also when the measure numbers start again", async () => {
+        // With NewPartAndSystemAfterFinalBarline, the measure numbers start again at 1 after the final barline after measure 4:
+        //   1-4 || 1-4, one measure per system. The cache of the batches' sky and bottom lines named a system by its measure numbers,
+        //   so the second part's systems 2 and 3 got the lines of the first part's, whose high notes take more space above the staff.
+        osmd.EngravingRules.NewPartAndSystemAfterFinalBarline = true; // (read when loading)
+        osmd.setOptions({ newSystemFromXML: true });
+        const measures: string[] = [];
+        for (let index: number = 0; index < 8; index++) {
+            const attributes: string = index === 0 ? "<attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type>" +
+                "</time><clef><sign>G</sign><line>2</line></clef></attributes>" : "<print new-system=\"yes\"/>";
+            const [step, octave] = index === 1 || index === 2 ? ["C", 7] : ["B", 4]; // high notes in the first part's systems 2 and 3
+            const barline: string = index === 3 || index === 7 ? "<barline location=\"right\"><bar-style>light-heavy</bar-style></barline>" : "";
+            measures.push(`<measure number="${index + 1}">${attributes}<note><pitch><step>${step}</step><octave>${octave}</octave></pitch>` +
+                `<duration>4</duration><type>whole</type></note>${barline}</measure>`);
+        }
+        await osmd.load("<?xml version=\"1.0\" encoding=\"UTF-8\"?><score-partwise version=\"4.0\"><part-list><score-part id=\"P1\">" +
+            `<part-name></part-name></score-part></part-list><part id="P1">${measures.join("")}</part></score-partwise>`);
+        expect(osmd.Sheet.SourceMeasures.map(measure => measure.MeasureNumber), "measure numbers").to.deep.equal([1, 2, 3, 4, 1, 2, 3, 4]);
+        renderNextInOneBatch();
+        const pagesInOneBatch: string[][] = drawnPages();
+        expect(renderNextUntilDone({ systems: 1 }), "batches").to.be.greaterThan(2);
+        expect(drawnPages(), "drawn pages").to.deep.equal(pagesInOneBatch);
+    });
 });
 
 describe("OpenSheetMusicDisplay incremental rendering of a draw range (renderNext)", () => {
