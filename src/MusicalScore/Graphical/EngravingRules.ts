@@ -580,9 +580,13 @@ export class EngravingRules {
     public VexFlowTextFontFamily: string;
     public DefaultFontStyle: FontStyles;
     public DefaultVexFlowNoteFont: string;
+    /** The index (in MusicSheet.SourceMeasures) of the last measure to draw. If MaxMeasureToDrawNumber is set (not
+     *  Number.MAX_VALUE), load(), render() and renderNext() put its index for the sheet here. */
     public MaxMeasureToDrawIndex: number;
     /** The setting given in osmd.setOptions(), which may lead to a different index if there's a pickup measure. */
     public MaxMeasureToDrawNumber: number;
+    /** The index (in MusicSheet.SourceMeasures) of the first measure to draw. If MinMeasureToDrawNumber is set (not 0), load(),
+     *  render() and renderNext() put its index for the sheet here. */
     public MinMeasureToDrawIndex: number;
     /** The setting given in osmd.setOptions(), which may lead to a different index if there's a pickup measure.
      * If there's a pickup measure (measure 0), and we want to draw from measure number 2,

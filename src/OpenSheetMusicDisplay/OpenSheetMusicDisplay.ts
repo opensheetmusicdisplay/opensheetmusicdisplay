@@ -240,6 +240,9 @@ export class OpenSheetMusicDisplay {
      * cursors where they are.
      */
     public updateGraphic(): void {
+        // the draw range of the sheet into the rules, as render() does: the cursors start at its first measure. The rules can still have
+        //   the indices of the sheet before (e.g. index 2 for drawFromMeasureNumber 3 without a pickup measure: measure 2 with one).
+        [this.rules.MinMeasureToDrawIndex, this.rules.MaxMeasureToDrawIndex] = this.getDrawRangeIndices();
         this.createGraphic();
         if (this.drawingParameters.drawCursors) {
             this.cursors.forEach(cursor => {
@@ -407,23 +410,29 @@ export class OpenSheetMusicDisplay {
     }
 
     /**
-     * The measures render() draws, as source-measure indices: the draw range set with setOptions() (drawFromMeasureNumber,
-     * drawUpToMeasureNumber) in EngravingRules.MinMeasureToDrawIndex and MaxMeasureToDrawIndex, where measure number n is
-     * at index n instead of n - 1 if the sheet begins with a pickup measure (number 0).
+     * The measures render() draws, as source-measure indices: those of the draw range set with setOptions() (drawFromMeasureNumber,
+     * drawUpToMeasureNumber, kept in EngravingRules.MinMeasureToDrawNumber and MaxMeasureToDrawNumber), where measure number n is
+     * at index n instead of n - 1 if the sheet begins with a pickup measure (number 0). Without a measure number set (the defaults
+     * 0 and Number.MAX_VALUE), the index in EngravingRules.MinMeasureToDrawIndex or MaxMeasureToDrawIndex, e.g. one set there.
+     * load(), render() and renderNext() put these indices into the rules: the ones there are those of the sheet loaded.
      * @returns the indices of the first and the last measure. The last one can be beyond the sheet (by default
      *  Number.MAX_VALUE), and if the first one is, the layout starts at the sheet's last measure.
      */
     private getDrawRangeIndices(): [number, number] {
+        // The indices in the rules can be those of the sheet laid out before, adjusted to its pickup measure (and the first one to
+        //   its measures, see MusicSheetCalculator.calculateMusicSystems()), so they're found again from the measure numbers set:
+        //   e.g. with drawFromMeasureNumber 3, a sheet without a pickup measure after one with a pickup measure was drawn from measure 4.
+        const pickup: boolean = !!this.Sheet.SourceMeasures[0]?.ImplicitMeasure;
         let firstIndex: number = this.rules.MinMeasureToDrawIndex;
+        const fromNumber: number = this.rules.MinMeasureToDrawNumber;
+        if (fromNumber > 0) {
+            // from measure 1, the pickup measure is drawn too
+            firstIndex = pickup && fromNumber > 1 ? fromNumber : Math.max(fromNumber - 1, 0);
+        }
         let lastIndex: number = this.rules.MaxMeasureToDrawIndex;
-        // drawing range: check if pickup measure and start or end measure number > 1
-        if (this.Sheet.SourceMeasures[0]?.ImplicitMeasure) {
-            if (this.rules.MinMeasureToDrawNumber > 1) {
-                firstIndex = this.rules.MinMeasureToDrawNumber; // -1 for index, +1 for pickup
-            }
-            if (this.rules.MaxMeasureToDrawNumber > 0) {
-                lastIndex = this.rules.MaxMeasureToDrawNumber; // -1 for index, +1 for pickup
-            }
+        const upToNumber: number = this.rules.MaxMeasureToDrawNumber;
+        if (upToNumber < Number.MAX_VALUE) {
+            lastIndex = pickup && upToNumber > 0 ? upToNumber : Math.max(upToNumber - 1, 0);
         }
         return [firstIndex, lastIndex];
     }
