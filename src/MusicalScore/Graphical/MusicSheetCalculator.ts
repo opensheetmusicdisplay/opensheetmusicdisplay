@@ -451,7 +451,11 @@ export abstract class MusicSheetCalculator {
 
     /** Stable per-staff-line key for the lazy sky/bottom-line cache: the system's measure range pins the
      *  system (systems partition the measures), the staff index picks the line within it. Returns undefined
-     *  for a staff line with no usable measures (so it is never cached/reused). */
+     *  for a staff line with no usable measures (so it is never cached/reused).
+     *  The measures are named by their index in SourceMeasures, not their number, which can repeat (e.g. it starts again at 1 after a
+     *  final barline with EngravingRules.NewPartAndSystemAfterFinalBarline: a system of the second part got the lines of the
+     *  first part's system with the same measure numbers), an extra measure at the system end (a key or time signature of the
+     *  next system) by the index of the measure it follows and an "x", as in its SVG group's id. */
     protected skyBottomLineCacheKey(staffLine: StaffLine, staffIndexInSystem: number): string {
         const measures: GraphicalMeasure[] = staffLine.Measures;
         const first: GraphicalMeasure = measures[0];
@@ -459,7 +463,9 @@ export abstract class MusicSheetCalculator {
         if (!first || !last) {
             return undefined;
         }
-        return first.MeasureNumber + ":" + last.MeasureNumber + ":" + staffIndexInSystem;
+        const measureKey: (measure: GraphicalMeasure) => string = (measure: GraphicalMeasure): string => measure.IsExtraGraphicalMeasure ?
+            `${measure.ExtraGraphicalMeasurePreviousMeasure?.parentSourceMeasure?.measureListIndex}x` : `${measure.parentSourceMeasure?.measureListIndex}`;
+        return measureKey(first) + ":" + measureKey(last) + ":" + staffIndexInSystem;
     }
 
     public calculateXLayout(graphicalMusicSheet: GraphicalMusicSheet, maxInstrNameLabelLength: number): void {

@@ -689,9 +689,11 @@ export class MusicSystemBuilder {
             let printRhythm: boolean = true;
             // check for previous pickup measure
             // TODO this does not need to be a pickup measure, see #1069
-            const pickupMeasureIndex: number = measure.MeasureNumber - 1;
+            // (the previous index, not the measure number - 1: that is this measure's own index in a sheet without a pickup measure,
+            //   and the numbers can start again, see VexFlowMusicSheetCalculator.calculateRehearsalMark())
+            const pickupMeasureIndex: number = measure.parentSourceMeasure.measureListIndex - 1;
             const measureIndex: number = pickupMeasureIndex - this.rules.MinMeasureToDrawIndex;
-            if (measure.MeasureNumber - 1 >= 0 && this.measureList[measureIndex]) {
+            if (pickupMeasureIndex >= 0 && this.measureList[measureIndex]) {
                 const previousMeasureList: GraphicalMeasure[] = this.measureList[measureIndex];
                 const previousMeasure: SourceMeasure = previousMeasureList[0]?.parentSourceMeasure;
                 if (previousMeasure?.ImplicitMeasure && previousMeasure?.RhythmPrinted) {

@@ -1652,10 +1652,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     if (!rehearsalExpression) {
       return;
     }
-    const firstMeasureNumber: number = this.graphicalMusicSheet.MeasureList[0][0].MeasureNumber; // 0 for pickup, 1 otherwise
-    const measureNumber: number = Math.max(measure.MeasureNumber - firstMeasureNumber, 0);
+    // MeasureList is indexed like SourceMeasures. Not by the measure number: it can repeat, e.g. it starts again at 1
+    //   after a final barline with EngravingRules.NewPartAndSystemAfterFinalBarline, which drew the marks after it in the first part.
     // const staffNumber: number = 0;
-    for (const gMeasure of this.graphicalMusicSheet.MeasureList[measureNumber]) {
+    for (const gMeasure of this.graphicalMusicSheet.MeasureList[measure.measureListIndex]) {
       const vfStave: VF.Stave = (gMeasure as VexFlowMeasure)?.getVFStave();
       if (!vfStave || !gMeasure.isVisible()) { // potentially multi measure rest
         continue;
