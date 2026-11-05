@@ -293,6 +293,22 @@ describe("Multiple rest measures", () => {
     });
 
     /**
+     * Test_Auto_Multirest_1.musicxml: measures 1-2 and 4-6 are whole-measure rests, and the final barline after measure 6 ends the piece.
+     * With NewPartAndSystemAfterFinalBarline, the multiple rest measure 4-6 ends the part, and no measure is left for a new system.
+     */
+    it("begins no new system after a multiple rest measure that ends the piece with a final barline, also with renderNext()", async () => {
+        osmd.EngravingRules.NewPartAndSystemAfterFinalBarline = true; // (read when loading)
+        const restMeasureCounts: number[] = await renderSample("Test_Auto_Multirest_1.musicxml");
+        expect(restMeasureCounts, "measures per multiple rest measure, for measures 1-6").to.deep.equal([2, 0, 0, 3, 0, 0]);
+        const measuresPerSystem: () => number[] = () => osmd.GraphicSheet.MusicPages[0].MusicSystems.map(system => system.StaffLines[0].Measures.length);
+        expect(measuresPerSystem(), "render(): measures 1-2, 3 and 4-6 in one system, and no empty system after it").to.deep.equal([3]);
+
+        await osmd.load(TestUtils.getScore("Test_Auto_Multirest_1.musicxml"));
+        expect(osmd.renderNext({ measures: osmd.Sheet.SourceMeasures.length }).done, "renderNext(): done in one batch").to.equal(true);
+        expect(measuresPerSystem(), "renderNext(): measures 1-2, 3 and 4-6 in one system").to.deep.equal([3]);
+    });
+
+    /**
      * test_multiple_rest_measures_auto_xml_breaks.musicxml: measures 2-7 are whole-measure rests, measure 4 begins a new system in the XML,
      * measure 6 a new page. The layout can't break within a multiple rest measure, so with newSystemFromXML and newPageFromXML,
      * measures 2-3, 4-5 and 6-7 become multiple rest measures. Without these options, measures 2-7 become one.
