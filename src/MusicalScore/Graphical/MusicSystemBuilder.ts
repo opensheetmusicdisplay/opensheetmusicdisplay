@@ -226,7 +226,8 @@ export class MusicSystemBuilder {
 
     /**
      * When the actual source measure doesn't fit any more, this method finalizes the current system and
-     * opens up a new empty system, where the actual measure will be added in the next iteration.
+     * opens up a new empty system, where the actual measure will be added in the next iteration
+     * (if a measure is left, see hasMeasuresLeft()).
      * @param measures
      * @param isPartEndingSystem
      */
@@ -237,10 +238,25 @@ export class MusicSystemBuilder {
         this.finalizeCurrentSystem(measures, systemEndsPart, checkExtraInstructionMeasure, startNewPage);
         this.currentSystemParams = new SystemBuildParameters(); // this and the following used to be in finalizeCurrentSystem after stretchMusicSystem
         if (measures !== undefined &&
-            this.measureListIndex < this.measureList.length) {
+            this.hasMeasuresLeft()) {
             this.currentSystemParams.currentSystem = this.initMusicSystem();
             this.currentSystemParams.maxLabelLength = this.currentSystemParams.currentSystem.MaxLabelLength;
         }
+    }
+
+    /**
+     * Whether the measureList has a measure left to add to a system, at the measureListIndex or after it.
+     * The later measures of a multiple rest measure have no graphical measures there (see getLastMeasureOfMultiRest()),
+     * so none is left after a multiple rest measure that ends the measureList (the piece, or e.g. a batch of renderNext()),
+     * though the measureListIndex is within the measureList.
+     */
+    protected hasMeasuresLeft(): boolean {
+        for (let index: number = this.measureListIndex; index < this.measureList.length; index++) {
+            if (this.measureList[index]?.[0]) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected finalizeCurrentSystem(measures: GraphicalMeasure[],
