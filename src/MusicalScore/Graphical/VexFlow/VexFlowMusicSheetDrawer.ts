@@ -855,7 +855,12 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         for (const graphicalPedal of staffLine.Pedals) {
             if (graphicalPedal) {
                 const vexFlowPedal: VexFlowPedal = graphicalPedal as VexFlowPedal;
-                if (!this.lazyDrawsSpanToMeasure(vexFlowPedal.endMeasure)) {
+                // the pedal's part on this staffline ends in its end measure, or at the end of the staffline if it goes on
+                //   in a later system (the end measure of a part before is the pedal's own, in that system)
+                const endMeasure: GraphicalMeasure = vexFlowPedal.endMeasure;
+                const endMeasureOnStaffLine: GraphicalMeasure = !endMeasure || endMeasure.ParentStaffLine === staffLine
+                    ? endMeasure : staffLine.Measures.last();
+                if (!this.lazyDrawsSpanToMeasure(endMeasureOnStaffLine)) {
                     continue; // lazy horizontal: span not yet fully in the frontier
                 }
                 const ctx: Vex.IRenderContext = this.backend.getContext();
