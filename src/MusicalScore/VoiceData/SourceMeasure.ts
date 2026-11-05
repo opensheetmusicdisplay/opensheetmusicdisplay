@@ -228,7 +228,7 @@ export class SourceMeasure {
     }
 
     public getPreviousMeasure(measures: SourceMeasure[]): SourceMeasure {
-        if (this.measureListIndex > 1) {
+        if (this.measureListIndex > 0) {
             return measures[this.measureListIndex - 1];
         }
         return undefined;
