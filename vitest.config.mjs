@@ -6,6 +6,7 @@
 //   first use, and base/test/data/ URLs work as in karma.
 // Browsers: TEST_BROWSERS, comma-separated: firefox and chrome, the installed ones. Default: firefox, as with karma.
 // CI set: names in src and VexFlow are mangled, like in the minified build, which karma tested then (see mangleNames()).
+// TEST_LOW_MEMORY set: the browsers collect garbage more often, for machines with little free RAM (see browserInstances()).
 // The config comes first, the functions it calls after it: function declarations, which JavaScript hoists.
 import fs from "node:fs";
 import path from "node:path";
@@ -30,6 +31,8 @@ export default defineConfig({
         exclude: ["test/Util/**"],
         globals: true,
         setupFiles: ["test/Util/vitestSetup.mjs"],
+        // for vitestSetup.mjs: whether to collect garbage after a test that left much in use (TEST_LOW_MEMORY)
+        provide: { lowMemory: Boolean(process.env.TEST_LOW_MEMORY) },
         testTimeout: 20000, // the mocha timeout under karma
         // the diff a failing comparison prints (to.equal(), deep.equal(), toEqual(), members(), ...): values 4 levels deep,
         //   not 20 (Vitest's default). Two different OSMD objects lead to most of the sheet in 20 levels: two graphical
@@ -124,14 +127,40 @@ function mangleNames() {
 }
 
 /** The browsers in TEST_BROWSERS (comma-separated: firefox, chrome; default: firefox), the installed ones: moz-firefox
- *  drives Firefox through WebDriver BiDi (Playwright's own Firefox build needs patches). */
+ *  drives Firefox through WebDriver BiDi (Playwright's own Firefox build needs patches).
+ *  With TEST_LOW_MEMORY, they collect garbage more often: most of what the tests allocate is garbage soon, but it's
+ *  collected only as the heap grows, so it piles up to about 1 GB over the run (on top of the fixed cost, see below).
+ *  Chrome gets gc() and exact heap sizes, and vitestSetup.mjs collects after a test that leaves over 100 MB of JS heap in
+ *  use; Firefox (no gc() for pages) grows its heap by 20% instead of 50-200% before it collects, and collects after
+ *  every 8 MB allocated instead of 27 MB. Measured in 2026-11 with the 936 tests, 2 pages (two runs each; time, the memory
+ *  peak of Vitest and the browser together, and how much less free RAM the machine had at the low point):
+ *    Chrome:  7.6-7.8 s, 2.4-2.6 GB, 1.8-1.9 GB  ->  8.8-9.0 s, 2.0-2.1 GB, 1.4-1.5 GB
+ *             (gc() after each test: 36.5 s, 1.9 GB, 1.1 GB)
+ *    Firefox: 11.4-12.2 s, 3.0 GB, 2.4-2.6 GB  ->  12.8-13.3 s, 2.6-2.7 GB, 2.0-2.4 GB
+ *  About 1.8 GB of it is Vitest, the browser and OSMD's modules in both pages, which no garbage collection frees.
+ *  One page (--maxWorkers=1) saves about as much again, but takes 50% longer: Firefox 18.7 s, 2.2 GB, 1.8 GB with
+ *  TEST_LOW_MEMORY. */
 function browserInstances() {
+    const lowMemory = Boolean(process.env.TEST_LOW_MEMORY);
+    const firefoxPrefs = lowMemory ? {
+        "javascript.options.mem.gc_high_frequency_small_heap_growth": 120,
+        "javascript.options.mem.gc_high_frequency_large_heap_growth": 120,
+        "javascript.options.mem.gc_low_frequency_heap_growth": 120,
+        "javascript.options.mem.gc_allocation_threshold_mb": 8,
+    } : undefined;
+    const chromeArgs = lowMemory ? ["--js-flags=--expose-gc", "--enable-precise-memory-info"] : undefined;
     const instances = {
         firefox: {
             browser: "firefox",
-            provider: playwright({ launchOptions: { channel: "moz-firefox", executablePath: linuxFirefox() } }),
+            provider: playwright({
+                launchOptions: { channel: "moz-firefox", executablePath: linuxFirefox(), firefoxUserPrefs: firefoxPrefs },
+            }),
         },
-        chrome: { browser: "chromium", name: "chrome", provider: playwright({ launchOptions: { channel: "chrome" } }) },
+        chrome: {
+            browser: "chromium",
+            name: "chrome",
+            provider: playwright({ launchOptions: { channel: "chrome", args: chromeArgs } }),
+        },
     };
     return (process.env.TEST_BROWSERS || "firefox").split(",").map((name) => instances[name.trim()]);
 }

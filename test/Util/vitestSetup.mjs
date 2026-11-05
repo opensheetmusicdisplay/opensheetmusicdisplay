@@ -2,6 +2,8 @@
 //   window.__raw__, read by TestUtils and a few tests); here these read a file from the test server when a test asks
 //   for it.
 
+import { afterEach, inject } from "vitest";
+
 /** Reads a file of test/data from the test server (base/test/data/, see vitest.config.mjs) synchronously, as the tests
  *  read window.__xml__ and window.__raw__.
  *  @param {string} path The file's path in the repository, e.g. test/data/HelloWorld.xml.
@@ -43,3 +45,14 @@ window.__raw__ = new Proxy({}, {
         return bytes?.replace(/[-]/g, (char) => String.fromCharCode(char.charCodeAt(0) & 0xff));
     },
 });
+
+// TEST_LOW_MEMORY (see browserInstances() in vitest.config.mjs): in Chrome, which then has gc() and exact heap sizes,
+//   collect the garbage of a test that left over 100 MB of JS heap in use. After every test would make the run 5 times
+//   slower; 100 MB keeps it 10-15% slower and takes most of what collecting saves.
+if (inject("lowMemory") && typeof globalThis.gc === "function" && performance.memory) {
+    afterEach(() => {
+        if (performance.memory.usedJSHeapSize > 100 * 2 ** 20) {
+            globalThis.gc();
+        }
+    });
+}
