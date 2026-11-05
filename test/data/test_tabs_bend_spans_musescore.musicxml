@@ -1,0 +1,539 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0">
+  <work>
+    <work-title>Native guitar bend spans - comparison</work-title>
+    </work>
+  <identification>
+    <creator type="composer">Original OSMD regression fixture</creator>
+    <encoding>
+      <software>MuseScore Studio 4.7.5</software>
+      <encoding-date>2026-11-04</encoding-date>
+      <supports element="accidental" type="yes"/>
+      <supports element="beam" type="yes"/>
+      <supports element="print" attribute="new-page" type="yes" value="yes"/>
+      <supports element="print" attribute="new-system" type="yes" value="yes"/>
+      <supports element="stem" type="yes"/>
+      </encoding>
+    <miscellaneous>
+      <miscellaneous-field name="creationDate">2026-11-02</miscellaneous-field>
+      <miscellaneous-field name="platform">Apple Macintosh</miscellaneous-field>
+      </miscellaneous>
+    </identification>
+  <defaults>
+    <scaling>
+      <millimeters>7</millimeters>
+      <tenths>40</tenths>
+      </scaling>
+    <page-layout>
+      <page-height>1696.72</page-height>
+      <page-width>1200.33</page-width>
+      <page-margins type="even">
+        <left-margin>85.7143</left-margin>
+        <right-margin>85.7143</right-margin>
+        <top-margin>85.7143</top-margin>
+        <bottom-margin>85.7143</bottom-margin>
+        </page-margins>
+      <page-margins type="odd">
+        <left-margin>85.7143</left-margin>
+        <right-margin>85.7143</right-margin>
+        <top-margin>85.7143</top-margin>
+        <bottom-margin>85.7143</bottom-margin>
+        </page-margins>
+      </page-layout>
+    <appearance>
+      <line-width type="light barline">1.8</line-width>
+      <line-width type="heavy barline">5.5</line-width>
+      <line-width type="beam">5</line-width>
+      <line-width type="bracket">4.5</line-width>
+      <line-width type="dashes">1</line-width>
+      <line-width type="enclosure">1</line-width>
+      <line-width type="ending">1.1</line-width>
+      <line-width type="extend">1</line-width>
+      <line-width type="leger">1.6</line-width>
+      <line-width type="pedal">1.1</line-width>
+      <line-width type="octave shift">1.1</line-width>
+      <line-width type="slur middle">2.1</line-width>
+      <line-width type="slur tip">0.5</line-width>
+      <line-width type="staff">1.1</line-width>
+      <line-width type="stem">1</line-width>
+      <line-width type="tie middle">2.1</line-width>
+      <line-width type="tie tip">0.5</line-width>
+      <line-width type="tuplet bracket">1</line-width>
+      <line-width type="wedge">1.2</line-width>
+      <note-size type="cue">70</note-size>
+      <note-size type="grace">70</note-size>
+      <note-size type="grace-cue">49</note-size>
+      </appearance>
+    <music-font font-family="Leland"/>
+    <word-font font-family="Edwin" font-size="10"/>
+    <lyric-font font-family="Edwin" font-size="10"/>
+    </defaults>
+  <credit page="1">
+    <credit-type>title</credit-type>
+    <credit-words default-x="600.17" default-y="1611.01" justify="center" valign="top" font-size="22">Native guitar bend spans - comparison</credit-words>
+    </credit>
+  <credit page="1">
+    <credit-type>composer</credit-type>
+    <credit-words default-x="1114.62" default-y="1511.01" justify="right" valign="bottom">Original OSMD regression fixture</credit-words>
+    </credit>
+  <part-list>
+    <score-part id="P1">
+      <part-name print-object="no">Guitar TAB</part-name>
+      <score-instrument id="P1-I1">
+        <instrument-name>Acoustic Guitar</instrument-name>
+        <instrument-sound>pluck.guitar.acoustic</instrument-sound>
+        </score-instrument>
+      <midi-device id="P1-I1" port="1"></midi-device>
+      <midi-instrument id="P1-I1">
+        <midi-channel>1</midi-channel>
+        <midi-program>25</midi-program>
+        <volume>78.7402</volume>
+        <pan>0</pan>
+        </midi-instrument>
+      </score-part>
+    </part-list>
+  <part id="P1">
+    <measure number="1" width="978.9">
+      <print>
+        <system-layout>
+          <system-margins>
+            <left-margin>50</left-margin>
+            <right-margin>0</right-margin>
+            </system-margins>
+          <top-system-distance>176.5</top-system-distance>
+          </system-layout>
+        </print>
+      <attributes>
+        <divisions>1</divisions>
+        <key print-object="no">
+          <fifths>0</fifths>
+          </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+          </time>
+        <clef>
+          <sign>TAB</sign>
+          </clef>
+        <staff-details>
+          <staff-lines>6</staff-lines>
+          <staff-tuning line="1">
+            <tuning-step>E</tuning-step>
+            <tuning-octave>2</tuning-octave>
+            </staff-tuning>
+          <staff-tuning line="2">
+            <tuning-step>A</tuning-step>
+            <tuning-octave>2</tuning-octave>
+            </staff-tuning>
+          <staff-tuning line="3">
+            <tuning-step>D</tuning-step>
+            <tuning-octave>3</tuning-octave>
+            </staff-tuning>
+          <staff-tuning line="4">
+            <tuning-step>G</tuning-step>
+            <tuning-octave>3</tuning-octave>
+            </staff-tuning>
+          <staff-tuning line="5">
+            <tuning-step>B</tuning-step>
+            <tuning-octave>3</tuning-octave>
+            </staff-tuning>
+          <staff-tuning line="6">
+            <tuning-step>E</tuning-step>
+            <tuning-octave>4</tuning-octave>
+            </staff-tuning>
+          <staff-size>150</staff-size>
+          </staff-details>
+        </attributes>
+      <direction placement="above">
+        <direction-type>
+          <words default-y="31.62" relative-y="10">1. Simple half-tone bend</words>
+          </direction-type>
+        </direction>
+      <note default-x="73.64" default-y="-45">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <stem>down</stem>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>2</fret>
+            <bend first-beat="0" last-beat="100">
+              <bend-alter>1</bend-alter>
+              </bend>
+            </technical>
+          </notations>
+        </note>
+      <note default-x="526.1" default-y="-45">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <stem>down</stem>
+        <notations print-object="no">
+          <technical>
+            <string>4</string>
+            <fret>2</fret>
+            </technical>
+          </notations>
+        </note>
+      </measure>
+    <measure number="2" width="1028.9">
+      <print new-system="yes">
+        <system-layout>
+          <system-margins>
+            <left-margin>0</left-margin>
+            <right-margin>0</right-margin>
+            </system-margins>
+          <system-distance>165.73</system-distance>
+          </system-layout>
+        </print>
+      <direction placement="above">
+        <direction-type>
+          <words default-y="45.15" relative-y="10">2. Bend and release - parenthesized continuation</words>
+          </direction-type>
+        </direction>
+      <note default-x="13.96" default-y="-45">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>down</stem>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>2</fret>
+            <bend first-beat="0" last-beat="100">
+              <bend-alter>1</bend-alter>
+              </bend>
+            </technical>
+          </notations>
+        </note>
+      <note default-x="303.84" default-y="-45">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>down</stem>
+        <notehead parentheses="yes">normal</notehead>
+        <notations print-object="no">
+          <technical>
+            <string>4</string>
+            <fret>2</fret>
+            </technical>
+          </notations>
+        <notations>
+          <technical>
+            <bend first-beat="0" last-beat="100">
+              <bend-alter>-1</bend-alter>
+              </bend>
+            </technical>
+          </notations>
+        </note>
+      <note default-x="593.73" default-y="-45">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <stem>down</stem>
+        <notehead parentheses="yes">normal</notehead>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>2</fret>
+            </technical>
+          </notations>
+        </note>
+      </measure>
+    <measure number="3" width="1028.9">
+      <print new-system="yes">
+        <system-layout>
+          <system-margins>
+            <left-margin>0</left-margin>
+            <right-margin>0</right-margin>
+            </system-margins>
+          <system-distance>165.73</system-distance>
+          </system-layout>
+        </print>
+      <direction placement="above">
+        <direction-type>
+          <words default-y="45.15" relative-y="10">3. Bend and release - no parentheses</words>
+          </direction-type>
+        </direction>
+      <note default-x="13.96" default-y="-45">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>down</stem>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>2</fret>
+            <bend first-beat="0" last-beat="100">
+              <bend-alter>1</bend-alter>
+              </bend>
+            </technical>
+          </notations>
+        </note>
+      <note default-x="303.84" default-y="-45">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>down</stem>
+        <notations print-object="no">
+          <technical>
+            <string>4</string>
+            <fret>2</fret>
+            </technical>
+          </notations>
+        <notations>
+          <technical>
+            <bend first-beat="0" last-beat="100">
+              <bend-alter>-1</bend-alter>
+              </bend>
+            </technical>
+          </notations>
+        </note>
+      <note default-x="593.73" default-y="-45">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <stem>down</stem>
+        <notehead parentheses="yes">normal</notehead>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>2</fret>
+            </technical>
+          </notations>
+        </note>
+      </measure>
+    <measure number="4" width="1028.9">
+      <print new-system="yes">
+        <system-layout>
+          <system-margins>
+            <left-margin>0</left-margin>
+            <right-margin>0</right-margin>
+            </system-margins>
+          <system-distance>165.73</system-distance>
+          </system-layout>
+        </print>
+      <direction placement="above">
+        <direction-type>
+          <words default-y="45.15" relative-y="10">4. Bend to later endpoint - no release</words>
+          </direction-type>
+        </direction>
+      <note default-x="13.96" default-y="-45">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>down</stem>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>2</fret>
+            <bend first-beat="0" last-beat="100">
+              <bend-alter>1</bend-alter>
+              </bend>
+            </technical>
+          </notations>
+        </note>
+      <note default-x="303.84" default-y="-45">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <stem>down</stem>
+        <notations print-object="no">
+          <technical>
+            <string>4</string>
+            <fret>2</fret>
+            </technical>
+          </notations>
+        </note>
+      <note default-x="737.22" default-y="-45">
+        <rest/>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        </note>
+      </measure>
+    <measure number="5" width="1028.9">
+      <print new-system="yes">
+        <system-layout>
+          <system-margins>
+            <left-margin>0</left-margin>
+            <right-margin>0</right-margin>
+            </system-margins>
+          <system-distance>165.73</system-distance>
+          </system-layout>
+        </print>
+      <direction placement="above">
+        <direction-type>
+          <words default-y="31.62" relative-y="10">5. Bend to parenthesized endpoint - no release</words>
+          </direction-type>
+        </direction>
+      <note default-x="13.96" default-y="-45">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <stem>down</stem>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>2</fret>
+            <bend first-beat="0" last-beat="100">
+              <bend-alter>1</bend-alter>
+              </bend>
+            </technical>
+          </notations>
+        </note>
+      <note default-x="521.26" default-y="-45">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <stem>down</stem>
+        <notehead parentheses="yes">normal</notehead>
+        <notations print-object="no">
+          <technical>
+            <string>4</string>
+            <fret>2</fret>
+            </technical>
+          </notations>
+        </note>
+      </measure>
+    <measure number="6" width="163.5">
+      <print new-system="yes">
+        <system-layout>
+          <system-margins>
+            <left-margin>0</left-margin>
+            <right-margin>0</right-margin>
+            </system-margins>
+          <system-distance>165.87</system-distance>
+          </system-layout>
+        </print>
+      <direction placement="above">
+        <direction-type>
+          <words default-y="45.3" relative-y="10">6. Two separately attacked bends - control</words>
+          </direction-type>
+        </direction>
+      <note default-x="13.96" default-y="-45">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>down</stem>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>2</fret>
+            <bend first-beat="0" last-beat="100">
+              <bend-alter>1</bend-alter>
+              </bend>
+            </technical>
+          </notations>
+        </note>
+      <note default-x="48.96" default-y="-45">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>down</stem>
+        <notations print-object="no">
+          <technical>
+            <string>4</string>
+            <fret>2</fret>
+            </technical>
+          </notations>
+        </note>
+      <note default-x="83.96" default-y="-45">
+        <pitch>
+          <step>E</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>down</stem>
+        <notations>
+          <technical>
+            <string>4</string>
+            <fret>2</fret>
+            <bend first-beat="0" last-beat="100">
+              <bend-alter>1</bend-alter>
+              </bend>
+            </technical>
+          </notations>
+        </note>
+      <note default-x="118.96" default-y="-45">
+        <pitch>
+          <step>F</step>
+          <octave>3</octave>
+          </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>down</stem>
+        <notations print-object="no">
+          <technical>
+            <string>4</string>
+            <fret>2</fret>
+            </technical>
+          </notations>
+        </note>
+      <barline location="right">
+        <bar-style>light-heavy</bar-style>
+        </barline>
+      </measure>
+    </part>
+  </score-partwise>
