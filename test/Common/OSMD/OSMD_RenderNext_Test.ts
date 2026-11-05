@@ -552,6 +552,9 @@ describe("OpenSheetMusicDisplay rendering with nothing to draw (render, renderNe
             renderAgain(description);
             expect(osmd.GraphicSheet.MusicPages.length, `${description}: pages laid out`).to.equal(0);
             expect(container.children.length, `${description}: elements left in the container`).to.equal(0);
+            // with no page drawn, the cursor stays hidden. On the drawing renderNext() used to leave, with no instrument visible,
+            //   it threw a TypeError: there was no visible measure to put it on.
+            osmd.cursor.show();
             undo();
         }
     }
@@ -561,4 +564,16 @@ describe("OpenSheetMusicDisplay rendering with nothing to draw (render, renderNe
         osmd.EngravingRules.RenderSingleHorizontalStaffline = true;
         expectPreviousDrawingRemoved((): void => osmd.render());
     });
+
+    for (const horizontal of [false, true]) {
+        const layout: string = horizontal ? "on a single horizontal staffline" : "on the endless page";
+        it(`removes the previous drawing with the first batch of renderNext(), like render(), ${layout}`, (): void => {
+            // The first batch used to leave the previous drawing in the container, and to report done at once with a draw range
+            //   without measures, without laying it out.
+            osmd.EngravingRules.RenderSingleHorizontalStaffline = horizontal;
+            expectPreviousDrawingRemoved((situation: string): void => {
+                expect(osmd.renderNext({ measures: 4 }).done, `${situation}: done`).to.equal(true);
+            });
+        });
+    }
 });
