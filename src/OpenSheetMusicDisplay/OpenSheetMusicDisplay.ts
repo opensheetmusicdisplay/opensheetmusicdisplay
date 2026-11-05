@@ -486,7 +486,9 @@ export class OpenSheetMusicDisplay {
         // the session renders the measures [first, last], those of the draw range (see beginIncrementalRendering())
         const lastMeasureIndex: number = this.lazyLastMeasureIndex;
         const totalMeasures: number = this.visualMeasureCount(this.lazyFirstMeasureIndex, lastMeasureIndex + 1);
-        if (this.lazyNextSourceIndex > lastMeasureIndex) {
+        // All measures rendered. A draw range without measures has none to render, but the session's first batch lays it out
+        //   like render(), which removes the previous drawing from the container.
+        if (this.lazyNextSourceIndex > lastMeasureIndex && !begin) {
             return {
                 done: true, renderedMeasures: totalMeasures, totalMeasures,
                 lastRenderedMeasure: this.graphicalMeasuresAtOrBefore(lastMeasureIndex), nextUnrenderedMeasure: []
@@ -815,7 +817,12 @@ export class OpenSheetMusicDisplay {
             [this.rules.MinMeasureToDrawIndex, this.rules.MaxMeasureToDrawIndex] = drawRangeIndices;
         }
         if (systems.length === 0) {
-            return lastMeasureIndex + 1; // produced nothing (e.g. all-invisible): nothing more to do
+            // Nothing laid out, e.g. with no instrument visible or a draw range without measures: no page. A batch starting the
+            //   session removes the previous drawing from the container like render(), which creates a backend for each page.
+            if (clearFirst) {
+                this.createOrRefreshRenderBackend(this.lazyLayoutWidth);
+            }
+            return lastMeasureIndex + 1; // nothing more to do
         }
 
         const systemCount: number = systems.length;
