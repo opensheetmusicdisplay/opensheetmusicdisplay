@@ -284,6 +284,10 @@ export class OpenSheetMusicDisplay {
 
     /** Incremental rendering ({@link renderNext}): whether a session is in progress (started, not yet reset). */
     private lazyIncrementalActive: boolean = false;
+    /** Incremental rendering: source-measure indices of the first and the last measure the session renders, the ones
+     *  render() draws (the draw range, see getDrawRangeIndices()), limited to the sheet. Set when the session starts. */
+    private lazyFirstMeasureIndex: number = 0;
+    private lazyLastMeasureIndex: number = 0;
     /** Incremental rendering: source-measure index where the next batch continues (the drawn frontier). */
     private lazyNextSourceIndex: number = 0;
     /** Incremental rendering of the endless page: the width in pixels all batches of the session lay the sheet out at, the
@@ -291,10 +295,6 @@ export class OpenSheetMusicDisplay {
      *  laid its systems out narrower than the ones drawn before when the container had become narrower in between, e.g. by
      *  the vertical scrollbar the page gets once the first batch makes it longer than the window. */
     private lazyLayoutWidth: number = 0;
-    /** Incremental rendering: the draw-measure range the lazy layout mutates, saved on begin and restored on
-     *  reset, so a later normal render() isn't left limited to the last batch's draw range. */
-    private lazySavedMinMeasureToDrawIndex: number = 0;
-    private lazySavedMaxMeasureToDrawIndex: number = 0;
     /** Incremental rendering: the scroll listener + its target, while enableIncrementalRenderingOnScroll() is on. */
     private lazyScrollHandler: (() => void) | undefined;
     private lazyScrollTarget: HTMLElement | Window | undefined;
@@ -315,8 +315,7 @@ export class OpenSheetMusicDisplay {
         if (this.graphicOutdated()) {
             this.createGraphic();
         }
-        // A full render() supersedes any incremental render in progress: abandon it and restore the
-        // draw-measure range it mutated, so this render isn't limited to the last batch.
+        // A full render() supersedes any incremental render in progress: abandon it.
         this.resetIncrementalRendering();
         // A normal (non-lazy) render never uses the lazy reuse caches; force the gate off so a prior
         // lazy session can't make them affect this render (they aren't cleared for normal renders).
@@ -325,15 +324,8 @@ export class OpenSheetMusicDisplay {
         // this.graphic.GetCalculator.clearSystemsAndMeasures(); // maybe?
         // this.graphic.GetCalculator.clearRecreatedObjects();
 
-        // drawing range: check if pickup measure and start or end measure number > 1
-        if (this.Sheet.SourceMeasures[0].ImplicitMeasure) {
-            if (this.rules.MinMeasureToDrawNumber > 1) {
-                this.rules.MinMeasureToDrawIndex = this.rules.MinMeasureToDrawNumber; // -1 for index, +1 for pickup
-            }
-            if (this.rules.MaxMeasureToDrawNumber > 0) {
-                this.rules.MaxMeasureToDrawIndex = this.rules.MaxMeasureToDrawNumber; // -1 for index, +1 for pickup
-            }
-        }
+        // drawing range, adjusted for a pickup measure
+        [this.rules.MinMeasureToDrawIndex, this.rules.MaxMeasureToDrawIndex] = this.getDrawRangeIndices();
 
         // Set page width
         let width: number = this.getContainerContentWidth();
@@ -397,8 +389,30 @@ export class OpenSheetMusicDisplay {
         //console.log("[OSMD] render finished");
     }
 
+    /**
+     * The measures render() draws, as source-measure indices: the draw range set with setOptions() (drawFromMeasureNumber,
+     * drawUpToMeasureNumber) in EngravingRules.MinMeasureToDrawIndex and MaxMeasureToDrawIndex, where measure number n is
+     * at index n instead of n - 1 if the sheet begins with a pickup measure (number 0).
+     * @returns the indices of the first and the last measure. The last one can be beyond the sheet (by default
+     *  Number.MAX_VALUE), and if the first one is, the layout starts at the sheet's last measure.
+     */
+    private getDrawRangeIndices(): [number, number] {
+        let firstIndex: number = this.rules.MinMeasureToDrawIndex;
+        let lastIndex: number = this.rules.MaxMeasureToDrawIndex;
+        // drawing range: check if pickup measure and start or end measure number > 1
+        if (this.Sheet.SourceMeasures[0].ImplicitMeasure) {
+            if (this.rules.MinMeasureToDrawNumber > 1) {
+                firstIndex = this.rules.MinMeasureToDrawNumber; // -1 for index, +1 for pickup
+            }
+            if (this.rules.MaxMeasureToDrawNumber > 0) {
+                lastIndex = this.rules.MaxMeasureToDrawNumber; // -1 for index, +1 for pickup
+            }
+        }
+        return [firstIndex, lastIndex];
+    }
+
     /** Internal range-based engine behind {@link renderNext} (the public incremental API). Lays out the
-     *  whole prefix [0..toMeasureIndex] and APPENDS the newly-stable source measures below previously
+     *  prefix of the draw range up to toMeasureIndex and APPENDS the newly-stable source measures below previously
      *  rendered batches, without clearing the container, so a large score renders "system by system".
      *  clearFirst=true starts a fresh session (clears prior content, resets the counters). Returns the
      *  source-measure index at which the next batch should continue. fromMeasureIndex is informational --
@@ -417,7 +431,7 @@ export class OpenSheetMusicDisplay {
             this.rules.LazyConsistentGraphic = false;
             return this.renderAppendGrowingHorizontal(toMeasureIndex, clearFirst);
         }
-        // Lazy rendering lays out the whole prefix [0..toMeasureIndex] into one growing, globally-consistent
+        // Lazy rendering lays out the whole prefix [first..toMeasureIndex] into one growing, globally-consistent
         // graphic and draws only the newly-stable systems (renderAppendGrowing). LazyConsistentGraphic gates
         // that path's reuse caches; a normal render() forces it off so the caches never affect a non-lazy render.
         this.rules.LazyConsistentGraphic = true;
@@ -428,12 +442,14 @@ export class OpenSheetMusicDisplay {
      * Incrementally render the loaded sheet one batch at a time, appending each batch so a large score
      * paints progressively ("system by system") instead of blocking on a full render(). The first call --
      * or the first after load(), render() or resetIncrementalRendering() -- starts a fresh session: it
-     * clears the container and lays the score out from the first measure. Each later call appends the next
-     * batch. Returns progress; once `done` is true the whole sheet is rendered and further calls are no-ops.
+     * clears the container and lays the score out from the first measure to draw. Each later call appends the
+     * next batch. Returns progress; once `done` is true all measures are rendered and further calls are no-ops.
+     * A session renders the measures render() draws: the whole sheet, or the range set with the options
+     * drawFromMeasureNumber and drawUpToMeasureNumber when the session starts (the progress counts the measures in it).
      * Like render(), a session lays the sheet out at the container's width when it starts: to adapt it to a new
      * width, e.g. after a resize, start a new session.
      * Like render(), it applies a changed transposition (osmd.Sheet.Transpose, Instrument.Transpose, osmd.TransposeCalculator)
-     * without updateGraphic(): during a session, the next call then starts it over from the first measure.
+     * without updateGraphic(): during a session, the next call then starts it over from its first measure.
      * Page labels are drawn with the batch that finalizes their position: the title block (title, subtitle,
      * composer, lyricist) with the first batch, the copyright (below the last system) with the final batch.
      *
@@ -454,8 +470,6 @@ export class OpenSheetMusicDisplay {
         const systemsOpt: number = options?.systems ?? 0;
         const targetNewSystems: number = systemsOpt > 0 && !this.rules.RenderSingleHorizontalStaffline
             ? Math.max(1, Math.floor(systemsOpt)) : undefined;
-        const lastSheetMeasureIndex: number = this.sheet.SourceMeasures.length - 1;
-        const totalMeasures: number = this.visualMeasureCount(0, this.sheet.SourceMeasures.length);
 
         // As in render(): create the graphic again after a change of the transposition or of the visible voices.
         const graphicOutdated: boolean = this.graphicOutdated();
@@ -466,12 +480,16 @@ export class OpenSheetMusicDisplay {
         if (begin) {
             this.beginIncrementalRendering();
         } else if (graphicOutdated) {
-            this.lazyNextSourceIndex = 0; // start the session over: the systems drawn show the previous transposition or voices
+            // start the session over: the systems drawn show the previous transposition or voices
+            this.lazyNextSourceIndex = this.lazyFirstMeasureIndex;
         }
-        if (this.lazyNextSourceIndex > lastSheetMeasureIndex) {
+        // the session renders the measures [first, last], those of the draw range (see beginIncrementalRendering())
+        const lastMeasureIndex: number = this.lazyLastMeasureIndex;
+        const totalMeasures: number = this.visualMeasureCount(this.lazyFirstMeasureIndex, lastMeasureIndex + 1);
+        if (this.lazyNextSourceIndex > lastMeasureIndex) {
             return {
                 done: true, renderedMeasures: totalMeasures, totalMeasures,
-                lastRenderedMeasure: this.graphicalMeasuresAtOrBefore(lastSheetMeasureIndex), nextUnrenderedMeasure: []
+                lastRenderedMeasure: this.graphicalMeasuresAtOrBefore(lastMeasureIndex), nextUnrenderedMeasure: []
             };
         }
 
@@ -480,11 +498,11 @@ export class OpenSheetMusicDisplay {
         // exactly `targetNewSystems` whole systems; otherwise advance the frontier by the visual-measure count.
         const toMeasureIndex: number = targetNewSystems !== undefined
             ? fromMeasureIndex
-            : this.visualBatchEndIndex(fromMeasureIndex, batchMeasures);
+            : Math.min(this.visualBatchEndIndex(fromMeasureIndex, batchMeasures), lastMeasureIndex);
         this.lazyNextSourceIndex = this.renderAppend(fromMeasureIndex, toMeasureIndex, begin || graphicOutdated, targetNewSystems);
 
-        const done: boolean = this.lazyNextSourceIndex > lastSheetMeasureIndex;
-        const renderedMeasures: number = done ? totalMeasures : this.visualMeasureCount(0, this.lazyNextSourceIndex);
+        const done: boolean = this.lazyNextSourceIndex > lastMeasureIndex;
+        const renderedMeasures: number = done ? totalMeasures : this.visualMeasureCount(this.lazyFirstMeasureIndex, this.lazyNextSourceIndex);
         return {
             done, renderedMeasures, totalMeasures,
             lastRenderedMeasure: this.graphicalMeasuresAtOrBefore(this.lazyNextSourceIndex - 1),
@@ -517,47 +535,55 @@ export class OpenSheetMusicDisplay {
         return this.lazyIncrementalActive;
     }
 
-    /** Whether the in-progress incremental render has rendered the whole sheet (its last measure). */
+    /** Whether the in-progress incremental render has rendered all its measures (up to the last one of the sheet, or of
+     *  the draw range, see {@link renderNext}). */
     public get IncrementalRenderingComplete(): boolean {
-        return this.lazyIncrementalActive && !!this.sheet && this.lazyNextSourceIndex > this.sheet.SourceMeasures.length - 1;
+        return this.lazyIncrementalActive && !!this.sheet && this.lazyNextSourceIndex > this.lazyLastMeasureIndex;
     }
 
     /** Current incremental-render progress as a snapshot (same shape {@link renderNext} returns), queryable
      *  at any time -- e.g. for a progress bar, or to re-render the same extent after a resize. Reports zero
-     *  rendered measures when no session is active. */
+     *  rendered measures when no session is active (of the measures a session would render now). */
     public get IncrementalRenderProgress(): IRenderNextResult {
-        const totalMeasures: number = this.graphic ? this.visualMeasureCount(0, this.sheet.SourceMeasures.length) : 0;
         const active: boolean = !!this.graphic && this.lazyIncrementalActive;
+        let totalMeasures: number = 0;
+        if (this.graphic) {
+            // the measures of the draw range, the session's one if active (see beginIncrementalRendering())
+            const [firstIndex, lastIndex]: [number, number] = active
+                ? [this.lazyFirstMeasureIndex, this.lazyLastMeasureIndex] : this.getDrawRangeIndices();
+            totalMeasures = this.visualMeasureCount(Math.min(firstIndex, this.sheet.SourceMeasures.length - 1), lastIndex + 1);
+        }
         const done: boolean = this.IncrementalRenderingComplete;
         const renderedMeasures: number = active
-            ? this.visualMeasureCount(0, Math.min(this.lazyNextSourceIndex, this.sheet.SourceMeasures.length)) : 0;
+            ? this.visualMeasureCount(this.lazyFirstMeasureIndex, Math.min(this.lazyNextSourceIndex, this.lazyLastMeasureIndex + 1)) : 0;
         return {
             done, renderedMeasures, totalMeasures,
-            lastRenderedMeasure: active && this.lazyNextSourceIndex > 0 ? this.graphicalMeasuresAtOrBefore(this.lazyNextSourceIndex - 1) : [],
+            lastRenderedMeasure: active && this.lazyNextSourceIndex > this.lazyFirstMeasureIndex
+                ? this.graphicalMeasuresAtOrBefore(this.lazyNextSourceIndex - 1) : [],
             nextUnrenderedMeasure: active && !done ? this.graphicalMeasuresAtOrBefore(this.lazyNextSourceIndex) : []
         };
     }
 
     /** All GraphicalMeasures (one per staff/instrument) at the measure position for source-measure index
      *  `sourceIndex`, walking BACK over collapsed multi-rest members (which have no graphical measure of their
-     *  own) to the nearest real measure. Empty if there is none at/before it. Used to resolve the last- /
-     *  next-measure handles for renderNext(). */
+     *  own) to the nearest real measure, not before the first measure of the incremental render. Empty if there is
+     *  none at/before it. Used to resolve the last- / next-measure handles for renderNext(). */
     private graphicalMeasuresAtOrBefore(sourceIndex: number): GraphicalMeasure[] {
         if (!this.graphic) {
             return [];
         }
         const measureList: GraphicalMeasure[][] = this.graphic.MeasureList;
         let li: number = Math.min(sourceIndex, measureList.length - 1);
-        while (li >= 0 && !(measureList[li] && measureList[li].some(measure => !!measure))) {
+        while (li >= this.lazyFirstMeasureIndex && !(measureList[li] && measureList[li].some(measure => !!measure))) {
             li--;
         }
-        return li >= 0 ? measureList[li].filter(measure => !!measure) : [];
+        return li >= this.lazyFirstMeasureIndex ? measureList[li].filter(measure => !!measure) : [];
     }
 
     /**
-     * Abandon any in-progress incremental render and restore the draw-measure range it mutated, so a
-     * following normal render() draws the whole sheet again. Called
-     * automatically by render(), load() and clear(); call it directly only to cancel a session yourself.
+     * Abandon any in-progress incremental render, so that the next renderNext() starts a new session (with the draw
+     * range set then). Called automatically by render(), load() and clear(); call it directly only to cancel a session
+     * yourself.
      */
     public resetIncrementalRendering(): void {
         if (!this.lazyIncrementalActive) {
@@ -569,16 +595,14 @@ export class OpenSheetMusicDisplay {
         this.lazyDrawnSystemCount = 0;
         this.lazyDrawnSystemPositions = [];
         this.lazyDrawnHMeasureCount = 0;
-        this.rules.MinMeasureToDrawIndex = this.lazySavedMinMeasureToDrawIndex;
-        this.rules.MaxMeasureToDrawIndex = this.lazySavedMaxMeasureToDrawIndex;
     }
 
     /**
      * Drive {@link renderNext} automatically from scrolling: render the next batch whenever the user scrolls
      * within ~1.5 viewports of the not-yet-rendered edge (the page bottom for the endless vertical format,
      * the right edge for RenderSingleHorizontalStaffline). Renders the first batch immediately if none has
-     * been rendered yet, then keeps appending as the user scrolls, and detaches itself once the whole sheet
-     * is rendered. Re-enabling replaces any previous listener; reset/render/load also detach it.
+     * been rendered yet, then keeps appending as the user scrolls, and detaches itself once all measures
+     * are rendered (see {@link renderNext}). Re-enabling replaces any previous listener; reset/render/load also detach it.
      *
      * @param options batch size (as {@link renderNext}) plus an optional `scrollElement` -- the element whose
      *  scrolling drives loading. Defaults to the OSMD container for a single horizontal staffline (it scrolls
@@ -596,7 +620,7 @@ export class OpenSheetMusicDisplay {
             this.renderNext(batchOptions); // paint the first batch so there is something to scroll
         }
         if (this.IncrementalRenderingComplete) {
-            return; // the whole sheet fit in the first batch; nothing to load on scroll
+            return; // all measures fit in the first batch; nothing to load on scroll
         }
         const nearEnd: () => boolean = () => {
             const margin: number = 1.5; // start loading ~1.5 viewports before the edge
@@ -663,14 +687,21 @@ export class OpenSheetMusicDisplay {
         this.lazyScrollTarget = undefined;
     }
 
-    /** Start a fresh incremental session: save the draw-measure range the lazy layout mutates (restored on
-     *  reset). Lazy needs the greedy, forward-stable builder so earlier systems keep their position as the
-     *  prefix grows -- public OSMD is greedy-only, so that is already in effect (nothing to force). */
+    /** Start a fresh incremental session for the measures render() draws (the draw range). Lazy needs the greedy,
+     *  forward-stable builder so earlier systems keep their position as the prefix grows -- public OSMD is
+     *  greedy-only, so that is already in effect (nothing to force). */
     private beginIncrementalRendering(): void {
-        this.lazySavedMinMeasureToDrawIndex = this.rules.MinMeasureToDrawIndex;
-        this.lazySavedMaxMeasureToDrawIndex = this.rules.MaxMeasureToDrawIndex;
         this.lazyIncrementalActive = true;
-        this.lazyNextSourceIndex = 0;
+        const [firstIndex, lastIndex]: [number, number] = this.getDrawRangeIndices();
+        const lastSheetMeasureIndex: number = this.sheet.SourceMeasures.length - 1;
+        // a first measure beyond the sheet is its last one, as in the layout (see MusicSheetCalculator.calculateMusicSystems())
+        this.lazyFirstMeasureIndex = Math.min(firstIndex, lastSheetMeasureIndex);
+        this.lazyLastMeasureIndex = Math.min(lastIndex, lastSheetMeasureIndex);
+        this.lazyNextSourceIndex = this.lazyFirstMeasureIndex;
+        // The draw range is in the rules like after render(), e.g. for the cursor. The batches lay out the measures from
+        //   its first one up to theirs, and leave the rules as they were.
+        this.rules.MinMeasureToDrawIndex = this.lazyFirstMeasureIndex;
+        this.rules.MaxMeasureToDrawIndex = lastIndex;
     }
 
     /** Number of VISUAL measures in the source-measure range [from, toExcl): a multi-rest renders as one
@@ -703,13 +734,14 @@ export class OpenSheetMusicDisplay {
 
     /**
      * Lazy rendering (EngravingRules.LazyConsistentGraphic). Lays out the WHOLE prefix
-     * [0..toMeasureIndex] into ONE globally-consistent graphic and draws only the systems that became
-     * stable since the previous batch, appending them into the shared backend below what's already drawn.
+     * [first..toMeasureIndex] of the draw range (see beginIncrementalRendering()) into ONE globally-consistent
+     * graphic and draws only the systems that became stable since the previous batch, appending them into the
+     * shared backend below what's already drawn.
      *
      * There is no per-batch vertical offset or seam-distance
      * computation: the real Y-layout already stacks and crisp-snaps every system at its final absolute
      * position, and the title space / first-system instrument names fall out of laying the prefix from
-     * measure 0 each time. The greedy builder is forward-stable -- every system except the LAST of a
+     * its first measure each time. The greedy builder is forward-stable -- every system except the LAST of a
      * prefix is *usually* forward-stable (an interior system keeps its position as the prefix grows), so
      * we skip drawing the already-drawn systems above and DEFER the last system of a non-final batch (it
      * is unstretched and shifts once it becomes an interior, stretched system next batch). But this is NOT
@@ -731,25 +763,22 @@ export class OpenSheetMusicDisplay {
             this.lazyLayoutWidth = this.getContainerContentWidth();
             this.layoutContainerWidth = this.lazyLayoutWidth;
         }
-        const lastSheetMeasureIndex: number = this.sheet.SourceMeasures.length - 1;
-
-        // Lay out the whole prefix [0..to] (Min stays 0). Earlier systems are re-laid-out identically;
-        // only the newly-completed systems are drawn below.
-        this.rules.MinMeasureToDrawIndex = 0;
-        this.rules.MaxMeasureToDrawIndex = Math.min(toMeasureIndex, lastSheetMeasureIndex);
+        const lastMeasureIndex: number = this.lazyLastMeasureIndex; // of the draw range
 
         this.sheet.pageWidth = this.lazyLayoutWidth / this.zoom / 10.0; // the session's width, see lazyLayoutWidth
         this.rules.PageHeight = 100001; // lazy assumes the endless (vertical scroll) page format
 
-        this.graphic.reCalculate();
-
+        // Lay out the whole prefix [first..to] of the draw range. Earlier systems are re-laid-out identically;
+        // only the newly-completed systems are drawn below. The rules' draw range is the prefix only for its layout,
+        // then the session's again (see beginIncrementalRendering()).
         // Ensure the prefix yields enough NEW systems to draw beyond the deferred last one (>= drawn +
         // minNewSystems + 1 systems total); otherwise this batch only grew the current last system. Extend the
-        // prefix by a batch span and retry until enough systems appear or the sheet ends. minNewSystems is 1 in
+        // prefix by a batch span and retry until enough systems appear or the draw range ends. minNewSystems is 1 in
         // measures mode (the batch's other complete systems are drawn too) and `targetNewSystems` in systems mode.
         // Then also until the octave shifts reaching into the systems to draw end in a complete system (see
         // lazySpannerEndInLastSystem()), without drawing the systems this adds.
-        let systems: MusicSystem[] = this.lazyLaidOutSystems();
+        const drawRangeIndices: [number, number] = [this.rules.MinMeasureToDrawIndex, this.rules.MaxMeasureToDrawIndex];
+        let systems: MusicSystem[];
         const minNewSystems: number = targetNewSystems ?? 1;
         const extendStep: number = Math.max(4, toMeasureIndex - fromMeasureIndex + 1);
         // Hold the last (unstretched, not-yet-stable) system unless this is the final batch, where the last
@@ -759,30 +788,38 @@ export class OpenSheetMusicDisplay {
         const nonFinalDrawToIdxExcl: (layoutSystemCount: number) => number = (layoutSystemCount: number): number =>
             targetNewSystems !== undefined ? Math.min(layoutSystemCount - 1, this.lazyDrawnSystemCount + targetNewSystems) : layoutSystemCount - 1;
         let drawToIdxExclCap: number; // the draw range end once the layout has enough systems
-        let extendedTo: number = this.rules.MaxMeasureToDrawIndex;
-        while (systems.length > 0 && extendedTo < lastSheetMeasureIndex) {
-            let extendTo: number = extendedTo + extendStep;
-            if (systems.length >= this.lazyDrawnSystemCount + minNewSystems + 1) {
-                if (drawToIdxExclCap === undefined) {
-                    drawToIdxExclCap = nonFinalDrawToIdxExcl(systems.length);
-                }
-                const spannerEndIndex: number = this.lazySpannerEndInLastSystem(systems, drawToIdxExclCap);
-                if (spannerEndIndex < 0) {
-                    break; // long enough
-                }
-                extendTo = Math.max(extendTo, spannerEndIndex + 1);
-            }
-            extendedTo = Math.min(extendTo, lastSheetMeasureIndex);
+        let extendedTo: number = Math.min(toMeasureIndex, lastMeasureIndex);
+        try {
+            this.rules.MinMeasureToDrawIndex = this.lazyFirstMeasureIndex;
             this.rules.MaxMeasureToDrawIndex = extendedTo;
             this.graphic.reCalculate();
             systems = this.lazyLaidOutSystems();
+            while (systems.length > 0 && extendedTo < lastMeasureIndex) {
+                let extendTo: number = extendedTo + extendStep;
+                if (systems.length >= this.lazyDrawnSystemCount + minNewSystems + 1) {
+                    if (drawToIdxExclCap === undefined) {
+                        drawToIdxExclCap = nonFinalDrawToIdxExcl(systems.length);
+                    }
+                    const spannerEndIndex: number = this.lazySpannerEndInLastSystem(systems, drawToIdxExclCap);
+                    if (spannerEndIndex < 0) {
+                        break; // long enough
+                    }
+                    extendTo = Math.max(extendTo, spannerEndIndex + 1);
+                }
+                extendedTo = Math.min(extendTo, lastMeasureIndex);
+                this.rules.MaxMeasureToDrawIndex = extendedTo;
+                this.graphic.reCalculate();
+                systems = this.lazyLaidOutSystems();
+            }
+        } finally {
+            [this.rules.MinMeasureToDrawIndex, this.rules.MaxMeasureToDrawIndex] = drawRangeIndices;
         }
         if (systems.length === 0) {
-            return lastSheetMeasureIndex + 1; // produced nothing (e.g. all-invisible): nothing more to do
+            return lastMeasureIndex + 1; // produced nothing (e.g. all-invisible): nothing more to do
         }
 
         const systemCount: number = systems.length;
-        const finalBatch: boolean = extendedTo >= lastSheetMeasureIndex;
+        const finalBatch: boolean = extendedTo >= lastMeasureIndex;
         const sysAbsY: (i: number) => number = i => systems[i].StaffLines[0].PositionAndShape.AbsolutePosition.y;
         // Reconciliation: forward-stability is not universal -- this batch's full-prefix layout may have
         // moved an already-drawn system. If the topmost drawn system whose Y (or page) changed exists, everything
@@ -802,7 +839,7 @@ export class OpenSheetMusicDisplay {
         const drawToIdxExcl: number = finalBatch ? systemCount : Math.min(nonFinalDrawToIdxExcl(systemCount), drawToIdxExclCap ?? systemCount);
         if (drawToIdxExcl <= drawFromIdx) {
             this.lazyDrawnSystemCount = Math.max(this.lazyDrawnSystemCount, drawToIdxExcl);
-            return lastSheetMeasureIndex + 1; // no new complete system (only happens at the very end)
+            return lastMeasureIndex + 1; // no new complete system (only happens at the very end)
         }
 
         // createOrRefreshRenderBackend rebuilds the drawer (resetting the lazy draw window), so it must
@@ -903,7 +940,7 @@ export class OpenSheetMusicDisplay {
         this.rules.RenderCount++;
 
         if (finalBatch) {
-            return lastSheetMeasureIndex + 1;
+            return lastMeasureIndex + 1;
         }
         // Continue at the deferred (held) system's first source measure.
         const heldMeasures: GraphicalMeasure[] = systems[drawToIdxExcl].StaffLines[0].Measures;
@@ -957,7 +994,7 @@ export class OpenSheetMusicDisplay {
 
     /**
      * Lazy rendering for RenderSingleHorizontalStaffline (one staffline growing to the right, horizontal scroll).
-     * The first batch lays the whole score out like render(), and each batch reuses that layout and draws only the
+     * The first batch lays the score (its draw range) out like render(), and each batch reuses that layout and draws only the
      * measures entering the drawn frontier (and the elements ending in them), so that the finished incremental render
      * looks like a normal render(). Laying out a growing prefix instead would move what is drawn already, e.g. a
      * higher note further right moves the staffline down, and the lyrics of a staffline are aligned at one height.
@@ -974,12 +1011,11 @@ export class OpenSheetMusicDisplay {
      * @returns the source-measure index at which the next batch should continue.
      */
     private renderAppendGrowingHorizontal(toMeasureIndex: number, clearFirst: boolean): number {
-        const lastSheetMeasureIndex: number = this.sheet.SourceMeasures.length - 1;
+        const lastMeasureIndex: number = this.lazyLastMeasureIndex; // of the draw range
         if (clearFirst) {
             this.lazyDrawnHMeasureCount = 0;
-            // One horizontal staffline: SheetMaximumWidth keeps it a single system (mirrors render()).
-            this.rules.MinMeasureToDrawIndex = 0;
-            this.rules.MaxMeasureToDrawIndex = lastSheetMeasureIndex;
+            // The draw range like render() (in the rules, see beginIncrementalRendering()), on one horizontal staffline:
+            //   SheetMaximumWidth keeps it a single system (mirrors render()).
             this.sheet.pageWidth = this.rules.SheetMaximumWidth / this.zoom / 10.0;
             this.rules.PageHeight = 100001;
             this.graphic.reCalculate();
@@ -994,7 +1030,7 @@ export class OpenSheetMusicDisplay {
             }
         }
         if (measures.length === 0) {
-            return lastSheetMeasureIndex + 1; // produced nothing (e.g. all invisible)
+            return lastMeasureIndex + 1; // produced nothing (e.g. all invisible)
         }
         // Draw the measures up to source measure toMeasureIndex, but at least one. A measure without a source measure
         // (an extra instruction measure ending a system, e.g. with the next system's clef) is drawn with the one before.
@@ -1075,7 +1111,7 @@ export class OpenSheetMusicDisplay {
         this.lazyDrawnHMeasureCount = drawToIdxExcl;
         this.rules.RenderCount++;
         if (finalBatch) {
-            return lastSheetMeasureIndex + 1;
+            return lastMeasureIndex + 1;
         }
         // Continue at the first measure not drawn yet.
         return measures[drawToIdxExcl].parentSourceMeasure.measureListIndex;
@@ -1604,7 +1640,7 @@ export class OpenSheetMusicDisplay {
      * FIXME: Probably unnecessary
      */
     protected reset(): void {
-        this.resetIncrementalRendering(); // abandon any incremental session + restore the rules it mutated
+        this.resetIncrementalRendering(); // abandon any incremental session
         if (this.drawingParameters.drawCursors) {
             this.cursors.forEach(cursor => {
                 cursor.hide();
@@ -2021,11 +2057,12 @@ export interface IRenderNextOptions {
 /** Progress returned by {@link OpenSheetMusicDisplay.renderNext}. Measure counts are visual (a multi-rest
  *  counts as one). */
 export interface IRenderNextResult {
-    /** True once the last measure of the sheet has been rendered -- no more batches remain. */
+    /** True once the last measure to render has been rendered -- no more batches remain. The measures to render are the
+     *  ones render() draws: the whole sheet, or the draw range (drawFromMeasureNumber, drawUpToMeasureNumber). */
     done: boolean;
     /** Visual measures rendered so far, cumulative across batches. */
     renderedMeasures: number;
-    /** Total visual measures in the sheet. */
+    /** Total visual measures to render: those of the sheet, or of the draw range (see `done`). */
     totalMeasures: number;
     /** The last measure position rendered so far (highest measure index): all its GraphicalMeasures, one per
      *  staff/instrument (e.g. 3 for a voice + piano score). Empty if nothing has been rendered yet. They
