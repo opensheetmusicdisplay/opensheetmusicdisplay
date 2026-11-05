@@ -1769,7 +1769,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     } else {
       endMeasure = this.graphicalMusicSheet.getLastGraphicalMeasureFromIndex(staffIndex, true); // get last rendered measure
     }
-    const endIsClipped: boolean = endMeasure.MeasureNumber > maxMeasureToDrawIndex + 1;
+    // the indices, not the measure number: with a pickup measure, that is the index, so a line starting in the first measure
+    //   drawn was cut off and one ending right after the last measure drawn wasn't drawn; and it can repeat, see calculateRehearsalMark()
+    const endIsClipped: boolean = endMeasure.parentSourceMeasure.measureListIndex > maxMeasureToDrawIndex;
     if (endIsClipped) { // octaveshift ends in measure not rendered
       endMeasure = this.graphicalMusicSheet.getLastGraphicalMeasureFromIndex(staffIndex, true);
     }
@@ -1780,7 +1782,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     } else {
       startMeasure = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex]; // first rendered measure
     }
-    const startIsClipped: boolean = startMeasure.MeasureNumber < minMeasureToDrawIndex + 1;
+    const startIsClipped: boolean = startMeasure.parentSourceMeasure.measureListIndex < minMeasureToDrawIndex;
     if (startIsClipped) { // octaveshift starts before range of measures selected to render
       startMeasure = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex]; // first rendered measure
       startStaffLine = startMeasure.ParentStaffLine;
@@ -2005,7 +2007,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       //return; // also possible: don't handle faulty pedal without end
       endMeasure = this.graphicalMusicSheet.getLastGraphicalMeasureFromIndex(staffIndex, true); // get last rendered measure
     }
-    const endIsClipped: boolean = endMeasure.MeasureNumber > maxMeasureToDrawIndex + 1;
+    // the indices, not the measure number: with a pickup measure, that is the index, so a line starting in the first measure
+    //   drawn was cut off and one ending right after the last measure drawn wasn't drawn; and it can repeat, see calculateRehearsalMark()
+    const endIsClipped: boolean = endMeasure.parentSourceMeasure.measureListIndex > maxMeasureToDrawIndex;
     if (endIsClipped) { // ends in measure not rendered
       endMeasure = this.graphicalMusicSheet.getLastGraphicalMeasureFromIndex(staffIndex, true);
     }
@@ -2022,7 +2026,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
       //console.log("no end multi expression for start measure " + startMeasure.MeasureNumber);
     }
-    const startIsClipped: boolean = startMeasure.MeasureNumber < minMeasureToDrawIndex + 1;
+    const startIsClipped: boolean = startMeasure.parentSourceMeasure.measureListIndex < minMeasureToDrawIndex;
     if (startIsClipped) { // starts before range of measures selected to render
       startMeasure = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex]; // first rendered measure
       startStaffLine = startMeasure.ParentStaffLine;
@@ -2240,7 +2244,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     } else {
       endMeasure = this.graphicalMusicSheet.getLastGraphicalMeasureFromIndex(staffIndex, true); // get last rendered measure
     }
-    const endIsClipped: boolean = endMeasure.MeasureNumber > maxMeasureToDrawIndex + 1;
+    // the indices, not the measure number: with a pickup measure, that is the index, so a line starting in the first measure
+    //   drawn was cut off and one ending right after the last measure drawn wasn't drawn; and it can repeat, see calculateRehearsalMark()
+    const endIsClipped: boolean = endMeasure.parentSourceMeasure.measureListIndex > maxMeasureToDrawIndex;
     if (endIsClipped) { // ends in measure not rendered
       endMeasure = this.graphicalMusicSheet.getLastGraphicalMeasureFromIndex(staffIndex, true);
     }
@@ -2251,7 +2257,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     } else {
       startMeasure = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex]; // first rendered measure
     }
-    const startIsClipped: boolean = startMeasure.MeasureNumber < minMeasureToDrawIndex + 1;
+    const startIsClipped: boolean = startMeasure.parentSourceMeasure.measureListIndex < minMeasureToDrawIndex;
     if (startIsClipped) { // starts before range of measures selected to render
       startMeasure = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex]; // first rendered measure
       startStaffLine = startMeasure.ParentStaffLine;
