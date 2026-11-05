@@ -113,6 +113,9 @@ export class EngravingRules {
     public KeyRightMargin: number;
     public RhythmRightMargin: number;
     public ShowRhythmAgainAfterPartEndOrFinalBarline: boolean;
+    /** Begin a new part after a final barline (light-heavy, without a repeat or ending) in the middle of the piece: a new system, also with
+     *  RenderSingleHorizontalStaffline, and measure numbers counted from 1 again (read in load()).
+     */
     public NewPartAndSystemAfterFinalBarline: boolean;
     public InStaffClefScalingFactor: number;
     public DistanceBetweenNaturalAndSymbolWhenCancelling: number;
@@ -728,6 +731,11 @@ export class EngravingRules {
     /** Whether dark mode is enabled. This is read-only, to set this, please use osmd.setOptions({darkMode: true}). */
     public DarkModeEnabled: boolean;
     public UsePageBackgroundColorForTabNotes: boolean;
+    /** Render the sheet on one horizontal staffline, without line breaks where the width is used up.
+     *  Explicit system breaks still begin a new system below, if their rules are set: NewSystemAtXMLNewSystemAttribute,
+     *  NewSystemAtXMLNewPageAttribute, NewPageAtXMLNewPageAttribute, RenderXMeasuresPerLineAkaSystem and
+     *  NewPartAndSystemAfterFinalBarline. A staffline wider than SheetMaximumWidth is broken too.
+     */
     public RenderSingleHorizontalStaffline: boolean;
     public RestoreCursorAfterRerender: boolean;
     public StretchLastSystemLine: boolean;

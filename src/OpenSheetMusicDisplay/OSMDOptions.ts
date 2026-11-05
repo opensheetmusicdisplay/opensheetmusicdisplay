@@ -186,6 +186,7 @@ export interface IOSMDOptions {
     /** This makes OSMD render on one single horizontal (staff-)line.
      * This option should be set before loading a score. It only starts working after load(),
      * calling setOptions() after load and then render() doesn't work in this case.
+     * Explicit system breaks still begin a new system below, e.g. with newSystemFromXML (see EngravingRules.RenderSingleHorizontalStaffline).
      */
     renderSingleHorizontalStaffline?: boolean;
     /** Whether to begin a new system ("line break") when given in XML ('new-system="yes"').
