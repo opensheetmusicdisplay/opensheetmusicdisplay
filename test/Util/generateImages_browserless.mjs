@@ -20,6 +20,11 @@ import OSMD from "../../build/opensheetmusicdisplay.min.js"; // window needs to 
   generated from, so that you can tell which state e.g. visual_regression/blessed shows (see writeSourceCommitFile()),
   and warns if the build is older than the files in src/, as the images may then not show that commit (checkBuildAge()).
 
+  Each page is saved as <sample filename>_<page number>.png or .svg, e.g. ActorPreludeSample.xml_1.png.
+  A PNG page taller than the canvas size limit of 32767 px (e.g. ActorPreludeSample in the endless page format)
+  continues in further images of at most 32767 px each, <sample filename>_<page number>_tile2.png, _tile3.png etc.,
+  see saveCutOffPageTiles().
+
   Note: this script needs to "fake" quite a few browser elements, like window, document,
   and a Canvas HTMLElement (for PNG) or the DOM (for SVG)   ,
   which otherwise are missing in pure nodejs, causing errors in OSMD.
@@ -477,6 +482,8 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         return;
     }
     debug("xml loaded", DEBUG);
+    // for a further image of a page taller than the canvas size limit, the page's canvas shows the page's next rows
+    const stopShowingCanvasTile = options.canvasTile ? showCanvasTile(osmdInstance, options.canvasTile) : undefined;
     try {
         renderOsmdTestSample(sampleFilename, osmdInstance, osmdTestMode);
         const isTestTransposingAccidentals = sampleFilename.includes("test_transposing_accidentals_1383");
@@ -505,6 +512,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     } catch (ex) {
         debug("renderError: " + ex);
     }
+    stopShowingCanvasTile?.();
     debug("rendered", DEBUG);
 
     const markupStrings = []; // svg
@@ -534,10 +542,14 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     }
 
     for (let pageIndex = 0; pageIndex < Math.max(dataUrls.length, markupStrings.length); pageIndex++) {
+        if (options.canvasTile && pageIndex + 1 !== options.canvasTile.pageNumber) {
+            continue; // a further image of a page taller than the canvas size limit: only that page's canvas is saved
+        }
         const pageNumberingString = `${pageIndex + 1}`;
         // pageNumberingString = dataUrls.length > 0 ? pageNumberingString : '' // don't put '_1' at the end if only one page. though that may cause more work
         const fileNameAddition = options.fileNameAddition ?? "";
-        const pageFilename = `${imageDir}/${sampleFilename}_${fileNameAddition}${pageNumberingString}.${imageFormat}`;
+        const tileNumberingString = options.canvasTile ? `_tile${options.canvasTile.tileNumber}` : "";
+        const pageFilename = `${imageDir}/${sampleFilename}_${fileNameAddition}${pageNumberingString}${tileNumberingString}.${imageFormat}`;
 
         if (imageFormat === "png") {
             const dataUrl = dataUrls[pageIndex];
@@ -576,8 +588,105 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     }
     // debug('maxRss total: ' + (maxRss / 1024 / 1024) + 'mb' + ' for ' + maxRssFilename)
 
+    if (imageFormat === "png" && !options.canvasTile) {
+        await saveCutOffPageTiles(sampleFilename, directory, osmdInstance, osmdTestMode, options, DEBUG);
+    }
+
     // await sleep(5000)
     // }) // end read file
+}
+
+// OSMD cuts off a canvas at this height (and width) in pixels, the browsers' limit (see
+//   OpenSheetMusicDisplay.createOrRefreshRenderBackend()). node-canvas (Cairo) can't create a larger canvas either.
+const canvasSizeLimit = 32767;
+
+/**
+ * Saves the rest of each page that OSMD cut off at the canvas size limit as further images of at most canvasSizeLimit
+ * pixels each (<sample filename>_<page number>_tile2.png etc.), so that the images cover the whole page.
+ * Each further image is generated like the page's first image, by loading and rendering the sample again (see
+ * generateSampleImage()), with the page's canvas showing the page's next rows (see showCanvasTile()).
+ * Drawing the rendered sheet again into a moved canvas would be faster, but its image would then depend on a second
+ * draw of a layout giving the same as the first, which it didn't before #1795 (D.C. texts and lyric extender lines
+ * moved), and it wouldn't draw in batches where the first image was drawn with renderNext().
+ * Loading and rendering again repeats exactly what drew the page's first image.
+ * @param {string} sampleFilename Filename of the sample.
+ * @param {string} directory Directory of the sample.
+ * @param {object} osmdInstance The OSMD instance that rendered the sample's first images.
+ * @param {boolean} osmdTestMode Whether we are in osmdTestingMode (--osmdtesting), where sample-specific settings apply.
+ * @param {object} options The options the sample's first images were generated with.
+ * @param {boolean} DEBUG Whether to log debug output.
+ */
+async function saveCutOffPageTiles (sampleFilename, directory, osmdInstance, osmdTestMode, options, DEBUG) {
+    const canvasTiles = [];
+    for (const backend of osmdInstance.Drawer?.Backends ?? []) {
+        const canvasHeight = backend.getCanvas().height;
+        if (canvasHeight < canvasSizeLimit) {
+            continue; // not cut off
+        }
+        const pageHeight = getUncutCanvasHeight(osmdInstance, backend);
+        const pageNumber = backend.graphicalMusicPage.PageNumber;
+        for (let top = canvasHeight, tileNumber = 2; top < Math.floor(pageHeight); top += canvasSizeLimit, tileNumber++) {
+            canvasTiles.push({ pageNumber, tileNumber, top, height: Math.min(canvasSizeLimit, pageHeight - top) });
+        }
+    }
+    for (const canvasTile of canvasTiles) {
+        debug(`${sampleFilename}: page ${canvasTile.pageNumber} is taller than the canvas size limit of ${canvasSizeLimit} px, ` +
+            `rendering its rows from ${canvasTile.top} px on into tile ${canvasTile.tileNumber}`);
+        await generateSampleImage(sampleFilename, directory, osmdInstance, osmdTestMode, { ...options, canvasTile }, DEBUG);
+    }
+}
+
+/**
+ * Returns the height in pixels that OSMD computes for the canvas of a page before cutting it off at the canvas size
+ * limit, like OpenSheetMusicDisplay.createOrRefreshRenderBackend() does.
+ * @param {object} osmdInstance The OSMD instance that rendered the page.
+ * @param {object} backend The page's canvas backend, from osmdInstance.Drawer.Backends.
+ * @returns {number} The height of the page's canvas in pixels, without the canvas size limit.
+ */
+function getUncutCanvasHeight (osmdInstance, backend) {
+    const rules = osmdInstance.EngravingRules;
+    if (rules.PageFormat && !rules.PageFormat.IsUndefined) {
+        return backend.width / rules.PageFormat.aspectRatio;
+    }
+    const page = backend.graphicalMusicPage;
+    // + 0.1: OSMD's fix for the canvas cutting off its bottom pixel
+    let height = page.PositionAndShape.Size.height + rules.PageBottomMargin + 0.1 + page.PositionAndShape.BorderTop;
+    if (rules.RenderTitle) {
+        height += rules.TitleTopDistance;
+    }
+    return height * osmdInstance.Zoom * 10;
+}
+
+/**
+ * Lets osmdInstance render a tile of a page instead of the page's top, until the returned function is called:
+ * the page's canvas gets the tile's height, and the page is drawn shifted up by the tile's top,
+ * so that the canvas shows the page's rows from canvasTile.top on. Works for render() and renderNext().
+ * @param {object} osmdInstance The OSMD instance.
+ * @param {{pageNumber: number, top: number, height: number}} canvasTile The page, and the tile's top and height in pixels.
+ * @returns {Function} Function that lets osmdInstance render whole pages again.
+ */
+function showCanvasTile (osmdInstance, canvasTile) {
+    // OpenSheetMusicDisplay.createOrRefreshRenderBackend() creates a canvas backend for each page of a render,
+    //   renderNext() also for a page its batch reaches
+    const createBackend = osmdInstance.createBackend;
+    osmdInstance.createBackend = function (type, page, idOverride) {
+        const backend = createBackend.call(this, type, page, idOverride);
+        if (page?.PageNumber === canvasTile.pageNumber) {
+            const resize = backend.resize.bind(backend);
+            backend.resize = (width) => resize(width, canvasTile.height);
+            const scale = backend.scale.bind(backend);
+            // the drawer scales the canvas to the zoom right before drawing the page, also in each batch of renderNext(),
+            //   whose resize() before it resets the canvas' transformation
+            backend.scale = (factor) => {
+                backend.translate(0, -canvasTile.top);
+                scale(factor);
+            };
+        }
+        return backend;
+    };
+    return () => {
+        delete osmdInstance.createBackend; // OpenSheetMusicDisplay.prototype.createBackend again
+    };
 }
 
 function debug (msg, debugEnabled = true) {
