@@ -158,22 +158,22 @@ describe("Part group symbols", () => {
 
     it("puts each nested bracket a GroupBracketColumnDistance further left, not counting a group without a symbol", async () => {
         const layout: string[] = ["[bracket", "Fl", "[bracket", "Ob", "[square", "Vn", "Va", "]", "]", "]"];
-        expect(reaches(await firstSystem(layout))).to.deep.equal([0.5, 1.4, 2.3]);
+        expect(reaches(await firstSystem(layout))).to.deep.equal([0.5, 1.2, 1.9]);
         expect(reaches(await firstSystem(layout, (rules: EngravingRules): void => { rules.GroupBracketColumnDistance = 1.0; })))
             .to.deep.equal([0.5, 1.5, 2.5]);
         // the middle group has no symbol: nothing is drawn for it, and it takes no column
         const noSymbolBetween: MusicSystem = await firstSystem(["[bracket", "Fl", "[", "Ob", "[square", "Vn", "Va", "]", "]", "]"]);
         expect(symbols(noSymbolBetween)).to.deep.equal([GroupSymbol.Bracket, GroupSymbol.Square]);
-        expect(reaches(noSymbolBetween)).to.deep.equal([0.5, 1.4]);
+        expect(reaches(noSymbolBetween)).to.deep.equal([0.5, 1.2]);
     });
 
     // layout, the reach of the piano's brace (units), and how much further right the staves start than without the brackets
     //   (the labels move left by as much as the brackets reach beyond a part brace beside the staves)
     const pianos: [string[], number, number][] = [
         [["Vn", "Pno"], 1.4, 0],
-        [["[bracket", "Vn", "Pno", "]"], 2.3, 0.9],
-        [["[square", "Pno", "Vn", "]"], 2.3, 0.9],
-        [["[bracket", "Fl", "[bracket", "Vn", "Pno", "]", "]"], 3.2, 1.8],
+        [["[bracket", "Vn", "Pno", "]"], 2.1, 0.7],
+        [["[square", "Pno", "Vn", "]"], 2.1, 0.7],
+        [["[bracket", "Fl", "[bracket", "Vn", "Pno", "]", "]"], 2.8, 1.4],
         [["[bracket", "Vn", "Va", "]", "Pno"], 1.4, 0],
     ];
     for (const [layout, braceReach, labelRoom] of pianos) {
@@ -188,10 +188,10 @@ describe("Part group symbols", () => {
         });
     }
 
-    it("leaves the labels where they are when the brackets reach no further than a part brace", async () => {
+    it("leaves the labels where they are when the brackets reach less far than a part brace", async () => {
         const layout: string[] = ["[bracket", "Fl", "Ob", "[square", "Vn", "Va", "]", "]"];
         const system: MusicSystem = await firstSystem(layout);
-        expect(reaches(system)).to.deep.equal([0.5, 1.4]); // not more than a brace's 1.4
+        expect(reaches(system)).to.deep.equal([0.5, 1.2]); // less than a brace's 1.4
         const noSymbols: MusicSystem = await firstSystem(layout.map((token: string): string => token.startsWith("[") ? "[" : token));
         expect(staffX(system)).to.be.closeTo(staffX(noSymbols), 1e-9);
     });

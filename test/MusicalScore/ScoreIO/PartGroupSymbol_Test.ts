@@ -59,4 +59,14 @@ describe("Part group symbol", () => {
         expect(tree(readSheet(["[bracket", "P1", "]", "[brace", "P2", "P3", "]"]).InstrumentalGroups))
             .to.deep.equal(["P1", ["Brace", "P2", "P3"]]);
     });
+
+    it("ends a group that is never stopped with the part-list, like a stop", () => {
+        // MuseScore 3 writes a brace group before a piano part without a stop: a group around one part, left out
+        expect(tree(readSheet(["[brace", "P1"]).InstrumentalGroups)).to.deep.equal(["P1"]);
+        expect(tree(readSheet(["P1", "[brace", "P2"]).InstrumentalGroups)).to.deep.equal(["P1", "P2"]);
+        // around two parts it is kept, like a stopped one, and so is a group nested in it
+        expect(tree(readSheet(["[brace", "P1", "P2"]).InstrumentalGroups)).to.deep.equal([["Brace", "P1", "P2"]]);
+        expect(tree(readSheet(["[bracket", "P1", "[square", "P2", "P3"]).InstrumentalGroups))
+            .to.deep.equal([["Bracket", "P1", ["Square", "P2", "P3"]]]);
+    });
 });

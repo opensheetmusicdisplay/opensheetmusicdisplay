@@ -60,7 +60,8 @@ export class EngravingRules {
     /** The distance between the columns of the brackets left of a system's staves, in units (1 unit = 10 px at zoom 1):
      *  a part group's bracket nested in another group's stands this much further left than the outer one, as does the
      *  brace of a multi-staff part inside a bracketed group (a brace is the outermost symbol, Gould, Behind Bars, p. 516).
-     *  Default 0.9, about MuseScore's distance (its bracket width plus bracketDistance, 0.45 + 0.45 staff spaces).
+     *  Default 0.7: 0.4 between a bracket (VexFlow's is 0.3 wide) and the symbol in the next column, about MuseScore's
+     *  bracketDistance of 0.45 staff spaces.
      */
     public GroupBracketColumnDistance: number;
     public SystemComposerDistance: number;
@@ -804,7 +805,7 @@ export class EngravingRules {
         this.SystemLeftMargin = 0.0;
         this.SystemRightMargin = 0.0;
         this.SystemLabelsRightMargin = 2.0;
-        this.GroupBracketColumnDistance = 0.9;
+        this.GroupBracketColumnDistance = 0.7;
         this.SystemComposerDistance = 2.0;
         this.SystemLyricistDistance = 2.0;
         this.InstrumentLabelTextHeight = 2;
