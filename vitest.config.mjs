@@ -1,7 +1,8 @@
 // Vitest browser mode: runs test/**/*.ts in headless browsers through Playwright (karma did until 2026).
 //   The Vite dev server transpiles each TypeScript file when the browser requests it (no type check: tsc does that) and
 //   pre-bundles the CommonJS/UMD dependencies. VexFlow is served from its source, node_modules/vexflow/src, so a changed
-//   VexFlowPatch is used right after npm run prebuild, without a stale pre-bundle.
+//   VexFlowPatch is used right after its copy there (npm run prebuildVexflow, which npm test and test:watch run first),
+//   without a stale pre-bundle. A direct npx vitest doesn't copy it.
 // Test data: test/Util/vitestSetup.mjs gives the tests karma's window.__xml__ and window.__raw__, read from this server on
 //   first use, and base/test/data/ URLs work as in karma.
 // Browsers: TEST_BROWSERS, comma-separated: firefox and chrome, the installed ones. Default: firefox, as with karma.

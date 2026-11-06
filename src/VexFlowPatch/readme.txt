@@ -6,7 +6,8 @@ note: this patch will likely create errors when used with a different vexflow ve
 if using a different vexflow version, disable this prebuild patch script in package.json.
 
 These files are custom patches for the currently installed vexflow version.
-They are copied by the npm prebuild script to ../../node_modules/vexflow/src/ before a build.
+They are copied by the npm prebuildVexflow script to ../../node_modules/vexflow/src/ before a build,
+and before npm test, test:watch, start and start:local, which use node_modules/vexflow/src without a build.
 Each .js has comments like "// VexFlowPatch: [explanation]" to indicate what was changed.
 (a diff can be created from the base vexflow version)
 
