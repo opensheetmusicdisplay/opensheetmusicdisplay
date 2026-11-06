@@ -1702,7 +1702,10 @@ export class GraphicalSlur extends GraphicalCurve {
      * Hardly costs any time (2026-11, Chrome): almost every call stops at the reach test, and in the test samples it calculates
      * at most 9 curves again per render (Haydn, Concertante: 271 curves), within the noise of the render time. But it might
      * not be the best solution (e.g. it can't clear a number at a slur's end note, which only moving the end could), and can
-     * be removed for a better one, e.g. one that places the numbers and the slurs together.
+     * be removed for a better one, e.g. one that places the numbers and the slurs together. Another option for the numbers it
+     * leaves is to move the slur's start or end point away from the number, like retryPastEndAccidentals() does for the end
+     * note's accidentals. But that changes more than the overlap: e.g. a start further left and an end further right make a
+     * longer slur, an aesthetic change some might not like. Going over the number only changes the arc where the number is.
      * @returns Whether the curve was calculated again (and added to the sky line), so there is nothing left to do.
      */
     private retryPastMeasureNumbers(rules: EngravingRules, staffLine: StaffLine): boolean {
