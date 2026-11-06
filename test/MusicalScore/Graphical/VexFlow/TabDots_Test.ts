@@ -90,6 +90,12 @@ describe("TAB rhythm and augmentation dots", () => {
         osmd.render();
         checkRhythm();
         expect(note(3, 0).getBeamSVGs()).to.have.length(0);
+        // Without the XML stem directions, <stem>none</stem> still keeps the stemless TAB staves stemless.
+        osmd.EngravingRules.SetWantedStemDirectionByXml = false;
+        osmd.updateGraphic();
+        osmd.render();
+        expect(stem(0, 2)).to.equal(null);
+        expect(stem(0, 4)).to.equal(null);
 
         const score: Document = sample();
         const main: Element = score.querySelector('part[id="P1"] measure note');
