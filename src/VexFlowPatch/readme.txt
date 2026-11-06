@@ -8,6 +8,7 @@ if using a different vexflow version, disable this prebuild patch script in pack
 These files are custom patches for the currently installed vexflow version.
 They are copied by the npm prebuildVexflow script to ../../node_modules/vexflow/src/ before a build,
 and before npm test, test:watch, start and start:local, which use node_modules/vexflow/src without a build.
+vitest.config.mjs also copies the changed files when Vitest starts, e.g. for npx vitest or an editor's Vitest extension.
 Each .js has comments like "// VexFlowPatch: [explanation]" to indicate what was changed.
 (a diff can be created from the base vexflow version)
 
