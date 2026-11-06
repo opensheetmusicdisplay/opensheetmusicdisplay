@@ -70,6 +70,15 @@ interface EndPastAccidentals {
 
 /** A label stacked on the articulations left outside a slur at its start or end note, a fingering or a measure number, which
  *  moves along with them (see GraphicalSlur.placeArticulationsOutside()). */
+/** While GraphicalSlur.calculateCurve() calculates the curve again over the measure numbers it ran into, see
+ *  GraphicalSlur.retryPastMeasureNumbers(). */
+interface PastMeasureNumbers {
+    /** The boxes of the numbers it goes over. */
+    clearing: BoundingBox[];
+    /** The boxes of the numbers it couldn't get over after all: it ignores them, as before. */
+    givenUp: BoundingBox[];
+}
+
 interface LabelOutside {
     box: BoundingBox;
     isStart: boolean;
@@ -114,6 +123,8 @@ export class GraphicalSlur extends GraphicalCurve {
     private clearingEveryArticulationAt: {start: boolean, end: boolean};
     /** While calculateCurve() calculates the curve again with its end further out, see EndPastAccidentals. */
     private endPastAccidentals: EndPastAccidentals;
+    /** While calculateCurve() calculates the curve again over the measure numbers it ran into, see retryPastMeasureNumbers(). */
+    private pastMeasureNumbers: PastMeasureNumbers;
 
     /**
      * Compares the timespan of two Graphical Slurs
@@ -262,7 +273,7 @@ export class GraphicalSlur extends GraphicalCurve {
             // SkyLinePointsList between firstStaffEntry startUpperRightPoint and lastStaffentry endUpperLeftPoint
             points = this.calculateTopPoints(startUpperRight, endUpperLeft, staffLine, skyBottomLineCalculator);
             const obstacles: PointF2D[] = this.getObstacles(points, skyBottomLineCalculator) // without the point added if there is none
-                .concat(this.articulationCorners);
+                .concat(this.articulationCorners, this.getMeasureNumberCorners(staffLine));
 
             if (points.length === 0) {
                 const pointF: PointF2D = new PointF2D((endUpperLeft.x - startUpperRight.x) / 2 + startUpperRight.x,
@@ -382,7 +393,9 @@ export class GraphicalSlur extends GraphicalCurve {
             this.bezierEndPt = new PointF2D(endX, endY - endYOffset);
 
             const passedClose: {start: boolean, end: boolean} = this.keepPassedArticulationsInside();
-            if (this.retryPastArticulationsOutside(rules, passedClose) ||
+            // the measure numbers first: given up on, the curve is calculated as if it hadn't tried, see retryPastMeasureNumbers()
+            if (this.retryPastMeasureNumbers(rules, staffLine) ||
+                this.retryPastArticulationsOutside(rules, passedClose) ||
                 this.retryPastEndFingerings(rules, slurStartNote, slurEndNote, startUpperRight.x, endUpperLeft.x) ||
                 this.retryPastBesideFingerings(rules, staffLine, beside, startUpperRight.x, endUpperLeft.x) ||
                 this.retryPastEndAccidentals(rules, slurEndNote)) {
@@ -1657,6 +1670,105 @@ export class GraphicalSlur extends GraphicalCurve {
             [startControlPoint.x, endControlPoint.x, startControlPoint.y, endControlPoint.y] = [startControlX, endControlX, startControlY,
                                                                                                 endControlY];
         }
+    }
+
+    /**
+     * The top corners of the measure numbers the curve ran into (see retryPastMeasureNumbers()), relative to the staffline, for
+     * clearObstacles(), SlurNoteHeadYOffset further in: clearObstacles() keeps the curve that far from the corners, and it only
+     * needs to pass over the number.
+     */
+    private getMeasureNumberCorners(staffLine: StaffLine): PointF2D[] {
+        return (this.pastMeasureNumbers?.clearing ?? []).flatMap((box: BoundingBox) => {
+            const x: number = box.RelativePosition.x - staffLine.PositionAndShape.RelativePosition.x; // (relative to the system)
+            const top: number = box.RelativePosition.y + box.BorderTop + this.rules.SlurNoteHeadYOffset;
+            return [new PointF2D(x + box.BorderLeft, top), new PointF2D(x + box.BorderRight, top)];
+        });
+    }
+
+    /**
+     * Calculates the curve again over the measure numbers above the staffline (the system's first) it ran into, if any: e.g. a
+     * long slur coming down to its end note right after the number of the end note's measure. The number stays above its
+     * barline, where calculateMeasureNumberPlacement() placed it (before the slurs), and the slur goes over it, as close as it
+     * fits: clearObstacles() raises the curve only where the number is, the more so steepening its tangents.
+     * Only the numbers it ran into: the numbers are not in the sky line the slurs are shaped by (calculateMeasureNumberSkyline()
+     * adds them after the slurs), so that a number doesn't reshape a slur that passes over or under it anyway, e.g. a slur
+     * ending at a low note after the number, or one from the previous system starting just over the number above the clef.
+     * Not the numbers it can't get over, rising to them from its start or end at the steepest tangent allowed (SlurTangentMaxAngle,
+     * see getRaisedControlPoints()): e.g. a slur from the previous system starting at the height of the number above the clef,
+     * or one ending at a note right after the number, low in the staff; only moving its start or end could clear them. Nor the
+     * ones moved outward with the articulations left outside the slur (labelsOutside).
+     * If the curve still runs into a number then (e.g. limited by SlurTangentMaxAngle near its end, or by a fingering it would run
+     * into, see clearObstacles()), it is calculated again without it: as before, rather than reshaped for nothing.
+     * @returns Whether the curve was calculated again (and added to the sky line), so there is nothing left to do.
+     */
+    private retryPastMeasureNumbers(rules: EngravingRules, staffLine: StaffLine): boolean {
+        const system: MusicSystem = staffLine.ParentMusicSystem;
+        if (this.placement !== PlacementEnum.Above || staffLine !== system?.StaffLines[0]) {
+            return false;
+        }
+        const past: PastMeasureNumbers = this.pastMeasureNumbers ?? {clearing: [], givenUp: []};
+        // (staffline-relative boxes, the box of a measure number is relative to the system in x)
+        const getExtent: (box: BoundingBox) => {left: number, right: number, top: number, bottom: number} = box => {
+            const x: number = box.RelativePosition.x - staffLine.PositionAndShape.RelativePosition.x;
+            return {left: x + box.BorderLeft, right: x + box.BorderRight, top: box.RelativePosition.y + box.BorderTop,
+                    bottom: box.RelativePosition.y + box.BorderBottom};
+        };
+        // the curve passes through the number, deeper than tolerance
+        const runsInto: (box: BoundingBox, tolerance: number) => boolean = (box, tolerance) => {
+            const {left, right, top, bottom} = getExtent(box);
+            const curve: {top: number, bottom: number} = this.getYRangeBetween(left, right);
+            return curve !== undefined && curve.top < bottom - tolerance && curve.bottom > top + tolerance;
+        };
+        let next: PastMeasureNumbers;
+        // (give or take clearObstacles()' sampling of the sky line)
+        const failed: BoundingBox[] = past.clearing.filter(box => runsInto(box, 0.1));
+        if (failed.length > 0) {
+            next = {clearing: past.clearing.filter(box => !failed.includes(box)), givenUp: past.givenUp.concat(failed)};
+        } else {
+            const maxSlope: number = Math.tan(rules.SlurTangentMaxAngle * GraphicalSlur.degreesToRadiansFactor);
+            const runInto: BoundingBox[] = system.MeasureNumberLabels.map((measureNumber: GraphicalLabel) => measureNumber.PositionAndShape)
+                .filter((box: BoundingBox) => {
+                    if (past.clearing.includes(box) || past.givenUp.includes(box) || this.labelsOutside.some(label => label.box === box)) {
+                        return false;
+                    }
+                    const {left, right, top} = getExtent(box);
+                    // out of reach from the start or end, at the steepest tangent allowed (see getRaisedControlPoints())
+                    if (this.bezierStartPt.y - top > (left - this.bezierStartPt.x) * maxSlope ||
+                        this.bezierEndPt.y - top > (this.bezierEndPt.x - right) * maxSlope) {
+                        return false;
+                    }
+                    return runsInto(box, 0);
+                });
+            if (runInto.length === 0) {
+                return false;
+            }
+            next = {clearing: past.clearing.concat(runInto), givenUp: past.givenUp};
+        }
+        this.pastMeasureNumbers = next;
+        try {
+            this.calculateCurve(rules);
+        } finally {
+            this.pastMeasureNumbers = past.clearing.length + past.givenUp.length > 0 ? past : undefined;
+        }
+        return true;
+    }
+
+    /**
+     * The highest and lowest y of the curve between left and right, relative to the staffline like the curve's points (sampled
+     * every 1/1000 of the curve), or undefined where the curve doesn't pass between them.
+     */
+    public getYRangeBetween(left: number, right: number): {top: number, bottom: number} | undefined {
+        let top: number = Number.POSITIVE_INFINITY;
+        let bottom: number = Number.NEGATIVE_INFINITY;
+        for (let i: number = 0; i <= 1000; i++) {
+            // (calculateCurvePointAtIndex(1) is not the end point, but (0, 0))
+            const point: PointF2D = i < 1000 ? this.calculateCurvePointAtIndex(i / 1000) : this.bezierEndPt;
+            if (point.x >= left && point.x <= right) {
+                top = Math.min(top, point.y);
+                bottom = Math.max(bottom, point.y);
+            }
+        }
+        return top <= bottom ? {top, bottom} : undefined;
     }
 
     /** The corners of the fingerings of the notes between the start and end, relative to the staffline (see calculateFingerings()). */
