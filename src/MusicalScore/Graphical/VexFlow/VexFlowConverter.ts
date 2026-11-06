@@ -1,3 +1,4 @@
+import { TabRhythmDot } from "./TabRhythmDot";
 import Vex from "vexflow";
 import VF = Vex.Flow;
 import {ClefEnum} from "../../VoiceData/Instructions/ClefInstruction";
@@ -1238,6 +1239,12 @@ export class VexFlowConverter {
             VexFlowConverter.setVexFlowTextFontOfBend(bend, rules);
             vfnote.addModifier(bend);
         }
+
+        // The duration already contains the dots in its ticks. Add only the glyphs, once per chord.
+        for (let index: number = 0; index < numDots; index++) {
+            vfnote.addModifier(new TabRhythmDot(), 0);
+        }
+        (vfnote as VF.TabNote & {render_options: {draw_dots: boolean}}).render_options.draw_dots = true;
 
         return vfnote;
     }
