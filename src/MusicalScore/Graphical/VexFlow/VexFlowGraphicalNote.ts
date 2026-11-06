@@ -448,7 +448,8 @@ export class VexFlowGraphicalNote extends GraphicalNote {
                 frets.push(children[2 * i + 1]);
             }
         }
-        const modifiers: HTMLElement[] = children.slice(2 * positionCount).filter((child: HTMLElement) => child.tagName !== "g");
+        const modifiers: HTMLElement[] = children.slice(2 * positionCount).filter((child: HTMLElement) =>
+            child.tagName !== "g" || child.classList.contains("vf-tab-rhythm-dot"));
         return { frets, modifiers };
     }
 
