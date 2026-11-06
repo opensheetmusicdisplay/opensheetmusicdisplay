@@ -185,6 +185,11 @@ export class TabNote extends StemmableNote {
   getStemExtension() {
     const glyph = this.getGlyph();
 
+    // Honor StemmableNote.setStemLength(), including OSMD's shorter rhythmic TAB half notes.
+    if (this.stemExtensionOverride != null) {
+      return this.stemExtensionOverride;
+    }
+
     if (this.stem_extension_override != null) {
       return this.stem_extension_override;
     }

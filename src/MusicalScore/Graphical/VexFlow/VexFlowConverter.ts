@@ -1221,6 +1221,10 @@ export class VexFlowConverter {
         } else {
             vfnote = renderRhythm ? new VF.TabNote(tabNoteStruct, true) : new VF.TabNote(tabNoteStruct);
             if (renderRhythm) {
+                if (gve.notes[0].sourceNote.TypeLength?.RealValue === 0.5) {
+                    // Like MuseScore, distinguish half notes from quarters with a half-length TAB rhythm stem.
+                    (vfnote as any).setStemLength(vfnote.getStemLength() / 2); // the VexFlow typings omit the argument
+                }
                 vfnote.setStemDirection(stemDirection === StemDirectionType.Down ? VF.Stem.DOWN : VF.Stem.UP);
                 gve.parentVoiceEntry.StemDirection = stemDirection === StemDirectionType.Down ? StemDirectionType.Down : StemDirectionType.Up;
             }

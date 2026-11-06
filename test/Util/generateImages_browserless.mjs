@@ -765,6 +765,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestKeySignatureCourtesyClefs = sampleFilename.startsWith("test_key_signature_courtesy_clefs");
     // courtesy key and time signatures of different widths at system breaks, see test_courtesy_signatures_staff_ends: systems as in the file
     const isTestCourtesySignaturesStaffEnds = sampleFilename.startsWith("test_courtesy_signatures_staff_ends");
+    const isTestTabRhythmDots = sampleFilename.startsWith("test_tab_rhythm_dots.");
     const isTestTabs4Strings = sampleFilename.includes("test_tabs_4_strings");
     const isTestFingeringLeft = sampleFilename.includes("test_fingering_left");
     const isTestArticulationAboveNote = sampleFilename.includes("test_accent_above_except_piano_left_hand");
@@ -881,6 +882,9 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     }
     if (isTestPartAbbreviationSingleStaff) {
         osmdInstance.EngravingRules.RenderPartAbbreviationsForSingleStaff = true;
+    }
+    if (isTestTabRhythmDots) {
+        osmdInstance.EngravingRules.TabRhythmRendered = true;
     }
     if (isTestTabs4Strings) {
         osmdInstance.EngravingRules.TabKeySignatureSpacingAdded = false;
