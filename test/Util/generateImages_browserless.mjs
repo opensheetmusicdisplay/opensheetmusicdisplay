@@ -782,6 +782,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestLyricsDashContinuedInNextSystem = sampleFilename.startsWith("test_lyrics_dash_continued_in_next_system");
     // tab ties across system breaks, see test_tab_hammer-on_pull-off_tie_across_system_breaks: systems as in the file
     const isTestTabTiesAcrossSystemBreaks = sampleFilename.startsWith("test_tab_hammer-on_pull-off_tie_across_system_breaks");
+    const isTestTabChordSlidesAcrossSystemBreaks = sampleFilename.startsWith("test_tabs_chord_slide_indices_system_break.");
     // a key and time change at a system break (courtesy signatures), see test_hidden_staff_clef_key_time: systems as in the file
     const isTestHiddenStaffClefKeyTime = sampleFilename.startsWith("test_hidden_staff_clef_key_time");
     // multiple rest measures ending at the system and page breaks of the file, see test_multiple_rest_measures_auto_xml_breaks
@@ -822,7 +823,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         drawUpToMeasureNumber: drawUpToMeasureNumber,
         drawMeasureNumbersOnlyAtSystemStart: isTestMeasureNumbersOnlyAtSystemStart,
         newSystemFromXML: isFunctionTestSystemAndPageBreaks || isTestMeasureNumbersOnlyAtSystemStart || isTestGraceNotesOnlyMeasure ||
-            isTestLyricsDashContinuedInNextSystem || isTestTabTiesAcrossSystemBreaks || isTestHiddenStaffClefKeyTime ||
+            isTestLyricsDashContinuedInNextSystem || isTestTabTiesAcrossSystemBreaks || isTestTabChordSlidesAcrossSystemBreaks ||
+            isTestHiddenStaffClefKeyTime ||
             isTestMultipleRestMeasuresXmlBreaks || isTestPedalSignsBelowBeams || isTestPedalLineAndSign || isTestPedalResumeDiscontinue ||
             isTestPedalAtWholeMeasureRest,
         newSystemFromNewPageInXML: isTestPageBreakImpliesSystemBreak,

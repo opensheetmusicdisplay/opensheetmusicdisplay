@@ -3410,18 +3410,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             let first_indices: number[] = undefined;
             let last_indices: number[] = undefined;
             let startStemmableNote: VF.StemmableNote  = undefined;
-            // let startNoteIndexInTie: number = 0;
             if (vfStartNote && vfStartNote.vfnote && vfStartNote.vfnote.length >= 2) {
               startStemmableNote = vfStartNote.vfnote[0]; // otherwise needs to be undefined in TabSlide constructor!
-              first_indices = [0];
-              // startNoteIndexInTie = vfStartNote.vfnote[1];
+              first_indices = [vfStartNote.vfnote[1]];
             }
             let endStemmableNote: VF.StemmableNote  = undefined;
-            // let endNoteIndexInTie: number = 0;
             if (vfEndNote && vfEndNote.vfnote && vfEndNote.vfnote.length >= 2) {
               endStemmableNote = vfEndNote.vfnote[0];
-              last_indices = [0];
-              // endNoteIndexInTie = vfEndNote.vfnote[1];
+              last_indices = [vfEndNote.vfnote[1]];
             }
             const vfTie: VF.TabSlide = new VF.TabSlide(
               {
