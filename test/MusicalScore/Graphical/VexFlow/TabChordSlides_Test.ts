@@ -10,21 +10,9 @@ describe("TAB slides on different chord strings", () => {
     afterEach(() => { osmd?.clear(); div.remove(); });
 
     async function render(systemBreak: boolean): Promise<void> {
-        const duration: number = systemBreak ? 4 : 2;
-        const chord: (stop: boolean) => string = stop => [
-            {string: 2, fret: stop ? 14 : 12, step: stop ? "C" : "B", octave: stop ? 5 : 4, alter: stop ? 1 : 0},
-            {string: 3, fret: stop ? 16 : 14, step: stop ? "B" : "A", octave: 4, alter: 0},
-        ].map((position, index) => `<note>${index === 1 ? "<chord/>" : ""}<pitch><step>${position.step}</step>
-            ${position.alter ? "<alter>1</alter>" : ""}<octave>${position.octave}</octave></pitch><duration>${duration}</duration>
-            <type>${systemBreak ? "whole" : "half"}</type><notations><slide type="${stop ? "stop" : "start"}" number="${index + 1}"/>
-            <technical><string>${position.string}</string><fret>${position.fret}</fret></technical></notations></note>`).join("");
         osmd = new OpenSheetMusicDisplay(div, {autoResize: false, backend: "svg", newSystemFromXML: true});
-        await osmd.load(`<?xml version="1.0"?><score-partwise version="4.0">
-            <part-list><score-part id="P1"><part-name>Guitar</part-name></score-part></part-list>
-            <part id="P1"><measure number="1"><attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>
-            <clef><sign>TAB</sign><line>5</line></clef><staff-details><staff-lines>6</staff-lines></staff-details></attributes>
-            ${chord(false)}${systemBreak ? '</measure><measure number="2"><print new-system="yes"/>' : ""}
-            ${chord(true)}</measure></part></score-partwise>`);
+        const filename: string = systemBreak ? "test_tabs_chord_slide_indices_system_break.musicxml" : "test_tabs_chord_slide_indices.musicxml";
+        await osmd.load(TestUtils.getScore(filename).cloneNode(true) as Document);
         osmd.render();
     }
 

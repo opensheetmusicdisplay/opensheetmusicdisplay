@@ -1,0 +1,28 @@
+Original chord-slide reproduction and comparison
+
+Open ../test_tabs_chord_slide_indices.musicxml in OSMD or MuseScore.
+There should be two slides: string 2, fret 12 to 14; string 3, fret 14 to 16.
+Without the fix both lines are drawn at the first chord position and overlap.
+The system-break variant is ../test_tabs_chord_slide_indices_system_break.musicxml.
+Enable NewSystemAtXMLNewSystemAttribute (newSystemFromXML=true) for that case.
+Both files are used directly by TabChordSlides_Test.ts; they are original
+public fixtures with standard guitar tuning, not excerpts from private scores.
+
+The native MuseScore file tab_chord_slide_indices.mscx was imported from the
+single-system MusicXML in MuseScore 4.7.5. The native file contains both
+Glissando spanners on the intended strings and frets.
+tab_chord_slide_indices_musescore.png is a real MuseScore 4.7.5 PNG export,
+cropped only to remove blank page area. No score content was retouched.
+The OSMD before/after images use production bundles and the same MusicXML,
+with a 1000px score container. Compare the strings the lines attach to;
+fonts, line style and the optional "sl." text follow each renderer's defaults.
+MuseScore does not add the "sl." label in this example.
+
+Reproduction checks:
+  npm run prebuildVexflow
+  TEST_BROWSERS=chrome npx vitest run test/MusicalScore/Graphical/VexFlow/TabChordSlides_Test.ts
+
+The two checks fail before the two index corrections and pass afterward.
+They inspect rendered line positions beside the marked fret strings,
+including redraw and both sides of a system break, and keep the existing
+policy of labeling a continued slide only in its first system.
