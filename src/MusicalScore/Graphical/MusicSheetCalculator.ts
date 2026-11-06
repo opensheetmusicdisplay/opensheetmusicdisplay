@@ -1104,10 +1104,9 @@ export abstract class MusicSheetCalculator {
         // the boxes touch: their margins leave about a word space between the texts
         const wordsLeft: number = before ? dynamicLeft - width : dynamicRight;
         const wordsRight: number = wordsLeft + width;
-        // no room at the start of the staff (left of the first measure's notes) or beyond its end
-        const firstMeasure: GraphicalMeasure = staffLine.Measures[0];
-        if (wordsLeft < firstMeasure.PositionAndShape.RelativePosition.x + firstMeasure.beginInstructionsWidth ||
-            wordsRight > staffLine.PositionAndShape.Size.width) {
+        // no room before the start of the staff or beyond its end. Under (over) the clef, key and time signature at the
+        //   start of a line there is room, e.g. for "piu" before an f at the first note of a line.
+        if (wordsLeft < 0 || wordsRight > staffLine.PositionAndShape.Size.width) {
             return undefined;
         }
         // the words' text on the dynamic's baseline

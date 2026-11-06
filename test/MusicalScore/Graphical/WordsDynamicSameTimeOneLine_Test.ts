@@ -181,6 +181,18 @@ describe("Words and a dynamic at the same time on one line", () => {
         expectBeside(sound, soundBefore, 3, "sempre", false); // "p sempre": the <words> after the <dynamics> in the direction
     });
 
+    it("puts the words before a dynamic at the first note of a line under the clef, if they fit right of the staff's start (m. 9)",
+       async () => {
+        const osmd: OpenSheetMusicDisplay = await render(sample, true, 1440);
+        const before: OpenSheetMusicDisplay = await render(sample, false, 1440);
+        const p: Pair = pair(osmd, 9, "piu");
+        expect(p.staffLine.Measures[0].MeasureNumber, "m. 9 starts a line at this width").to.equal(9);
+        expectBeside(osmd, before, 9, "piu", true);
+        expect(p.wordsLeft, "the words start right of the staff's start").to.be.at.least(0);
+        expect(p.wordsLeft, "and under the clef, left of the first note's measure content")
+            .to.be.below(p.staffLine.Measures[0].beginInstructionsWidth);
+    });
+
     it("places words at another time (m. 4) and words of several lines (m. 12) as before", async () => {
         const osmd: OpenSheetMusicDisplay = await render();
         const before: OpenSheetMusicDisplay = await render(sample, false);
