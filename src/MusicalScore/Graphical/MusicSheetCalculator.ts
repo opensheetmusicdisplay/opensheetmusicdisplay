@@ -2555,6 +2555,9 @@ export abstract class MusicSheetCalculator {
                     break;
                 }
             }
+            if (!staffLine) {
+                return; // the measure is after the last system drawn (drawUpToSystemNumber): not in a staffline
+            }
             relative = this.getRelativePositionInStaffLineFromTimestamp(absoluteTimestamp,
                                                                         verticalIndex,
                                                                         staffLine,
@@ -4667,7 +4670,8 @@ export abstract class MusicSheetCalculator {
             //Reset, beginning of new measure
             this.dynamicExpressionMap.clear();
             for (let j: number = 0; j < sourceMeasure.StaffLinkedExpressions.length; j++) {
-                if (!this.graphicalMusicSheet.MeasureList[i] || !this.graphicalMusicSheet.MeasureList[i][j]) {
+                // a measure after the last system drawn (drawUpToSystemNumber) isn't in a staffline
+                if (!this.graphicalMusicSheet.MeasureList[i]?.[j]?.ParentStaffLine) {
                     continue;
                 }
 
