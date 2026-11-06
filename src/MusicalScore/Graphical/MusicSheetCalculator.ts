@@ -1237,11 +1237,8 @@ export abstract class MusicSheetCalculator {
         }
         this.staffEntriesWithGraphicalTies.length = 0;
         // Reset the tuplet number visibility decisions of calculateTupletNumbers() to the default:
-        // it runs after calculateSkyBottomLines(), so without the reset, a re-render's skyline
-        // would include the previous render's decisions, where the first render's skyline saw the
-        // default (true) - making re-renders differ from the first render.
-        // (Also makes sure all numbers come back when TupletNumberLimitConsecutiveRepetitions is
-        // disabled between renders, as calculateTupletNumbers() then doesn't re-activate them.)
+        // makes sure all numbers come back when TupletNumberLimitConsecutiveRepetitions is
+        // disabled between renders, as calculateTupletNumbers() then doesn't re-activate them.
         for (const instrument of this.graphicalMusicSheet.ParentMusicSheet.Instruments) {
             for (const voice of instrument.Voices) {
                 for (const ve of voice.VoiceEntries) {
@@ -1356,11 +1353,13 @@ export abstract class MusicSheetCalculator {
                 this.calculateTieCurves();
             }
         }
+        // calculate TupletsNumbers: which tuplets show their number. Before the skyline, which the geometric calculation
+        //   measures from a draw of each measure, so that it has the numbers that are drawn, and not the ones that aren't
+        //   (e.g. the repeated numbers of consecutive tuplets, see TupletNumberLimitConsecutiveRepetitions).
+        this.calculateTupletNumbers();
         // calculate Sky- and BottomLine
         // will have reasonable values only between ObjectsBorders (eg StaffEntries)
         this.calculateSkyBottomLines();
-        // calculate TupletsNumbers
-        this.calculateTupletNumbers();
         // Reserve space for multi-measure repeat counts before placing measure numbers.
         this.reserveSkylineForMeasureRepeats();
 
