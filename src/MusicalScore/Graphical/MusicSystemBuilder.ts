@@ -60,6 +60,15 @@ export class MusicSystemBuilder {
         let prevMeasureEndsPart: boolean = false;
         this.measureListIndex = 0;
         this.currentSystemParams = new SystemBuildParameters();
+        // Each measure gets the staffline of this layout when it's added to a system (see addStaveMeasuresToSystem()). The ones
+        //   after the last system laid out (MaxSystemToDrawNumber) aren't in one, also when a layout before had them in one.
+        for (const measures of this.measureList) {
+            for (const measure of measures ?? []) {
+                if (measure) {
+                    measure.ParentStaffLine = undefined;
+                }
+            }
+        }
 
         // the first System - create also its Labels
         this.currentSystemParams.currentSystem = this.initMusicSystem();

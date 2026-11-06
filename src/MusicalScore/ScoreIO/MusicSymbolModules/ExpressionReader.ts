@@ -767,6 +767,7 @@ export class ExpressionReader {
                         currentMeasure,
                         markingEnum);
                 instantaneousDynamicExpression.InMeasureTimestamp = inSourceMeasureCurrentFraction.clone();
+                instantaneousDynamicExpression.YPositionXml = ExpressionReader.readYPositionXml(dynamicsNode);
                 this.getMultiExpression.addExpression(instantaneousDynamicExpression, "");
                 // addExpression unnecessary now?:
                 //const multiExpression = this.getMultiExpression(ExpressionType.InstantaneousDynamic, numberXml);
@@ -830,7 +831,8 @@ export class ExpressionReader {
             if (this.checkIfWordsNodeIsRepetitionInstruction(text)) {
                 return;
             }
-            this.fillMultiOrTempoExpression(text, currentMeasure, inSourceMeasureCurrentFraction, fontStyle, fontColor, defaultYXml, language);
+            this.fillMultiOrTempoExpression(text, currentMeasure, inSourceMeasureCurrentFraction, fontStyle, fontColor, defaultYXml, language,
+                                            ExpressionReader.readYPositionXml(wordsNode));
         }
     }
     private readNumber(node: IXmlElement): number {
@@ -919,6 +921,18 @@ export class ExpressionReader {
         return /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(decimal) ? Number(decimal) : NaN;
     }
 
+    /** The vertical position a `<words>` or `<dynamics>` element gives, in tenths of a staff space (see
+     *  AbstractExpression.YPositionXml): its default-y plus its relative-y, or undefined without a default-y (a relative-y
+     *  alone is relative to a position the file doesn't give). */
+    private static readYPositionXml(node: IXmlElement): number {
+        const defaultY: number = ExpressionReader.readDecimal(node.attribute("default-y")?.value ?? "");
+        if (!Number.isFinite(defaultY)) {
+            return undefined;
+        }
+        const relativeY: number = ExpressionReader.readDecimal(node.attribute("relative-y")?.value ?? "");
+        return defaultY + (Number.isFinite(relativeY) ? relativeY : 0);
+    }
+
     private createNewTempoExpressionIfNeeded(currentMeasure: SourceMeasure): void {
         if (!this.currentMultiTempoExpression ||
             this.currentMultiTempoExpression.SourceMeasureParent !== currentMeasure ||
@@ -971,7 +985,8 @@ export class ExpressionReader {
         }
     }
     private fillMultiOrTempoExpression(inputString: string, currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction: Fraction,
-        fontStyle: FontStyles, fontColor: string, defaultYXml: number = undefined, language: string = undefined): void {
+        fontStyle: FontStyles, fontColor: string, defaultYXml: number = undefined, language: string = undefined,
+        yPositionXml: number = undefined): void {
         if (!inputString) {
             return;
         }
@@ -981,7 +996,7 @@ export class ExpressionReader {
 
         //for (const splitStr of splitStrings) {
         this.createExpressionFromString("", tmpInputString, currentMeasure, inSourceMeasureCurrentFraction, inputString, fontStyle, fontColor,
-                                        defaultYXml, language);
+                                        defaultYXml, language, yPositionXml);
         //}
     }
     /*
@@ -1017,7 +1032,8 @@ export class ExpressionReader {
                                        fontStyle: FontStyles,
                                        fontColor: string,
                                        defaultYXml: number = undefined,
-                                       language: string = undefined): boolean {
+                                       language: string = undefined,
+                                       yPositionXml: number = undefined): boolean {
         const isInstantaneousTempo: boolean = InstantaneousTempoExpression.isInputStringInstantaneousTempo(stringTrimmed);
         const isContinuousTempo: boolean = ContinuousTempoExpression.isInputStringContinuousTempo(stringTrimmed);
         if (isInstantaneousTempo || isContinuousTempo) {
@@ -1105,6 +1121,7 @@ export class ExpressionReader {
             moodExpression.fontStyle = fontStyle;
             moodExpression.ColorXML = fontColor;
             moodExpression.language = language;
+            moodExpression.YPositionXml = yPositionXml;
             multiExpression.addExpression(moodExpression, prefix);
             return true;
         }
@@ -1141,6 +1158,7 @@ export class ExpressionReader {
         unknownExpression.ColorXML = fontColor;
         unknownExpression.language = language;
         unknownExpression.defaultYXml = defaultYXml;
+        unknownExpression.YPositionXml = yPositionXml;
         unknownExpression.parentMeasure = currentMeasure;
         unknownMultiExpression.addExpression(unknownExpression, prefix);
         return false;

@@ -1,7 +1,8 @@
 // Vitest browser mode: runs test/**/*.ts in headless browsers through Playwright (karma did until 2026).
 //   The Vite dev server transpiles each TypeScript file when the browser requests it (no type check: tsc does that) and
 //   pre-bundles the CommonJS/UMD dependencies. VexFlow is served from its source, node_modules/vexflow/src, so a changed
-//   VexFlowPatch is used right after npm run prebuild, without a stale pre-bundle.
+//   VexFlowPatch is used right after its copy there, without a stale pre-bundle. The config makes the copy itself when
+//   Vitest starts (copyDependencyPatches()), also for a direct npx vitest, which skips npm test's pretest.
 // Test data: test/Util/vitestSetup.mjs gives the tests karma's window.__xml__ and window.__raw__, read from this server on
 //   first use, and base/test/data/ URLs work as in karma.
 // Browsers: TEST_BROWSERS, comma-separated: firefox and chrome, the installed ones. Default: firefox, as with karma.
@@ -15,6 +16,8 @@ import { playwright } from "@vitest/browser-playwright";
 // Vite 8's bundler (Oxc's parser and minifier), installed with vite
 import { minifySync, parseSync } from "rolldown/utils";
 import { defineConfig } from "vitest/config";
+
+copyDependencyPatches();
 
 export default defineConfig({
     plugins: [serveTestData(), ...(process.env.CI ? [mangleNames()] : [])],
@@ -69,6 +72,53 @@ export default defineConfig({
         },
     },
 });
+
+/** Copies the dependency patches into node_modules, as npm run prebuild does (which npm test and test:watch run first),
+ *  so that Vitest started directly (npx vitest, an editor's Vitest extension) doesn't test the previous patch after a
+ *  merge, rebase or checkout that changed one. The copies are the ncp calls of package.json's prebuild scripts (here
+ *  src/VexFlowPatch/src/ -> node_modules/vexflow/src/), so further copies a fork adds there come along.
+ *  Writes only the files whose content differs, each through a temporary file renamed over the copy, so that parallel
+ *  Vitest runs don't read a half-written file. */
+function copyDependencyPatches() {
+    const root = import.meta.dirname;
+    const scripts = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8")).scripts ?? {};
+    let copied = 0;
+    for (const [name, command] of Object.entries(scripts)) {
+        if (!name.startsWith("prebuild")) {
+            continue;
+        }
+        for (const [, from, to] of command.matchAll(/\bncp\s+(\S+)\s+(\S+)/g)) {
+            const fromFolder = path.join(root, from);
+            if (!fs.existsSync(fromFolder) || !fs.existsSync(path.dirname(path.join(root, to)))) {
+                continue; // no patches, or the dependency isn't installed: npm install copies them
+            }
+            for (const file of fs.readdirSync(fromFolder, { recursive: true })) {
+                const source = path.join(fromFolder, file);
+                const target = path.join(root, to, file);
+                if (!fs.statSync(source).isFile()) {
+                    continue;
+                }
+                const content = fs.readFileSync(source);
+                if (fs.existsSync(target) && content.equals(fs.readFileSync(target))) {
+                    continue;
+                }
+                fs.mkdirSync(path.dirname(target), { recursive: true });
+                const temp = `${target}.${process.pid}.tmp`;
+                fs.writeFileSync(temp, content);
+                try {
+                    fs.renameSync(temp, target);
+                } catch {
+                    fs.rmSync(temp, { force: true }); // Windows: another process has the file open
+                    fs.writeFileSync(target, content);
+                }
+                copied++;
+            }
+        }
+    }
+    if (copied > 0) {
+        process.stdout.write(`vitest.config.mjs: copied ${copied} changed patch file(s) into node_modules (npm run prebuild)\n`);
+    }
+}
 
 /** Serves test/data under base/test/data/, like karma (e.g. "base/test/data/x.mxl" in OSMD_Test.ts), relative to any
  *  page, and answers 404 for a missing file, as a web server does. */

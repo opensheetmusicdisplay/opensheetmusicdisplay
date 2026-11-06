@@ -24,10 +24,6 @@ export class VexFlowInstantaneousDynamicExpression extends GraphicalInstantaneou
         this.PositionAndShape.calculateBoundingBox();
     }
 
-    get InstantaneousDynamic(): InstantaneousDynamicExpression {
-        return this.mInstantaneousDynamicExpression;
-    }
-
     get Expression(): string {
         return this.mInstantaneousDynamicExpression.DynamicExpression;
     }
