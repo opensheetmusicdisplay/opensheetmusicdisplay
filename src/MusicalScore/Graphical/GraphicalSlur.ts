@@ -1699,6 +1699,10 @@ export class GraphicalSlur extends GraphicalCurve {
      * ones moved outward with the articulations left outside the slur (labelsOutside).
      * If the curve still runs into a number then (e.g. limited by SlurTangentMaxAngle near its end, or by a fingering it would run
      * into, see clearObstacles()), it is calculated again without it: as before, rather than reshaped for nothing.
+     * Hardly costs any time (2026-11, Chrome): almost every call stops at the reach test, and in the test samples it calculates
+     * at most 9 curves again per render (Haydn, Concertante: 271 curves), within the noise of the render time. But it might
+     * not be the best solution (e.g. it can't clear a number at a slur's end note, which only moving the end could), and can
+     * be removed for a better one, e.g. one that places the numbers and the slurs together.
      * @returns Whether the curve was calculated again (and added to the sky line), so there is nothing left to do.
      */
     private retryPastMeasureNumbers(rules: EngravingRules, staffLine: StaffLine): boolean {
