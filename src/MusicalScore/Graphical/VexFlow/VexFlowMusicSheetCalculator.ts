@@ -552,8 +552,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       //   distance to the next note when it is first called (by draw(), or before, by getExtent()) and keeps it. Unset it, so that the next draw calculates it
       //   for the current layout - otherwise the turn kept its distance of the previous layout, e.g. after a resize.
       // - the y_shift of articulations and ornaments: GraphicalSlur.placeArticulationsOutside() moves an accent, a fermata or a
-      //   trill at the start or end of a slur beyond it. Restore the value it had before the first render, snapshotted on the
-      //   first render - otherwise a re-render would start from the moved position, in the skyline too.
+      //   trill at the start or end of a slur beyond it, and raiseTrillMark() raises a trill to its raised wavy line. Restore
+      //   the value it had before the first render, snapshotted on the first render - otherwise a re-render would start from
+      //   the moved position, in the skyline too.
       for (const voice of voices) {
         for (const tickable of voice.getTickables()) {
           const note: any = tickable as any;
@@ -2360,23 +2361,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   private calculateWavyLineSkyBottomLine(startVfVoiceEntry: VexFlowVoiceEntry, endVfVoiceEntry: VexFlowVoiceEntry,
     vfVibratoBracket: VexFlowVibratoBracket, parentStaffline: StaffLine): void {
+    // Vexflow draws the bracket from the stave of its start note (VibratoBracket.draw())
     const startStave: Vex.Flow.Stave = vfVibratoBracket.startNote.getStave();
-    let endStave: Vex.Flow.Stave = vfVibratoBracket.endNote?.getStave();
-    if (!endStave) { // e.g. if endNote undefined
-      endStave = startStave;
+    if (!vfVibratoBracket.endNote) { // e.g. if endNote undefined
       endVfVoiceEntry = startVfVoiceEntry;
       // TODO maybe not best way to handle this. sample/situation where value is undefined unclear.
     }
-    //In VF Line positions, need to negate for our units
-    const highestVFTopTextPosition: number = Math.max(
-      startStave.options.top_text_position,
-      endStave.options.top_text_position
-    );
-
-    //Whichever is higher, set the other to match
-    startStave.options.top_text_position = highestVFTopTextPosition;
-    endStave.options.top_text_position = highestVFTopTextPosition;
-    let headroom: number = -highestVFTopTextPosition;
+    let headroom: number;
     let trillStartX: number = 0;
     let trillEndX: number = 0;
     let trillSkyline: number = Infinity;
@@ -2428,19 +2419,47 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       //   so from 1 unit further on.
       headroom = startX + 1 < stopX ? parentStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(startX + 1, stopX) : Infinity;
     }
+    // The line at which Vexflow draws the bracket as with its stave's text position at y (relative to the staffline): it counts
+    //   the line from the stave's text position (Stave.getYForTopText()), and the bracket's default line is 1.
+    const bracketLineAt: (y: number) => number = (y: number): number => 1 - startStave.options.top_text_position - y;
     //If somewhere in our wavy line path we have to render higher than where the trill mark is set...
     if (headroom < trillWavyLineBottom) {
-      startStave.options.top_text_position = -headroom;
-      endStave.options.top_text_position = -headroom;
+      // Raises the bracket and the trill mark by themselves, not by raising the text position of the start and end staves: that
+      //   also raised the other marks placed from it there, e.g. a fermata on the end note, after the skyline was calculated, so
+      //   the skyline didn't have them (see VexFlowOctaveShift.getTextBracket()).
+      vfVibratoBracket.line = bracketLineAt(headroom);
+      if (trillStartX !== trillEndX) {
+        this.raiseTrillMark(startVfVoiceEntry, startStave.getYForLine(headroom));
+      }
       //A decent enough approximation. Better than recalculating via Canvas or SVG sampling
       parentStaffline.SkyBottomLineCalculator.updateSkyLineInRange(trillStartX, trillEndX, headroom - TRILL_HEIGHT);
     } else { //Else just render where Vexflow has set the trill mark
-      vfVibratoBracket.line = -trillWavyLineBottom;
+      vfVibratoBracket.line = bracketLineAt(trillWavyLineBottom);
       headroom = trillWavyLineBottom;
     }
     //Update skyline to include height of the wavy line
     headroom -= vfVibratoBracket.PositionAndShape.Size.height;
     parentStaffline.SkyBottomLineCalculator.updateSkyLineInRange(startX, stopX, headroom);
+  }
+
+  /**
+   * Raises the trill mark above a voice entry's note to a wavy line raised over what is in its way (see
+   * calculateWavyLineSkyBottomLine()), as if the text position of its stave was there: its bottom to y, unless it is higher.
+   * By its y_shift, which VexFlowMusicSheetCalculator.calculateMeasureXLayout() resets for every render.
+   * @param y the y of the wavy line's bottom, in the stave's coordinates (pixels)
+   */
+  private raiseTrillMark(voiceEntry: VexFlowVoiceEntry, y: number): void {
+    const modifiers: any[] = (voiceEntry.vfStaveNote as any)?.getModifiers() ?? [];
+    const trill: any = modifiers.find((modifier: any) =>
+      modifier.getCategory?.() === "ornaments" && modifier.type === "tr" && modifier.getPosition() === VF.Modifier.Position.ABOVE);
+    if (!trill) {
+      return;
+    }
+    // where it is drawn now (with its y_shift, e.g. outside a slur, see GraphicalSlur.placeArticulationsOutside()), counted
+    //   from the stave's text position or from the note, whichever is higher (Ornament.getRenderXY())
+    const bottom: number = trill.getExtent().bottom;
+    const raisedBottom: number = Math.min(y + (trill.y_shift ?? 0), bottom);
+    trill.setYShift((trill.y_shift ?? 0) + raisedBottom - bottom);
   }
 
   /**
