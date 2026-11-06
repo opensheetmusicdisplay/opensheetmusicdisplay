@@ -106,6 +106,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    *  with the overflow. Indexed first by Staff, then by verse/container index. */
   private previousLyricOverflowsByStaff: Map<Staff, number[]> = new Map<Staff, number[]>();
   private previousChordOverflowsByStaff: Map<Staff, number[]> = new Map<Staff, number[]>();
+  /** The format of each vertical measure in formatMeasures(), for the next skyline calculation, which formats every measure
+   *  again: the repeats of these formats are skipped (see VexFlowMeasure.format()). Used once, by calculateSkyBottomLines(). */
+  private formatMeasuresFormats: Map<SourceMeasure, IVerticalMeasureFormat> = undefined;
   /** Multi-measure repeat units awaiting skyline reservation in the current render. */
   private measureRepeatUnitsPendingSkyline: VexFlowMeasureRepeat[] = [];
   private metronomePlacements: IMetronomePlacement[] = [];
@@ -153,13 +156,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   protected formatMeasures(): void {
     // let totalFinalizeBeamsTime: number = 0;
+    this.formatMeasuresFormats = new Map<SourceMeasure, IVerticalMeasureFormat>();
     for (const verticalMeasureList of this.graphicalMusicSheet.MeasureList) {
       if (!verticalMeasureList || !verticalMeasureList[0]) {
         continue;
       }
       const firstVisibleMeasure: VexFlowMeasure = verticalMeasureList.find(measure => measure?.isVisible()) as VexFlowMeasure;
       // first measure has formatting method as lambda function object, but formats all measures. TODO this could be refactored
-      firstVisibleMeasure.format();
+      firstVisibleMeasure.format(this.formatMeasuresFormats); // (records the format, see formatMeasuresFormats)
       for (const measure of verticalMeasureList) {
         for (const staffEntry of measure.staffEntries) {
           (<VexFlowStaffEntry>staffEntry).calculateXPosition();
@@ -2914,7 +2918,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const toCache: { key: string, staffLine: StaffLine }[] = [];
     // The geometric calculation formats every measure, i.e. each vertical measure once per staff, which mostly just repeats
     //   the same format: shared across the stafflines, this record of each vertical measure's last format skips the repeats.
-    const lastMeasureFormats: Map<SourceMeasure, IVerticalMeasureFormat> = new Map<SourceMeasure, IVerticalMeasureFormat>();
+    //   It starts with the formats of formatMeasures(), which the skyline calculation repeats too.
+    const lastMeasureFormats: Map<SourceMeasure, IVerticalMeasureFormat> =
+      this.formatMeasuresFormats ?? new Map<SourceMeasure, IVerticalMeasureFormat>();
+    this.formatMeasuresFormats = undefined;
     if (lazyCache) {
       const lastSystemIndex: number = this.musicSystems.length - 1;
       for (let si: number = 0; si < this.musicSystems.length; si++) {
