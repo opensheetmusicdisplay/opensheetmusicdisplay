@@ -3,6 +3,7 @@
 // Optionally compare the default with an upstream build:
 //   OSMD_BASELINE_BUNDLE=/absolute/path/to/upstream.js node test/data/tab-rhythm-dots/render-comparison.mjs
 import fs from "node:fs/promises";
+import { createHash } from "node:crypto";
 import http from "node:http";
 import process from "node:process";
 import console from "node:console";
@@ -36,16 +37,29 @@ const browser = await chromium.launch({ channel: "chrome", headless: true });
 try {
     const page = await browser.newPage({ viewport: { width: 1150, height: 1000 }, deviceScaleFactor: 1 });
     const modes = process.env.OSMD_BASELINE_BUNDLE ? ["upstream", "default", "rhythmic"] : ["default", "rhythmic"];
+    let baselineHash;
     for (const mode of modes) {
         await page.goto(`http://127.0.0.1:${server.address().port}/${mode === "upstream" ? "?baseline" : ""}`);
-        await page.evaluate(async enabled => {
+        await page.evaluate(async mode => {
+            // The baseline ignores this new option; both before and opt-in after request it.
+            const enabled = mode !== "default";
             const osmd = new globalThis.opensheetmusicdisplay.OpenSheetMusicDisplay("score", { autoResize: false, backend: "svg" });
             osmd.EngravingRules.TabRhythmRendered = enabled;
-            globalThis.document.querySelector("#title").textContent = enabled ? "OSMD — rhythmic TAB opt-in" : "OSMD — default stemless TAB";
+            globalThis.document.querySelector("#title").textContent = mode === "upstream" ? "OSMD — before (upstream)" :
+                enabled ? "OSMD — rhythmic TAB opt-in" : "OSMD — default stemless TAB";
             await osmd.load(await globalThis.fetch("/score.xml").then(response => response.text()));
             osmd.render();
-        }, mode === "rhythmic");
-        const output = path.join(directory, `osmd-${mode}.png`);
+        }, mode);
+        const scoreHash = createHash("sha256").update(await page.locator("#score").screenshot()).digest("hex");
+        if (mode === "upstream") {
+            baselineHash = scoreHash;
+        } else if (mode === "default" && baselineHash) {
+            if (scoreHash !== baselineHash) {
+                throw new Error("Default rendering differs from the upstream baseline");
+            }
+            console.log(`Default score matches upstream: ${scoreHash}`);
+        }
+        const output = path.join(directory, `osmd-${mode === "upstream" ? "before" : mode}.png`);
         await page.screenshot({ path: output, fullPage: true });
         console.log(output);
     }

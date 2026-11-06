@@ -3,6 +3,7 @@ import Vex from "vexflow";
 import VF = Vex.Flow;
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { VexFlowGraphicalNote } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
+import { GraphicalVoiceEntry } from "../../../../src/MusicalScore/Graphical/GraphicalVoiceEntry";
 import { TestUtils } from "../../../Util/TestUtils";
 
 type RhythmTabNote = VF.TabNote & {getModifiers(): VF.Modifier[], beam?: VF.Beam, render_options: {draw_stem: boolean}};
@@ -122,10 +123,54 @@ describe("TAB rhythm and augmentation dots", () => {
         checkDots();
     });
 
+    it("does not leave a visible dot on a source-hidden TAB note", async () => {
+        const score: Document = TestUtils.getScore("tab-rhythm-dots/tab-rhythm-reference.musicxml").cloneNode(true) as Document;
+        score.querySelector('part[id="P1"] measure note').setAttribute("print-object", "no");
+        await render(true, "svg", true, score);
+        const paths: SVGPathElement[] = dotPaths(0, 0);
+        expect(paths.every(path => {
+            const style: CSSStyleDeclaration = getComputedStyle(path);
+            return style.visibility === "hidden" || style.fill === "rgba(0, 0, 0, 0)";
+        })).to.equal(true);
+        expect(tab(0, 0).render_options.draw_stem).not.to.equal(true);
+        osmd.EngravingRules.RenderHiddenNotes = true;
+        osmd.updateGraphic();
+        osmd.render();
+        expect(dotPaths(0, 0)).to.have.length(1);
+        expect(tab(0, 0).render_options.draw_stem).to.equal(true);
+    });
+
+    it("keeps grace TAB notes without added rhythm while drawing their main note's dot", async () => {
+        const score: Document = TestUtils.getScore("tab-rhythm-dots/tab-rhythm-reference.musicxml").cloneNode(true) as Document;
+        const main: Element = score.querySelector('part[id="P1"] measure note');
+        const grace: Element = main.cloneNode(true) as Element;
+        grace.querySelector("duration").remove();
+        grace.querySelector("type").textContent = "eighth";
+        grace.prepend(score.createElement("grace"));
+        main.before(grace);
+        await render(true, "svg", true, score);
+        const entries: GraphicalVoiceEntry[] = osmd.GraphicSheet.MeasureList[0][0].staffEntries.flatMap(entry => entry.graphicalVoiceEntries);
+        const graceEntry: GraphicalVoiceEntry = entries.find(entry => entry.parentVoiceEntry.IsGrace);
+        const mainEntry: GraphicalVoiceEntry = entries.find(entry => !entry.parentVoiceEntry.IsGrace);
+        const graceNote: VexFlowGraphicalNote = graceEntry.notes[0] as VexFlowGraphicalNote;
+        expect((graceNote.vfnote[0] as RhythmTabNote).render_options.draw_stem).not.to.equal(true);
+        expect(graceNote.getSVGGElement().querySelectorAll(".vf-tab-rhythm-dot")).to.have.length(0);
+        expect((mainEntry.notes[0] as VexFlowGraphicalNote).getSVGGElement().querySelectorAll(".vf-tab-rhythm-dot")).to.have.length(1);
+    });
+
     it("renders the same dot modifiers with the canvas backend", async () => {
         await render(true, "canvas");
         expect(div.querySelector("canvas")).not.to.equal(null);
         expect(tab(1, 0).getModifiers().filter(modifier => modifier.getCategory() === "dots")).to.have.length(2);
         expect(tab(1, 0).getTicks().value()).to.equal(7 / 16 * VF.RESOLUTION);
+        // Read actual pixels beside the stem base, away from the stem and the staff lines.
+        const canvas: HTMLCanvasElement = div.querySelector("canvas");
+        const context: CanvasRenderingContext2D = canvas.getContext("2d");
+        const vf: RhythmTabNote = tab(1, 0);
+        const point: DOMPoint = context.getTransform().transformPoint({x: vf.getStemX() + 4, y: vf.getStemExtents().baseY - 2});
+        const scale: number = context.getTransform().a;
+        const pixels: Uint8ClampedArray = context.getImageData(Math.floor(point.x), Math.floor(point.y),
+            Math.ceil(18 * scale), Math.ceil(4 * scale)).data;
+        expect(Array.from(pixels).some((value, index) => index % 4 === 3 && value > 0 && pixels[index - 1] < 128)).to.equal(true);
     });
 });

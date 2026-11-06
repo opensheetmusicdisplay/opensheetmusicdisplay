@@ -1,4 +1,3 @@
-import { TabRhythmDot } from "./TabRhythmDot";
 import Vex from "vexflow";
 import VF = Vex.Flow;
 import {ClefEnum} from "../../VoiceData/Instructions/ClefInstruction";
@@ -12,6 +11,7 @@ import {KeyEnum} from "../../VoiceData/Instructions/KeyInstruction";
 import {AccidentalEnum} from "../../../Common/DataObjects/Pitch";
 import {NoteEnum} from "../../../Common/DataObjects/Pitch";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
+import { TabRhythmDot } from "./TabRhythmDot";
 import {GraphicalNote} from "../GraphicalNote";
 import {SystemLinesEnum} from "../SystemLinesEnum";
 import {FontStyles} from "../../../Common/Enums/FontStyles";
@@ -1208,7 +1208,9 @@ export class VexFlowConverter {
         };
         const stemDirection: StemDirectionType = gve.parentVoiceEntry.WantedStemDirection;
         // MuseScore's stemless TAB and whole notes have no rhythm dots. Keep OSMD's default unchanged.
+        // Hidden playback notes must not acquire a visible flag or dot; RenderHiddenNotes can opt them back in.
         const renderRhythm: boolean = rules.TabRhythmRendered && !gve.parentVoiceEntry.IsGrace &&
+            notes.some(note => note.sourceNote.isVisible()) &&
             gve.parentVoiceEntry.StemDirectionXml !== StemDirectionType.None && stemDirection !== StemDirectionType.None &&
             (gve.notes[0].sourceNote.TypeLength ?? frac).RealValue < 1;
         let vfnote: VF.TabNote;

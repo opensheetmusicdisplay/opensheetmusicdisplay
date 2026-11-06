@@ -2,8 +2,7 @@
 
 `tab-rhythm-reference.mscx` is an original, programmatically authored native
 MuseScore score. `tab-rhythm-reference.musicxml` was exported from that score
-by MuseScore Studio 4.7.5. This is not a third-party song or an imported
-MusicXML score presented as a native reference.
+by MuseScore Studio 4.7.5.
 
 The five measures contain a dotted quarter, double-dotted quarter, dotted
 chord, beamed dotted eighth/sixteenth, and dotted whole note in 6/4. Four
@@ -36,13 +35,14 @@ single-voice TAB stem defaults up. Refresh with `updateGraphic()` when changing
 
 This uses VexFlow's stem and flag shapes, rather than reproducing MuseScore's
 fonts, half-note stem style, or spacing. It does not add TAB rests or change
-MusicMaster's detached-stem styling. The images are an engraving comparison,
+application-specific detached-stem styling. The images are an engraving comparison,
 not a claim of pixel equivalence between the engines.
 
 ## Images and reproduction
 
 - `musescore-1.png`: actual PNG exported by the installed MuseScore executable
   from the native `.mscx`, at 130 DPI.
+- `osmd-before.png`: independently built, unmodified upstream `944390fd`.
 - `osmd-default.png`: this branch with the default stemless setting.
 - `osmd-rhythmic.png`: this branch with `TabRhythmRendered = true`.
 
@@ -56,8 +56,11 @@ node test/data/tab-rhythm-dots/render-comparison.mjs
 The screenshot script uses the installed Chrome browser through Playwright.
 To compare default output with a separately built upstream bundle, set
 `OSMD_BASELINE_BUNDLE` to its absolute path. Against upstream `944390fd`, the
-whole-score default PNGs had identical SHA-256 hashes with this fixture.
-The generated optional `osmd-upstream.png` is not checked in.
+score-area PNGs have identical SHA-256 hashes with this fixture (the page
+headings identify different builds). The script verifies this equality and
+writes `osmd-before.png` when a baseline bundle is supplied. Before and opt-in
+after both request `TabRhythmRendered = true`; upstream ignores that new
+property. The default image requests `false`.
 
 To export again with MuseScore on macOS, use fresh output filenames:
 
@@ -79,9 +82,13 @@ exports; the exported XML, five-measure content and PNG were checked directly.
 The focused tests use this exported MusicXML, cloned before each load. They
 check dot positions relative to the stem base, chord dot count, exact logical
 durations, up/down directions, explicit stemless TAB, whole notes, beam
-suppression, redraw/reflow, coloring/visibility, and canvas rendering.
+suppression, redraw/reflow, coloring/visibility, grace-note exclusion, source
+hidden-note exclusion with `RenderHiddenNotes`, and actual canvas dot pixels.
 
-- Chrome suite and TypeScript: **964 passed**, including five focused tests.
+- TypeScript and full suite: **966 tests pass in each of Chrome and Playwright
+  Firefox** (1,932 executions total), including seven focused tests per browser.
+  Firefox used a temporary provider override pointing to Playwright's installed
+  Firefox executable; the repository's normal config expects system Firefox.
 - Lint and production webpack build: pass (three performance warnings).
 - Default screenshot: identical to upstream for this reference.
-- Firefox and the full screenshot corpus have not been run.
+- The full screenshot corpus has not been run.
