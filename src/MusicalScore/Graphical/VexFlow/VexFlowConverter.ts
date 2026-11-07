@@ -1152,7 +1152,7 @@ export class VexFlowConverter {
     public static CreateTabNote(gve: GraphicalVoiceEntry): VF.TabNote {
         const tabPositions: {str: number, fret: number}[] = [];
         const notes: GraphicalNote[] = gve.notes.reverse();
-        const tabPhrases: { type: number, text: string }[] = [];
+        const tabBends: { type: number, text: string }[][] = [];
         const frac: Fraction = gve.notes[0].graphicalNoteLength;
         const isTuplet: boolean = gve.notes[0].sourceNote.NoteTuplet !== undefined;
         let duration: string = VexFlowConverter.durations(frac, isTuplet)[0];
@@ -1161,6 +1161,8 @@ export class VexFlowConverter {
         let isXNotehead: boolean = false;
         for (const note of gve.notes) {
             const tabNote: TabNote = note.sourceNote as TabNote;
+            const tabPhrases: { type: number, text: string }[] = [];
+            tabBends.push(tabPhrases);
             let tabPosition: {str: number, fret: number} = {str: tabNote.StringNumberTab, fret: tabNote.FretNumber};
             if (!(note.sourceNote instanceof TabNote)) {
                 log.info(`invalid tab note: ${note.sourceNote.Pitch.ToString()} in measure ${gve.parentStaffEntry.parentMeasure.MeasureNumber}` +
@@ -1245,14 +1247,18 @@ export class VexFlowConverter {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
         }
 
-        if (tabPhrases.length > 0) {
+        for (let index: number = 0; index < tabBends.length; index++) {
+            const tabPhrases: {type: number, text: string}[] = tabBends[index];
+            if (tabPhrases.length === 0) {
+                continue;
+            }
             // One Bend for all segments, so that a release continues from the preceding bend
             //   (the legacy constructor's release flag adds an up segment of its own).
             //   Without a width, VexFlow sizes each segment by its text (Bend.updateWidth()) like the legacy constructor;
             //   the typings require one.
             const bend: VF.Bend = new VF.Bend("", false, tabPhrases as { type: number, text: string, width: number }[]);
             VexFlowConverter.setVexFlowTextFontOfBend(bend, rules);
-            vfnote.addModifier(bend);
+            vfnote.addModifier(bend, index);
         }
 
         // The duration already contains the dots in its ticks. Add only the glyphs, once per chord.
