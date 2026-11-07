@@ -70,4 +70,41 @@ describe("Sustain ties starting at TAB technique endpoints", () => {
         check();
         expect(div.querySelector("canvas")).not.to.equal(null);
     });
+    it("does not duplicate a visible technique and sustain for a hidden unison voice", async () => {
+        const score: Document = TestUtils.getScore("test_tab_sustain_after_hp.musicxml").cloneNode(true) as Document;
+        for (const measure of Array.from(score.querySelectorAll("part > measure"))) {
+            const notes: Element[] = Array.from(measure.querySelectorAll("note"));
+            const backup: Element = score.createElement("backup");
+            const duration: Element = score.createElement("duration");
+            duration.textContent = "4";
+            backup.append(duration);
+            measure.append(backup);
+            for (const source of notes) {
+                const note: Element = source.cloneNode(true) as Element;
+                note.setAttribute("print-object", "no");
+                note.querySelector("voice").textContent = "2";
+                measure.append(note);
+            }
+        }
+        osmd = new OpenSheetMusicDisplay(div, {autoResize: false});
+        await osmd.load(score);
+        osmd.render();
+        expect(div.querySelectorAll(".vf-stavetie path")).to.have.length(6);
+        osmd.render();
+        expect(div.querySelectorAll(".vf-stavetie path")).to.have.length(6);
+    });
+    it("clears outgoing graphical ties when the legacy NoteTie setter is cleared", async () => {
+        await render();
+        const sustain: GraphicalTie = ties(0).find(tie => tie.Tie.Type === "");
+        const source: any = sustain.StartNote.sourceNote;
+        const legacy: any = source.NoteTie;
+        expect(source.NoteTies).to.have.length(2);
+        source.NoteTie = legacy;
+        expect(source.NoteTies).to.have.length(2);
+        source.NoteTie = undefined;
+        expect(source.NoteTies).to.have.length(0);
+        osmd.render();
+        expect(ties(0).filter(tie => tie.Tie.Type === "")).to.have.length(0);
+        expect(ties(0).filter(tie => tie.Tie.Type === "H")).to.have.length(1);
+    });
 });
