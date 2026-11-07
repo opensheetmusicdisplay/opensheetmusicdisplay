@@ -9,6 +9,11 @@ on:
     branches: [perf/safari-bench]
   workflow_dispatch:
 
+# The session numbers of each benchmark (each session a fresh browser; empty: the benchmark is skipped).
+env:
+  WARM_SESSIONS: ""
+  CLEARIDLE_SESSIONS: "21 22 23 24 25 26"
+
 jobs:
   bench:
     strategy:
@@ -16,7 +21,7 @@ jobs:
       matrix:
         engine: [safari, webkit]
     runs-on: macos-15
-    timeout-minutes: 120
+    timeout-minutes: 150
 
     steps:
       - uses: actions/checkout@v6
@@ -47,21 +52,23 @@ jobs:
           sysctl -n hw.ncpu hw.memsize
           /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" /Applications/Safari.app/Contents/Info.plist
 
-      - name: Warm (21 scores, 2 sessions)
+      - name: Warm (21 scores)
+        if: env.WARM_SESSIONS != ''
         working-directory: test/performance/browserBenchWork
         env:
           PLAYWRIGHT_FROM: ${{ github.workspace }}
         run: |
           cp builds-warm.json builds.json
-          for s in 1 2; do node browserBench.mjs ${{ matrix.engine }} browserBenchWarm.html $s 10 3 warm.json; done
+          for s in $WARM_SESSIONS; do node browserBench.mjs ${{ matrix.engine }} browserBenchWarm.html $s 10 3 warm.json; done
 
-      - name: clear() + 10 s idle, next score (6 scores, 2 sessions)
+      - name: clear() + 10 s idle, next score (6 scores)
+        if: env.CLEARIDLE_SESSIONS != ''
         working-directory: test/performance/browserBenchWork
         env:
           PLAYWRIGHT_FROM: ${{ github.workspace }}
         run: |
           cp builds-clearidle.json builds.json
-          for s in 11 12; do node browserBench.mjs ${{ matrix.engine }} browserBenchClearIdle.html $s 3 1 clearidle.json; done
+          for s in $CLEARIDLE_SESSIONS; do node browserBench.mjs ${{ matrix.engine }} browserBenchClearIdle.html $s 3 1 clearidle.json; done
 
       - name: Summary
         if: always()
