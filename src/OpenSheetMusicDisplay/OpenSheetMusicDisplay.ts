@@ -1542,6 +1542,9 @@ export class OpenSheetMusicDisplay {
         if (options.fillEmptyMeasuresWithWholeRest !== undefined) {
             this.rules.FillEmptyMeasuresWithWholeRest = options.fillEmptyMeasuresWithWholeRest;
         }
+        if (options.drawRestOnlyMeasuresAsWholeMeasureRest !== undefined) {
+            this.rules.DrawRestOnlyMeasuresAsWholeMeasureRest = options.drawRestOnlyMeasuresAsWholeMeasureRest;
+        }
         if (options.followCursor !== undefined) {
             this.FollowCursor = options.followCursor;
         }

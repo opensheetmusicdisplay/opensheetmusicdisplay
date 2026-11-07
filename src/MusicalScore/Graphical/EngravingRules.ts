@@ -529,6 +529,8 @@ export class EngravingRules {
     public AlignRests: AlignRestOption; // 0 = false, 1 = true, 2 = auto
     public RestCollisionYPadding: number;
     public FillEmptyMeasuresWithWholeRest: FillEmptyMeasuresWithWholeRests | number;
+    /** Draw a staff's measure that only has rests of one voice, filling the measure, as one whole-measure rest. See OSMDOptions. */
+    public DrawRestOnlyMeasuresAsWholeMeasureRest: boolean;
     public ArpeggiosGoAcrossVoices: boolean;
     public RenderArpeggios: boolean;
     public RenderSlurs: boolean;
@@ -1195,6 +1197,7 @@ export class EngravingRules {
         this.AlignRests = AlignRestOption.Never; // 0 = false, 1 = true, 2 = auto
         this.RestCollisionYPadding = 0.0; // 1.0 = half distance between staff lines (e.g. E to F). will be rounded to whole numbers.
         this.FillEmptyMeasuresWithWholeRest = FillEmptyMeasuresWithWholeRests.No;
+        this.DrawRestOnlyMeasuresAsWholeMeasureRest = false;
         this.ArpeggiosGoAcrossVoices = false; // safe option, as otherwise arpeggios will always go across all voices in Vexflow, which is often unwanted
         this.RenderArpeggios = true;
         this.RenderSlurs = true;
