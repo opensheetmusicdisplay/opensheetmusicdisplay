@@ -6,6 +6,9 @@ export class AbstractExpression {
     public ColorXML: string;
     /** The xml:lang of the expression's words, see Label.language. */
     public language: string;
+    /** The vertical position the file gives the words or dynamic, in tenths of a staff space, up from the top line of the
+     *  staff: MusicXML default-y plus relative-y. Undefined without a default-y (see ExpressionReader.readYPositionXml()). */
+    public YPositionXml: number;
 
     constructor(placement: PlacementEnum) {
         this.placement = placement;

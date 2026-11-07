@@ -6,9 +6,17 @@ note: this patch will likely create errors when used with a different vexflow ve
 if using a different vexflow version, disable this prebuild patch script in package.json.
 
 These files are custom patches for the currently installed vexflow version.
-They are copied by the npm prebuild script to ../../node_modules/vexflow/src/ before a build.
+They are copied by the npm prebuildVexflow script to ../../node_modules/vexflow/src/ before a build,
+and before npm test, test:watch, start and start:local, which use node_modules/vexflow/src without a build.
+vitest.config.mjs also copies the changed files when Vitest starts, e.g. for npx vitest or an editor's Vitest extension.
 Each .js has comments like "// VexFlowPatch: [explanation]" to indicate what was changed.
 (a diff can be created from the base vexflow version)
+
+All source files of vexflow 1.2.93 are here, also the ones without patches (unchanged originals, not listed below),
+so that a build of any commit uses exactly that commit's vexflow sources: the prebuild copy only overwrites files,
+and a file patched later would otherwise stay patched in node_modules when building an older commit.
+When patching one of them, its diff then only shows the patch (the "// VexFlowPatch:" lines).
+Left out: the fonts that vexflow 1.2.93 doesn't import (fonts/gonville*.js, custom_glyphs.js, microtonal.js).
 
 articulation.js (custom addition):
 respect modifier.y_shift (y_shift affects y position of rendering)

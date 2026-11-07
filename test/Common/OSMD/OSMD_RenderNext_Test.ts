@@ -596,6 +596,47 @@ describe("OpenSheetMusicDisplay incremental rendering of a draw range (renderNex
         osmd.render();
         expect(systemsLaidOut()).to.equal("2 3");
     });
+
+    // drawUpToSystemNumber and drawUpToPageNumber end the layout at a system or page: where it ends depends on the layout. The
+    //   progress of renderNext() used to count up to the last measure of the sheet, also once it was drawn up to that system.
+    it("renders the systems up to drawUpToSystemNumber, counting the progress up to their last measure once laid out", async () => {
+        // 16 measures with a system break every 4 measures: 3 systems are the measures 1 to 12
+        osmd.setOptions({ newSystemFromXML: true, drawUpToSystemNumber: 3 });
+        await osmd.load(TestUtils.getScore("test_renderNext_copyright_below_last_system_1710.musicxml"));
+        osmd.render();
+        expect(systemsLaidOut(), "render()").to.equal("1 2 3 4 | 5 6 7 8 | 9 10 11 12");
+        const elementsOfRender: string[] = drawnElements();
+        expect(renderNextUntilDone({ measures: 100 }), "one batch").to.deep.equal(["12/12, last 12, next none"]);
+        osmd.resetIncrementalRendering();
+        expect(renderNextUntilDone({ systems: 1 })).to.deep.equal(
+            ["4/16, last 4, next 5", "8/16, last 8, next 9", "12/12, last 12, next none"]);
+        expect(progress(osmd.IncrementalRenderProgress), "after the last batch").to.equal("12/12, last 12, next none");
+        expect(systemsLaidOut()).to.equal("1 2 3 4 | 5 6 7 8 | 9 10 11 12");
+        expect(drawnElements()).to.deep.equal(elementsOfRender);
+    });
+
+    it("renders the pages up to drawUpToPageNumber, counting the progress up to their last measure once laid out", async () => {
+        // page breaks from the XML: the first page has the measures 1 to 12
+        osmd.setOptions({ newPageFromXML: true, drawUpToPageNumber: 1 });
+        await osmd.load(TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml"));
+        osmd.render();
+        const elementsOfRender: string[] = drawnElements();
+        expect(renderNextUntilDone({ systems: 1 })).to.deep.equal(["6/38, last 6, next 7", "12/12, last 12, next none"]);
+        expect(drawnElements()).to.deep.equal(elementsOfRender);
+    });
+
+    it("renders the systems up to drawUpToSystemNumber on a single horizontal staffline, counting the progress in their measures", async () => {
+        // 6 measures in 3 systems (system breaks from the XML), the first two ending with an extra measure for the key and time
+        //   of the next one: 2 systems are the measures 1 to 4
+        osmd.setOptions({ renderSingleHorizontalStaffline: true, newSystemFromXML: true, drawUpToSystemNumber: 2 });
+        await osmd.load(TestUtils.getScore("test_wavy_line_multiline_extragraphicalmeasure.musicxml"));
+        osmd.render();
+        expect(systemsLaidOut(), "render()").to.equal("1 2 -1 | 3 4 -1");
+        const elementsOfRender: string[] = drawnElements();
+        expect(renderNextUntilDone({ measures: 1 })).to.deep.equal(
+            ["1/4, last 1, next 2", "2/4, last 2, next 3", "3/4, last 3, next 4", "4/4, last 4, next none"]);
+        expect(drawnElements()).to.deep.equal(elementsOfRender);
+    });
 });
 
 describe("OpenSheetMusicDisplay rendering with nothing to draw (render, renderNext)", () => {

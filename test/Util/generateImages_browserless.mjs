@@ -765,6 +765,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestKeySignatureCourtesyClefs = sampleFilename.startsWith("test_key_signature_courtesy_clefs");
     // courtesy key and time signatures of different widths at system breaks, see test_courtesy_signatures_staff_ends: systems as in the file
     const isTestCourtesySignaturesStaffEnds = sampleFilename.startsWith("test_courtesy_signatures_staff_ends");
+    const isTestTabRhythmDots = sampleFilename.startsWith("test_tab_rhythm_dots.");
     const isTestTabs4Strings = sampleFilename.includes("test_tabs_4_strings");
     const isTestFingeringLeft = sampleFilename.includes("test_fingering_left");
     const isTestArticulationAboveNote = sampleFilename.includes("test_accent_above_except_piano_left_hand");
@@ -781,6 +782,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestLyricsDashContinuedInNextSystem = sampleFilename.startsWith("test_lyrics_dash_continued_in_next_system");
     // tab ties across system breaks, see test_tab_hammer-on_pull-off_tie_across_system_breaks: systems as in the file
     const isTestTabTiesAcrossSystemBreaks = sampleFilename.startsWith("test_tab_hammer-on_pull-off_tie_across_system_breaks");
+    const isTestTabChordSlidesAcrossSystemBreaks = sampleFilename.startsWith("test_tabs_chord_slide_indices_system_break.");
     // a key and time change at a system break (courtesy signatures), see test_hidden_staff_clef_key_time: systems as in the file
     const isTestHiddenStaffClefKeyTime = sampleFilename.startsWith("test_hidden_staff_clef_key_time");
     // multiple rest measures ending at the system and page breaks of the file, see test_multiple_rest_measures_auto_xml_breaks
@@ -821,7 +823,8 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
         drawUpToMeasureNumber: drawUpToMeasureNumber,
         drawMeasureNumbersOnlyAtSystemStart: isTestMeasureNumbersOnlyAtSystemStart,
         newSystemFromXML: isFunctionTestSystemAndPageBreaks || isTestMeasureNumbersOnlyAtSystemStart || isTestGraceNotesOnlyMeasure ||
-            isTestLyricsDashContinuedInNextSystem || isTestTabTiesAcrossSystemBreaks || isTestHiddenStaffClefKeyTime ||
+            isTestLyricsDashContinuedInNextSystem || isTestTabTiesAcrossSystemBreaks || isTestTabChordSlidesAcrossSystemBreaks ||
+            isTestHiddenStaffClefKeyTime ||
             isTestMultipleRestMeasuresXmlBreaks || isTestPedalSignsBelowBeams || isTestPedalLineAndSign || isTestPedalResumeDiscontinue ||
             isTestPedalAtWholeMeasureRest,
         newSystemFromNewPageInXML: isTestPageBreakImpliesSystemBreak,
@@ -881,6 +884,9 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     }
     if (isTestPartAbbreviationSingleStaff) {
         osmdInstance.EngravingRules.RenderPartAbbreviationsForSingleStaff = true;
+    }
+    if (isTestTabRhythmDots) {
+        osmdInstance.EngravingRules.TabRhythmRendered = true;
     }
     if (isTestTabs4Strings) {
         osmdInstance.EngravingRules.TabKeySignatureSpacingAdded = false;

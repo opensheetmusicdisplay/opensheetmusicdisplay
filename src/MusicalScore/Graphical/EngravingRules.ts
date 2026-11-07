@@ -260,6 +260,11 @@ export class EngravingRules {
      */
     public TabTupletYOffsetTop: number;
     public TabTupletYOffsetEffects: number;
+    /** Opt in to TAB note rhythm (stems, flags and augmentation dots). Defaults to false.
+     * Explicit MusicXML stem=none remains stemless; whole notes and grace notes keep their existing rendering.
+     * Existing XML beams are controlled separately by TabBeamsRendered.
+     */
+    public TabRhythmRendered: boolean;
     public TabBeamsRendered: boolean;
     public TabKeySignatureRendered: boolean;
     /** Whether space should be reserved as if there was a key signature.
@@ -687,6 +692,10 @@ export class EngravingRules {
     public RenderWavyLines: boolean;
     public DynamicExpressionMaxDistance: number;
     public DynamicExpressionSpacer: number;
+    /** Whether words and an instantaneous dynamic of the same staff, placement and time are drawn on one line, in the order
+     *  of the file, e.g. "più f" or "p dolce" (see MusicSheetCalculator.placeWordsBesideSameTimeDynamic()). Otherwise the
+     *  words are placed under (over) the dynamic. Default true. */
+    public PlaceWordsBesideSameTimeDynamic: boolean;
     /** Skip a dynamic marking that repeats the currently active one, i.e. has the same text (e.g. a second p in a row). Default false. */
     public IgnoreRepeatedDynamics: boolean;
     public ExpressionsUseXMLColor: boolean;
@@ -1007,6 +1016,7 @@ export class EngravingRules {
         this.TabTupletYOffsetTop = -3.5; // -3.5 is fine if you don't have effects like bends on top. Otherwise, e.g. -2 avoids overlaps.
         this.TabTupletYOffsetEffects = 1.5;
         this.TabTupletsBracketed = true;
+        this.TabRhythmRendered = false;
         this.TabBeamsRendered = true;
         this.TabKeySignatureRendered = false; // standard not to render for tab scores
         this.TabKeySignatureSpacingAdded = true; // false only works for tab-only scores, as it will prevent vertical x-alignment.
@@ -1112,6 +1122,7 @@ export class EngravingRules {
         this.ContinuousTempoTextHeight = 2.3;
         this.DynamicExpressionMaxDistance = 2;
         this.DynamicExpressionSpacer = 0.5;
+        this.PlaceWordsBesideSameTimeDynamic = true;
         this.IgnoreRepeatedDynamics = false;
         this.ExpressionsUseXMLColor = true;
 

@@ -11,6 +11,7 @@ import {KeyEnum} from "../../VoiceData/Instructions/KeyInstruction";
 import {AccidentalEnum} from "../../../Common/DataObjects/Pitch";
 import {NoteEnum} from "../../../Common/DataObjects/Pitch";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
+import { TabRhythmDot } from "./TabRhythmDot";
 import {GraphicalNote} from "../GraphicalNote";
 import {SystemLinesEnum} from "../SystemLinesEnum";
 import {FontStyles} from "../../../Common/Enums/FontStyles";
@@ -1205,13 +1206,28 @@ export class VexFlowConverter {
             duration: duration,
             positions: tabPositions,
         };
+        const stemDirection: StemDirectionType = gve.parentVoiceEntry.WantedStemDirection;
+        // MuseScore's stemless TAB and whole notes have no rhythm dots. Keep OSMD's default unchanged.
+        // Hidden playback notes must not acquire a visible flag or dot; RenderHiddenNotes can opt them back in.
+        const renderRhythm: boolean = rules.TabRhythmRendered && !gve.parentVoiceEntry.IsGrace &&
+            notes.some(note => note.sourceNote.isVisible()) &&
+            gve.parentVoiceEntry.StemDirectionXml !== StemDirectionType.None && stemDirection !== StemDirectionType.None &&
+            (gve.notes[0].sourceNote.TypeLength ?? frac).RealValue < 1;
         let vfnote: VF.TabNote;
         if (gve.parentVoiceEntry?.IsGrace) {
             // Grace note in a tab staff: Vexflow's GraceTabNote draws the fret number smaller (scale 0.6, 7.5pt instead of 10pt font).
             //   It is drawn as part of a GraceNoteGroup attached to its main note, see VexFlowTabMeasure.graphicalMeasureCreatedCalculations() (#1721)
             vfnote = new (VF as any).GraceTabNote(tabNoteStruct); // GraceTabNote is missing in the vexflow typings
         } else {
-            vfnote = new VF.TabNote(tabNoteStruct);
+            vfnote = renderRhythm ? new VF.TabNote(tabNoteStruct, true) : new VF.TabNote(tabNoteStruct);
+            if (renderRhythm) {
+                if (gve.notes[0].sourceNote.TypeLength?.RealValue === 0.5) {
+                    // Like MuseScore, distinguish half notes from quarters with a half-length TAB rhythm stem.
+                    (vfnote as any).setStemLength(vfnote.getStemLength() / 2); // the VexFlow typings omit the argument
+                }
+                vfnote.setStemDirection(stemDirection === StemDirectionType.Down ? VF.Stem.DOWN : VF.Stem.UP);
+                gve.parentVoiceEntry.StemDirection = stemDirection === StemDirectionType.Down ? StemDirectionType.Down : StemDirectionType.Up;
+            }
         }
         (vfnote as any).render_options.font = VexFlowConverter.vexFlowTextCssFont((vfnote as any).render_options.font, rules);
         if (isXNotehead) {
@@ -1237,6 +1253,13 @@ export class VexFlowConverter {
             const bend: VF.Bend = new VF.Bend("", false, tabPhrases as { type: number, text: string, width: number }[]);
             VexFlowConverter.setVexFlowTextFontOfBend(bend, rules);
             vfnote.addModifier(bend);
+        }
+
+        // The duration already contains the dots in its ticks. Add only the glyphs, once per chord.
+        if (renderRhythm) {
+            for (let index: number = 0; index < numDots; index++) {
+                vfnote.addModifier(new TabRhythmDot(), 0);
+            }
         }
 
         return vfnote;
