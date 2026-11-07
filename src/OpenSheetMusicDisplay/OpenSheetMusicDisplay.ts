@@ -112,8 +112,8 @@ export class OpenSheetMusicDisplay {
     /** The key of the container's property that keeps this instance in memory while autoResize is on (see handleResize()). */
     private static readonly containerInstanceKey: symbol = Symbol("OpenSheetMusicDisplay");
     protected followCursor: boolean;
-    /** Whether this instance uses the page's warm keeper, see KeepWarm. */
-    private keepWarm: boolean = true;
+    /** Whether this instance uses the page's warm keeper, or "auto" (in Chromium-based browsers), see KeepWarm. */
+    private keepWarm: boolean | "auto" = "auto";
     /** Whether this instance is counted in warmKeeperUsers (it rendered with KeepWarm on, and isn't disposed). */
     private usesWarmKeeper: boolean = false;
     /** The page's warm keeper (see KeepWarm): one instance, shared by all instances that use it. Static on purpose: its
@@ -430,26 +430,48 @@ export class OpenSheetMusicDisplay {
     }
 
     /**
-     * Whether this instance uses the page's warm keeper (default true), a small rendering OSMD keeps alive so that a sheet
+     * Whether this instance uses the page's warm keeper: true, false, or "auto" (default): in Chromium-based browsers (Chrome,
+     * Edge, Opera, Electron, ...), see isChromiumBrowser(). The keeper is a small rendering OSMD keeps alive so that a sheet
      * rendered after clear() renders about as fast as the one before it. Also the option keepWarm (constructor, setOptions()).
      * The JavaScript engine (V8 in Chrome, Edge and Node) compiles OSMD's code for the objects it creates, and throws that
      * compiled code away once no such object is left, at a full garbage collection. After clear(), nothing of the sheet is
      * left, so the next sheet then rendered up to ~27% slower if such a collection happened in between (Chrome).
+     * Firefox and Safari showed no such slowdown, and no gain from the keeper: "auto" makes none there.
      * After the first render() or renderNext() of an instance that uses it, OSMD renders a built-in score of 8 measures
      * (WarmKeeperScore.ts) when the page is idle (requestIdleCallback), into a container that isn't in the page: about
      * 20 ms in Chrome, and a few MB. One keeper per page, shared by the instances that use it, as any rendering keeps the
-     * compiled code alive. It's freed when the last of them is disposed (dispose()) or sets this to false. Not made without
+     * compiled code alive. It's freed when the last of them is disposed (dispose()) or turns this off. Not made without
      * requestIdleCallback (e.g. Node with jsdom).
      */
-    public get KeepWarm(): boolean {
+    public get KeepWarm(): boolean | "auto" {
         return this.keepWarm;
     }
 
-    public set KeepWarm(value: boolean) {
+    public set KeepWarm(value: boolean | "auto") {
         this.keepWarm = value;
-        if (!value) {
+        if (!this.keepsWarm()) {
             this.stopUsingWarmKeeper();
         }
+    }
+
+    /** Whether this instance uses the page's warm keeper with its KeepWarm setting in this browser ("auto" decided). */
+    private keepsWarm(): boolean {
+        return this.keepWarm === true || this.keepWarm === "auto" && typeof navigator !== "undefined" &&
+            OpenSheetMusicDisplay.isChromiumBrowser(navigator);
+    }
+
+    /**
+     * Whether `browser` (the page's navigator) is a Chromium-based browser, whose JavaScript engine V8 throws away the code it
+     * compiled for objects of which none is left (see KeepWarm): from navigator.userAgentData (Chromium 90+, secure pages
+     * only), else from the user agent: Chromium-based browsers name "Chrome/" or "Chromium/" in it, Safari and Firefox don't
+     * (also not on iOS, where every browser is WebKit-based: CriOS, EdgiOS, FxiOS).
+     */
+    private static isChromiumBrowser(browser: Navigator): boolean {
+        const brands: { brand: string }[] = (<any>browser).userAgentData?.brands;
+        if (Array.isArray(brands) && brands.length > 0) {
+            return brands.some((b: { brand: string }) => b.brand === "Chromium");
+        }
+        return /Chrome\/|Chromium\//.test(browser.userAgent ?? "");
     }
 
     /** Stops using the page's warm keeper (see KeepWarm): the last instance to stop frees it. */
@@ -477,7 +499,7 @@ export class OpenSheetMusicDisplay {
     private useWarmKeeper(): void {
         // Browsers only: without requestIdleCallback (e.g. Node with jsdom) there's no idle time to render the keeper in,
         //   and scripts that render many sheets (e.g. generateImages_browserless) would render a keeper for each instance.
-        if (!this.keepWarm || this.fixedLayoutWidth !== undefined || typeof (<any>globalThis).requestIdleCallback !== "function" ||
+        if (!this.keepsWarm() || this.fixedLayoutWidth !== undefined || typeof (<any>globalThis).requestIdleCallback !== "function" ||
             typeof document === "undefined" || typeof atob === "undefined") {
             return;
         }

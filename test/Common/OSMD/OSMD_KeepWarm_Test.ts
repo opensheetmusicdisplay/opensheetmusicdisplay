@@ -8,7 +8,8 @@ import { WarmKeeperScoreMxlBase64 } from "../../../src/OpenSheetMusicDisplay/War
  * The warm keeper (OpenSheetMusicDisplay.KeepWarm): after the first render() or renderNext() of an instance that uses it, OSMD
  * renders a built-in score when the page is idle, into a container that isn't in the page, and keeps it, so that the JavaScript
  * engine keeps the code it compiled for OSMD's objects after clear(). One keeper per page, shared by the instances that use it,
- * freed when the last of them stops (dispose(), KeepWarm = false). These tests check when it's made and freed, not the speed.
+ * freed when the last of them stops (dispose(), KeepWarm = false). KeepWarm "auto" (default) uses it in Chromium-based browsers
+ * only, so the tests set KeepWarm = true where they need a keeper. These tests check when it's made and freed, not the speed.
  * Each test file runs in a page of its own, so other files' instances don't use this page's keeper.
  */
 describe("OSMD KeepWarm", () => {
@@ -52,9 +53,15 @@ describe("OSMD KeepWarm", () => {
         return new XMLSerializer().serializeToString(clone.documentElement);
     }
 
+    /** Whether `browser` counts as Chromium-based for KeepWarm "auto" (a private static method). */
+    function isChromiumBrowser(browser: object): boolean {
+        return (OpenSheetMusicDisplay as any).isChromiumBrowser(browser);
+    }
+
+    /** A loaded and rendered instance, with KeepWarm true unless `options` says otherwise. */
     async function renderedInstance(options: object = {}): Promise<OpenSheetMusicDisplay> {
         const container: HTMLElement = TestUtils.getDivElement(document);
-        const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(container, { autoResize: false, ...options });
+        const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(container, { autoResize: false, keepWarm: true, ...options });
         await osmd.load(TestUtils.getScore(sampleName));
         osmd.render();
         return osmd;
@@ -76,7 +83,6 @@ describe("OSMD KeepWarm", () => {
         const first: OpenSheetMusicDisplay = await renderedInstance();
         let second: OpenSheetMusicDisplay = undefined;
         try {
-            expect(first.KeepWarm, "on by default").to.equal(true);
             expect(await waitFor(() => pageKeeper() !== undefined, 5000), "a keeper is made when the page is idle").to.equal(true);
             const keeper: OpenSheetMusicDisplay = pageKeeper();
             expect(containerOf(keeper).isConnected, "the keeper's container isn't in the page").to.equal(false);
@@ -125,7 +131,7 @@ describe("OSMD KeepWarm", () => {
 
     it("renderNext() makes a keeper too", async () => {
         const container: HTMLElement = TestUtils.getDivElement(document);
-        const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(container, { autoResize: false });
+        const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(container, { autoResize: false, keepWarm: true });
         try {
             await osmd.load(TestUtils.getScore(sampleName));
             osmd.renderNext();
@@ -133,5 +139,48 @@ describe("OSMD KeepWarm", () => {
         } finally {
             remove(osmd);
         }
+    });
+
+    it("KeepWarm \"auto\" (default) makes a keeper in Chromium-based browsers only", async () => {
+        const osmd: OpenSheetMusicDisplay = await renderedInstance({ keepWarm: undefined });
+        try {
+            expect(osmd.KeepWarm, "auto by default").to.equal("auto");
+            const chromium: boolean = isChromiumBrowser(navigator);
+            expect(await waitFor(() => pageKeeper() !== undefined, chromium ? 5000 : 0) || !chromium,
+                "a keeper in Chromium").to.equal(true);
+            if (!chromium) {
+                await idle(); // where a keeper would be made
+                await idle(); // and loaded, before it renders
+                expect(pageKeeper(), "no keeper in this browser").to.equal(undefined);
+            }
+            osmd.KeepWarm = true;
+            osmd.render();
+            expect(await waitFor(() => pageKeeper() !== undefined, 5000), "true makes one in any browser").to.equal(true);
+            osmd.KeepWarm = "auto";
+            expect(pageKeeper() !== undefined, "\"auto\" keeps it in Chromium, frees it elsewhere").to.equal(chromium);
+        } finally {
+            remove(osmd);
+        }
+    });
+
+    it("counts Chromium-based browsers for \"auto\" from userAgentData, else from the user agent", () => {
+        const chrome: string = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36";
+        const edge: string = chrome + " Edg/142.0.0.0";
+        const safari: string = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15";
+        const chromeIos: string = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) " +
+            "CriOS/142.0.0.0 Mobile/15E148 Safari/604.1";
+        const firefox: string = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0";
+        expect(isChromiumBrowser({ userAgent: chrome }), "Chrome").to.equal(true);
+        expect(isChromiumBrowser({ userAgent: edge }), "Edge").to.equal(true);
+        expect(isChromiumBrowser({ userAgent: safari }), "Safari").to.equal(false);
+        expect(isChromiumBrowser({ userAgent: chromeIos }), "Chrome on iOS (WebKit)").to.equal(false);
+        expect(isChromiumBrowser({ userAgent: firefox }), "Firefox").to.equal(false);
+        expect(isChromiumBrowser({}), "no user agent").to.equal(false);
+        const brands: (names: string[]) => object = (names: string[]) => ({ brands: names.map(brand => ({ brand })) });
+        expect(isChromiumBrowser({ userAgent: safari, userAgentData: brands(["Not)A;Brand", "Chromium", "Google Chrome"]) }),
+            "userAgentData first").to.equal(true);
+        expect(isChromiumBrowser({ userAgent: chrome, userAgentData: brands(["Not)A;Brand", "Some Browser"]) }),
+            "userAgentData without Chromium").to.equal(false);
+        expect(isChromiumBrowser({ userAgent: chrome, userAgentData: { brands: [] } }), "empty brands: the user agent").to.equal(true);
     });
 });
