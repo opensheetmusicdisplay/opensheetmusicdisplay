@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>OSMD checkpoints</title>
+<style>
+  body { margin: 0; }
+  #host > div { width: 1200px; }
+</style>
+</head>
+<body>
+<div id="host"></div>
+<script>
+  // Shuffled, paired A/B as in PR 1786: both builds on the same page, each score measured with both builds back to back
+  // in random order, score order shuffled every round. The driver (run.mjs) opens a fresh headless Chrome per session.
+  const params = new URLSearchParams(location.search);
+  const session = Number(params.get("session") || 0);
+  const rounds = Number(params.get("rounds") || 10);
+  const warmup = Number(params.get("warmup") || 2);
+  let builds = [];
+  const scores = [
+    "JosephHaydn_ConcertanteCello.xml", "ScottJoplin_The_Entertainer.xml", "MuzioClementi_SonatinaOpus36No3_Part1.xml",
+    "ScottJoplin_EliteSyncopations.xml", "CharlesGounod_Meditation.xml", "ActorPreludeSample.xml",
+    "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml", "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
+    "MuzioClementi_SonatinaOpus36No1_Part1.xml", "JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml",
+    "MuzioClementi_SonatinaOpus36No1_Part2.xml", "JohannSebastianBach_Air.xml", "Schubert_An_die_Musik.xml",
+    "Mozart_DasVeilchen.xml", "Saltarello.xml", "Brahms_violin_concerto.musicxml", "MuzioClementi_SonatinaOpus36No3_Part2.xml",
+    "Mozart_AnChloe.xml", "Beethoven_AnDieFerneGeliebte.xml", "Debussy_Mandoline.xml",
+    "Mozart_String_Quartet_in_G_K._387_1st_Mvmnt_excerpt.musicxml"
+  ];
+
+  function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  async function measure(build, xml) {
+    const container = document.createElement("div");
+    document.getElementById("host").appendChild(container);
+    const osmd = new window.libs[build].OpenSheetMusicDisplay(container, { autoResize: false });
+    Object.assign(osmd.EngravingRules, window.buildRules[build]); // e.g. the same file with a rule changed
+    const t0 = performance.now();
+    await osmd.load(xml);
+    const t1 = performance.now();
+    osmd.render();
+    const t2 = performance.now();
+    container.getBoundingClientRect(); // forces the browser's layout of the drawn SVG, as before the score can be shown
+    const t3 = performance.now();
+    const result = { load: t1 - t0, render: t2 - t1, renderLayout: t3 - t1, version: osmd.Version,
+                     svgElements: container.getElementsByTagName("*").length };
+    osmd.clear();
+    container.remove();
+    return result;
+  }
+
+  async function loadBuilds() {
+    // builds.json: [[label, file, rules?], ...], loaded one after the other, each one's global kept under its label;
+    //   rules: EngravingRules set on each instance of that label before load(), e.g. {"SVGMergeSingleChildGroups": false}
+    window.libs = {};
+    window.buildRules = {};
+    for (const [label, file, rules] of await (await fetch("builds.json")).json()) {
+      window.buildRules[label] = rules || {};
+      window.opensheetmusicdisplay = undefined;
+      await new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = file;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+      window.libs[label] = window.opensheetmusicdisplay;
+    }
+    builds = Object.keys(window.libs);
+  }
+
+  async function run() {
+    await loadBuilds();
+    const start = performance.now();
+    const xml = {};
+    for (const score of scores) {
+      xml[score] = await (await fetch("scores/" + encodeURIComponent(score))).text();
+    }
+    const results = [];
+    const errors = [];
+    for (let round = 0; round < warmup + rounds; round++) {
+      for (const score of shuffle(scores.slice())) {
+        for (const build of shuffle(builds.slice())) {
+          try {
+            const m = await measure(build, xml[score]);
+            if (round >= warmup) {
+              results.push({ session, round: round - warmup, score, build, ...m });
+            }
+            if (!window.gc) {
+              // Firefox has no gc(): its cycle collector, which frees a dropped rendering (DOM nodes that JS objects hold),
+              //   runs while the page is idle. Back to back, one session grew to 13 GB (2026-10-30).
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
+          } catch (e) {
+            errors.push({ session, round, score, build, error: String(e && e.stack || e) });
+          }
+        }
+      }
+    }
+    await fetch("/result", { method: "POST", body: JSON.stringify({ session, results, errors, userAgent: navigator.userAgent,
+                                                                    gc: !!window.gc, ms: performance.now() - start }) });
+  }
+
+  run().catch(e => fetch("/result", { method: "POST", body: JSON.stringify({ session, results: [], errors: [String(e && e.stack || e)] }) }));
+</script>
+</body>
+</html>

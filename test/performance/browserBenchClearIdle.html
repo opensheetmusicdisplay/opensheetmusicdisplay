@@ -1,0 +1,129 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>OSMD checkpoints</title>
+<style>
+  body { margin: 0; }
+  #host > div { width: 1200px; }
+</style>
+</head>
+<body>
+<div id="host"></div>
+<script>
+  // Shuffled, paired A/B as in PR 1786: both builds on the same page, each score measured with both builds back to back
+  // in random order, score order shuffled every round. The driver (run.mjs) opens a fresh headless Chrome per session.
+  const params = new URLSearchParams(location.search);
+  const session = Number(params.get("session") || 0);
+  const rounds = Number(params.get("rounds") || 10);
+  const warmup = Number(params.get("warmup") || 2);
+  let builds = [];
+  const scores = [ // the 6 scores of cycle.html (each render after 10 s idle: 6 x builds x 10 s per round)
+    "ScottJoplin_The_Entertainer.xml", "JosephHaydn_ConcertanteCello.xml", "CharlesGounod_Meditation.xml",
+    "MuzioClementi_SonatinaOpus36No3_Part1.xml", "JohannSebastianBach_Air.xml", "Beethoven_AnDieFerneGeliebte.xml"];
+  const IDLE_MS = Number(params.get("idle") || 10000);
+
+  function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  async function measure(build, xml, round0) {
+    window.inst = window.inst || {};
+    if (!window.inst[build]) {
+      const c = document.createElement("div");
+      document.getElementById("host").appendChild(c);
+      window.inst[build] = new window.libs[build].OpenSheetMusicDisplay(c, { autoResize: false });
+      Object.assign(window.inst[build].EngravingRules, window.buildRules[build]);
+    }
+    const osmd = window.inst[build]; // experiment: one instance per build, reused for every score
+    const container = osmd.container;
+    // clear + idle: the app clears the instance (nothing of its sheet is left), the page idles, then the next score;
+    //   builds paired on one page (bench-idlepair-clear.html)
+    if (!round0) {
+      osmd.clear();
+    }
+    // experiment (idle-pair): the page idles before each measurement, so that Chrome's idle-time GCs run; builds paired
+    await new Promise(resolve => setTimeout(resolve, round0 ? 0 : IDLE_MS));
+    const t0 = performance.now();
+    await osmd.load(xml);
+    const t1 = performance.now();
+    osmd.render();
+    const t2 = performance.now();
+    container.getBoundingClientRect(); // forces the browser's layout of the drawn SVG, as before the score can be shown
+    const t3 = performance.now();
+    const result = { load: t1 - t0, render: t2 - t1, renderLayout: t3 - t1, version: osmd.Version,
+                     svgElements: container.getElementsByTagName("*").length };
+    // reused: the next load() replaces the sheet
+    return result;
+  }
+
+  async function loadBuilds() {
+    // builds.json: [[label, file, rules?], ...], loaded one after the other, each one's global kept under its label;
+    //   rules: EngravingRules set on each instance of that label before load(), e.g. {"SVGMergeSingleChildGroups": false}
+    window.libs = {};
+    window.buildRules = {};
+    for (const [label, file, rules] of await (await fetch("builds.json")).json()) {
+      window.buildRules[label] = rules || {};
+      window.opensheetmusicdisplay = undefined;
+      await new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = file;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+      window.libs[label] = window.opensheetmusicdisplay;
+      if (window.buildRules[label].__appKeeper) {
+        // app-level warm keeper (for browsers without requestIdleCallback, e.g. Safari, where the build's own keeper isn't
+        //   made): this build renders the given score once into a container that isn't in the page, kept alive
+        const keeperScore = window.buildRules[label].__appKeeper;
+        delete window.buildRules[label].__appKeeper;
+        const k = new window.libs[label].OpenSheetMusicDisplay(document.createElement("div"), { autoResize: false });
+        await k.load(await (await fetch("scores/" + encodeURIComponent(keeperScore))).text());
+        k.render();
+        (window.appKeepers = window.appKeepers || {})[label] = k;
+      }
+    }
+    builds = Object.keys(window.libs);
+  }
+
+  async function run() {
+    await loadBuilds();
+    const start = performance.now();
+    const xml = {};
+    for (const score of scores) {
+      xml[score] = await (await fetch("scores/" + encodeURIComponent(score))).text();
+    }
+    const results = [];
+    const errors = [];
+    for (let round = 0; round < warmup + rounds; round++) {
+      for (const score of shuffle(scores.slice())) {
+        for (const build of shuffle(builds.slice())) {
+          try {
+            const m = await measure(build, xml[score], round < warmup);
+            if (round >= warmup) {
+              results.push({ session, round: round - warmup, score, build, ...m });
+            }
+            if (!window.gc) {
+              // Firefox has no gc(): its cycle collector, which frees a dropped rendering (DOM nodes that JS objects hold),
+              //   runs while the page is idle. Back to back, one session grew to 13 GB (2026-10-30).
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
+          } catch (e) {
+            errors.push({ session, round, score, build, error: String(e && e.stack || e) });
+          }
+        }
+      }
+    }
+    await fetch("/result", { method: "POST", body: JSON.stringify({ session, results, errors, userAgent: navigator.userAgent,
+                                                                    gc: !!window.gc, ms: performance.now() - start }) });
+  }
+
+  run().catch(e => fetch("/result", { method: "POST", body: JSON.stringify({ session, results: [], errors: [String(e && e.stack || e)] }) }));
+</script>
+</body>
+</html>

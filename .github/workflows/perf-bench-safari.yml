@@ -1,0 +1,77 @@
+# Performance benchmark of OSMD in Safari and in Playwright's WebKit on macOS (test/performance/README.md, section
+# "Safari and WebKit"): OSMD 2.2.1 from npm vs this checkout, builds paired on one page, with an A/A pair.
+# Runs on pushes to the branch perf/safari-bench only.
+# Results: the artifacts safari-results and webkit-results (JSON, for test/performance/browserBenchCompare.py).
+name: Perf bench (Safari, WebKit)
+
+on:
+  push:
+    branches: [perf/safari-bench]
+  workflow_dispatch:
+
+jobs:
+  bench:
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [safari, webkit]
+    runs-on: macos-15
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install dependencies and build
+        run: npm install
+
+      - name: Prepare the bench folder
+        run: bash test/performance/browserBenchPrepare.sh
+
+      - name: Enable safaridriver
+        if: matrix.engine == 'safari'
+        run: sudo safaridriver --enable
+
+      - name: Install Playwright's WebKit
+        if: matrix.engine == 'webkit'
+        run: npx playwright install webkit
+
+      - name: Browser and machine
+        run: |
+          sw_vers
+          sysctl -n machdep.cpu.brand_string
+          sysctl -n hw.ncpu hw.memsize
+          /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" /Applications/Safari.app/Contents/Info.plist
+
+      - name: Warm (21 scores, 2 sessions)
+        working-directory: test/performance/browserBenchWork
+        env:
+          PLAYWRIGHT_FROM: ${{ github.workspace }}
+        run: |
+          cp builds-warm.json builds.json
+          for s in 1 2; do node browserBench.mjs ${{ matrix.engine }} browserBenchWarm.html $s 10 3 warm.json; done
+
+      - name: clear() + 10 s idle, next score (6 scores, 2 sessions)
+        working-directory: test/performance/browserBenchWork
+        env:
+          PLAYWRIGHT_FROM: ${{ github.workspace }}
+        run: |
+          cp builds-clearidle.json builds.json
+          for s in 11 12; do node browserBench.mjs ${{ matrix.engine }} browserBenchClearIdle.html $s 3 1 clearidle.json; done
+
+      - name: Summary
+        if: always()
+        working-directory: test/performance/browserBenchWork
+        run: |
+          if [ -f warm.json ]; then python3 ../browserBenchCompare.py warm.json v221:dev dev:devAA | grep -E "^===|render  |renderLayout|load  "; fi
+          if [ -f clearidle.json ]; then python3 ../browserBenchCompare.py clearidle.json v221:dev dev:devAA dev:devAppKeep v221:devAppKeep | grep -E "^===|render  |load  "; fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ matrix.engine }}-results
+          path: test/performance/browserBenchWork/*.json

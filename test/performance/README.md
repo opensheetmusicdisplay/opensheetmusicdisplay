@@ -104,3 +104,43 @@ They serve the repository root, so the bundles to compare must be below it. Buil
   `node test/performance/chromeForcedLayouts.mjs [--filter=regex]`
 
 Run one timing tool at a time, on an otherwise idle machine: parallel load distorts the timings more than the noise above.
+
+## Safari and WebKit
+
+Compares the rendering speed of OSMD 2.2.1 (from npm) with this checkout in real Safari and in Playwright's WebKit, on
+GitHub's macOS runners (`.github/workflows/perf-bench-safari.yml`, runs on pushes to the branch `perf/safari-bench`,
+where these files are).
+Made in November 2026 for the 2.3.0 release and the warm keeper (`osmd.KeepWarm`, a PR at the time), because the
+maintainers have no Mac: does Safari (JavaScriptCore) also render slower after `clear()`, once the memory is collected,
+like Chrome (V8)?
+
+### Method
+
+All builds of a comparison run on one page, each score measured with all builds back to back in random order, the score
+order shuffled every round (the paired design of issue #1716's measurements), so that the machine's speed changes
+cancel out. An A/A pair (`dev` vs `devAA`, the same build twice) shows the noise that's left. Results are the median over
+the scores of the per-score median of the paired ratios (`browserBenchCompare.py`).
+
+- `browserBenchWarm.html`: warm rendering, the 21 scores of issue #1716: each measurement on a new instance, `clear()` after it.
+  No forced garbage collection (`gc()` before each measurement penalizes builds that free their memory, see below).
+- `browserBenchClearIdle.html`: the app's score switch: one instance per build, `clear()`, then the page idles 10 s (the
+  browsers collect garbage then), then `load()` + `render()` of the next score; 6 scores. `devAppKeep` keeps a small
+  rendering alive (the keeper score in `browserBenchScores/`, rendered once at the start), like OSMD's warm keeper does where
+  `requestIdleCallback` exists (Safari doesn't have it).
+- `browserBench.mjs <webkit|safari> <page> <session> <rounds> <warmup> <out.json>`: serves the folder, opens the page in
+  Playwright's WebKit or in Safari (safaridriver), appends the page's result to the JSON file.
+- `browserBenchPrepare.sh`: makes `test/performance/browserBenchWork/` (gitignored) with the builds, scores, pages and build
+  lists. Run after `npm install`, which builds this checkout.
+
+Why no `gc()`: OSMD 2.2.1 kept the last rendering in memory (fixed in #1853). With a forced full GC before each
+measurement and nothing of a build alive, V8 discards the optimized code it compiled for that build's objects (their
+hidden classes die), and the next render runs ~70% slower: develop looked 60% slower than 2.2.1 that way, while it's
+~13% faster without it.
+
+### Results
+
+Download a run's artifacts (`gh run download <run id> -R opensheetmusicdisplay/opensheetmusicdisplay`), then e.g.
+`python browserBenchCompare.py clearidle.json v221:dev dev:devAA dev:devAppKeep`. The workflow log's last step prints the same.
+
+Locally, Playwright's WebKit runs on Windows and Linux too: `npx playwright install webkit`, then in browserBenchWork/
+`node browserBench.mjs webkit browserBenchClearIdle.html 1 3 1 clearidle.json` (with builds.json from builds-clearidle.json).
