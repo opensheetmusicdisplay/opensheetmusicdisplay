@@ -217,9 +217,12 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
                 continue;
             }
             let parentBbox: BoundingBox = graphicalStaffEntry.PositionAndShape;
+            const wholeRestNote: GraphicalNote = graphicalStaffEntry.graphicalVoiceEntries[0]?.notes[0];
             if (graphicalStaffEntry.graphicalVoiceEntries.length === 1 &&
                 graphicalStaffEntry.graphicalVoiceEntries[0].notes.length === 1 &&
-                graphicalStaffEntry.graphicalVoiceEntries[0].notes[0].sourceNote.isWholeRest()) {
+                (wholeRestNote.sourceNote.isWholeRest() || // drawn as a whole-measure rest: rests of the measure (drawRestOnlyMeasuresAsWholeMeasureRest)
+                    (wholeRestNote.sourceNote.isRest() && wholeRestNote.graphicalNoteLength.RealValue ===
+                        graphicalStaffEntry.parentMeasure.parentSourceMeasure.ActiveTimeSignature.RealValue))) {
                 // graphicalStaffEntry.graphicalVoiceEntries[0]?.notes[0]?.sourceNote.IsWholeMeasureRest // not yet set apparently
                 // whole measure rests: position at start of measure instead of middle like the rest note
                 // xShift -= graphicalStaffEntry.PositionAndShape.RelativePosition.x; // unfortunately relative x is 0 here

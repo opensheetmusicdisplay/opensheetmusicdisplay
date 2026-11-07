@@ -3676,10 +3676,20 @@ export abstract class MusicSheetCalculator {
         const graceEntriesAfterMainNote: {
             voiceEntry: VoiceEntry; graphicalStaffEntry: GraphicalStaffEntry; sourceStaffEntry: SourceStaffEntry; linkedNotes: Note[];
         }[] = [];
+        const drawAsWholeMeasureRest: boolean = this.rules.DrawRestOnlyMeasuresAsWholeMeasureRest &&
+            this.isRestOnlyMeasureFilledByRests(sourceMeasure, staffIndex);
+        let wholeMeasureRestCreated: boolean = false;
+        // expressions (e.g. words, dynamics) are placed at the staff entries of their time, so they keep the entries of the replaced rests
+        const keepEntriesOfDroppedRests: boolean = sourceMeasure.hasMoodExpressions || sourceMeasure.TempoExpressions.length > 0 ||
+            sourceMeasure.StaffLinkedExpressions[staffIndex].length > 0;
         // create GraphicalStaffEntries - always check for possible null Entry
         for (let entryIndex: number = 0; entryIndex < sourceMeasure.VerticalSourceStaffEntryContainers.length; entryIndex++) {
             const sourceStaffEntry: SourceStaffEntry = sourceMeasure.VerticalSourceStaffEntryContainers[entryIndex].StaffEntries[staffIndex];
             // is there a SourceStaffEntry at this Index
+            if (drawAsWholeMeasureRest && wholeMeasureRestCreated && sourceStaffEntry && !keepEntriesOfDroppedRests &&
+                sourceStaffEntry.ChordContainers.length === 0 && sourceStaffEntry.Instructions.length === 0) {
+                continue; // a rest that the whole-measure rest replaces, nothing else is attached to its time
+            }
             if (sourceStaffEntry) {
                 // a SourceStaffEntry exists
                 const laidOutVoiceEntries: VoiceEntry[] = this.voiceEntriesToLayOut(sourceStaffEntry);
@@ -3738,6 +3748,9 @@ export abstract class MusicSheetCalculator {
                         octaveShiftValue = OctaveEnum.NONE;
                         activeOctaveShift = undefined;
                     }
+                    if (drawAsWholeMeasureRest && wholeMeasureRestCreated) {
+                        continue; // the first rest is drawn as the whole-measure rest. The staff entry stays for its chord symbols.
+                    }
                     // Normal Notes...
                     octaveShiftValue = this.handleVoiceEntry(
                         voiceEntry, graphicalStaffEntry,
@@ -3746,6 +3759,14 @@ export abstract class MusicSheetCalculator {
                         openBeams, octaveShiftValue, staffIndex,
                         linkedNotes, sourceStaffEntry
                     );
+                    if (drawAsWholeMeasureRest && graphicalStaffEntry.graphicalVoiceEntries.length > 0) {
+                        // only the drawn length changes: the source rests keep their length and time
+                        for (const graphicalNote of graphicalStaffEntry.graphicalVoiceEntries.last().notes) {
+                            graphicalNote.graphicalNoteLength = sourceMeasure.ActiveTimeSignature.clone();
+                            graphicalNote.numberOfDots = 0;
+                        }
+                        wholeMeasureRestCreated = true;
+                    }
                 }
                 this.handleLyricsOfLeftOutVoices(sourceStaffEntry, laidOutVoiceEntries, graphicalStaffEntry, openLyricWords);
                 // SourceStaffEntry has inStaff ClefInstruction -> create graphical clef
@@ -3865,6 +3886,47 @@ export abstract class MusicSheetCalculator {
         }
 
         return measure;
+    }
+
+    /** Whether the staff's measure only has visible rests of one voice that fill the whole measure (e.g. four quarter rests in 4/4),
+     * see OSMDOptions.drawRestOnlyMeasuresAsWholeMeasureRest. Not for pickup measures, tuplets, grace notes, rests with a fermata
+     * or other marks or a given position, or an in-measure clef or key change, which are drawn as written.
+     */
+    private isRestOnlyMeasureFilledByRests(sourceMeasure: SourceMeasure, staffIndex: number): boolean {
+        if (sourceMeasure.Duration.RealValue !== sourceMeasure.ActiveTimeSignature.RealValue) {
+            return false;
+        }
+        let voice: Voice;
+        let restLength: Fraction = new Fraction(0, 1);
+        for (const container of sourceMeasure.VerticalSourceStaffEntryContainers) {
+            const staffEntry: SourceStaffEntry = container.StaffEntries[staffIndex];
+            if (!staffEntry) {
+                continue;
+            }
+            if (staffEntry.Link ||
+                staffEntry.Instructions.some(instruction => instruction instanceof ClefInstruction || instruction instanceof KeyInstruction)) {
+                return false;
+            }
+            for (const voiceEntry of staffEntry.VoiceEntries) {
+                if (voiceEntry.IsGrace || (voice && voice !== voiceEntry.ParentVoice)) {
+                    return false;
+                }
+                // what a rest carries (e.g. a fermata) would be lost with the rest
+                if (voiceEntry.Articulations.length > 0 || voiceEntry.TechnicalInstructions.length > 0 || voiceEntry.OrnamentContainer ||
+                    voiceEntry.Arpeggio) {
+                    return false;
+                }
+                voice = voiceEntry.ParentVoice;
+                for (const note of voiceEntry.Notes) {
+                    // a rest with a given vertical position (display-step) is not a measure rest
+                    if (!note.isRest() || !note.PrintObject || note.Pitch || note.NoteTuplet || note.NoteBeam) {
+                        return false;
+                    }
+                    restLength = Fraction.plus(restLength, note.Length);
+                }
+            }
+        }
+        return restLength.RealValue === sourceMeasure.ActiveTimeSignature.RealValue;
     }
 
     /** Makes a clef change at the end of the measure (for the next measure) the staff's active clef. */

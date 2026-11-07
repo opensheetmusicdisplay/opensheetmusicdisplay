@@ -156,6 +156,11 @@ export interface IOSMDOptions {
     drawFromMeasureNumber?: number;
     /** Whether to fill measures that don't have notes given in the XML with whole rests (visible = 1, invisible = 2, for layouting). Default No (0). */
     fillEmptyMeasuresWithWholeRest?: FillEmptyMeasuresWithWholeRests | number;
+    /** Whether to draw a measure of a staff that consists only of rests of one voice, filling the measure, as one whole-measure rest,
+     * e.g. four quarter rests in 4/4 or six quarter rests in 6/4 (like a measure with a single whole-measure rest).
+     * Only affects drawing: the rests keep their time, and chord symbols stay at their times in the measure.
+     * Doesn't apply to pickup measures, hidden rests, tuplets, or if a clef or key changes within the measure. Default false. */
+    drawRestOnlyMeasuresAsWholeMeasureRest?: boolean;
     /** Whether to set the wanted stem direction by xml (default) or automatically. */
     setWantedStemDirectionByXml?: boolean;
     /** Whether tuplets are labeled with ratio (e.g. 5:2 instead of 5 for quintuplets). Default false. */
