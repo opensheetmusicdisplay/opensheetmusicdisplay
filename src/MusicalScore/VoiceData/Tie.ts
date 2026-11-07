@@ -39,14 +39,23 @@ export class Tie {
      * @returns The direction, PlacementEnum.NotYetDefined if none is given.
      */
     public getTieDirection(startNote?: Note): PlacementEnum {
+        return this.directionAtNote(startNote, this.TieDirection);
+    }
+
+    /** Explicit XML direction at this note, without a direction chosen automatically during layout. */
+    public getTieDirectionFromXml(startNote?: Note): PlacementEnum {
+        return this.directionAtNote(startNote, this.TieDirectionXml);
+    }
+
+    private directionAtNote(startNote: Note, fallback: PlacementEnum): PlacementEnum {
         if (!startNote) {
-            return this.TieDirection;
+            return fallback;
         }
         const noteIndex: number = this.Notes.indexOf(startNote);
         if (noteIndex < 0) {
             log.debug("Tie.getTieDirection(): note not in tie.Notes");
             // ^ happens in Christbaum measure 19 - probably note sharing stem
-            return this.TieDirection;
+            return fallback;
         }
         for (let i: number = noteIndex; i > 0; i--) {
             const directionAtIndex: PlacementEnum = this.NoteIndexToTieDirection[i];
@@ -55,7 +64,7 @@ export class Tie {
                 return directionAtIndex;
             }
         }
-        return this.TieDirection;
+        return fallback;
     }
 
     public get Notes(): Note[] {

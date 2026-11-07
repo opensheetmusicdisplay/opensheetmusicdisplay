@@ -1227,7 +1227,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       vfEndNote = endNote.vfnote[0];
       endNoteIndexInTie = endNote.vfnote[1];
     }
-    // in a standard staff, e.g. given in the XML for the start note (a TabTie always curves upwards)
+    // Standard staves use the layout direction; TAB sustains below use only explicit source placement.
     const tieDirection: PlacementEnum = tie.Tie.getTieDirection(startNote?.sourceNote);
 
     if (tieIsAtSystemBreak) {
@@ -1243,6 +1243,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         const vfTie1: VF.StaveTie = isTab ? new VF.TabTie(notes, tie.Tie.Type) : this.createStaveTie(notes, tieDirection);
         VexFlowConverter.setVexFlowTextFontFamily((vfTie1 as any).font, this.rules); // e.g. "H" for a hammer-on
         const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
+        this.setTabTieDirectionFromXml(vfTie1, tie);
         measure1.addStaveTie(vfTie1, tie);
       }
 
@@ -1253,6 +1254,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         };
         const vfTie2: VF.StaveTie = isTab ? new VF.TabTie(notes) : this.createStaveTie(notes, tieDirection);
         const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
+        this.setTabTieDirectionFromXml(vfTie2, tie);
         measure2.addStaveTie(vfTie2, tie);
       }
     } else {
@@ -1300,8 +1302,21 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
 
         const measure: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
+        this.setTabTieDirectionFromXml(vfTie, tie);
         measure.addStaveTie(vfTie, tie);
       }
+    }
+  }
+
+  /** Honour explicit sustain placement while leaving TAB defaults and H/P styling unchanged. */
+  private setTabTieDirectionFromXml(vfTie: VF.StaveTie, graphicalTie: GraphicalTie): void {
+    if (!(vfTie instanceof VF.TabTie) || graphicalTie.Tie.Type !== "") {
+      return;
+    }
+    const direction: PlacementEnum = graphicalTie.Tie.getTieDirectionFromXml(graphicalTie.StartNote?.sourceNote);
+    if (direction === PlacementEnum.Above || direction === PlacementEnum.Below) {
+      // StaveTie.setDirection exists in VexFlow 1.x, but is missing from its declarations.
+      (vfTie as unknown as VF.StaveTie & {setDirection(value: number): void}).setDirection(direction === PlacementEnum.Above ? -1 : 1);
     }
   }
 
