@@ -51,4 +51,21 @@ describe("TAB slide line types", () => {
         await render(false, "canvas");
         expect(div.querySelector("canvas")).not.to.equal(null);
     });
+    it("uses stop-only styles as a fallback and lets explicit start styles win", async () => {
+        const score: Document = TestUtils.getScore("test_tab_slide_line_types.musicxml").cloneNode(true) as Document;
+        const start: Element = score.querySelector('slide[type="start"][line-type="dashed"]');
+        const number: string = start.getAttribute("number");
+        const stop: Element = score.querySelector('slide[type="stop"][number="' + number + '"]');
+        start.removeAttribute("line-type");
+        stop.setAttribute("line-type", "dotted");
+        osmd = new OpenSheetMusicDisplay(div, {autoResize: false});
+        await osmd.load(score);
+        osmd.render();
+        expect(Array.from(div.querySelectorAll(".vf-glissando path")).filter(path =>
+            getComputedStyle(path).strokeDasharray === "1px, 2px")).to.have.length(1);
+        start.setAttribute("line-type", "dashed");
+        await osmd.load(score);
+        osmd.render();
+        check();
+    });
 });
