@@ -50,4 +50,17 @@ describe("Bends on individual TAB chord strings", () => {
         await render("canvas");
         expect(div.querySelector("canvas")).not.to.equal(null);
     });
+    it("omits a hidden chord member's bend and restores it with RenderHiddenNotes", async () => {
+        const score: Document = TestUtils.getScore("test_tab_chord_bends.musicxml").cloneNode(true) as Document;
+        score.querySelector("part > measure note").setAttribute("print-object", "no");
+        osmd = new OpenSheetMusicDisplay(div, {autoResize: false});
+        await osmd.load(score);
+        osmd.render();
+        const curves: () => number = () => div.querySelectorAll('.vf-tabnote path[fill="none"]').length;
+        expect(curves()).to.equal(4);
+        osmd.EngravingRules.RenderHiddenNotes = true;
+        osmd.updateGraphic();
+        osmd.render();
+        expect(curves()).to.equal(5);
+    });
 });

@@ -1179,7 +1179,7 @@ export class VexFlowConverter {
                 (tabPosition as any).fret = `(${tabPosition.fret})`;
             }
             tabPositions.push(tabPosition);
-            if (tabNote.BendArray) {
+            if (tabNote.BendArray && tabNote.isVisible()) {
                 // Like Guitar Pro and MuseScore, a bend is labeled with how far the string is bent after it, from the unbent note:
                 //   a half step and another half step are "1/2" and "Full", a release that leaves a half step is "1/2".
                 let bentSemitones: number = 0;
