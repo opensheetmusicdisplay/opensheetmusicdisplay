@@ -80,11 +80,16 @@ export class TabSlide extends TabTie {
         throw new Vex.RERR('BadArguments', 'Bad indices for slide rendering.');
       }
 
+      // VexFlowPatch: preserve MusicXML line type on each system segment without leaking it to another slide.
+      const lineDash = this.render_options.line_dash || [];
+      ctx.save();
+      ctx.setLineDash(lineDash);
       ctx.beginPath();
       ctx.moveTo(first_x_px, slide_y + (3 * direction));
       ctx.lineTo(last_x_px, slide_y - (3 * direction));
-      ctx.closePath();
+      if (lineDash.length === 0) ctx.closePath(); // Retracing a dashed line would paint over its gaps.
       ctx.stroke();
+      ctx.restore();
     }
 
     this.setRendered();

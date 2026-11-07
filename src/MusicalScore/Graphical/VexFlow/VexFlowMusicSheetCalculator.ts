@@ -3447,6 +3447,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               },
               slideDirection
             );
+            (vfTie as any).render_options.line_dash = gGliss.Glissando.LineType === "dashed" ? [4, 3] :
+              gGliss.Glissando.LineType === "dotted" ? [1, 2] : [];
             VexFlowConverter.setVexFlowTextFontFamily((vfTie as any).font, this.rules);
             if (!startStemmableNote) {
               // the part of a slide continued from the previous system: only the part in the first system gets the label "sl.",
