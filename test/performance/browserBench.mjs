@@ -18,6 +18,7 @@ const types = { ".html": "text/html", ".js": "text/javascript", ".json": "applic
                 ".musicxml": "application/xml" };
 
 let onResult = undefined;
+let onFailure = undefined;
 const server = http.createServer((req, res) => {
     if (req.method === "POST" && req.url === "/result") {
         let body = "";
@@ -37,9 +38,11 @@ const server = http.createServer((req, res) => {
 });
 await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
 const url = `http://127.0.0.1:${server.address().port}/${page}?session=${session}&rounds=${rounds}&warmup=${warmup}`;
+let timeout = undefined;
 const result = new Promise((resolve, reject) => {
     onResult = resolve;
-    setTimeout(() => reject(new Error("timeout")), timeoutMs);
+    onFailure = reject; // the browser closed or the page crashed: no result will come
+    timeout = setTimeout(() => reject(new Error("timeout")), timeoutMs);
 });
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -48,7 +51,10 @@ if (engine === "webkit") {
     const require = createRequire(path.join(process.env.PLAYWRIGHT_FROM || dir, "package.json"));
     const { webkit } = require("playwright");
     const browser = await webkit.launch();
+    browser.on("disconnected", () => onFailure(new Error("the browser closed (crashed?)")));
     const tab = await browser.newPage({ viewport: { width: 1400, height: 1000 } });
+    tab.on("crash", () => onFailure(new Error("the page crashed")));
+    tab.on("pageerror", e => console.log("page error:", String(e).slice(0, 300)));
     await tab.goto(url);
     close = () => browser.close();
 } else if (engine === "safari") {
@@ -69,7 +75,19 @@ if (engine === "webkit") {
     }
     await fetch(`${base}/session/${sessionId}/window/rect`, { method: "POST", body: JSON.stringify({ width: 1400, height: 1000 }) });
     await fetch(`${base}/session/${sessionId}/url`, { method: "POST", body: JSON.stringify({ url }) });
+    // a crashed page or a lost session gives no result: ask the session every 30 s whether it's still there
+    const watch = setInterval(async () => {
+        try {
+            const r = await fetch(`${base}/session/${sessionId}/url`);
+            if (!r.ok) {
+                onFailure(new Error(`safaridriver: ${r.status} ${(await r.text()).slice(0, 200)}`));
+            }
+        } catch (e) {
+            onFailure(new Error("safaridriver gone: " + e));
+        }
+    }, 30000);
     close = async () => {
+        clearInterval(watch);
         await fetch(`${base}/session/${sessionId}`, { method: "DELETE" }).catch(() => {});
         driver.kill();
     };
@@ -86,6 +104,8 @@ try {
         console.log("  error:", JSON.stringify(e).slice(0, 300));
     }
 } finally {
+    clearTimeout(timeout); // else the timer keeps the process alive until it fires
     await close();
     server.close();
 }
+process.exit(0); // nothing left to wait for (e.g. the browser's or safaridriver's handles)
