@@ -42,7 +42,9 @@ describe("MuseScore tablature bend spans", () => {
                 expect(peak(entries[index]), `bend endpoint in measure ${measure + 1}`).to.be.closeTo(target, 0.5);
                 const text: SVGTextElement = label(entries[index]);
                 const box: DOMRect = text.getBBox();
-                expect(box.x + box.width / 2, "label over endpoint").to.be.closeTo(target, 1);
+                // The text's ink bounds can overhang its x origin (e.g. Arial in Firefox on macOS).
+                // Bend centers the label using its measured width and text origin, not its glyph side bearing.
+                expect(Number(text.getAttribute("x")) + box.width / 2, "label over endpoint").to.be.closeTo(target, 1);
                 expect(text.getAttribute("fill") ?? "#000000", "black bend label").to.equal("#000000");
             }
             if (measure === 1 || measure === 2) {

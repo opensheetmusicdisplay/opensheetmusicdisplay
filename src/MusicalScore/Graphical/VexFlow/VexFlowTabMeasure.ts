@@ -1,7 +1,7 @@
 import Vex from "vexflow";
 import VF = Vex.Flow;
 import { Fraction } from "../../../Common/DataObjects/Fraction";
-import { TabNote } from "../../VoiceData/TabNote";
+import { TabBendSegment, TabNote } from "../../VoiceData/TabNote";
 import { Staff } from "../../VoiceData/Staff";
 import { SourceMeasure } from "../../VoiceData/SourceMeasure";
 import { VexFlowMeasure } from "./VexFlowMeasure";
@@ -186,6 +186,39 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
         //this.createOrnaments();
     }
 
+    /** Whether a visible single-note bend has MuseScore's hidden-fret endpoint at the bent pitch. */
+    private isHiddenBendEnd(first: TabNote, target: TabNote): boolean {
+        if (!first?.Pitch || !target?.Pitch || !first.isVisible() || !target.isVisible() || first.BendArray?.length !== 1) {
+            return false;
+        }
+        const bend: TabBendSegment = first.BendArray[0];
+        if (bend.direction !== "up" || bend.bendalter <= 0) {
+            return false;
+        }
+        if (target.FretVisible !== false || first.StringNumberTab !== target.StringNumberTab || first.FretNumber !== target.FretNumber ||
+            Math.abs(target.Pitch.getHalfTone() - first.Pitch.getHalfTone() - bend.bendalter) > 1e-8) {
+            return false;
+        }
+        const targetBends: TabBendSegment[] = target.BendArray;
+        if (targetBends?.length > 0 && (targetBends.length !== 1 || targetBends[0].direction !== "down" ||
+            Math.abs(targetBends[0].bendalter) !== bend.bendalter)) {
+            return false;
+        }
+        return true;
+    }
+
+    /** After a hidden bend endpoint, whether its release returns to the original string, fret and pitch. */
+    private isMatchingReleaseEnd(first: TabNote, target: TabNote, end: TabNote): boolean {
+        if (!end?.Pitch || !end.isVisible()) {
+            return false;
+        }
+        const release: TabBendSegment[] = target.BendArray;
+        return release?.length === 1 && release[0].direction === "down" &&
+            Math.abs(release[0].bendalter) === first.BendArray[0].bendalter &&
+            end.StringNumberTab === first.StringNumberTab && end.FretNumber === first.FretNumber &&
+            end.Pitch.getHalfTone() === first.Pitch.getHalfTone();
+    }
+
     /** Connects only adjacent, single-note gestures within this measure and voice. A hidden fret identifies
      *  a bend endpoint; parentheses alone do not imply a continuation or change a note's attack. */
     private configureBendSpans(): void {
@@ -213,22 +246,13 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
                 const first: TabNote = sourceOf(entries[i]);
                 const target: TabNote = sourceOf(entries[i + 1]);
                 const bend: SpanBend = bendOf(entries[i]);
-                if (!bend || !first?.Pitch || !target?.Pitch || !first.isVisible() || !target.isVisible() || first.BendArray?.length !== 1 ||
-                    first.BendArray[0].direction !== "up" || first.BendArray[0].bendalter <= 0 || target.FretVisible !== false ||
-                    first.StringNumberTab !== target.StringNumberTab || first.FretNumber !== target.FretNumber ||
-                    (target.BendArray?.length > 0 && (target.BendArray.length !== 1 || target.BendArray[0].direction !== "down" ||
-                        Math.abs(target.BendArray[0].bendalter) !== first.BendArray[0].bendalter)) ||
-                    !adjacent(entries[i], entries[i + 1]) ||
-                    Math.abs(target.Pitch.getHalfTone() - first.Pitch.getHalfTone() - first.BendArray[0].bendalter) > 1e-8) {
+                if (!bend || !this.isHiddenBendEnd(first, target) || !adjacent(entries[i], entries[i + 1])) {
                     continue;
                 }
                 const targets: VF.TabNote[] = [entries[i + 1].vfStaveNote as VF.TabNote];
                 let release: SpanBend;
                 const end: TabNote = sourceOf(entries[i + 2]);
-                if (target.BendArray?.length === 1 && target.BendArray[0].direction === "down" &&
-                    Math.abs(target.BendArray[0].bendalter) === first.BendArray[0].bendalter &&
-                    end?.Pitch && end.isVisible() && end.StringNumberTab === first.StringNumberTab && end.FretNumber === first.FretNumber &&
-                    end.Pitch.getHalfTone() === first.Pitch.getHalfTone() && adjacent(entries[i + 1], entries[i + 2])) {
+                if (this.isMatchingReleaseEnd(first, target, end) && adjacent(entries[i + 1], entries[i + 2])) {
                     release = bendOf(entries[i + 1]);
                     if (release) { targets.push(entries[i + 2].vfStaveNote as VF.TabNote); }
                 }
