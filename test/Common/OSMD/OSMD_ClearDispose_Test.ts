@@ -56,10 +56,14 @@ describe("OSMD clear() and dispose()", () => {
         return paths;
     }
 
-    /** The paths (see referencedBy()) to the sheet's graphical objects and to the SVG elements they drew. */
+    /** The paths (see referencedBy()) to the sheet's graphical objects and to the SVG elements they drew. Not the warm keeper's
+     *  (see OpenSheetMusicDisplay.KeepWarm): a separate small rendering the instance keeps on purpose. */
     function pathsToRendering(paths: Map<object, string>, drawnElements: Element[]): string[] {
         const found: string[] = [];
         paths.forEach((path: string, object: object) => {
+            if (path.includes(".warmKeeper")) {
+                return;
+            }
             if (object instanceof GraphicalMusicSheet || object instanceof GraphicalObject) {
                 found.push(path);
             }
