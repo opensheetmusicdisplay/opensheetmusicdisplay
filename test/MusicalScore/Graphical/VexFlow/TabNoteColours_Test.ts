@@ -78,4 +78,27 @@ describe("Initial TAB note, stem and flag colours", () => {
         n.setVisible(false);
         expect(getComputedStyle(flag).visibility).to.equal("hidden");
     });
+    it("preserves independent grace-note colours with unmerged SVG groups", async () => {
+        const score: Document = TestUtils.getScore("test_tab_note_colours.musicxml").cloneNode(true) as Document;
+        const first: Element = score.querySelector("part > measure note");
+        const grace: Element = first.cloneNode(true) as Element;
+        grace.prepend(score.createElement("grace"));
+        grace.querySelector("duration").remove();
+        grace.querySelector("type").textContent = "eighth";
+        grace.setAttribute("color", "#0000ff");
+        first.before(grace);
+        osmd = new OpenSheetMusicDisplay(div, {autoResize: false, defaultColorNotehead: "#cc6600"});
+        osmd.EngravingRules.SVGMergeSingleChildGroups = false;
+        osmd.EngravingRules.TabRhythmRendered = true;
+        await osmd.load(score);
+        osmd.render();
+        const voices: any[] = osmd.GraphicSheet.MeasureList[0][0].staffEntries[0].graphicalVoiceEntries;
+        const graceNote: VexFlowGraphicalNote = voices.find(voice => voice.parentVoiceEntry.IsGrace).notes[0];
+        const mainNote: VexFlowGraphicalNote = voices.find(voice => !voice.parentVoiceEntry.IsGrace).notes[0];
+        expect(getComputedStyle(graceNote.getNoteheadSVGs()[0]).fill).to.equal("rgb(0, 0, 255)");
+        expect(getComputedStyle(mainNote.getNoteheadSVGs()[0]).fill).to.equal("rgb(204, 102, 0)");
+        mainNote.setColor("#ff0000");
+        expect(getComputedStyle(graceNote.getNoteheadSVGs()[0]).fill).to.equal("rgb(0, 0, 255)");
+        expect(graceNote.vfnote[0].getWidth()).to.be.lessThan(mainNote.vfnote[0].getWidth());
+    });
 });
