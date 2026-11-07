@@ -381,7 +381,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
 
     /** Gets the SVG element of the note's flag: its path, or with EngravingRules.SVGMergeSingleChildGroups false, its group. */
     public getFlagSVG(): HTMLElement {
-        const vfNote: HTMLElement = this.getVFNoteSVG();
+        const vfNote: HTMLElement = this.isTabNote ? this.getSVGGElement() as unknown as HTMLElement : this.getVFNoteSVG();
         if (vfNote?.children?.length) {
             for (const noteChild of vfNote.children) {
                 if (noteChild.classList.contains("vf-flag")) {

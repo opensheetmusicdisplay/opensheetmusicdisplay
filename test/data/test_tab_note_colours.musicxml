@@ -1,0 +1,183 @@
+<?xml version='1.0' encoding='utf-8'?>
+<score-partwise version="4.0">
+  <work>
+    <work-title>TAB default and XML colours</work-title>
+  </work>
+  <identification>
+    <creator type="composer">Original test</creator>
+  </identification>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Guitar</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>2</divisions>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef>
+          <sign>TAB</sign>
+          <line>5</line>
+        </clef>
+        <staff-details>
+          <staff-lines>6</staff-lines>
+        </staff-details>
+      </attributes>
+      <direction>
+        <direction-type>
+          <rehearsal>A</rehearsal>
+        </direction-type>
+      </direction>
+      <note>
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <beam number="1">begin</beam>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem>down</stem>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>9</fret>
+          </technical>
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <beam number="1">end</beam>
+        <voice>1</voice>
+        <type>eighth</type>
+        <stem>down</stem>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <tie type="start" />
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>down</stem>
+        <notations>
+          <tied type="start" />
+          <technical>
+            <string>3</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <tie type="stop" />
+        <voice>1</voice>
+        <type>half</type>
+        <stem>down</stem>
+        <notations>
+          <tied type="stop" />
+          <technical>
+            <string>3</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <measure number="2">
+      <note color="#ff0000">
+        <pitch>
+          <step>B</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <type>quarter</type>
+        <stem>up</stem>
+        <notations>
+          <technical>
+            <string>2</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note>
+        <chord />
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <type>eighth</type>
+        <stem>down</stem>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <type>eighth</type>
+        <stem>up</stem>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note print-object="no">
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <type>half</type>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+  </part>
+</score-partwise>
