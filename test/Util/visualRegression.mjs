@@ -65,7 +65,7 @@
 import FS from "fs";
 import Path from "path";
 import canvasPkg from "canvas";
-import { writeCrops } from "./visualRegressionCrops.mjs";
+import { releaseCanvas, writeCrops } from "./visualRegressionCrops.mjs";
 
 const { loadImage, createCanvas } = canvasPkg;
 
@@ -133,10 +133,14 @@ function listPngs(dir, prefix) {
  */
 async function decode(png) {
     const img = await loadImage(png);
-    const c = createCanvas(img.width, img.height);
+    const { width: w, height: h } = img;
+    const c = createCanvas(w, h);
     const ctx = c.getContext("2d");
     ctx.drawImage(img, 0, 0);
-    return { w: img.width, h: img.height, data: ctx.getImageData(0, 0, img.width, img.height).data };
+    img.src = Buffer.alloc(0); // frees the decoded image now (see releaseCanvas()); its width and height become 0
+    const data = ctx.getImageData(0, 0, w, h).data;
+    releaseCanvas(c);
+    return { w, h, data };
 }
 
 /**
@@ -327,6 +331,7 @@ async function diffImage(name, writeImages) {
             }
             ctx.putImageData(out, 0, 0);
             FS.writeFileSync(Path.join(DIFF, `${base}.png`), c.toBuffer("image/png"));
+            releaseCanvas(c);
         }
         return {
             name: base, diffPixels: total, total,
@@ -377,6 +382,7 @@ async function diffImage(name, writeImages) {
         imgData.data.set(out);
         ctx.putImageData(imgData, 0, 0);
         FS.writeFileSync(Path.join(DIFF, `${base}.png`), c.toBuffer("image/png"));
+        releaseCanvas(c);
         FS.copyFileSync(blessedPath, Path.join(DIFF, `${base}_Blessed.png`));
         FS.copyFileSync(currentPath, Path.join(DIFF, `${base}_Current.png`));
     }

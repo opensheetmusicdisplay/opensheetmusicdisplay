@@ -38,17 +38,32 @@ const FONT = "14px sans-serif";
 // ---------------------------------------------------------------------------
 
 /**
- * Decodes a PNG file into a canvas context and its RGBA pixels.
+ * Frees the pixel memory of a canvas once it's no longer needed (an image's: `img.src = Buffer.alloc(0)`). node-canvas
+ * keeps the native memory of canvases and images, not even gc() frees it (node-canvas 3.2, measured in 2026-11 with a
+ * release comparison: 89 changed extra scores, 5 of them 1440x32767 pages, made the crops grow to 10.5 GB, and
+ * visualRegression.mjs then died without an error; its comparison of 261 pairs peaked at 11.8 GB).
+ * @param {object} canvas the canvas
+ */
+export function releaseCanvas(canvas) {
+    canvas.width = 0;
+    canvas.height = 0;
+}
+
+/**
+ * Decodes a PNG file into a canvas context and its RGBA pixels. Release its canvas with releaseCanvas(image.ctx.canvas)
+ * when done.
  * Reads the file with Node's fs: node-canvas can't open paths longer than 260 characters on Windows.
  * @param {string} file path of the PNG file
  * @returns {Promise<{ ctx: object, w: number, h: number, data: Uint8ClampedArray }>} the decoded image
  */
 async function decode(file) {
     const img = await loadImage(FS.readFileSync(file));
-    const canvas = createCanvas(img.width, img.height);
+    const { width: w, height: h } = img;
+    const canvas = createCanvas(w, h);
     const ctx = canvas.getContext("2d");
     ctx.drawImage(img, 0, 0);
-    return { ctx, w: img.width, h: img.height, data: ctx.getImageData(0, 0, img.width, img.height).data };
+    img.src = Buffer.alloc(0); // frees the decoded image now (see releaseCanvas()); its width and height become 0
+    return { ctx, w, h, data: ctx.getImageData(0, 0, w, h).data };
 }
 
 /**
@@ -200,9 +215,13 @@ function drawCrop(name, index, count, region, blessed, current, labels) {
         aloneCtx.fillStyle = "#b00000";
         aloneCtx.fillText(labels[i], 4, TEXT_HEIGHT + 4);
         aloneCtx.drawImage(part, 0, 2 * TEXT_HEIGHT);
-        return aloneCtx.canvas.toBuffer("image/png");
+        const png = aloneCtx.canvas.toBuffer("image/png");
+        releaseCanvas(aloneCtx.canvas);
+        return png;
     });
-    return { crop: ctx.canvas.toBuffer("image/png"), blessed: blessedAlone, current: currentAlone };
+    const cropPng = ctx.canvas.toBuffer("image/png");
+    [ctx.canvas, measure.canvas, ...parts].forEach(releaseCanvas);
+    return { crop: cropPng, blessed: blessedAlone, current: currentAlone };
 }
 
 // ---------------------------------------------------------------------------
@@ -234,20 +253,25 @@ export async function writeCrops(diffFolder, cropsFolder, { labels, channelThres
     for (const [index, name] of names.entries()) {
         const blessed = await decode(Path.join(diffFolder, `${name}_Blessed.png`));
         const current = await decode(Path.join(diffFolder, `${name}_Current.png`));
-        const regions = findRegions(blessed, current, channelThreshold);
-        if (regions.length === 0) {
-            result.uncropped.push(name);
-        } else if (regions.length > maxRegions) {
-            result.capped.push(name);
+        try {
+            const regions = findRegions(blessed, current, channelThreshold);
+            if (regions.length === 0) {
+                result.uncropped.push(name);
+            } else if (regions.length > maxRegions) {
+                result.capped.push(name);
+            }
+            regions.slice(0, maxRegions).forEach((region, i) => {
+                const pngs = drawCrop(name, i + 1, regions.length, region, blessed, current, labels);
+                const file = Path.join(cropsFolder, `${name}_crop${i + 1}`);
+                FS.writeFileSync(`${file}.png`, pngs.crop);
+                FS.writeFileSync(`${file}_Blessed.png`, pngs.blessed);
+                FS.writeFileSync(`${file}_Current.png`, pngs.current);
+                result.count++;
+            });
+        } finally {
+            releaseCanvas(blessed.ctx.canvas);
+            releaseCanvas(current.ctx.canvas);
         }
-        regions.slice(0, maxRegions).forEach((region, i) => {
-            const pngs = drawCrop(name, i + 1, regions.length, region, blessed, current, labels);
-            const file = Path.join(cropsFolder, `${name}_crop${i + 1}`);
-            FS.writeFileSync(`${file}.png`, pngs.crop);
-            FS.writeFileSync(`${file}_Blessed.png`, pngs.blessed);
-            FS.writeFileSync(`${file}_Current.png`, pngs.current);
-            result.count++;
-        });
         onProgress(index + 1, names.length);
     }
     return result;
