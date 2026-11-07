@@ -29,6 +29,7 @@ import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartMa
 import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalculator";
 import { NoteEnum } from "../Common/DataObjects/Pitch";
 import { TemposCalculator } from "../MusicalScore/ScoreIO/MusicSymbolModules/TemposCalculator";
+import { WarmKeeperScoreMxlBase64 } from "./WarmKeeperScore";
 
 /** WeakRef (ES2021) isn't in the TypeScript lib of OSMD's target, es2020. Older browsers don't have it: Chrome before 84,
  *  Firefox before 79, Safari before 14.1. */
@@ -111,6 +112,20 @@ export class OpenSheetMusicDisplay {
     /** The key of the container's property that keeps this instance in memory while autoResize is on (see handleResize()). */
     private static readonly containerInstanceKey: symbol = Symbol("OpenSheetMusicDisplay");
     protected followCursor: boolean;
+    /** Whether this instance uses the page's warm keeper, see KeepWarm. */
+    private keepWarm: boolean = true;
+    /** Whether this instance is counted in warmKeeperUsers (it rendered with KeepWarm on, and isn't disposed). */
+    private usesWarmKeeper: boolean = false;
+    /** The page's warm keeper (see KeepWarm): one instance, shared by all instances that use it. Static on purpose: its
+     *  rendering keeps the compiled code alive for every instance, so one per page is enough. It holds no other instance. */
+    private static warmKeeper: OpenSheetMusicDisplay = undefined;
+    /** Whether the page's warm keeper was made or is scheduled, so that it's made once. */
+    private static warmKeeperScheduled: boolean = false;
+    /** How many instances use the warm keeper (see usesWarmKeeper); the last one to stop frees it. A count, not references,
+     *  so that it keeps no instance in memory. */
+    private static warmKeeperUsers: number = 0;
+    /** The layout width in pixels of the warm keeper, which has no container in the page: getContainerContentWidth() returns it. */
+    private fixedLayoutWidth: number = undefined;
     /** A function that is executed when the XML has been read.
      * The return value will be used as the actual XML OSMD parses,
      * so you can make modifications to the xml that OSMD will use.
@@ -411,6 +426,88 @@ export class OpenSheetMusicDisplay {
         this.zoomUpdated = false;
         this.rules.RenderCount++;
         //console.log("[OSMD] render finished");
+        this.useWarmKeeper();
+    }
+
+    /**
+     * Whether this instance uses the page's warm keeper (default true), a small rendering OSMD keeps alive so that a sheet
+     * rendered after clear() renders about as fast as the one before it. Also the option keepWarm (constructor, setOptions()).
+     * The JavaScript engine (V8 in Chrome, Edge and Node) compiles OSMD's code for the objects it creates, and throws that
+     * compiled code away once no such object is left, at a full garbage collection. After clear(), nothing of the sheet is
+     * left, so the next sheet then rendered up to ~27% slower if such a collection happened in between (Chrome).
+     * After the first render() or renderNext() of an instance that uses it, OSMD renders a built-in score of 8 measures
+     * (WarmKeeperScore.ts) when the page is idle (requestIdleCallback), into a container that isn't in the page: about
+     * 20 ms in Chrome, and a few MB. One keeper per page, shared by the instances that use it, as any rendering keeps the
+     * compiled code alive. It's freed when the last of them is disposed (dispose()) or sets this to false. Not made without
+     * requestIdleCallback (e.g. Node with jsdom).
+     */
+    public get KeepWarm(): boolean {
+        return this.keepWarm;
+    }
+
+    public set KeepWarm(value: boolean) {
+        this.keepWarm = value;
+        if (!value) {
+            this.stopUsingWarmKeeper();
+        }
+    }
+
+    /** Stops using the page's warm keeper (see KeepWarm): the last instance to stop frees it. */
+    private stopUsingWarmKeeper(): void {
+        if (!this.usesWarmKeeper) {
+            return;
+        }
+        this.usesWarmKeeper = false;
+        OpenSheetMusicDisplay.warmKeeperUsers--;
+        if (OpenSheetMusicDisplay.warmKeeperUsers > 0) {
+            return;
+        }
+        const keeper: OpenSheetMusicDisplay = OpenSheetMusicDisplay.warmKeeper;
+        OpenSheetMusicDisplay.warmKeeper = undefined;
+        OpenSheetMusicDisplay.warmKeeperScheduled = false;
+        keeper?.clear();
+        keeper?.dispose();
+    }
+
+    /**
+     * Uses the page's warm keeper (see KeepWarm), after a render() or renderNext(): makes it when the page is idle, if no
+     * instance did yet. The keeper is a separate instance that renders the built-in score into a container that isn't in
+     * the page.
+     */
+    private useWarmKeeper(): void {
+        // Browsers only: without requestIdleCallback (e.g. Node with jsdom) there's no idle time to render the keeper in,
+        //   and scripts that render many sheets (e.g. generateImages_browserless) would render a keeper for each instance.
+        if (!this.keepWarm || this.fixedLayoutWidth !== undefined || typeof (<any>globalThis).requestIdleCallback !== "function" ||
+            typeof document === "undefined" || typeof atob === "undefined") {
+            return;
+        }
+        if (!this.usesWarmKeeper) {
+            this.usesWarmKeeper = true;
+            OpenSheetMusicDisplay.warmKeeperUsers++;
+        }
+        if (OpenSheetMusicDisplay.warmKeeperScheduled) {
+            return; // made or scheduled already
+        }
+        OpenSheetMusicDisplay.warmKeeperScheduled = true;
+        const makeKeeper: () => void = (): void => {
+            if (OpenSheetMusicDisplay.warmKeeperUsers === 0 || !OpenSheetMusicDisplay.warmKeeperScheduled) {
+                return; // no instance uses it anymore
+            }
+            const keeper: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(document.createElement("div"),
+                { autoResize: false, drawingParameters: "default", keepWarm: false });
+            keeper.fixedLayoutWidth = 1200;
+            keeper.load(atob(WarmKeeperScoreMxlBase64), "OSMD warm keeper").then(() => {
+                if (OpenSheetMusicDisplay.warmKeeperUsers === 0 || !OpenSheetMusicDisplay.warmKeeperScheduled) {
+                    keeper.clear(); // stopped meanwhile
+                    return;
+                }
+                keeper.render();
+                OpenSheetMusicDisplay.warmKeeper = keeper;
+            }).catch((e: any) => {
+                log.debug("[OSMD] warm keeper not rendered: " + e);
+            });
+        };
+        (<any>globalThis).requestIdleCallback(makeKeeper, { timeout: 3000 }); // at the latest after 3 s
     }
 
     /**
@@ -542,6 +639,7 @@ export class OpenSheetMusicDisplay {
         const lastDrawnMeasureIndex: number = Math.min(this.lazyNextSourceIndex - 1, this.lazyLayoutLastMeasureIndex);
         const totalMeasures: number = this.visualMeasureCount(this.lazyFirstMeasureIndex, this.lazyLayoutLastMeasureIndex + 1);
         const renderedMeasures: number = done ? totalMeasures : this.visualMeasureCount(this.lazyFirstMeasureIndex, lastDrawnMeasureIndex + 1);
+        this.useWarmKeeper();
         return {
             done, renderedMeasures, totalMeasures,
             lastRenderedMeasure: this.graphicalMeasuresAtOrBefore(lastDrawnMeasureIndex),
@@ -1312,6 +1410,9 @@ export class OpenSheetMusicDisplay {
      * for the layout. It's also 0 in generateImages_browserless, which only sets offsetWidth.
      */
     protected getContainerContentWidth(): number {
+        if (this.fixedLayoutWidth !== undefined) {
+            return this.fixedLayoutWidth; // the warm keeper, which isn't in the page (see KeepWarm)
+        }
         const style: CSSStyleDeclaration = window.getComputedStyle(this.container);
         // NaN -> 0: jsdom (generateImages_browserless) returns "medium" for a border that isn't set
         const pixels: (length: string) => number = (length: string): number => parseFloat(length) || 0;
@@ -1381,6 +1482,7 @@ export class OpenSheetMusicDisplay {
         }
         this.disableIncrementalRenderingOnScroll(); // the scroll listener of enableIncrementalRenderingOnScroll(), if on
         this.resetIncrementalRendering(); // so that a batch it scheduled (requestAnimationFrame) doesn't render anymore
+        this.stopUsingWarmKeeper();
     }
 
     /** Set OSMD rendering options using an IOSMDOptions object.
@@ -1606,6 +1708,9 @@ export class OpenSheetMusicDisplay {
         }
         if (options.tripletsBracketed !== undefined) {
             this.rules.TripletsBracketed = options.tripletsBracketed;
+        }
+        if (options.keepWarm !== undefined) {
+            this.KeepWarm = options.keepWarm;
         }
         if (options.autoResize) {
             this.AutoResizeEnabled = true;

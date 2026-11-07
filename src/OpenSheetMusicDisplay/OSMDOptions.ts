@@ -42,6 +42,9 @@ export interface IOSMDOptions {
     autoResize?: boolean;
     /** Render Backend, will be SVG if given undefined, "SVG" or "svg", otherwise Canvas. */
     backend?: string;
+    /** Whether the instance keeps a small rendering alive, so that a sheet rendered after clear() renders about as fast as
+     *  the one before it (default true). Sets osmd.KeepWarm, see there. */
+    keepWarm?: boolean;
     /** Defines the mode that is used for coloring: XML (0), Boomwhacker(1), CustomColorSet (2). Default XML.
      *  If coloringMode.CustomColorSet (2) is chosen, a coloringSetCustom parameter must be added.
      */
