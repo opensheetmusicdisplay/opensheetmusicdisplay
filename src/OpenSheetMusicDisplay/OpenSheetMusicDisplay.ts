@@ -41,7 +41,7 @@ declare const WeakRef: new <T extends object>(target: T) => { deref(): T | undef
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    protected version: string = "2.2.1-dev"; // getter: this.Version
+    protected version: string = "2.3.0-release"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
