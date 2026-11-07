@@ -1,0 +1,189 @@
+<?xml version='1.0' encoding='utf-8'?>
+<score-partwise version="4.0">
+  <work>
+    <work-title>Sustain after hammer-on and pull-off</work-title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Guitar</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef>
+          <sign>TAB</sign>
+          <line>5</line>
+        </clef>
+        <staff-details>
+          <staff-lines>6</staff-lines>
+        </staff-details>
+      </attributes>
+      <note>
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>9</fret>
+            <hammer-on type="start" number="1" />
+          </technical>
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <tie type="start" />
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <tied type="start" />
+          <technical>
+            <string>3</string>
+            <fret>12</fret>
+            <hammer-on type="stop" number="1" />
+          </technical>
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <tie type="stop" />
+        <voice>1</voice>
+        <type>half</type>
+        <notations>
+          <tied type="stop" />
+          <technical>
+            <string>3</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <measure number="2">
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>12</fret>
+            <pull-off type="start" number="1" />
+          </technical>
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <tie type="start" />
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <tied type="start" />
+          <technical>
+            <string>3</string>
+            <fret>9</fret>
+            <pull-off type="stop" number="1" />
+          </technical>
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <tie type="stop" />
+        <voice>1</voice>
+        <type>half</type>
+        <notations>
+          <tied type="stop" />
+          <technical>
+            <string>3</string>
+            <fret>9</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <measure number="3">
+      <note>
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>9</fret>
+            <hammer-on type="start" number="1" />
+          </technical>
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>3</duration>
+        <tie type="start" />
+        <voice>1</voice>
+        <type>half</type>
+        <dot />
+        <notations>
+          <tied type="start" />
+          <technical>
+            <string>3</string>
+            <fret>12</fret>
+            <hammer-on type="stop" number="1" />
+          </technical>
+        </notations>
+      </note>
+    </measure>
+    <measure number="4">
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <tie type="stop" />
+        <voice>1</voice>
+        <type>whole</type>
+        <notations>
+          <tied type="stop" />
+          <technical>
+            <string>3</string>
+            <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

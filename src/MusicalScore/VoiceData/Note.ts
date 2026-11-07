@@ -66,6 +66,7 @@ export class Note {
     private beam: Beam;
     private tuplet: Tuplet;
     private tie: Tie;
+    private noteTies: Tie[] = [];
     private glissando: Glissando;
     private slurs: Slur[] = [];
     private playbackInstrumentId: string = undefined;
@@ -207,8 +208,17 @@ export class Note {
     public get NoteTie(): Tie {
         return this.tie;
     }
+    /** All ties/techniques containing this note. A technique endpoint can also start a sustain.
+     * NoteTie retains its legacy single-tie view; graphical tie creation uses this complete list.
+     */
+    public get NoteTies(): readonly Tie[] {
+        return this.noteTies;
+    }
     public set NoteTie(value: Tie) {
         this.tie = value;
+        if (value && !this.noteTies.includes(value)) {
+            this.noteTies.push(value);
+        }
     }
     public get NoteSlurs(): Slur[] {
         return this.slurs;
