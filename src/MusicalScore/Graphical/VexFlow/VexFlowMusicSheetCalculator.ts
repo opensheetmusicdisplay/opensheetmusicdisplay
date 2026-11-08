@@ -1,3 +1,4 @@
+import { TieTypes } from "../../../Common/Enums";
 import { MusicSheetCalculator } from "../MusicSheetCalculator";
 import { VexFlowGraphicalSymbolFactory } from "./VexFlowGraphicalSymbolFactory";
 import { GraphicalMeasure } from "../GraphicalMeasure";
@@ -1231,7 +1232,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       vfEndNote = endNote.vfnote[0];
       endNoteIndexInTie = endNote.vfnote[1];
     }
-    // in a standard staff, e.g. given in the XML for the start note (a TabTie always curves upwards)
+    // Standard staves use the layout direction; TAB sustains below use only explicit source placement.
     const tieDirection: PlacementEnum = tie.Tie.getTieDirection(startNote?.sourceNote);
 
     if (tieIsAtSystemBreak) {
@@ -1244,7 +1245,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           first_indices: [startNoteIndexInTie],
           first_note: vfStartNote
         };
-        const vfTie1: VF.StaveTie = isTab ? new VF.TabTie(notes, tie.Tie.Type) : this.createStaveTie(notes, tieDirection);
+        const vfTie1: VF.StaveTie = isTab ? this.createTabTie(notes, tie, tie.Tie.Type) : this.createStaveTie(notes, tieDirection);
         VexFlowConverter.setVexFlowTextFontFamily((vfTie1 as any).font, this.rules); // e.g. "H" for a hammer-on
         const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure1.addStaveTie(vfTie1, tie);
@@ -1255,7 +1256,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           last_indices: [endNoteIndexInTie],
           last_note: vfEndNote
         };
-        const vfTie2: VF.StaveTie = isTab ? new VF.TabTie(notes) : this.createStaveTie(notes, tieDirection);
+        const vfTie2: VF.StaveTie = isTab ? this.createTabTie(notes, tie) : this.createStaveTie(notes, tieDirection);
         const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure2.addStaveTie(vfTie2, tie);
       }
@@ -1282,14 +1283,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               slideDirection
             );
           } else {
-            vfTie = new VF.TabTie(
+            vfTie = this.createTabTie(
               {
                 first_indices: [startNoteIndexInTie],
                 first_note: vfStartNote,
                 last_indices: [endNoteIndexInTie],
                 last_note: vfEndNote,
               },
-              tie.Tie.Type
+              tie, tie.Tie.Type
             );
           }
           VexFlowConverter.setVexFlowTextFontFamily(vfTie.font, this.rules); // e.g. "H" for a hammer-on
@@ -1310,6 +1311,31 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   /**
+   * Creates a Vexflow tie in a TAB staff. It curves upwards, unless a sustain tie has a direction in the XML.
+   * Not the direction of tie.Tie.getTieDirection(): that can be one chosen by the layout for a standard staff.
+   * @param notes The notes of the tie (or of the part of a tie across a system break), see VF.TabTie.
+   * @param tie The tie.
+   * @param label The label, e.g. "H" for a hammer-on.
+   * @returns The Vexflow tie.
+   */
+  private createTabTie(notes: any, tie: GraphicalTie, label?: string): VF.TabTie {
+    const vfTie: VF.TabTie = new VF.TabTie(notes, label);
+    if (tie.Tie.Type === TieTypes.SIMPLE) {
+      this.setVexFlowTieDirection(vfTie, tie.Tie.getTieDirectionFromXml(tie.StartNote?.sourceNote));
+    }
+    return vfTie;
+  }
+
+  /** Sets the direction of a Vexflow tie, if one is given. */
+  private setVexFlowTieDirection(vfTie: VF.StaveTie, direction: PlacementEnum): void {
+    if (direction === PlacementEnum.Below) {
+      (vfTie as any).setDirection(1); // + is down in vexflow
+    } else if (direction === PlacementEnum.Above) {
+      (vfTie as any).setDirection(-1);
+    }
+  }
+
+  /**
    * Creates a Vexflow tie in a standard staff, curved in the given direction.
    * @param notes The notes of the tie (or of the part of a tie across a system break), see VF.StaveTie.
    * @param direction The direction, e.g. from the XML. Without one, Vexflow takes it from the stem direction of the notes.
@@ -1317,11 +1343,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    */
   private createStaveTie(notes: any, direction: PlacementEnum): VF.StaveTie {
     const vfTie: VF.StaveTie = new VF.StaveTie(notes);
-    if (direction === PlacementEnum.Below) {
-      (vfTie as any).setDirection(1); // + is down in vexflow
-    } else if (direction === PlacementEnum.Above) {
-      (vfTie as any).setDirection(-1);
-    }
+    this.setVexFlowTieDirection(vfTie, direction);
     return vfTie;
   }
 

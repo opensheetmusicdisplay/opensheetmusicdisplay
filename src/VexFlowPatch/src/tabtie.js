@@ -71,7 +71,7 @@ export class TabTie extends StaveTie {
       last_x_px,
       first_ys,
       last_ys,
-      direction: -1, // Tab tie's are always face up.
+      direction: this.direction ?? -1, // VexFlowPatch: explicit XML placement can override the upward TAB default.
     });
 
     this.renderText(first_x_px, last_x_px);
