@@ -3679,16 +3679,14 @@ export abstract class MusicSheetCalculator {
         const drawAsWholeMeasureRest: boolean = this.rules.DrawRestOnlyMeasuresAsWholeMeasureRest &&
             this.isRestOnlyMeasureFilledByRests(sourceMeasure, staffIndex);
         let wholeMeasureRestCreated: boolean = false;
-        // expressions (e.g. words, dynamics) are placed at the staff entries of their time, so they keep the entries of the replaced rests
-        const keepEntriesOfDroppedRests: boolean = sourceMeasure.hasMoodExpressions || sourceMeasure.TempoExpressions.length > 0 ||
-            sourceMeasure.StaffLinkedExpressions[staffIndex].length > 0;
+        let wholeMeasureRestNote: GraphicalNote;
         // create GraphicalStaffEntries - always check for possible null Entry
         for (let entryIndex: number = 0; entryIndex < sourceMeasure.VerticalSourceStaffEntryContainers.length; entryIndex++) {
             const sourceStaffEntry: SourceStaffEntry = sourceMeasure.VerticalSourceStaffEntryContainers[entryIndex].StaffEntries[staffIndex];
             // is there a SourceStaffEntry at this Index
-            if (drawAsWholeMeasureRest && wholeMeasureRestCreated && sourceStaffEntry && !keepEntriesOfDroppedRests &&
+            if (drawAsWholeMeasureRest && wholeMeasureRestCreated && sourceStaffEntry &&
                 sourceStaffEntry.ChordContainers.length === 0 && sourceStaffEntry.Instructions.length === 0) {
-                continue; // a rest that the whole-measure rest replaces, nothing else is attached to its time
+                continue; // the replaced rest has no chord symbols or instructions to draw here
             }
             if (sourceStaffEntry) {
                 // a SourceStaffEntry exists
@@ -3764,6 +3762,7 @@ export abstract class MusicSheetCalculator {
                         for (const graphicalNote of graphicalStaffEntry.graphicalVoiceEntries.last().notes) {
                             graphicalNote.graphicalNoteLength = sourceMeasure.ActiveTimeSignature.clone();
                             graphicalNote.numberOfDots = 0;
+                            wholeMeasureRestNote = graphicalNote;
                         }
                         wholeMeasureRestCreated = true;
                     }
@@ -3785,6 +3784,19 @@ export abstract class MusicSheetCalculator {
                         graphicalStaffEntry,
                         accidentalCalculator.ActiveKeyInstruction,
                         this.graphicalMusicSheet.ParentMusicSheet.Transpose);
+                }
+            }
+        }
+
+        if (wholeMeasureRestNote) {
+            // The drawn rest represents the replaced rests in the public note-to-graphical-note mapping too.
+            for (const container of sourceMeasure.VerticalSourceStaffEntryContainers) {
+                for (const voiceEntry of container.StaffEntries[staffIndex]?.VoiceEntries ?? []) {
+                    for (const note of voiceEntry.Notes) {
+                        if (note !== wholeMeasureRestNote.sourceNote) {
+                            this.rules.addGraphicalNoteToNoteMap(note, wholeMeasureRestNote);
+                        }
+                    }
                 }
             }
         }

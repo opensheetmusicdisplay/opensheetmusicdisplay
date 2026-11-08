@@ -2,6 +2,8 @@ import { expect } from "vitest";
 import { TestUtils } from "../../Util/TestUtils";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { GraphicalStaffEntry } from "../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
+import { GraphicalNote } from "../../../src/MusicalScore/Graphical/GraphicalNote";
+import { Note } from "../../../src/MusicalScore/VoiceData/Note";
 
 /**
  * test_rest_only_measures_whole_measure_rest.musicxml: two staffs. The measures in between the cases have notes, so that
@@ -28,33 +30,53 @@ describe("Rest-only measures drawn as one whole-measure rest (drawRestOnlyMeasur
         container.remove();
     });
 
-    async function render(drawAsWholeMeasureRest: boolean): Promise<void> {
-        osmd.setOptions({ drawRestOnlyMeasuresAsWholeMeasureRest: drawAsWholeMeasureRest });
+    /** For each case (odd measures 1-21), the number of notes and rests drawn in each staff. */
+    function drawnNoteCounts(): number[][] {
+        return Array.from({ length: 11 }, (_, index) => [0, 1].map(staff =>
+            container.querySelector(`#osmd-m${index * 2}-${staff}`).querySelectorAll(".vf-stavenote").length));
+    }
+
+    function cursorSteps(drawAsWholeMeasureRest: boolean): number[] {
+        expect(osmd.Sheet.SourceMeasures[22].multipleRestMeasures, "measures 23-25").to.equal(3);
+        osmd.cursor.show();
+        const xs: number[] = [];
+        let firstMeasureRestSteps: number = 0;
+        const drawnRest: GraphicalNote = osmd.GraphicSheet.MeasureList[0][0].staffEntries[0].graphicalVoiceEntries[0].notes[0];
+        while (!osmd.cursor.iterator.EndReached) {
+            xs.push(parseFloat(osmd.cursor.cursorElement.style.left));
+            if (drawAsWholeMeasureRest && osmd.cursor.iterator.CurrentMeasureIndex === 0 && osmd.cursor.NotesUnderCursor().length > 0) {
+                const notes: Note[] = osmd.cursor.NotesUnderCursor();
+                const graphicalNotes: GraphicalNote[] = osmd.cursor.GNotesUnderCursor();
+                expect(graphicalNotes, "graphical notes at each first-measure cursor step").to.have.length(notes.length);
+                expect(graphicalNotes.every(note => note !== undefined), "no replaced rest is undefined").to.equal(true);
+                const restIndex: number = notes.findIndex(note => note.isRest());
+                if (restIndex >= 0) {
+                    expect(graphicalNotes[restIndex], "the drawn rest represents each source rest").to.equal(drawnRest);
+                    firstMeasureRestSteps++;
+                }
+            }
+            osmd.cursor.next();
+        }
+        if (drawAsWholeMeasureRest) {
+            expect(firstMeasureRestSteps, "first measure's four rests").to.equal(4);
+        }
+        return xs;
+    }
+
+    it("draws rests as written by default, and replaces eligible rests without changing their source timing", async () => {
         await osmd.load(TestUtils.getScore("test_rest_only_measures_whole_measure_rest.musicxml"));
         osmd.render();
-    }
-
-    /** Per measure (1-22) the number of notes and rests drawn in each staff (a measure group is osmd-m<measure index>-<staff index>). */
-    function drawnNoteCounts(): number[][] {
-        return osmd.Sheet.SourceMeasures.slice(0, 22).map((_, index) => [0, 1].map(staff =>
-            container.querySelector(`#osmd-m${index}-${staff}`).querySelectorAll(".vf-stavenote").length));
-    }
-
-    it("draws rests as written by default, and rest-only measures as whole-measure rests when set", async () => {
-        await render(false);
         expect(drawnNoteCounts(), "as written").to.deep.equal([
-            [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 1], [4, 4], [4, 1], [4, 4],
-            [4, 1], [4, 4], [4, 1], [4, 4], [4, 1], [4, 4], [6, 6], [4, 4], [2, 4], [4, 4], [3, 4], [4, 4]]);
-        await render(true);
+            [4, 4], [4, 4], [4, 4], [4, 1], [4, 1], [4, 1], [4, 1], [4, 1], [6, 6], [2, 4], [3, 4]]);
+        const originalCursorXs: number[] = cursorSteps(false);
+        osmd.setOptions({ drawRestOnlyMeasuresAsWholeMeasureRest: true });
+        osmd.updateGraphic();
+        osmd.render();
         expect(drawnNoteCounts(), "rest-only measures as whole-measure rests").to.deep.equal([
-            [1, 4], [4, 4], [4, 1], [4, 4], [1, 1], [4, 4], // measures 1, 3, 5: replaced in the staffs of rests only
-            [4, 1], [4, 4], [4, 1], [4, 4], [4, 1], [4, 4], [4, 1], [4, 4], [4, 1], [4, 4], // 7-15: fermata, position, voices, tuplet, hidden
-            [1, 1], [4, 4], [2, 1], [4, 4], // 17: 6/4, 19: a rest and a note in staff 1
-            [3, 4], [4, 4]]); // 21: rests that don't fill the measure
-    });
-
-    it("keeps the chord symbols and the text of the measure at their times, and the music's timing unchanged", async () => {
-        await render(true);
+            [1, 4], [4, 1], [1, 1], // measures 1, 3, 5: replaced in the staffs of rests only
+            [4, 1], [4, 1], [4, 1], [4, 1], [4, 1], // 7-15: fermata, position, voices, tuplet, hidden
+            [1, 1], [2, 1], // 17: 6/4, 19: a rest and a note in staff 1
+            [3, 4]]); // 21: rests that don't fill the measure
         expect(container.textContent, "the direction at a replaced rest").to.contain("cresc.");
         const chordXs: number[] = [];
         for (const entry of osmd.GraphicSheet.MeasureList[0][0].staffEntries as GraphicalStaffEntry[]) {
@@ -69,23 +91,42 @@ describe("Rest-only measures drawn as one whole-measure rest (drawRestOnlyMeasur
             .PositionAndShape.AbsolutePosition.x;
         expect(chordXs[0], "C left of the rest").to.be.lessThan(restX - 1);
         // drawing only: the source measure keeps its staff entries at each beat
-        expect(osmd.Sheet.SourceMeasures[0].VerticalSourceStaffEntryContainers.filter(c => c), "source staff entries").to.have.length(4);
+        expect(osmd.Sheet.SourceMeasures[0].VerticalSourceStaffEntryContainers.map(c => c.Timestamp.RealValue), "source entry times")
+            .to.deep.equal([0, 0.25, 0.5, 0.75]);
+        const replacedCursorXs: number[] = cursorSteps(true);
+        expect(replacedCursorXs, "cursor steps").to.have.length(originalCursorXs.length);
+        expect(replacedCursorXs.every(x => Number.isFinite(x)), "cursor positions").to.equal(true);
+        osmd.setOptions({ drawRestOnlyMeasuresAsWholeMeasureRest: false });
+        osmd.updateGraphic();
+        osmd.render();
+        expect(drawnNoteCounts()[0], "switching back draws the rests as written").to.deep.equal([4, 4]);
+        const sourceRests: Note[] = osmd.Sheet.SourceMeasures[0].VerticalSourceStaffEntryContainers
+            .map(entry => entry.StaffEntries[0].VoiceEntries[0].Notes[0]);
+        expect(sourceRests.map(note => osmd.EngravingRules.GNote(note).sourceNote === note), "rest mappings after switching back")
+            .to.deep.equal([true, true, true, true]);
     });
 
-    it("keeps a multiple rest measure of consecutive rest measures, and steps the cursor as when drawn as written", async () => {
-        const cursorXs: number[][] = [];
-        for (const drawAsWholeMeasureRest of [false, true]) {
-            await render(drawAsWholeMeasureRest);
-            expect(osmd.Sheet.SourceMeasures[22].multipleRestMeasures, "measures 23-25").to.equal(3);
+    it("positions the cursor at a replaced rest like at the same whole-measure rest in the XML", async () => {
+        const restNote: (whole: boolean) => string = (whole: boolean): string => whole ?
+            "<note><rest measure=\"yes\"/><duration>4</duration></note>" :
+            "<note><rest/><duration>1</duration><type>quarter</type></note>".repeat(4);
+        const offsetFromRest: number[] = [];
+        for (const whole of [false, true]) {
+            const xml: string = `<?xml version="1.0"?><score-partwise version="4.0">
+                <part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
+                <part id="P1"><measure number="1"><attributes><divisions>1</divisions><time><beats>4</beats>
+                <beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>
+                ${restNote(whole)}</measure></part></score-partwise>`;
+            osmd.setOptions({ drawRestOnlyMeasuresAsWholeMeasureRest: true });
+            await osmd.load(xml);
+            osmd.render();
             osmd.cursor.show();
-            const xs: number[] = [];
-            while (!osmd.cursor.iterator.EndReached) {
-                xs.push(parseFloat(osmd.cursor.cursorElement.style.left));
-                osmd.cursor.next();
-            }
-            cursorXs.push(xs);
+            expect(osmd.cursor.NotesUnderCursor().map(note => note.isRest()), "cursor at the rest").to.deep.equal([true]);
+            const rest: Element = container.querySelector(".vf-stavenote");
+            expect(rest, "drawn rest").not.to.equal(null);
+            offsetFromRest.push(parseFloat(osmd.cursor.cursorElement.style.left) -
+                (rest.getBoundingClientRect().left - container.getBoundingClientRect().left));
         }
-        expect(cursorXs[1], "cursor steps").to.have.length(cursorXs[0].length);
-        expect(cursorXs[1].every(x => Number.isFinite(x)), "cursor positions").to.equal(true);
+        expect(offsetFromRest[0], "cursor offset from the drawn rest").to.be.closeTo(offsetFromRest[1], 0.1);
     });
 });

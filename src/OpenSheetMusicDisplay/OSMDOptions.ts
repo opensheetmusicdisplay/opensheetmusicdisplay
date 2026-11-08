@@ -159,7 +159,8 @@ export interface IOSMDOptions {
     /** Whether to draw a measure of a staff that consists only of rests of one voice, filling the measure, as one whole-measure rest,
      * e.g. four quarter rests in 4/4 or six quarter rests in 6/4 (like a measure with a single whole-measure rest).
      * Only affects drawing: the rests keep their time, and chord symbols stay at their times in the measure.
-     * Doesn't apply to pickup measures, hidden rests, tuplets, or if a clef or key changes within the measure. Default false. */
+     * Doesn't apply to pickup measures, multiple voices, hidden or positioned rests, tuplets, beams, grace notes, rests carrying marks
+     * (e.g. fermatas), or an in-measure clef or key change. Default false. Set before load(), or call updateGraphic() after changing it. */
     drawRestOnlyMeasuresAsWholeMeasureRest?: boolean;
     /** Whether to set the wanted stem direction by xml (default) or automatically. */
     setWantedStemDirectionByXml?: boolean;

@@ -87,7 +87,8 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                     }
                 }
                 const sourceNote: Note = gve.notes[0].sourceNote;
-                if (sourceNote.isRest() && sourceNote.Length.RealValue === this.parentMeasure.parentSourceMeasure.ActiveTimeSignature.RealValue) {
+                if (sourceNote.isRest() && gve.notes[0].graphicalNoteLength.RealValue ===
+                    this.parentMeasure.parentSourceMeasure.ActiveTimeSignature.RealValue) {
                     // whole rest: length = measure length. (4/4 in a 4/4 time signature, 3/4 in a 3/4 time signature, 1/4 in a 1/4 time signature, etc.)
                     // see Note.isWholeRest(), which is currently not safe
                     if (gve.vfStaveNote.isCenterAligned()) {
