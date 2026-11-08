@@ -64,6 +64,24 @@
     <measure number="2">
       <note>
         <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>4</duration>
+        <type>whole</type>
+        <notations>
+          <technical>
+            <string>3</string>
+            <fret>9</fret>
+            <bend>
+              <bend-alter>2</bend-alter>
+            </bend>
+          </technical>
+        </notations>
+      </note>
+      <note>
+        <chord />
+        <pitch>
           <step>G</step>
           <alter>1</alter>
           <octave>4</octave>
@@ -76,24 +94,6 @@
             <fret>9</fret>
             <bend>
               <bend-alter>1</bend-alter>
-            </bend>
-          </technical>
-        </notations>
-      </note>
-      <note>
-        <chord />
-        <pitch>
-          <step>E</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>4</duration>
-        <type>whole</type>
-        <notations>
-          <technical>
-            <string>3</string>
-            <fret>9</fret>
-            <bend>
-              <bend-alter>2</bend-alter>
             </bend>
           </technical>
         </notations>

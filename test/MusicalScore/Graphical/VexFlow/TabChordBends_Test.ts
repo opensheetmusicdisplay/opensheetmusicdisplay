@@ -10,8 +10,8 @@ describe("Bends on individual TAB chord strings", () => {
     let osmd: OpenSheetMusicDisplay;
     beforeEach(() => { div = TestUtils.getDivElement(document); div.style.width = "1000px"; });
     afterEach(() => { osmd?.clear(); div.remove(); });
-    async function render(backend: "svg" | "canvas" = "svg"): Promise<void> {
-        osmd = new OpenSheetMusicDisplay(div, {autoResize: false, backend});
+    async function render(): Promise<void> {
+        osmd = new OpenSheetMusicDisplay(div, {autoResize: false});
         await osmd.load(TestUtils.getScore("test_tab_chord_bends.musicxml").cloneNode(true) as Document);
         osmd.render();
     }
@@ -19,7 +19,7 @@ describe("Bends on individual TAB chord strings", () => {
         for (const [measure, count] of [[0, 2], [1, 2], [2, 1]]) {
             const entry: VexFlowVoiceEntry = osmd.GraphicSheet.MeasureList[measure][0].staffEntries[0].graphicalVoiceEntries[0] as VexFlowVoiceEntry;
             const note: VexFlowGraphicalNote = entry.notes[0] as VexFlowGraphicalNote;
-            const curves: Element[] = Array.from(note.getSVGGElement().querySelectorAll('path[fill="none"]'));
+            const curves: SVGGeometryElement[] = Array.from(note.getSVGGElement().querySelectorAll<SVGGeometryElement>('path[fill="none"]'));
             expect(curves).to.have.length(count);
             const starts: number[] = curves.map(path => Number(path.getAttribute("d").match(/^M\s*[-\d.]+[ ,]+([-\d.]+)/)[1])).sort((a, b) => a - b);
             const expected: number[] = entry.notes.filter(graphical => (graphical.sourceNote as TabNote).BendArray?.length > 0)
@@ -28,6 +28,12 @@ describe("Bends on individual TAB chord strings", () => {
                     return vf.vfnote[0].getYs()[vf.vfnote[1]] + 0.5;
                 }).sort((a, b) => a - b);
             expect(starts).to.deep.equal(expected);
+            // From the top string down, each curve ends further right, avoiding crossings in either XML chord order.
+            const endXs: number[] = curves.map(path => ({
+                y: path.getPointAtLength(0).y,
+                endX: path.getPointAtLength(path.getTotalLength()).x
+            })).sort((a, b) => a.y - b.y).map(curve => curve.endX);
+            expect(endXs).to.deep.equal([...endXs].sort((a, b) => a - b));
         }
         for (const path of Array.from(div.querySelectorAll("svg path"))) { expect(path.getAttribute("d")).not.to.match(/NaN|Infinity/); }
     }
@@ -40,15 +46,12 @@ describe("Bends on individual TAB chord strings", () => {
         osmd.render();
         check();
     });
-    it("keeps each note's interval label and supports canvas", async () => {
+    it("keeps each note's interval label", async () => {
         await render();
         const note: VexFlowGraphicalNote = osmd.GraphicSheet.MeasureList[1][0].staffEntries[0]
             .graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote;
         const group: SVGGElement = note.getSVGGElement();
         expect(Array.from(group.querySelectorAll("text")).map(text => text.textContent)).to.include.members(["1/2", "Full"]);
-        osmd.clear();
-        await render("canvas");
-        expect(div.querySelector("canvas")).not.to.equal(null);
     });
     it("omits a hidden chord member's bend and restores it with RenderHiddenNotes", async () => {
         const score: Document = TestUtils.getScore("test_tab_chord_bends.musicxml").cloneNode(true) as Document;

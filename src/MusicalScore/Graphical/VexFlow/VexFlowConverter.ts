@@ -1247,7 +1247,10 @@ export class VexFlowConverter {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
         }
 
-        for (let index: number = 0; index < tabBends.length; index++) {
+        // VexFlow's Bend.format() moves each bend further right than the preceding bend of the same note.
+        // Add the top string's bend first so that the curves stay nested instead of crossing.
+        const bendIndices: number[] = tabBends.map((_, index) => index).sort((a, b) => tabPositions[a].str - tabPositions[b].str);
+        for (const index of bendIndices) {
             const tabPhrases: {type: number, text: string}[] = tabBends[index];
             if (tabPhrases.length === 0) {
                 continue;
