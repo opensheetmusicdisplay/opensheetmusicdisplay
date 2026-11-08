@@ -66,6 +66,7 @@ export class Note {
     private beam: Beam;
     private tuplet: Tuplet;
     private tie: Tie;
+    private noteTies: Tie[] = [];
     private glissando: Glissando;
     private slurs: Slur[] = [];
     private playbackInstrumentId: string = undefined;
@@ -204,11 +205,24 @@ export class Note {
     public set NoteGlissando(value: Glissando) {
         this.glissando = value;
     }
+    /** The tie added last, when this note belongs to several ties or techniques. */
     public get NoteTie(): Tie {
         return this.tie;
     }
     public set NoteTie(value: Tie) {
         this.tie = value;
+        if (!value) {
+            this.noteTies.length = 0;
+        } else if (!this.noteTies.includes(value)) {
+            this.noteTies.push(value);
+        }
+    }
+    /** All ties/techniques containing this note. A technique endpoint can also start a sustain.
+     * NoteTie returns the tie added last; graphical tie creation uses this complete list.
+     * Clearing NoteTie also clears these memberships for outgoing graphical tie creation.
+     */
+    public get NoteTies(): readonly Tie[] {
+        return this.noteTies;
     }
     public get NoteSlurs(): Slur[] {
         return this.slurs;

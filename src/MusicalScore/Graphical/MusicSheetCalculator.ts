@@ -3348,8 +3348,8 @@ export abstract class MusicSheetCalculator {
                 for (const staffEntry of container.StaffEntries) {
                     for (const voiceEntry of staffEntry?.VoiceEntries ?? []) {
                         for (const note of voiceEntry.Notes) {
-                            if (note.NoteTie) {
-                                note.NoteTie.TieDirection = note.NoteTie.TieDirectionXml;
+                            for (const tie of note.NoteTies) {
+                                tie.TieDirection = tie.TieDirectionXml;
                             }
                         }
                     }
@@ -3374,9 +3374,8 @@ export abstract class MusicSheetCalculator {
                             const voiceEntry: VoiceEntry = sourceStaffEntry.VoiceEntries[idx];
                             for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
                                 const note: Note = voiceEntry.Notes[idx2];
-                                if (note.NoteTie) {
-                                    const tie: Tie = note.NoteTie;
-                                    if (note === note.NoteTie.Notes.last()) {
+                                for (const tie of note.NoteTies) {
+                                    if (note === tie.Notes.last()) {
                                         continue; // nothing to do on last note. don't create last tie twice.
                                     }
                                     this.handleTie(tie, startStaffEntry, staffIndex, measureIndex, tie.Notes.indexOf(note));
@@ -3422,10 +3421,11 @@ export abstract class MusicSheetCalculator {
                 if (!startNote.sourceNote.isVisible() || !endNote.sourceNote.isVisible()) {
                     continue;
                 }
-                const tieOfFoundNotes: Tie = startNote.sourceNote.NoteTie;
-                if (tieOfFoundNotes && tieOfFoundNotes !== tie && tieOfFoundNotes === endNote.sourceNote.NoteTie) {
-                    // not the tie's own notes (see findTieGraphicalNoteFromNote), and they are tied to each other themselves,
-                    // e.g. visible notes that a hidden voice doubles in unison: don't draw a second tie between them
+                const substitutedNote: boolean = startNote.sourceNote !== tie.Notes[i - 1] || endNote.sourceNote !== tie.Notes[i];
+                if (substitutedNote && startNote.sourceNote.NoteTies.some(otherTie =>
+                    otherTie !== tie && otherTie.Type === tie.Type && endNote.sourceNote.NoteTies.includes(otherTie))) {
+                    // A hidden voice shares these visible noteheads, whose own tie already connects them.
+                    // Check all memberships: a technique endpoint can also start a sustain.
                     continue;
                 }
                 const graphicalTie: GraphicalTie = this.createGraphicalTie(tie, startGse, endGse, startNote, endNote);

@@ -1279,6 +1279,9 @@ export class VoiceGenerator {
     for (const key in openTieDict) {
       if (openTieDict.hasOwnProperty(key)) {
         const tie: Tie = openTieDict[key];
+        if (tie.StartNote === candidateNote) {
+          continue; // A note cannot stop the tie it has just started.
+        }
         const tieTabNote: TabNote = tie.Notes[0] as TabNote;
         const tieCandidateNote: TabNote = candidateNote as TabNote;
         if (tie.Pitch.FundamentalNote === candidateNote.Pitch.FundamentalNote && tie.Pitch.Octave === candidateNote.Pitch.Octave) {
@@ -1293,6 +1296,9 @@ export class VoiceGenerator {
     for (const key in openTieDict) {
       if (openTieDict.hasOwnProperty(key)) {
         const tie: Tie = openTieDict[key];
+        if (tie.StartNote === candidateNote) {
+          continue; // A note cannot stop the tie it has just started.
+        }
         if (tie.Pitch.getHalfTone() === candidateNote.Pitch.getHalfTone()) {
           return parseInt(key, 10);
         }
