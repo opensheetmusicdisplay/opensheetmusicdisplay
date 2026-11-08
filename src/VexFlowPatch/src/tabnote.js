@@ -167,6 +167,23 @@ export class TabNote extends StemmableNote {
     if (this.stave) this.setStave(this.stave);
   }
 
+  // VexFlowPatch: expose the same styling entry points OSMD uses for ordinary notes.
+  setFretStyle(index, style) {
+    if (!this.fretStyles) this.fretStyles = [];
+    this.fretStyles[index] = style;
+    return this;
+  }
+
+  setStemStyle(style) {
+    this.stem.setStyle(style);
+    return this;
+  }
+
+  setFlagStyle(style) {
+    this.flagStyle = style;
+    return this;
+  }
+
   // The ModifierContext category
   getCategory() { return TabNote.CATEGORY; }
 
@@ -383,7 +400,11 @@ export class TabNote extends StemmableNote {
         : glyph.code_flag_upstem;
 
       // Draw the Flag
+      context.openGroup('flag', null, { pointerBBox: true, mergeIntoChild: true }); // VexFlowPatch: group and style like StaveNote's flag
+      this.applyStyle(context, this.flagStyle || false);
       Glyph.renderGlyph(context, flag_x, flag_y, glyph_font_scale, flag_code);
+      this.restoreStyle(context, this.flagStyle || false);
+      context.closeGroup();
     }
   }
 
@@ -458,7 +479,7 @@ export class TabNote extends StemmableNote {
 
       // VexFlowPatch: a hidden (empty) fret, e.g. OSMD's TabNote.FretVisible false, clears no gap in the string line.
       //   Its rect and text are still drawn, for the order of the elements (see OSMD's VexFlowGraphicalNote.getTabNoteSVGs()).
-      const rectWidth = glyph.text === '' ? 0 : currentGlyphWidth + 4;
+      const rectWidth = glyph.text === '' || this.fretStyles?.[i]?.fillStyle === '#00000000' ? 0 : currentGlyphWidth + 4;
       // VexFlowPatch: fix black instead of transparent rectangles around tab notes in certain scenarios
       //   e.g. when EngravingRules.PageBackgroundColor set or image viewer displays transparent as black
       if (this.BackgroundColor) {
@@ -472,6 +493,8 @@ export class TabNote extends StemmableNote {
         ctx.clearRect(tab_x - 2, y - 3, rectWidth, 6);
       }
 
+      const fretStyle = this.fretStyles?.[i] || false;
+      this.applyStyle(ctx, fretStyle);
       if (glyph.code) {
         Glyph.renderGlyph(ctx, tab_x, y,
           this.render_options.glyph_font_scale * this.render_options.scale,
@@ -489,6 +512,7 @@ export class TabNote extends StemmableNote {
         }
         ctx.restore();
       }
+      this.restoreStyle(ctx, fretStyle);
     }
   }
 
@@ -518,7 +542,7 @@ export class TabNote extends StemmableNote {
     this.stem.setNoteHeadXBounds(stem_x, stem_x);
 
     if (render_stem) {
-      this.context.openGroup('stem', null, { pointerBBox: true, mergeIntoChild: true }); // VexFlowPatch: mergeIntoChild
+      this.context.openGroup('stem', this.getAttribute('id') + '-stem', { pointerBBox: true, mergeIntoChild: true }); // VexFlowPatch: mergeIntoChild
       this.stem.setContext(this.context).draw();
       this.context.closeGroup();
     }

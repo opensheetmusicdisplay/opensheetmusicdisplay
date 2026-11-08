@@ -767,6 +767,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestCourtesySignaturesStaffEnds = sampleFilename.startsWith("test_courtesy_signatures_staff_ends");
     const isTestTabRhythmDots = sampleFilename.startsWith("test_tab_rhythm_dots.");
     const isTestTabTieXmlPlacement = sampleFilename.startsWith("test_tab_tie_xml_placement.");
+    const isTestTabNoteColors = sampleFilename.startsWith("test_tab_note_colors.");
     const isTestTabs4Strings = sampleFilename.includes("test_tabs_4_strings");
     const isTestFingeringLeft = sampleFilename.includes("test_fingering_left");
     const isTestArticulationAboveNote = sampleFilename.includes("test_accent_above_except_piano_left_hand");
@@ -890,7 +891,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     if (isTestTabTieXmlPlacement) {
         osmdInstance.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
     }
-    if (isTestTabRhythmDots) {
+    if (isTestTabRhythmDots || isTestTabNoteColors) {
         osmdInstance.EngravingRules.TabRhythmRendered = true;
     }
     if (isTestTabs4Strings) {
