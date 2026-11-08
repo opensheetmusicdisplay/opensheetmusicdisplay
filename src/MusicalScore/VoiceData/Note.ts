@@ -205,15 +205,9 @@ export class Note {
     public set NoteGlissando(value: Glissando) {
         this.glissando = value;
     }
+    /** The tie added last, when this note belongs to several ties or techniques. */
     public get NoteTie(): Tie {
         return this.tie;
-    }
-    /** All ties/techniques containing this note. A technique endpoint can also start a sustain.
-     * NoteTie retains its legacy single-tie view; graphical tie creation uses this complete list.
-     * Clearing NoteTie also clears these memberships for outgoing graphical tie creation.
-     */
-    public get NoteTies(): readonly Tie[] {
-        return this.noteTies;
     }
     public set NoteTie(value: Tie) {
         this.tie = value;
@@ -222,6 +216,13 @@ export class Note {
         } else if (!this.noteTies.includes(value)) {
             this.noteTies.push(value);
         }
+    }
+    /** All ties/techniques containing this note. A technique endpoint can also start a sustain.
+     * NoteTie returns the tie added last; graphical tie creation uses this complete list.
+     * Clearing NoteTie also clears these memberships for outgoing graphical tie creation.
+     */
+    public get NoteTies(): readonly Tie[] {
+        return this.noteTies;
     }
     public get NoteSlurs(): Slur[] {
         return this.slurs;

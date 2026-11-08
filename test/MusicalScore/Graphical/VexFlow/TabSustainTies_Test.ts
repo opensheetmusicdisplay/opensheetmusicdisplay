@@ -2,6 +2,9 @@ import { expect } from "vitest";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { GraphicalTie } from "../../../../src/MusicalScore/Graphical/GraphicalTie";
 import { VexFlowGraphicalNote } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
+import { GraphicalNote } from "../../../../src/MusicalScore/Graphical/GraphicalNote";
+import { GraphicalStaffEntry } from "../../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
+import { TabNote } from "../../../../src/MusicalScore/VoiceData/TabNote";
 import { TestUtils } from "../../../Util/TestUtils";
 
 describe("Sustain ties starting at TAB technique endpoints", () => {
@@ -38,7 +41,7 @@ describe("Sustain ties starting at TAB technique endpoints", () => {
     it("draws both the technique and outgoing sustain, and preserves them on redraw/reflow", async () => {
         await render();
         check();
-        expect(div.querySelectorAll(".vf-stavetie path")).to.have.length(6);
+        expect(div.querySelectorAll(".vf-stavetie path")).to.have.length(13);
         osmd.render();
         check();
         div.style.width = "650px";
@@ -50,7 +53,7 @@ describe("Sustain ties starting at TAB technique endpoints", () => {
         check();
         const sustain: GraphicalTie = ties(2).find(tie => tie.Tie.Type === "");
         expect(sustain.vfTies).to.have.length(2);
-        expect(div.querySelectorAll(".vf-stavetie path")).to.have.length(7);
+        expect(div.querySelectorAll(".vf-stavetie path")).to.have.length(14);
         for (const path of Array.from(div.querySelectorAll("svg path"))) {
             expect(path.getAttribute("d")).not.to.match(/NaN|Infinity/);
         }
@@ -72,6 +75,10 @@ describe("Sustain ties starting at TAB technique endpoints", () => {
     });
     it("does not duplicate a visible technique and sustain for a hidden unison voice", async () => {
         const score: Document = TestUtils.getScore("test_tab_sustain_after_hp.musicxml").cloneNode(true) as Document;
+        // This regression doubles the original single-note examples. The chord cases below test one voice.
+        for (const measure of Array.from(score.querySelectorAll("part > measure")).slice(4)) {
+            measure.remove();
+        }
         for (const measure of Array.from(score.querySelectorAll("part > measure"))) {
             const notes: Element[] = Array.from(measure.querySelectorAll("note"));
             const backup: Element = score.createElement("backup");
@@ -93,13 +100,47 @@ describe("Sustain ties starting at TAB technique endpoints", () => {
         osmd.render();
         expect(div.querySelectorAll(".vf-stavetie path")).to.have.length(6);
     });
-    it("clears outgoing graphical ties when the legacy NoteTie setter is cleared", async () => {
+    it("keeps a hammer-on endpoint's sustain when a bass tie closes earlier in the chord", async () => {
+        await render();
+        const hammerOn: GraphicalTie = ties(4).find(tie => tie.Tie.Type === "H");
+        const sustain: GraphicalTie = ties(5).find(tie => tie.Tie.Type === "");
+        const chord: VexFlowGraphicalNote[] = osmd.GraphicSheet.MeasureList[5][0].staffEntries[0]
+            .graphicalVoiceEntries[0].notes as VexFlowGraphicalNote[];
+        const endpoint: VexFlowGraphicalNote = chord.find(note => (note.sourceNote as TabNote).StringNumberTab === 3);
+        const end: VexFlowGraphicalNote = osmd.GraphicSheet.MeasureList[5][0].staffEntries[1]
+            .graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote;
+        expect(hammerOn.EndNote.sourceNote === endpoint.sourceNote).to.equal(true);
+        expect(sustain).not.to.equal(undefined);
+        expect(sustain.StartNote.sourceNote === endpoint.sourceNote).to.equal(true);
+        expect(sustain.EndNote.sourceNote === end.sourceNote).to.equal(true);
+        expect(hammerOn.SVGElements[0].querySelector("path")).not.to.equal(null);
+        expect(sustain.SVGElements[0].querySelector("path")).not.to.equal(null);
+    });
+    it("keeps both outgoing sustains when two hammer-ons end on the same chord", async () => {
+        await render();
+        const hammerOns: GraphicalTie[] = ties(6).filter(tie => tie.Tie.Type === "H");
+        const sustains: GraphicalTie[] = ties(7).filter(tie => tie.Tie.Type === "");
+        const entries: GraphicalStaffEntry[] = osmd.GraphicSheet.MeasureList[7][0].staffEntries;
+        expect(hammerOns).to.have.length(2);
+        expect(sustains).to.have.length(2);
+        for (const string of [3, 2]) {
+            const endpoint: GraphicalNote = entries[0].graphicalVoiceEntries[0].notes.find(note => (note.sourceNote as TabNote).StringNumberTab === string);
+            const end: GraphicalNote = entries[1].graphicalVoiceEntries[0].notes.find(note => (note.sourceNote as TabNote).StringNumberTab === string);
+            const hammerOn: GraphicalTie = hammerOns.find(tie => tie.EndNote.sourceNote === endpoint.sourceNote);
+            const sustain: GraphicalTie = sustains.find(tie => tie.StartNote.sourceNote === endpoint.sourceNote);
+            expect(hammerOn).not.to.equal(undefined);
+            expect(sustain).not.to.equal(undefined);
+            expect(sustain.EndNote.sourceNote === end.sourceNote).to.equal(true);
+            expect(sustain.SVGElements[0].querySelector("path")).not.to.equal(null);
+        }
+    });
+    it("clears outgoing graphical ties when the NoteTie setter is cleared", async () => {
         await render();
         const sustain: GraphicalTie = ties(0).find(tie => tie.Tie.Type === "");
         const source: any = sustain.StartNote.sourceNote;
-        const legacy: any = source.NoteTie;
+        const lastTie: any = source.NoteTie;
         expect(source.NoteTies).to.have.length(2);
-        source.NoteTie = legacy;
+        source.NoteTie = lastTie;
         expect(source.NoteTies).to.have.length(2);
         source.NoteTie = undefined;
         expect(source.NoteTies).to.have.length(0);
