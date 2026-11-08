@@ -381,7 +381,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
 
     /** Gets the SVG element of the note's flag: its path, or with EngravingRules.SVGMergeSingleChildGroups false, its group. */
     public getFlagSVG(): HTMLElement {
-        const vfNote: HTMLElement = this.getVFNoteSVG();
+        const vfNote: HTMLElement = this.isTabNote ? this.getSVGGElement() as unknown as HTMLElement : this.getVFNoteSVG();
         if (vfNote?.children?.length) {
             for (const noteChild of vfNote.children) {
                 if (noteChild.classList.contains("vf-flag")) {
@@ -449,7 +449,8 @@ export class VexFlowGraphicalNote extends GraphicalNote {
             }
         }
         const modifiers: HTMLElement[] = children.slice(2 * positionCount).filter((child: HTMLElement) =>
-            child.tagName !== "g" || child.classList.contains("vf-tab-rhythm-dot"));
+            !child.classList.contains("vf-stem") && !child.classList.contains("vf-flag") &&
+            (child.tagName !== "g" || child.classList.contains("vf-tab-rhythm-dot")));
         return { frets, modifiers };
     }
 

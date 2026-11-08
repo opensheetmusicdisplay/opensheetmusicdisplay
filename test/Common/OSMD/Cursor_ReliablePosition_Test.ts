@@ -87,7 +87,7 @@ describe("Cursor reliable position", () => {
 
     it("tablature sample: stepping the cursor never places it off-canvas", async () => {
         const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
-        // this sample has tablature rests that are never formatted and carry garbage coordinates
+        // a rest-only TAB measure on top of this sample used to give the notes below it garbage coordinates
         // (x ~ 70000 units); the cursor used to jump ~700000px off-canvas when stepping onto them
         await loadAndRender(osmd, "test_tab_dont_switch_to_classical_from_clefinstruction.musicxml");
         osmd.cursor.reset();

@@ -825,7 +825,10 @@ describe("VexFlow Measure", () => {
                const stemRight: number = (stemBox.x + stemBox.width) / unitInPixels;
                for (const fingering of staffEntry.FingeringEntries) {
                   const box: BoundingBox = fingering.PositionAndShape;
-                  if (stemRight < box.AbsolutePosition.x + box.BorderMarginLeft || stemLeft > box.AbsolutePosition.x + box.BorderMarginRight) {
+                  // a label is as wide as its note head, so a stem at the head's side is at the label's edge: it counts too
+                  const edgeTolerance: number = 0.01;
+                  if (stemRight < box.AbsolutePosition.x + box.BorderMarginLeft - edgeTolerance ||
+                     stemLeft > box.AbsolutePosition.x + box.BorderMarginRight + edgeTolerance) {
                      continue;
                   }
                   stemsUnderLabels++;

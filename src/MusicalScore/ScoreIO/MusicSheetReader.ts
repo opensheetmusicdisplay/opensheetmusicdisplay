@@ -566,7 +566,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             const instrumentsDuration: Fraction = instrumentsDurations[i];
             if (
                 (this.currentMeasure.ImplicitMeasure && instrumentsDuration !== maxInstrumentDuration) ||
-                !Fraction.Equal(instrumentsDuration, activeRhythm) &&
+                !instrumentsDuration.Equals(activeRhythm) && // by value: a full 4/4 measure is 1 0/1, not 4/4
                 !this.allInstrumentsHaveSameDuration(instrumentsDurations, maxInstrumentDuration)
             ) {
                 const firstStaffIndexOfInstrument: number = this.musicSheet.getGlobalStaffIndexOfFirstStaff(this.musicSheet.Instruments[i]);

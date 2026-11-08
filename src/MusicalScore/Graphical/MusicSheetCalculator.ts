@@ -3348,8 +3348,8 @@ export abstract class MusicSheetCalculator {
                 for (const staffEntry of container.StaffEntries) {
                     for (const voiceEntry of staffEntry?.VoiceEntries ?? []) {
                         for (const note of voiceEntry.Notes) {
-                            if (note.NoteTie) {
-                                note.NoteTie.TieDirection = note.NoteTie.TieDirectionXml;
+                            for (const tie of note.NoteTies) {
+                                tie.TieDirection = tie.TieDirectionXml;
                             }
                         }
                     }
@@ -3374,9 +3374,8 @@ export abstract class MusicSheetCalculator {
                             const voiceEntry: VoiceEntry = sourceStaffEntry.VoiceEntries[idx];
                             for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
                                 const note: Note = voiceEntry.Notes[idx2];
-                                if (note.NoteTie) {
-                                    const tie: Tie = note.NoteTie;
-                                    if (note === note.NoteTie.Notes.last()) {
+                                for (const tie of note.NoteTies) {
+                                    if (note === tie.Notes.last()) {
                                         continue; // nothing to do on last note. don't create last tie twice.
                                     }
                                     this.handleTie(tie, startStaffEntry, staffIndex, measureIndex, tie.Notes.indexOf(note));
@@ -3422,10 +3421,11 @@ export abstract class MusicSheetCalculator {
                 if (!startNote.sourceNote.isVisible() || !endNote.sourceNote.isVisible()) {
                     continue;
                 }
-                const tieOfFoundNotes: Tie = startNote.sourceNote.NoteTie;
-                if (tieOfFoundNotes && tieOfFoundNotes !== tie && tieOfFoundNotes === endNote.sourceNote.NoteTie) {
-                    // not the tie's own notes (see findTieGraphicalNoteFromNote), and they are tied to each other themselves,
-                    // e.g. visible notes that a hidden voice doubles in unison: don't draw a second tie between them
+                const substitutedNote: boolean = startNote.sourceNote !== tie.Notes[i - 1] || endNote.sourceNote !== tie.Notes[i];
+                if (substitutedNote && startNote.sourceNote.NoteTies.some(otherTie =>
+                    otherTie !== tie && otherTie.Type === tie.Type && endNote.sourceNote.NoteTies.includes(otherTie))) {
+                    // A hidden voice shares these visible noteheads, whose own tie already connects them.
+                    // Check all memberships: a technique endpoint can also start a sustain.
                     continue;
                 }
                 const graphicalTie: GraphicalTie = this.createGraphicalTie(tie, startGse, endGse, startNote, endNote);
@@ -3676,10 +3676,18 @@ export abstract class MusicSheetCalculator {
         const graceEntriesAfterMainNote: {
             voiceEntry: VoiceEntry; graphicalStaffEntry: GraphicalStaffEntry; sourceStaffEntry: SourceStaffEntry; linkedNotes: Note[];
         }[] = [];
+        const drawAsWholeMeasureRest: boolean = this.rules.DrawRestOnlyMeasuresAsWholeMeasureRest &&
+            this.isRestOnlyMeasureFilledByRests(sourceMeasure, staffIndex);
+        let wholeMeasureRestCreated: boolean = false;
+        let wholeMeasureRestNote: GraphicalNote;
         // create GraphicalStaffEntries - always check for possible null Entry
         for (let entryIndex: number = 0; entryIndex < sourceMeasure.VerticalSourceStaffEntryContainers.length; entryIndex++) {
             const sourceStaffEntry: SourceStaffEntry = sourceMeasure.VerticalSourceStaffEntryContainers[entryIndex].StaffEntries[staffIndex];
             // is there a SourceStaffEntry at this Index
+            if (drawAsWholeMeasureRest && wholeMeasureRestCreated && sourceStaffEntry &&
+                sourceStaffEntry.ChordContainers.length === 0 && sourceStaffEntry.Instructions.length === 0) {
+                continue; // the replaced rest has no chord symbols or instructions to draw here
+            }
             if (sourceStaffEntry) {
                 // a SourceStaffEntry exists
                 const laidOutVoiceEntries: VoiceEntry[] = this.voiceEntriesToLayOut(sourceStaffEntry);
@@ -3738,6 +3746,9 @@ export abstract class MusicSheetCalculator {
                         octaveShiftValue = OctaveEnum.NONE;
                         activeOctaveShift = undefined;
                     }
+                    if (drawAsWholeMeasureRest && wholeMeasureRestCreated) {
+                        continue; // the first rest is drawn as the whole-measure rest. The staff entry stays for its chord symbols.
+                    }
                     // Normal Notes...
                     octaveShiftValue = this.handleVoiceEntry(
                         voiceEntry, graphicalStaffEntry,
@@ -3746,6 +3757,15 @@ export abstract class MusicSheetCalculator {
                         openBeams, octaveShiftValue, staffIndex,
                         linkedNotes, sourceStaffEntry
                     );
+                    if (drawAsWholeMeasureRest && graphicalStaffEntry.graphicalVoiceEntries.length > 0) {
+                        // only the drawn length changes: the source rests keep their length and time
+                        for (const graphicalNote of graphicalStaffEntry.graphicalVoiceEntries.last().notes) {
+                            graphicalNote.graphicalNoteLength = sourceMeasure.ActiveTimeSignature.clone();
+                            graphicalNote.numberOfDots = 0;
+                            wholeMeasureRestNote = graphicalNote;
+                        }
+                        wholeMeasureRestCreated = true;
+                    }
                 }
                 this.handleLyricsOfLeftOutVoices(sourceStaffEntry, laidOutVoiceEntries, graphicalStaffEntry, openLyricWords);
                 // SourceStaffEntry has inStaff ClefInstruction -> create graphical clef
@@ -3764,6 +3784,19 @@ export abstract class MusicSheetCalculator {
                         graphicalStaffEntry,
                         accidentalCalculator.ActiveKeyInstruction,
                         this.graphicalMusicSheet.ParentMusicSheet.Transpose);
+                }
+            }
+        }
+
+        if (wholeMeasureRestNote) {
+            // The drawn rest represents the replaced rests in the public note-to-graphical-note mapping too.
+            for (const container of sourceMeasure.VerticalSourceStaffEntryContainers) {
+                for (const voiceEntry of container.StaffEntries[staffIndex]?.VoiceEntries ?? []) {
+                    for (const note of voiceEntry.Notes) {
+                        if (note !== wholeMeasureRestNote.sourceNote) {
+                            this.rules.addGraphicalNoteToNoteMap(note, wholeMeasureRestNote);
+                        }
+                    }
                 }
             }
         }
@@ -3865,6 +3898,47 @@ export abstract class MusicSheetCalculator {
         }
 
         return measure;
+    }
+
+    /** Whether the staff's measure only has visible rests of one voice that fill the whole measure (e.g. four quarter rests in 4/4),
+     * see OSMDOptions.drawRestOnlyMeasuresAsWholeMeasureRest. Not for pickup measures, tuplets, grace notes, rests with a fermata
+     * or other marks or a given position, or an in-measure clef or key change, which are drawn as written.
+     */
+    private isRestOnlyMeasureFilledByRests(sourceMeasure: SourceMeasure, staffIndex: number): boolean {
+        if (sourceMeasure.Duration.RealValue !== sourceMeasure.ActiveTimeSignature.RealValue) {
+            return false;
+        }
+        let voice: Voice;
+        let restLength: Fraction = new Fraction(0, 1);
+        for (const container of sourceMeasure.VerticalSourceStaffEntryContainers) {
+            const staffEntry: SourceStaffEntry = container.StaffEntries[staffIndex];
+            if (!staffEntry) {
+                continue;
+            }
+            if (staffEntry.Link ||
+                staffEntry.Instructions.some(instruction => instruction instanceof ClefInstruction || instruction instanceof KeyInstruction)) {
+                return false;
+            }
+            for (const voiceEntry of staffEntry.VoiceEntries) {
+                if (voiceEntry.IsGrace || (voice && voice !== voiceEntry.ParentVoice)) {
+                    return false;
+                }
+                // what a rest carries (e.g. a fermata) would be lost with the rest
+                if (voiceEntry.Articulations.length > 0 || voiceEntry.TechnicalInstructions.length > 0 || voiceEntry.OrnamentContainer ||
+                    voiceEntry.Arpeggio) {
+                    return false;
+                }
+                voice = voiceEntry.ParentVoice;
+                for (const note of voiceEntry.Notes) {
+                    // a rest with a given vertical position (display-step) is not a measure rest
+                    if (!note.isRest() || !note.PrintObject || note.Pitch || note.NoteTuplet || note.NoteBeam) {
+                        return false;
+                    }
+                    restLength = Fraction.plus(restLength, note.Length);
+                }
+            }
+        }
+        return restLength.RealValue === sourceMeasure.ActiveTimeSignature.RealValue;
     }
 
     /** Makes a clef change at the end of the measure (for the next measure) the staff's active clef. */
