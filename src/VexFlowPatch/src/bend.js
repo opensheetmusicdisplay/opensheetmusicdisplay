@@ -140,6 +140,17 @@ export class Bend extends Modifier {
     this.setWidth(total_width + this.x_shift);
     return this;
   }
+  // VexflowPatch: optional endpoints supplied after OSMD has created all notes in a TAB measure.
+  // The hidden note's release stays a separate modifier unless this bend actually draws both curves.
+  setSpanTargets(targets, release) {
+    this.spanTargets = targets;
+    this.spanRelease = release;
+    this.spanSource = undefined;
+    this.spanDrawn = false;
+    if (release) release.spanSource = this;
+    return this;
+  }
+
   draw() {
     this.checkContext();
     if (!(this.note && (this.index != null))) {
@@ -147,6 +158,8 @@ export class Bend extends Modifier {
     }
 
     this.setRendered();
+    if (this.spanSource && this.spanSource.spanDrawn) return;
+    this.spanDrawn = false;
 
     const start = this.note.getModifierStartXY(Modifier.Position.RIGHT,
       this.index);
@@ -158,6 +171,14 @@ export class Bend extends Modifier {
     const bend_height = this.note.getStave().getYForTopText(this.text_line) + 3;
     const annotation_y = this.note.getStave().getYForTopText(this.text_line) - 1;
     const that = this;
+
+    // VexflowPatch: use laid-out note positions, recomputed for every draw (including skyline and resize passes).
+    const spanXs = (this.spanTargets || []).map((target, index) => index === 0
+      ? target.getModifierStartXY(Modifier.Position.ABOVE, 0).x
+      : target.getModifierStartXY(Modifier.Position.LEFT, 0).x - 1);
+    this.spanDrawn = spanXs.length > 0 && spanXs.every((x, index) =>
+      Number.isFinite(x) && x > (index === 0 ? start.x : spanXs[index - 1]));
+    const phrase = this.spanDrawn && this.spanRelease ? this.phrase.concat(this.spanRelease.phrase) : this.phrase;
 
     function renderBend(x, y, width, height) {
       const cp_x = x + width;
@@ -210,8 +231,8 @@ export class Bend extends Modifier {
 
     let last_bend = null;
     let last_drawn_width = 0;
-    for (let i = 0; i < this.phrase.length; ++i) {
-      const bend = this.phrase[i];
+    for (let i = 0; i < phrase.length; ++i) {
+      const bend = phrase[i];
       if (i === 0) {
         //VexflowPatch: Save unmodified width so that we don't increase x on every render
         bend.draw_width_unmodified = bend.draw_width;
@@ -221,6 +242,7 @@ export class Bend extends Modifier {
       last_drawn_width = bend.draw_width +
         (last_bend ? last_bend.draw_width : 0) -
         (i === 1 ? x_shift : 0);
+      if (this.spanDrawn) last_drawn_width = spanXs[i] - start.x;
       if (bend.type === Bend.UP) {
         if (last_bend && last_bend.type === Bend.UP) {
           renderArrowHead(start.x, bend_height);
@@ -259,8 +281,8 @@ export class Bend extends Modifier {
       renderArrowHead(last_bend.x + last_drawn_width, start.y, -1);
     }
     // VexflowPatch: reset draw_width, so that bend doesn't get longer every re-render
-    for (let i = 0; i < this.phrase.length; ++i) {
-        const bend = this.phrase[i];
+    for (let i = 0; i < phrase.length; ++i) {
+        const bend = phrase[i];
         if (bend.draw_width_unmodified) {
             bend.draw_width = bend.draw_width_unmodified;
         }

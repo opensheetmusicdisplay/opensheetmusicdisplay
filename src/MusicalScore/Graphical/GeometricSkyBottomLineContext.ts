@@ -1176,6 +1176,9 @@ export class GeometricSkyBottomLineCaches {
     public characterProbeCanvas: HTMLCanvasElement;
     public characterProbeContext: CanvasRenderingContext2D;
     public characterProbeCreationFailed: boolean = false;
+    /** The context that SkyBottomLineCalculator.calculateLinesGeometric() draws the measures in. Reused for all stafflines,
+     *  so that its arrays don't have to grow again for each of them. */
+    public linesContext: GeometricSkyBottomLineContext;
     /** The sky- and bottom lines of all measures of a staffline, one after the other, before subsampling them
      *  (reused for all stafflines, see SkyBottomLineCalculator.calculateLinesGeometric()). */
     public skyLineBuffer: Float64Array = new Float64Array(0);
