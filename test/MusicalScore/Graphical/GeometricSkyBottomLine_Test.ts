@@ -1,4 +1,6 @@
 import { expect } from "vitest";
+import Vex from "vexflow";
+import VF = Vex.Flow;
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { SkyBottomLineCalculator } from "../../../src/MusicalScore/Graphical/SkyBottomLineCalculator";
 import { GeometricSkyBottomLineContext } from "../../../src/MusicalScore/Graphical/GeometricSkyBottomLineContext";
@@ -192,14 +194,23 @@ describe("GeometricSkyBottomLineCalculation", () => {
         osmd.EngravingRules.SkyBottomLineBatchMinMeasures = 9999999; // use the non-batched raster path
         await osmd.load(TestUtils.getScore("OSMD_Function_Test_Tablature_Hammeron_Pulloff.musicxml"));
 
-        /** Renders with the given skyline method and returns the tie texts drawn into its context, with their x. */
+        /** Renders with the given skyline method and returns the tie texts drawn into its context, with their x relative to the
+         *  middle of their tie: the methods format the notes to slightly different widths (the raster method to its canvas's,
+         *  the stave's width truncated), which moves the ties by up to a pixel, but the text must be centered alike. */
         function renderTieTexts(geometric: boolean): { text: string, x: number }[] {
             const texts: { text: string, x: number }[] = [];
             const context: any = geometric ? GeometricSkyBottomLineContext.prototype : CanvasRenderingContext2D.prototype;
             const originalFillText: any = context.fillText;
+            const tieProto: any = (VF as any).StaveTie.prototype;
+            const originalRenderText: any = tieProto.renderText;
+            let tieMiddle: number = undefined;
+            tieProto.renderText = function (firstX: number, lastX: number): void {
+                tieMiddle = (firstX + lastX) / 2;
+                originalRenderText.call(this, firstX, lastX);
+            };
             context.fillText = function (text: string, x: number, y: number): void {
                 if (text === "H" || text === "P") {
-                    texts.push({ text, x });
+                    texts.push({ text, x: x - tieMiddle });
                 }
                 originalFillText.call(this, text, x, y);
             };
@@ -208,6 +219,7 @@ describe("GeometricSkyBottomLineCalculation", () => {
                 osmd.render();
             } finally {
                 context.fillText = originalFillText;
+                tieProto.renderText = originalRenderText;
             }
             return texts;
         }
