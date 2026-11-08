@@ -894,7 +894,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         if (lastEntryDict[currentContainerIndex]) { // if previous lyric needs more spacing than measure end, take that spacing
           const lastNoteDuration: Fraction = lastEntryDict[currentContainerIndex].sourceNoteDuration;
           elongationFactorNeededForLastContainer = spacingNeededToLastContainer / currentSpacingToLastContainer;
-          if ((lastNoteDuration.Denominator) > 4) {
+          if (lastNoteDuration.RealValue < 0.25) { // shorter than a quarter note (not by denominator: a dotted quarter is 3/8)
             elongationFactorNeededForLastContainer *= 1.1; // from 1.2 upwards, this unnecessarily bloats shorter measures
             // spacing in Vexflow depends on note duration, our minSpacing is calibrated for quarter notes
             // if we double the measure length, the distance between eighth notes only gets half of the added length
