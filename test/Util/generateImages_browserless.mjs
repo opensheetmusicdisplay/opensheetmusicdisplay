@@ -766,6 +766,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     // courtesy key and time signatures of different widths at system breaks, see test_courtesy_signatures_staff_ends: systems as in the file
     const isTestCourtesySignaturesStaffEnds = sampleFilename.startsWith("test_courtesy_signatures_staff_ends");
     const isTestTabRhythmDots = sampleFilename.startsWith("test_tab_rhythm_dots.");
+    const isTestTabSlideLineTypes = sampleFilename.startsWith("test_tab_slide_line_types");
     const isTestTabTieXmlPlacement = sampleFilename.startsWith("test_tab_tie_xml_placement.");
     const isTestTabNoteColors = sampleFilename.startsWith("test_tab_note_colors.");
     const isTestTabs4Strings = sampleFilename.includes("test_tabs_4_strings");
@@ -888,7 +889,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     if (isTestPartAbbreviationSingleStaff) {
         osmdInstance.EngravingRules.RenderPartAbbreviationsForSingleStaff = true;
     }
-    if (isTestTabTieXmlPlacement) {
+    if (isTestTabSlideLineTypes || isTestTabTieXmlPlacement) {
         osmdInstance.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
     }
     if (isTestTabRhythmDots || isTestTabNoteColors) {

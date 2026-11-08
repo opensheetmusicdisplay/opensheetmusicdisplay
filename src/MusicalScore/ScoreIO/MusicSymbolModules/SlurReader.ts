@@ -97,6 +97,7 @@ export class SlurReader {
                                 }
                                 slur.StartNote = currentNote;
                                 slur.PlacementXml = slurPlacementXml;
+                                slur.LineTypeXml = slurNode.attribute("line-type")?.value;
                                 if (isSlur && pendingCrossStaffStop?.EndNote === currentNote) {
                                     // This note also has a stop of this number that ended no earlier slur (stops are read
                                     // first): Dolet for Sibelius writes a slur whose end isn't attached to a note like this,
@@ -117,6 +118,7 @@ export class SlurReader {
                                 if (slur && slur.StartNote !== currentNote) {
                                     const startNote: Note = slur.StartNote;
                                     const newGlissando: Glissando = new Glissando(startNote);
+                                    newGlissando.LineType = slur.LineTypeXml ?? slurNode.attribute("line-type")?.value ?? "solid";
                                     newGlissando.AddNote(currentNote);
                                     newGlissando.EndNote = currentNote;
                                     currentNote.NoteGlissando = newGlissando;

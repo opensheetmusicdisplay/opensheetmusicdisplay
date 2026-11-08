@@ -15,6 +15,7 @@ export class Glissando {
     public StartNote: Note;
     public EndNote: Note;
     public XMLNumber: number = 1;
+    public LineType: string = "solid";
     public Direction: ColDirEnum;
 
     public get Notes(): Note[] {
