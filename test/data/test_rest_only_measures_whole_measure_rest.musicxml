@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes><divisions>3</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><staves>2</staves><clef number="1"><sign>G</sign><line>2</line></clef><clef number="2"><sign>F</sign><line>4</line></clef></attributes>
+      <harmony><root><root-step>C</root-step></root><kind>major</kind></harmony>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <harmony><root><root-step>G</root-step></root><kind>major</kind></harmony>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><pitch><step>C</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>C</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>C</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>C</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+    </measure>
+    <measure number="2">
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+    </measure>
+    <measure number="3">
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+    </measure>
+    <measure number="4">
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+    </measure>
+    <measure number="5">
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <direction placement="above"><direction-type><words>cresc.</words></direction-type><staff>1</staff></direction>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+    </measure>
+    <measure number="6">
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+    </measure>
+    <measure number="7">
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff><notations><fermata/></notations></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><rest measure="yes"/><duration>12</duration><voice>2</voice><staff>2</staff></note>
+    </measure>
+    <measure number="8">
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+    </measure>
+    <measure number="9">
+      <note><rest><display-step>B</display-step><display-octave>4</display-octave></rest><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest><display-step>B</display-step><display-octave>4</display-octave></rest><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest><display-step>B</display-step><display-octave>4</display-octave></rest><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest><display-step>B</display-step><display-octave>4</display-octave></rest><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><rest measure="yes"/><duration>12</duration><voice>2</voice><staff>2</staff></note>
+    </measure>
+    <measure number="10">
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+    </measure>
+    <measure number="11">
+      <note><rest/><duration>6</duration><voice>1</voice><type>half</type><staff>1</staff></note>
+      <note><rest/><duration>6</duration><voice>1</voice><type>half</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><rest/><duration>6</duration><voice>3</voice><type>half</type><staff>1</staff></note>
+      <note><rest/><duration>6</duration><voice>3</voice><type>half</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><rest measure="yes"/><duration>12</duration><voice>5</voice><staff>2</staff></note>
+    </measure>
+    <measure number="12">
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+    </measure>
+    <measure number="13">
+      <note><rest/><duration>2</duration><voice>1</voice><type>quarter</type><time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification><staff>1</staff><notations><tuplet type="start"/></notations></note>
+      <note><rest/><duration>2</duration><voice>1</voice><type>quarter</type><time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification><staff>1</staff></note>
+      <note><rest/><duration>2</duration><voice>1</voice><type>quarter</type><time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification><staff>1</staff><notations><tuplet type="stop"/></notations></note>
+      <note><rest/><duration>6</duration><voice>1</voice><type>half</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><rest measure="yes"/><duration>12</duration><voice>2</voice><staff>2</staff></note>
+    </measure>
+    <measure number="14">
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+    </measure>
+    <measure number="15">
+      <note print-object="no"><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note print-object="no"><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note print-object="no"><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note print-object="no"><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><rest measure="yes"/><duration>12</duration><voice>2</voice><staff>2</staff></note>
+    </measure>
+    <measure number="16">
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+    </measure>
+    <measure number="17">
+      <attributes><time><beats>6</beats><beat-type>4</beat-type></time></attributes>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>18</duration></backup>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+    </measure>
+    <measure number="18">
+      <attributes><time><beats>4</beats><beat-type>4</beat-type></time></attributes>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+    </measure>
+    <measure number="19">
+      <note><rest/><duration>6</duration><voice>1</voice><type>half</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>6</duration><voice>1</voice><type>half</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+    </measure>
+    <measure number="20">
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+    </measure>
+    <measure number="21">
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><pitch><step>C</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>C</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>C</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>C</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+    </measure>
+    <measure number="22">
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><pitch><step>E</step><octave>3</octave></pitch><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+    </measure>
+    <measure number="23">
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+    </measure>
+    <measure number="24">
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+    </measure>
+    <measure number="25">
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+    </measure>
+    <measure number="26">
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <note><rest/><duration>3</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+      <backup><duration>12</duration></backup>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+      <note><rest/><duration>3</duration><voice>2</voice><type>quarter</type><staff>2</staff></note>
+    </measure>
+  </part>
+</score-partwise>

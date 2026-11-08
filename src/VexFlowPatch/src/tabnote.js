@@ -480,7 +480,13 @@ export class TabNote extends StemmableNote {
         ctx.save();
         ctx.setRawFont(this.render_options.font);
         const text = glyph.text.toString();
-        ctx.fillText(text, tab_x, y + 5 * this.render_options.scale);
+        // VexFlowPatch: retain the hidden fret's empty SVG text for OSMD's note/modifier lookup.
+        // Only empty text gets the extra flag: Canvas interprets a fourth argument as maxWidth.
+        if (text === '') {
+          ctx.fillText(text, tab_x, y + 5 * this.render_options.scale, true);
+        } else {
+          ctx.fillText(text, tab_x, y + 5 * this.render_options.scale);
+        }
         ctx.restore();
       }
     }

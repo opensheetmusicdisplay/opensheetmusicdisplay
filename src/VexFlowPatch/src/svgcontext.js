@@ -114,6 +114,9 @@ export class SVGContext {
     // VexFlowPatch: the innermost open group while it has no element of its own: { cls, id, attrs, merge, child }
     //   (see openGroup())
     this.pendingGroup = undefined;
+    // VexFlowPatch: the boxes measureText() has measured, by font and text. Emptied when the scale changes (see setViewBox()),
+    //   as the browser's text metrics can depend on it.
+    this.measureTextCache = new Map();
 
     this.path = '';
     this.pen = { x: NaN, y: NaN };
@@ -453,6 +456,7 @@ export class SVGContext {
   }
 
   setViewBox(...args) {
+    this.measureTextCache.clear();
     // Override for "x y w h" style:
     if (args.length === 1) {
       const [viewBox] = args;
@@ -822,6 +826,16 @@ export class SVGContext {
 
   // ## Text Methods:
   measureText(text, useTextAdvance = false) {
+    // VexFlowPatch: measure the same text in the same font only once. getBBox() makes the browser lay out everything drawn since
+    //   its last call, which for scores measuring per note (e.g. TAB fret numbers) took up to 39% of the render time.
+    const attributes = this.attributes;
+    const cacheKey = attributes['font-family'] + '|' + attributes['font-size'] + '|' + attributes['font-weight'] + '|' +
+      attributes['font-style'] + '|' + useTextAdvance + '|' + text;
+    const cachedBox = this.measureTextCache.get(cacheKey);
+    if (cachedBox) {
+      return cachedBox;
+    }
+
     const txt = this.create('text');
     if (typeof (txt.getBBox) !== 'function') {
       return { x: 0, y: 0, width: 0, height: 0 };
@@ -843,6 +857,7 @@ export class SVGContext {
     }
 
     this.svg.removeChild(txt);
+    this.measureTextCache.set(cacheKey, bbox);
     return bbox;
   }
 
@@ -872,8 +887,8 @@ export class SVGContext {
     return box;
   }
 
-  fillText(text, x, y) {
-    if (!text || text.length <= 0) {
+  fillText(text, x, y, keepEmpty = false) {
+    if ((!text || text.length <= 0) && !keepEmpty) {
       return;
     }
     const attributes = {};

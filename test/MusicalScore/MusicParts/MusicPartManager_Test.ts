@@ -79,6 +79,18 @@ describe("MusicPartManager after loading", () => {
         expect(firstPass.to.RealValue - firstPass.$from.RealValue, "m3, first pass: sheet timestamp - enrolled timestamp").to.equal(0);
     });
 
+    /**
+     * The mapping is calculated at its first use, for the whole sheet: also when the selection is limited to the first measures
+     * by then, as the cursor does with drawUpToMeasureNumber. The selection stays as it was.
+     */
+    it("maps the whole sheet when first used with a limited selection, and keeps the selection", () => {
+        osmd.Sheet.SelectionEnd = new Fraction(1, 1);
+
+        expect(sheetTimestampOf(new Fraction(7, 2)), "m2, second pass").to.equal(1.5);
+        expect(sheetTimestampOf(new Fraction(17, 4)), "m4").to.equal(3.25);
+        expect(osmd.Sheet.SelectionEnd.RealValue, "the selection's end").to.equal(1);
+    });
+
     /** The repeat of m2-m3, and the repetition of the whole piece that OSMD adds when no repetition spans it (played once). */
     it("Parts lists the sheet's repetitions", () => {
         expect(osmd.Sheet.Repetitions.length).to.equal(2);
