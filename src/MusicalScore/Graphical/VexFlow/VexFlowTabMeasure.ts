@@ -115,9 +115,10 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
             }
 
             // add a vexFlow voice for this voice:
+            // Fraction keeps the whole part apart (WholeValue): a 4/4 measure is 1 0/1, so its Numerator is 0.
             this.vfVoices[voice.VoiceId] = new VF.Voice({
                         beat_value: this.parentSourceMeasure.Duration.Denominator,
-                        num_beats: this.parentSourceMeasure.Duration.Numerator,
+                        num_beats: this.parentSourceMeasure.Duration.GetExpandedNumerator(),
                         resolution: VF.RESOLUTION,
                     }).setMode(VF.Voice.Mode.SOFT);
 
