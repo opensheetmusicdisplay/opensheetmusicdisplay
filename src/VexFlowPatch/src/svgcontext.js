@@ -872,8 +872,8 @@ export class SVGContext {
     return box;
   }
 
-  fillText(text, x, y) {
-    if (!text || text.length <= 0) {
+  fillText(text, x, y, keepEmpty = false) {
+    if ((!text || text.length <= 0) && !keepEmpty) {
       return;
     }
     const attributes = {};
