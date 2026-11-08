@@ -316,7 +316,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                 this.parentVoiceEntry.StemColor = stemColor; // this shouldn't be set by DefaultColorStem
             }
             vfStaveNote.setStemStyle(stemStyle);
-            if ((vfStaveNote.flag || vfStaveNote.setFretStyle) && vfStaveNote.setFlagStyle) {
+            if (vfStaveNote.setFlagStyle) {
                 // in the color of the stem with ColorFlags, else in the default stem color, which also resets the color of an
                 //   earlier render. Set explicitly: a flag without a style is drawn in the style around it, e.g. a grace note's
                 //   flag in the notehead style of its main note. A transparent stem (a hidden note, <stem>none</stem>) hides

@@ -400,11 +400,10 @@ export class TabNote extends StemmableNote {
         : glyph.code_flag_upstem;
 
       // Draw the Flag
-      context.openGroup('flag');
-      context.save();
-      this.applyStyle(context, this.flagStyle);
+      context.openGroup('flag', null, { pointerBBox: true, mergeIntoChild: true }); // VexFlowPatch: group and style like StaveNote's flag
+      this.applyStyle(context, this.flagStyle || false);
       Glyph.renderGlyph(context, flag_x, flag_y, glyph_font_scale, flag_code);
-      context.restore();
+      this.restoreStyle(context, this.flagStyle || false);
       context.closeGroup();
     }
   }
@@ -494,8 +493,8 @@ export class TabNote extends StemmableNote {
         ctx.clearRect(tab_x - 2, y - 3, rectWidth, 6);
       }
 
-      ctx.save();
-      this.applyStyle(ctx, this.fretStyles?.[i]);
+      const fretStyle = this.fretStyles?.[i] || false;
+      this.applyStyle(ctx, fretStyle);
       if (glyph.code) {
         Glyph.renderGlyph(ctx, tab_x, y,
           this.render_options.glyph_font_scale * this.render_options.scale,
@@ -513,7 +512,7 @@ export class TabNote extends StemmableNote {
         }
         ctx.restore();
       }
-      ctx.restore();
+      this.restoreStyle(ctx, fretStyle);
     }
   }
 
