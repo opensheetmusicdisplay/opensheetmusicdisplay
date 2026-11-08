@@ -9,6 +9,7 @@ export class MusicPartManager /*implements ISelectionListener*/ {
         this.musicSheet = musicSheet;
     }
     private parts: PartListEntry[];
+    /** The mapping between enrolled and sheet timestamps, undefined until it's needed: see Timestamps. */
     private timestamps: TimestampTransform[];
     private musicSheet: MusicSheet;
     private sheetStart: Fraction;
@@ -26,15 +27,33 @@ export class MusicPartManager /*implements ISelectionListener*/ {
     /**
      * Main initialize method for MusicPartManager, called by MusicSheetReader when it has read a sheet:
      * copies the sheet's repetitions into Parts, sets the selection to the whole sheet (MusicSheet.SelectionStart and SelectionEnd,
-     * which the cursor sets to the measures it draws when it's reset), and calculates the mapping between enrolled and sheet
-     * timestamps (see absoluteEnrolledToSheetTimestamp()) by iterating through the sheet.
+     * which the cursor sets to the measures it draws when it's reset). The mapping between enrolled and sheet timestamps
+     * (see absoluteEnrolledToSheetTimestamp()) is calculated when it's first needed, see Timestamps.
      */
     public init(): void {
         this.parts = this.musicSheet.Repetitions.slice(); // slice=arrayCopy
         this.sheetStart = this.musicSheet.SelectionStart = new Fraction(0, 1);
         this.sheetEnd = this.musicSheet.SelectionEnd = this.musicSheet.SheetEndTimestamp;
-        this.calcMapping();
+        this.timestamps = undefined;
     }
+
+    /** The mapping between enrolled and sheet timestamps. Calculated at the first use, because it iterates through the whole
+     *  sheet, which every load() would pay for (about 1% of it), and only these public methods need it.
+     *  For the whole sheet, not the current selection, which the cursor may have limited to the measures it draws by then:
+     *  iterators end at Sheet.SelectionEnd. */
+    private get Timestamps(): TimestampTransform[] {
+        if (!this.timestamps) {
+            const selectionEnd: Fraction = this.musicSheet.SelectionEnd;
+            this.musicSheet.SelectionEnd = this.sheetEnd;
+            try {
+                this.timestamps = this.calcMapping();
+            } finally {
+                this.musicSheet.SelectionEnd = selectionEnd;
+            }
+        }
+        return this.timestamps;
+    }
+
     /**
      * Returns the transform for the part of the enrolled time line that an enrolled timestamp is in. A part starts at each jump of
      * the playback, e.g. back to the start of a repeat or forward over an ending, and where a repetition starts.
@@ -43,13 +62,14 @@ export class MusicPartManager /*implements ISelectionListener*/ {
      */
     public getCurrentRepetitionTimestampTransform(curEnrolledTimestamp: Fraction): TimestampTransform {
         let curTransform: TimestampTransform = undefined;
-        for (let i: number = this.timestamps.length - 1; i >= 0; i--) {
-            curTransform = this.timestamps[i];
+        const timestamps: TimestampTransform[] = this.Timestamps;
+        for (let i: number = timestamps.length - 1; i >= 0; i--) {
+            curTransform = timestamps[i];
             if (curEnrolledTimestamp.gte(curTransform.$from)) {
                 return curTransform;
             }
         }
-        return this.timestamps[0];
+        return timestamps[0];
     }
     /**
      * Returns the sheet timestamp of an enrolled timestamp. The enrolled timestamp is the time on the time line with the
@@ -59,7 +79,7 @@ export class MusicPartManager /*implements ISelectionListener*/ {
      * @param timestamp An enrolled timestamp.
      */
     public absoluteEnrolledToSheetTimestamp(timestamp: Fraction): Fraction {
-        if (this.timestamps.length === 0) {
+        if (this.Timestamps.length === 0) {
             return timestamp;
         }
         const transform: TimestampTransform = this.getCurrentRepetitionTimestampTransform(timestamp);
@@ -85,9 +105,10 @@ export class MusicPartManager /*implements ISelectionListener*/ {
         this.musicSheet.SelectionStart = start ?? this.sheetStart;
         this.musicSheet.SelectionEnd = end ?? this.sheetEnd;
     }
-    private calcMapping(): void {
+    /** Calculates the mapping between enrolled and sheet timestamps by iterating through the sheet up to Sheet.SelectionEnd. */
+    private calcMapping(): TimestampTransform[] {
         const timestamps: TimestampTransform[] = [];
-        const iterator: MusicPartManagerIterator = this.getIterator();
+        const iterator: MusicPartManagerIterator = new MusicPartManagerIterator(this.musicSheet, this.sheetStart, this.sheetEnd);
         let currentRepetition: Repetition = iterator.CurrentRepetition;
         let curTimestampTransform: TimestampTransform = new TimestampTransform(
             iterator.CurrentEnrolledTimestamp.clone(),
@@ -106,9 +127,6 @@ export class MusicPartManager /*implements ISelectionListener*/ {
                     curTimestampTransform.nextBackJump = iterator.CurrentEnrolledTimestamp;
                     curTimestampTransform.curRepetition = jumpRep;
                     curTimestampTransform.curRepetitionIteration = iterator.CurrentJumpResponsibleRepetitionIterationBeforeJump;
-                    // note: must use the local timestamps array here - this.timestamps is only assigned
-                    //   at the end of this method, so it is undefined during the first init()
-                    //   (which crashed init() for any sheet with a backwards repetition jump)
                     for (let i: number = timestamps.length - 2; i >= 0; i--) {
                         if (timestamps[i].to.lt(jumpRep.AbsoluteTimestamp) || timestamps[i].curRepetition) {
                             break;
@@ -128,7 +146,7 @@ export class MusicPartManager /*implements ISelectionListener*/ {
             }
             iterator.moveToNext();
         }
-        this.timestamps = timestamps;
+        return timestamps;
     }
 }
 
