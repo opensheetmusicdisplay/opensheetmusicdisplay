@@ -42,6 +42,24 @@
         </notations>
       </note>
       <note>
+        <chord />
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <tie type="start" />
+        <type>half</type>
+        <stem>down</stem>
+        <notations>
+          <tied type="start" />
+          <technical>
+            <string>2</string>
+            <fret>10</fret>
+          </technical>
+        </notations>
+      </note>
+      <note>
         <pitch>
           <step>G</step>
           <octave>4</octave>
@@ -55,6 +73,24 @@
           <technical>
             <string>3</string>
             <fret>12</fret>
+          </technical>
+        </notations>
+      </note>
+      <note>
+        <chord />
+        <pitch>
+          <step>A</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <tie type="stop" />
+        <type>half</type>
+        <stem>down</stem>
+        <notations>
+          <tied type="stop" />
+          <technical>
+            <string>2</string>
+            <fret>10</fret>
           </technical>
         </notations>
       </note>
