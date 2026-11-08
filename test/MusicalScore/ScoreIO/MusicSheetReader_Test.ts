@@ -228,6 +228,39 @@ describe("Music Sheet Reader", () => {
         });
     });
 
+    describe("Notehead fill", () => {
+        /** Reads a score of one note in the given note head element and returns whether that head is filled. */
+        function isFilled(type: string, duration: number, extras: string, notehead: string): boolean {
+            const xml: string = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><score-partwise version=\"4.0\"><part-list><score-part id=\"P1\">" +
+                "<part-name>P1</part-name></score-part></part-list><part id=\"P1\"><measure number=\"1\"><attributes><divisions>12</divisions>" +
+                "<time><beats>8</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>" +
+                `<note><pitch><step>C</step><octave>5</octave></pitch><duration>${duration}</duration><voice>1</voice><type>${type}</type>` +
+                `${extras}${notehead}</note></measure></part></score-partwise>`;
+            const doc: Document = new DOMParser().parseFromString(xml, "text/xml");
+            const root: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
+            const noteSheet: MusicSheet = new MusicSheetReader().createMusicSheet(root, "notehead.musicxml");
+            return noteSheet.SourceMeasures[0].VerticalSourceStaffEntryContainers[0].StaffEntries[0].VoiceEntries[0].Notes[0].Notehead.Filled;
+        }
+        const dot: string = "<dot/>";
+        const triplet: string = "<time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>";
+        const diamond: string = "<notehead>diamond</notehead>";
+
+        it("follows the note's type without a filled attribute", () => {
+            const cases: [string, number, string, boolean][] = [
+                ["whole", 48, "", false], ["half", 24, "", false], ["half", 36, dot, false], ["half", 16, triplet, false], ["whole", 72, dot, false],
+                ["quarter", 12, "", true], ["quarter", 18, dot, true], ["quarter", 8, triplet, true], ["eighth", 6, "", true],
+            ];
+            for (const [type, duration, extras, filled] of cases) {
+                expect(isFilled(type, duration, extras, diamond), `${type} of duration ${duration} ${extras}`).to.equal(filled);
+            }
+        });
+
+        it("keeps a given filled attribute", () => {
+            expect(isFilled("half", 36, dot, "<notehead filled=\"yes\">diamond</notehead>"), "filled dotted half").to.equal(true);
+            expect(isFilled("quarter", 12, "", "<notehead filled=\"no\">diamond</notehead>"), "hollow quarter").to.equal(false);
+        });
+    });
+
     describe("Tremolo between two notes", () => {
         const tremoloBetweenNotesPath: string = "test/data/test_tremolo_between_notes_short.musicxml";
         let tremoloSheet: MusicSheet;
