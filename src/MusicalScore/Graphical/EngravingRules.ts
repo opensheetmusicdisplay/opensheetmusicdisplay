@@ -418,6 +418,11 @@ export class EngravingRules {
     public GlissandoStafflineStartYDistanceToNote: number;
     public GlissandoStafflineEndOffset: number;
     public GlissandoDefaultWidth: number;
+    /** The lengths of the dash and the gap of a dashed slide or glissando in a TAB staff,
+     * in VexFlow's units (10 = the distance of two staff lines). */
+    public TabSlideLineDashDashed: number[];
+    /** The lengths of the dot and the gap of a dotted slide or glissando in a TAB staff, in VexFlow's units. */
+    public TabSlideLineDashDotted: number[];
     public TempoYSpacing: number;
     public InstantaneousTempoTextHeight: number;
     public ContinuousDynamicTextHeight: number;
@@ -1072,6 +1077,8 @@ export class EngravingRules {
         this.GlissandoStafflineStartYDistanceToNote = 0.8; // just crossing the line above/below end note. should be similar to tab slide angle.
         this.GlissandoStafflineEndOffset = 1;
         this.GlissandoDefaultWidth = 0.1;
+        this.TabSlideLineDashDashed = [4, 3];
+        this.TabSlideLineDashDotted = [1, 2];
 
         // Repetitions
         this.RepetitionAllowFirstMeasureBeginningRepeatBarline = true;
