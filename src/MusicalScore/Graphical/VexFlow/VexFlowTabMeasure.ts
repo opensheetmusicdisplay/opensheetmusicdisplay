@@ -1,5 +1,7 @@
 import Vex from "vexflow";
 import VF = Vex.Flow;
+import { Fraction } from "../../../Common/DataObjects/Fraction";
+import { TabBendSegment, TabNote } from "../../VoiceData/TabNote";
 import { Staff } from "../../VoiceData/Staff";
 import { SourceMeasure } from "../../VoiceData/SourceMeasure";
 import { VexFlowMeasure } from "./VexFlowMeasure";
@@ -12,6 +14,15 @@ import { Arpeggio } from "../../VoiceData/Arpeggio";
 import { Voice } from "../../VoiceData/Voice";
 import log from "loglevel";
 import { ClefEnum, ClefInstruction } from "../../VoiceData/Instructions/ClefInstruction";
+
+/** Endpoints supported by our patched VexFlow Bend (omitted from the VexFlow 1.x typings). */
+interface SpanBend extends VF.Bend {
+    setSpanTargets(targets: VF.TabNote[], release?: SpanBend): void;
+}
+
+interface BendTabNote extends VF.TabNote {
+    getModifiers(): VF.Modifier[];
+}
 
 export class VexFlowTabMeasure extends VexFlowMeasure {
     public multiRestElement: any; // VexFlow: Element
@@ -104,9 +115,10 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
             }
 
             // add a vexFlow voice for this voice:
+            // Fraction keeps the whole part apart (WholeValue): a 4/4 measure is 1 0/1, so its Numerator is 0.
             this.vfVoices[voice.VoiceId] = new VF.Voice({
                         beat_value: this.parentSourceMeasure.Duration.Denominator,
-                        num_beats: this.parentSourceMeasure.Duration.Numerator,
+                        num_beats: this.parentSourceMeasure.Duration.GetExpandedNumerator(),
                         resolution: VF.RESOLUTION,
                     }).setMode(VF.Voice.Mode.SOFT);
 
@@ -175,6 +187,83 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
         //this.createOrnaments();
     }
 
+    /** Whether a visible single-note bend has MuseScore's hidden-fret endpoint at the bent pitch. */
+    private isHiddenBendEnd(first: TabNote, target: TabNote): boolean {
+        if (!first?.Pitch || !target?.Pitch || !first.isVisible() || !target.isVisible() || first.BendArray?.length !== 1) {
+            return false;
+        }
+        const bend: TabBendSegment = first.BendArray[0];
+        if (bend.direction !== "up" || bend.bendalter <= 0) {
+            return false;
+        }
+        if (target.FretVisible !== false || first.StringNumberTab !== target.StringNumberTab || first.FretNumber !== target.FretNumber ||
+            Math.abs(target.Pitch.getHalfTone() - first.Pitch.getHalfTone() - bend.bendalter) > 1e-8) {
+            return false;
+        }
+        const targetBends: TabBendSegment[] = target.BendArray;
+        if (targetBends?.length > 0 && (targetBends.length !== 1 || targetBends[0].direction !== "down" ||
+            Math.abs(targetBends[0].bendalter) !== bend.bendalter)) {
+            return false;
+        }
+        return true;
+    }
+
+    /** After a hidden bend endpoint, whether its release returns to the original string, fret and pitch. */
+    private isMatchingReleaseEnd(first: TabNote, target: TabNote, end: TabNote): boolean {
+        if (!end?.Pitch || !end.isVisible()) {
+            return false;
+        }
+        const release: TabBendSegment[] = target.BendArray;
+        return release?.length === 1 && release[0].direction === "down" &&
+            Math.abs(release[0].bendalter) === first.BendArray[0].bendalter &&
+            end.StringNumberTab === first.StringNumberTab && end.FretNumber === first.FretNumber &&
+            end.Pitch.getHalfTone() === first.Pitch.getHalfTone();
+    }
+
+    /** Connects only adjacent, single-note gestures within this measure and voice. A hidden fret identifies
+     *  a bend endpoint; parentheses alone do not imply a continuation or change a note's attack. */
+    private configureBendSpans(): void {
+        const voices: Map<Voice, VexFlowVoiceEntry[]> = new Map();
+        const bendOf: (entry: VexFlowVoiceEntry) => SpanBend = entry => {
+            const note: BendTabNote = entry?.vfStaveNote as BendTabNote;
+            const bends: VF.Modifier[] = note instanceof VF.TabNote ? note.getModifiers().filter(modifier => modifier instanceof VF.Bend) : [];
+            return bends.length === 1 ? bends[0] as SpanBend : undefined;
+        };
+        for (const staffEntry of this.staffEntries) {
+            for (const entry of staffEntry.graphicalVoiceEntries as VexFlowVoiceEntry[]) {
+                const voice: Voice = entry.parentVoiceEntry.ParentVoice;
+                if (!voices.has(voice)) { voices.set(voice, []); }
+                voices.get(voice).push(entry);
+                bendOf(entry)?.setSpanTargets([]);
+            }
+        }
+        const sourceOf: (entry: VexFlowVoiceEntry) => TabNote = entry =>
+            entry?.notes.length === 1 && !entry.parentVoiceEntry.IsGrace && entry.notes[0].sourceNote instanceof TabNote
+                ? entry.notes[0].sourceNote as TabNote : undefined;
+        const adjacent: (first: VexFlowVoiceEntry, next: VexFlowVoiceEntry) => boolean = (first, next) =>
+            Fraction.plus(first.parentVoiceEntry.Timestamp, first.notes[0].sourceNote.Length).Equals(next.parentVoiceEntry.Timestamp);
+        for (const entries of voices.values()) {
+            for (let i: number = 0; i + 1 < entries.length; i++) {
+                const first: TabNote = sourceOf(entries[i]);
+                const target: TabNote = sourceOf(entries[i + 1]);
+                const bend: SpanBend = bendOf(entries[i]);
+                if (!bend || !this.isHiddenBendEnd(first, target) || !adjacent(entries[i], entries[i + 1])) {
+                    continue;
+                }
+                const targets: VF.TabNote[] = [entries[i + 1].vfStaveNote as VF.TabNote];
+                let release: SpanBend;
+                const end: TabNote = sourceOf(entries[i + 2]);
+                if (this.isMatchingReleaseEnd(first, target, end) && adjacent(entries[i + 1], entries[i + 2])) {
+                    release = bendOf(entries[i + 1]);
+                    if (release) { targets.push(entries[i + 2].vfStaveNote as VF.TabNote); }
+                }
+                // Targets need the skyline's or final render's stave position before Voice.draw() reaches them.
+                for (const note of targets) { note.setStave(this.stave); }
+                bend.setSpanTargets(targets, release);
+            }
+        }
+    }
+
      public addClefAtBegin(clef: ClefInstruction): void {
         if (clef.ClefType === ClefEnum.TAB) {
             super.addClefAtBegin(clef);
@@ -183,6 +272,7 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
      }
 
      public draw(ctx: Vex.IRenderContext): void {
+        this.configureBendSpans();
         super.draw(ctx);
 
         // draw multi-measure rest: unlike a classical measure, this is not a VexFlowMultiRestMeasure class,

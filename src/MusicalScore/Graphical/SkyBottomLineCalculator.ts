@@ -276,10 +276,11 @@ export class SkyBottomLineCalculator {
         const samplingUnit: number = this.mRules.SamplingUnit;
         const caches: GeometricSkyBottomLineCaches = this.mRules.GeometricSkyBottomLineCaches;
 
-        // The virtual rendering context, replacing the temporary canvas of the raster method. Reused for all measures.
+        // The virtual rendering context, replacing the temporary canvas of the raster method. Reused for all measures and stafflines.
         // The caches (text measurements, flattened glyph outlines) live in the EngravingRules,
         // so they persist across stafflines and renders (per OSMD instance, no static state).
-        const geometricContext: GeometricSkyBottomLineContext = new GeometricSkyBottomLineContext(0, 300, caches);
+        caches.linesContext = caches.linesContext ?? new GeometricSkyBottomLineContext(0, 300, caches);
+        const geometricContext: GeometricSkyBottomLineContext = caches.linesContext;
         // The lines of all measures, one after the other, as updateLines() concatenates them (NaN where nothing was drawn, like
         //   undefined in a new array: drawn columns are never NaN). In buffers reused for all stafflines, instead of two new arrays
         //   per measure and their concatenation per staffline.
@@ -384,12 +385,18 @@ export class SkyBottomLineCalculator {
         // (Kept from the raster method for identical side effects. The stave position is set again by the drawer later.)
         vsStaff.setY(vsStaff.y + 100);
         const oldMeasureWidth: number = vsStaff.getWidth();
-        // We need to tell the VexFlow stave about the canvas width. This looks
-        // redundant because it should know the canvas but somehow it doesn't.
-        // Maybe I am overlooking something but for now this does the trick
-        vsStaff.setWidth(width);
-        measure.format(lastMeasureFormats);
-        vsStaff.setWidth(oldMeasureWidth);
+        if (oldMeasureWidth > 0 && isFinite(oldMeasureWidth)) {
+            // Format the notes to the stave's own width, like formatMeasures() (VexFlowMusicSheetCalculator), not to the truncated
+            //   width of the raster method's canvas: this format is the last one before drawing, so the notes were drawn up to
+            //   a pixel left of where formatMeasures() had put them, from which the staff entries got their x (e.g. the cursor's).
+            //   It's usually a repeat of formatMeasures' format then, which format() skips (lastMeasureFormats).
+            measure.format(lastMeasureFormats);
+        } else {
+            // a stave with a negative width (e.g. some extra graphical measures): formatted to the raster method's width
+            vsStaff.setWidth(width);
+            measure.format(lastMeasureFormats);
+            vsStaff.setWidth(oldMeasureWidth);
+        }
         return width;
     }
 

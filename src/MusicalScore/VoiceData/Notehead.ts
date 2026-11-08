@@ -40,7 +40,9 @@ export class Notehead {
                 log.warn("notehead: sourceNote and filledXmlAttribute undefined.");
                 filled = true;
             } else {
-                filled = this.sourceNote.Length.Denominator > 2;
+                // Half notes and longer are hollow. The notated type decides, not the length: a dotted half lasts 3/4, a triplet half 1/3.
+                //   TypeLength can be undefined, e.g. for a grace note, whose length comes from its type anyway.
+                filled = (this.sourceNote.TypeLength ?? this.sourceNote.Length).RealValue < 0.5;
             }
         }
         this.filled = filled;

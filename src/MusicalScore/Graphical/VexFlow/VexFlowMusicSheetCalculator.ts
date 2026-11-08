@@ -1,3 +1,4 @@
+import { TieTypes } from "../../../Common/Enums";
 import { MusicSheetCalculator } from "../MusicSheetCalculator";
 import { VexFlowGraphicalSymbolFactory } from "./VexFlowGraphicalSymbolFactory";
 import { GraphicalMeasure } from "../GraphicalMeasure";
@@ -106,6 +107,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    *  with the overflow. Indexed first by Staff, then by verse/container index. */
   private previousLyricOverflowsByStaff: Map<Staff, number[]> = new Map<Staff, number[]>();
   private previousChordOverflowsByStaff: Map<Staff, number[]> = new Map<Staff, number[]>();
+  /** The format of each vertical measure in formatMeasures(), for the next skyline calculation, which formats every measure
+   *  again: the repeats of these formats are skipped (see VexFlowMeasure.format()). Used once, by calculateSkyBottomLines(). */
+  private formatMeasuresFormats: Map<SourceMeasure, IVerticalMeasureFormat> = undefined;
   /** Multi-measure repeat units awaiting skyline reservation in the current render. */
   private measureRepeatUnitsPendingSkyline: VexFlowMeasureRepeat[] = [];
   private metronomePlacements: IMetronomePlacement[] = [];
@@ -153,13 +157,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   protected formatMeasures(): void {
     // let totalFinalizeBeamsTime: number = 0;
+    this.formatMeasuresFormats = new Map<SourceMeasure, IVerticalMeasureFormat>();
     for (const verticalMeasureList of this.graphicalMusicSheet.MeasureList) {
       if (!verticalMeasureList || !verticalMeasureList[0]) {
         continue;
       }
       const firstVisibleMeasure: VexFlowMeasure = verticalMeasureList.find(measure => measure?.isVisible()) as VexFlowMeasure;
       // first measure has formatting method as lambda function object, but formats all measures. TODO this could be refactored
-      firstVisibleMeasure.format();
+      firstVisibleMeasure.format(this.formatMeasuresFormats); // (records the format, see formatMeasuresFormats)
       for (const measure of verticalMeasureList) {
         for (const staffEntry of measure.staffEntries) {
           (<VexFlowStaffEntry>staffEntry).calculateXPosition();
@@ -890,7 +895,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         if (lastEntryDict[currentContainerIndex]) { // if previous lyric needs more spacing than measure end, take that spacing
           const lastNoteDuration: Fraction = lastEntryDict[currentContainerIndex].sourceNoteDuration;
           elongationFactorNeededForLastContainer = spacingNeededToLastContainer / currentSpacingToLastContainer;
-          if ((lastNoteDuration.Denominator) > 4) {
+          if (lastNoteDuration.RealValue < 0.25) { // shorter than a quarter note (not by denominator: a dotted quarter is 3/8)
             elongationFactorNeededForLastContainer *= 1.1; // from 1.2 upwards, this unnecessarily bloats shorter measures
             // spacing in Vexflow depends on note duration, our minSpacing is calibrated for quarter notes
             // if we double the measure length, the distance between eighth notes only gets half of the added length
@@ -1227,7 +1232,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       vfEndNote = endNote.vfnote[0];
       endNoteIndexInTie = endNote.vfnote[1];
     }
-    // in a standard staff, e.g. given in the XML for the start note (a TabTie always curves upwards)
+    // Standard staves use the layout direction; TAB sustains below use only explicit source placement.
     const tieDirection: PlacementEnum = tie.Tie.getTieDirection(startNote?.sourceNote);
 
     if (tieIsAtSystemBreak) {
@@ -1240,7 +1245,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           first_indices: [startNoteIndexInTie],
           first_note: vfStartNote
         };
-        const vfTie1: VF.StaveTie = isTab ? new VF.TabTie(notes, tie.Tie.Type) : this.createStaveTie(notes, tieDirection);
+        const vfTie1: VF.StaveTie = isTab ? this.createTabTie(notes, tie, tie.Tie.Type) : this.createStaveTie(notes, tieDirection);
         VexFlowConverter.setVexFlowTextFontFamily((vfTie1 as any).font, this.rules); // e.g. "H" for a hammer-on
         const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure1.addStaveTie(vfTie1, tie);
@@ -1251,7 +1256,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           last_indices: [endNoteIndexInTie],
           last_note: vfEndNote
         };
-        const vfTie2: VF.StaveTie = isTab ? new VF.TabTie(notes) : this.createStaveTie(notes, tieDirection);
+        const vfTie2: VF.StaveTie = isTab ? this.createTabTie(notes, tie) : this.createStaveTie(notes, tieDirection);
         const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure2.addStaveTie(vfTie2, tie);
       }
@@ -1278,14 +1283,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               slideDirection
             );
           } else {
-            vfTie = new VF.TabTie(
+            vfTie = this.createTabTie(
               {
                 first_indices: [startNoteIndexInTie],
                 first_note: vfStartNote,
                 last_indices: [endNoteIndexInTie],
                 last_note: vfEndNote,
               },
-              tie.Tie.Type
+              tie, tie.Tie.Type
             );
           }
           VexFlowConverter.setVexFlowTextFontFamily(vfTie.font, this.rules); // e.g. "H" for a hammer-on
@@ -1306,6 +1311,31 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   /**
+   * Creates a Vexflow tie in a TAB staff. It curves upwards, unless a sustain tie has a direction in the XML.
+   * Not the direction of tie.Tie.getTieDirection(): that can be one chosen by the layout for a standard staff.
+   * @param notes The notes of the tie (or of the part of a tie across a system break), see VF.TabTie.
+   * @param tie The tie.
+   * @param label The label, e.g. "H" for a hammer-on.
+   * @returns The Vexflow tie.
+   */
+  private createTabTie(notes: any, tie: GraphicalTie, label?: string): VF.TabTie {
+    const vfTie: VF.TabTie = new VF.TabTie(notes, label);
+    if (tie.Tie.Type === TieTypes.SIMPLE) {
+      this.setVexFlowTieDirection(vfTie, tie.Tie.getTieDirectionFromXml(tie.StartNote?.sourceNote));
+    }
+    return vfTie;
+  }
+
+  /** Sets the direction of a Vexflow tie, if one is given. */
+  private setVexFlowTieDirection(vfTie: VF.StaveTie, direction: PlacementEnum): void {
+    if (direction === PlacementEnum.Below) {
+      (vfTie as any).setDirection(1); // + is down in vexflow
+    } else if (direction === PlacementEnum.Above) {
+      (vfTie as any).setDirection(-1);
+    }
+  }
+
+  /**
    * Creates a Vexflow tie in a standard staff, curved in the given direction.
    * @param notes The notes of the tie (or of the part of a tie across a system break), see VF.StaveTie.
    * @param direction The direction, e.g. from the XML. Without one, Vexflow takes it from the stem direction of the notes.
@@ -1313,11 +1343,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    */
   private createStaveTie(notes: any, direction: PlacementEnum): VF.StaveTie {
     const vfTie: VF.StaveTie = new VF.StaveTie(notes);
-    if (direction === PlacementEnum.Below) {
-      (vfTie as any).setDirection(1); // + is down in vexflow
-    } else if (direction === PlacementEnum.Above) {
-      (vfTie as any).setDirection(-1);
-    }
+    this.setVexFlowTieDirection(vfTie, direction);
     return vfTie;
   }
 
@@ -2914,7 +2940,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const toCache: { key: string, staffLine: StaffLine }[] = [];
     // The geometric calculation formats every measure, i.e. each vertical measure once per staff, which mostly just repeats
     //   the same format: shared across the stafflines, this record of each vertical measure's last format skips the repeats.
-    const lastMeasureFormats: Map<SourceMeasure, IVerticalMeasureFormat> = new Map<SourceMeasure, IVerticalMeasureFormat>();
+    //   It starts with the formats of formatMeasures(), which the skyline calculation repeats too.
+    const lastMeasureFormats: Map<SourceMeasure, IVerticalMeasureFormat> =
+      this.formatMeasuresFormats ?? new Map<SourceMeasure, IVerticalMeasureFormat>();
+    this.formatMeasuresFormats = undefined;
     if (lazyCache) {
       const lastSystemIndex: number = this.musicSystems.length - 1;
       for (let si: number = 0; si < this.musicSystems.length; si++) {
@@ -3447,6 +3476,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               },
               slideDirection
             );
+            (vfTie as any).render_options.line_dash = gGliss.Glissando.LineType === "dashed" ? this.rules.TabSlideLineDashDashed :
+              gGliss.Glissando.LineType === "dotted" ? this.rules.TabSlideLineDashDotted : undefined;
             VexFlowConverter.setVexFlowTextFontFamily((vfTie as any).font, this.rules);
             if (!startStemmableNote) {
               // the part of a slide continued from the previous system: only the part in the first system gets the label "sl.",

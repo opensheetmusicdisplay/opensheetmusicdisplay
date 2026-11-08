@@ -418,6 +418,11 @@ export class EngravingRules {
     public GlissandoStafflineStartYDistanceToNote: number;
     public GlissandoStafflineEndOffset: number;
     public GlissandoDefaultWidth: number;
+    /** The lengths of the dash and the gap of a dashed slide or glissando in a TAB staff,
+     * in VexFlow's units (10 = the distance of two staff lines). */
+    public TabSlideLineDashDashed: number[];
+    /** The lengths of the dot and the gap of a dotted slide or glissando in a TAB staff, in VexFlow's units. */
+    public TabSlideLineDashDotted: number[];
     public TempoYSpacing: number;
     public InstantaneousTempoTextHeight: number;
     public ContinuousDynamicTextHeight: number;
@@ -529,6 +534,8 @@ export class EngravingRules {
     public AlignRests: AlignRestOption; // 0 = false, 1 = true, 2 = auto
     public RestCollisionYPadding: number;
     public FillEmptyMeasuresWithWholeRest: FillEmptyMeasuresWithWholeRests | number;
+    /** Draw a staff's measure that only has rests of one voice, filling the measure, as one whole-measure rest. See OSMDOptions. */
+    public DrawRestOnlyMeasuresAsWholeMeasureRest: boolean;
     public ArpeggiosGoAcrossVoices: boolean;
     public RenderArpeggios: boolean;
     public RenderSlurs: boolean;
@@ -1070,6 +1077,8 @@ export class EngravingRules {
         this.GlissandoStafflineStartYDistanceToNote = 0.8; // just crossing the line above/below end note. should be similar to tab slide angle.
         this.GlissandoStafflineEndOffset = 1;
         this.GlissandoDefaultWidth = 0.1;
+        this.TabSlideLineDashDashed = [4, 3];
+        this.TabSlideLineDashDotted = [1, 2];
 
         // Repetitions
         this.RepetitionAllowFirstMeasureBeginningRepeatBarline = true;
@@ -1195,6 +1204,7 @@ export class EngravingRules {
         this.AlignRests = AlignRestOption.Never; // 0 = false, 1 = true, 2 = auto
         this.RestCollisionYPadding = 0.0; // 1.0 = half distance between staff lines (e.g. E to F). will be rounded to whole numbers.
         this.FillEmptyMeasuresWithWholeRest = FillEmptyMeasuresWithWholeRests.No;
+        this.DrawRestOnlyMeasuresAsWholeMeasureRest = false;
         this.ArpeggiosGoAcrossVoices = false; // safe option, as otherwise arpeggios will always go across all voices in Vexflow, which is often unwanted
         this.RenderArpeggios = true;
         this.RenderSlurs = true;

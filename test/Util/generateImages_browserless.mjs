@@ -766,10 +766,14 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     // courtesy key and time signatures of different widths at system breaks, see test_courtesy_signatures_staff_ends: systems as in the file
     const isTestCourtesySignaturesStaffEnds = sampleFilename.startsWith("test_courtesy_signatures_staff_ends");
     const isTestTabRhythmDots = sampleFilename.startsWith("test_tab_rhythm_dots.");
+    const isTestTabSlideLineTypes = sampleFilename.startsWith("test_tab_slide_line_types");
+    const isTestTabTieXmlPlacement = sampleFilename.startsWith("test_tab_tie_xml_placement.");
+    const isTestTabNoteColors = sampleFilename.startsWith("test_tab_note_colors.");
     const isTestTabs4Strings = sampleFilename.includes("test_tabs_4_strings");
     const isTestFingeringLeft = sampleFilename.includes("test_fingering_left");
     const isTestArticulationAboveNote = sampleFilename.includes("test_accent_above_except_piano_left_hand");
     const isTestAlignRests = sampleFilename.includes("alignrests");
+    const isTestRestOnlyWholeMeasure = sampleFilename.includes("test_rest_only_measures_whole_measure_rest");
     const isTestHeavyBarline = sampleFilename.includes("test_barline_heavy-heavy_mid_score");
     const isTestTupletRatioed = sampleFilename.includes("test_tuplet_ratioed");
     const isTestDrawFromMeasureNumber9ClefChange = sampleFilename.includes("test_drawFromMeasureNumber_9_respect_earlier_clef_changes");
@@ -885,7 +889,10 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     if (isTestPartAbbreviationSingleStaff) {
         osmdInstance.EngravingRules.RenderPartAbbreviationsForSingleStaff = true;
     }
-    if (isTestTabRhythmDots) {
+    if (isTestTabSlideLineTypes || isTestTabTieXmlPlacement) {
+        osmdInstance.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
+    }
+    if (isTestTabRhythmDots || isTestTabNoteColors) {
         osmdInstance.EngravingRules.TabRhythmRendered = true;
     }
     if (isTestTabs4Strings) {
@@ -902,6 +909,9 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     }
     if (isTestAlignRests) {
         osmdInstance.EngravingRules.AlignRests = 1; // true. 0 = false (default), 2 = auto
+    }
+    if (isTestRestOnlyWholeMeasure) {
+        osmdInstance.EngravingRules.DrawRestOnlyMeasuresAsWholeMeasureRest = true;
     }
     if (isTestHeavyBarline) {
         osmdInstance.EngravingRules.AutoGenerateMultipleRestMeasuresFromRestMeasures = false;
