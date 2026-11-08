@@ -276,10 +276,11 @@ export class SkyBottomLineCalculator {
         const samplingUnit: number = this.mRules.SamplingUnit;
         const caches: GeometricSkyBottomLineCaches = this.mRules.GeometricSkyBottomLineCaches;
 
-        // The virtual rendering context, replacing the temporary canvas of the raster method. Reused for all measures.
+        // The virtual rendering context, replacing the temporary canvas of the raster method. Reused for all measures and stafflines.
         // The caches (text measurements, flattened glyph outlines) live in the EngravingRules,
         // so they persist across stafflines and renders (per OSMD instance, no static state).
-        const geometricContext: GeometricSkyBottomLineContext = new GeometricSkyBottomLineContext(0, 300, caches);
+        caches.linesContext = caches.linesContext ?? new GeometricSkyBottomLineContext(0, 300, caches);
+        const geometricContext: GeometricSkyBottomLineContext = caches.linesContext;
         // The lines of all measures, one after the other, as updateLines() concatenates them (NaN where nothing was drawn, like
         //   undefined in a new array: drawn columns are never NaN). In buffers reused for all stafflines, instead of two new arrays
         //   per measure and their concatenation per staffline.
