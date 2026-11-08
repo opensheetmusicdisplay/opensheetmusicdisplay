@@ -569,6 +569,29 @@ describe("Music Sheet Reader", () => {
         });
     });
 
+    describe("Parts with different durations in a measure", () => {
+        /** Reads a measure of two parts, one note each, of the given durations in quarters, and returns the error flags of their staves. */
+        function measureErrors(beats: number, beatType: number, quarters1: number, quarters2: number): boolean[] {
+            const part: (id: string, quarters: number) => string = (id, quarters) => `<part id="${id}"><measure number="1">` +
+                "<attributes><divisions>4</divisions>" +
+                `<time><beats>${beats}</beats><beat-type>${beatType}</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>` +
+                `<note><pitch><step>C</step><octave>5</octave></pitch><duration>${quarters * 4}</duration><voice>1</voice></note></measure></part>`;
+            const xml: string = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><score-partwise version=\"4.0\"><part-list>" +
+                "<score-part id=\"P1\"><part-name>P1</part-name></score-part><score-part id=\"P2\"><part-name>P2</part-name></score-part></part-list>" +
+                part("P1", quarters1) + part("P2", quarters2) + "</score-partwise>";
+            const doc: Document = new DOMParser().parseFromString(xml, "text/xml");
+            const root: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
+            const measure: SourceMeasure = new MusicSheetReader().createMusicSheet(root, "durations.musicxml").SourceMeasures[0];
+            return [measure.getErrorInMeasure(0), measure.getErrorInMeasure(1)];
+        }
+
+        for (const [beats, beatType, quarters] of [[3, 4, 3], [4, 4, 4], [6, 8, 3], [2, 2, 4], [5, 4, 5], [12, 8, 6]]) {
+            it(`flags only the incomplete part in ${beats}/${beatType}`, () => {
+                expect(measureErrors(beats, beatType, quarters, 1).join()).to.equal("false,true");
+            });
+        }
+    });
+
     describe("transpose octave-change", () => {
         const filename: string = "test/data/test_transpose_octave_change.musicxml";
         let transposeSheet: MusicSheet;
