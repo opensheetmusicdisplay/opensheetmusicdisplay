@@ -917,11 +917,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
         const centerX: number = refCenterX >= 0 ? refCenterX : localCenterX;
         const tickGroups: Map<number, VF.StemmableNote[]> = new Map();
         const voiceTotalTicks: Map<any, number> = new Map();
-        for (const voice of this.getVoicesWithinMeasure()) {
-            for (const ve of voice.VoiceEntries) {
-                for (const note of ve.Notes) {
-                    const gNote: VexFlowGraphicalNote = this.rules.GNote(note) as VexFlowGraphicalNote;
-                    const vfnote: VF.StemmableNote = gNote?.vfnote?.[0];
+        // This measure's own staff entries: a voice's VoiceEntries span the whole score, and this runs at every format.
+        for (const gse of this.staffEntries) {
+            for (const gve of gse.graphicalVoiceEntries) {
+                for (const gNote of gve.notes) {
+                    const vfnote: VF.StemmableNote = (gNote as VexFlowGraphicalNote).vfnote?.[0];
                     if (!vfnote || !vfnote.isRest?.()) { continue; }
                     const tcX: number = vfnote.getTickContext?.()?.getX() ?? 0;
                     const key: number = Math.round(tcX * 100);
@@ -950,7 +950,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
     }
 
-    // correct position / bounding box (note.setIndex() needs to have been called)
     /**
      * Attach the data attributes the editor selects by to the elements drawn into this measure's group.
      * Queried within the group: a document-wide query per measure grows quadratically with the score.
@@ -985,6 +984,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         numberedByNote(".vf-accidental", "data-accidental-id", "acc");
     }
 
+    // correct position / bounding box (note.setIndex() needs to have been called)
     public correctNotePositions(): void {
         if (this.isTabMeasure) {
             // Measure-scoped, same reasoning as the non-tab branch below: iterating
