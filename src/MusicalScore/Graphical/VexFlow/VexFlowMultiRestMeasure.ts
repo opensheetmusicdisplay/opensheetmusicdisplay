@@ -75,6 +75,9 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
         ctx.closeGroup();
 
         ctx.closeGroup();
+        if (measureNode) {
+            this.setEditorIds(measureNode);
+        }
 
         // Draw vertical lines
         for (const connector of this.connectors) {

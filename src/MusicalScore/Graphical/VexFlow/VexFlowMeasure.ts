@@ -877,61 +877,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
         ctx.closeGroup(); // close measure group
 
-        // Attach data attributes for editor selection
-        if (typeof document !== "undefined") {
-            const staffIdx: number = ((this.ParentStaffLine as any)?.ParentStaff?.idInMusicSheet ?? 0) + 1;
-            const mNum: number = this.parentSourceMeasure?.MeasureNumberXML ?? this.MeasureNumber;
-            let clefCount: number = 0;
-            document.querySelectorAll(".vf-clef").forEach((el: Element) => {
-                if (!el.getAttribute("data-clef-id")) {
-                    el.setAttribute("data-clef-id", `clef-m${mNum}-s${staffIdx}-${clefCount++}`);
-                }
-            });
-            let tempoCount: number = 0;
-            document.querySelectorAll(".vf-stavetempo").forEach((el: Element) => {
-                if (!el.getAttribute("data-tempo-id")) {
-                    el.setAttribute("data-tempo-id", `tempo-m${mNum}-s${staffIdx}-${tempoCount++}`);
-                }
-            });
-            let ksCount: number = 0;
-            document.querySelectorAll(".vf-keysignature").forEach((el: Element) => {
-                if (!el.getAttribute("data-key-signature-id")) {
-                    el.setAttribute("data-key-signature-id", `keysig-m${mNum}-${ksCount++}`);
-                }
-            });
-            const artCountByNote: Map<string, number> = new Map();
-            document.querySelectorAll(".vf-articulation").forEach((el: Element) => {
-                if (el.getAttribute("data-articulation-id")) { return; }
-                const noteEl: Element | null = el.closest("[data-note-id]");
-                if (!noteEl) { return; }
-                const noteId: string | null = noteEl.getAttribute("data-note-id");
-                if (!noteId) { return; }
-                const count: number = artCountByNote.get(noteId) || 0;
-                el.setAttribute("data-articulation-id", `art-${noteId}-${count}`);
-                artCountByNote.set(noteId, count + 1);
-            });
-            const ornCountByNote: Map<string, number> = new Map();
-            document.querySelectorAll(".vf-ornament").forEach((el: Element) => {
-                if (el.getAttribute("data-ornament-id")) { return; }
-                const noteEl: Element | null = el.closest("[data-note-id]");
-                if (!noteEl) { return; }
-                const noteId: string | null = noteEl.getAttribute("data-note-id");
-                if (!noteId) { return; }
-                const count: number = ornCountByNote.get(noteId) || 0;
-                el.setAttribute("data-ornament-id", `orn-${noteId}-${count}`);
-                ornCountByNote.set(noteId, count + 1);
-            });
-            const accCountByNote: Map<string, number> = new Map();
-            document.querySelectorAll(".vf-accidental").forEach((el: Element) => {
-                if (el.getAttribute("data-accidental-id")) { return; }
-                const noteEl: Element | null = el.closest("[data-note-id]");
-                if (!noteEl) { return; }
-                const noteId: string | null = noteEl.getAttribute("data-note-id");
-                if (!noteId) { return; }
-                const count: number = accCountByNote.get(noteId) || 0;
-                el.setAttribute("data-accidental-id", `acc-${noteId}-${count}`);
-                accCountByNote.set(noteId, count + 1);
-            });
+        if (measureNode) {
+            this.setEditorIds(measureNode);
         }
 
         // Draw vertical lines
@@ -1004,6 +951,40 @@ export class VexFlowMeasure extends GraphicalMeasure {
     }
 
     // correct position / bounding box (note.setIndex() needs to have been called)
+    /**
+     * Attach the data attributes the editor selects by to the elements drawn into this measure's group.
+     * Queried within the group: a document-wide query per measure grows quadratically with the score.
+     */
+    protected setEditorIds(measureNode: SVGGElement): void {
+        const staffIdx: number = ((this.ParentStaffLine as any)?.ParentStaff?.idInMusicSheet ?? 0) + 1;
+        const mNum: number = this.parentSourceMeasure?.MeasureNumberXML ?? this.MeasureNumber;
+        const numbered: (selector: string, attribute: string, prefix: string) => void = (selector, attribute, prefix) => {
+            let count: number = 0;
+            measureNode.querySelectorAll(selector).forEach((el: Element) => {
+                if (!el.getAttribute(attribute)) {
+                    el.setAttribute(attribute, `${prefix}-${count++}`);
+                }
+            });
+        };
+        const numberedByNote: (selector: string, attribute: string, prefix: string) => void = (selector, attribute, prefix) => {
+            const countByNote: Map<string, number> = new Map();
+            measureNode.querySelectorAll(selector).forEach((el: Element) => {
+                if (el.getAttribute(attribute)) { return; }
+                const noteId: string | null | undefined = el.closest("[data-note-id]")?.getAttribute("data-note-id");
+                if (!noteId) { return; }
+                const count: number = countByNote.get(noteId) || 0;
+                el.setAttribute(attribute, `${prefix}-${noteId}-${count}`);
+                countByNote.set(noteId, count + 1);
+            });
+        };
+        numbered(".vf-clef", "data-clef-id", `clef-m${mNum}-s${staffIdx}`);
+        numbered(".vf-stavetempo", "data-tempo-id", `tempo-m${mNum}-s${staffIdx}`);
+        numbered(".vf-keysignature", "data-key-signature-id", `keysig-m${mNum}`);
+        numberedByNote(".vf-articulation", "data-articulation-id", "art");
+        numberedByNote(".vf-ornament", "data-ornament-id", "orn");
+        numberedByNote(".vf-accidental", "data-accidental-id", "acc");
+    }
+
     public correctNotePositions(): void {
         if (this.isTabMeasure) {
             for (const voice of this.getVoicesWithinMeasure()) {
