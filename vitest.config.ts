@@ -29,7 +29,7 @@ export default defineConfig({
     // errors, while the same tree passed fully on a quieter machine). Capping the
     // pool keeps peak memory well below that cliff at nearly the same wall time.
     pool: "forks",
-    poolOptions: { forks: { maxForks: 8 } },
+    maxWorkers: 8,
     coverage: {
       provider: "v8",
       include: ["src/**/*.ts"],
