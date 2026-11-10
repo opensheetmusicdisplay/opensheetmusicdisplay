@@ -11,11 +11,16 @@ import { Staff } from "../../VoiceData/Staff";
 
 export class SlurReader {
     private musicSheet: MusicSheet;
-    private openSlurDict: { [_: number]: Slur } = {};
-    /** Slur stops that were read before their matching start, kept separate from openSlurDict so they don't
+    /** Open slurs by staff and number. Per staff, because e.g. the standard and the tab staff of a guitar part both
+     * write the same slur, usually with the same number (1): kept by number alone for the whole part, the tab staff's
+     * start replaced the standard staff's, whose stop then drew one slur from the tab staff to the standard staff.
+     * A stop still ends an open slur of its number on another staff when its own staff has none (a cross-staff slur,
+     * e.g. from the right to the left hand of a piano part), see openSlurOfStop(). */
+    private openSlurDicts: Map<Staff, { [_: number]: Slur }> = new Map();
+    /** Slur stops that were read before their matching start, kept separate from the open slurs so they don't
      * interfere with normal start-before-stop slurs that reuse the same slur number. See addSlur(). */
     private openStopBeforeStartDict: { [_: number]: Slur } = {};
-    /** Open glissandi and slides by staff and number: separate from openSlurDict, so they don't end a slur with the same
+    /** Open glissandi and slides by staff and number: separate from openSlurDicts, so they don't end a slur with the same
      * number, and per staff, because e.g. the standard and the tab staff of a guitar part both write a slide with number 1. */
     private openGlissDicts: Map<Staff, { [_: number]: Slur }> = new Map();
     constructor(musicSheet: MusicSheet) {
@@ -88,7 +93,7 @@ export class SlurReader {
                                 pendingCrossStaffStop.PlacementXml = slurPlacementXml;
                                 this.linkSlurToNotes(pendingCrossStaffStop);
                             } else {
-                                const openDict: { [_: number]: Slur } = isSlur ? this.openSlurDict : this.openGlissDictOfStaff(currentNote);
+                                const openDict: { [_: number]: Slur } = this.openDictOfStaff(isSlur ? this.openSlurDicts : this.openGlissDicts, currentNote);
                                 let slur: Slur = openDict[slurNumber];
                                 if (!slur || slur.HasUnattachedEnd) {
                                     // an open slur with an unattached end (see below) keeps its start note
@@ -113,7 +118,7 @@ export class SlurReader {
                             if (nodeName === "slide" || nodeName === "glissando") {
                                 // TODO for now, we abuse the SlurReader to also process slides and glissandi, to avoid a lot of duplicate code.
                                 //   also see variable glissElements later on
-                                const openGlissDict: { [_: number]: Slur } = this.openGlissDictOfStaff(currentNote);
+                                const openGlissDict: { [_: number]: Slur } = this.openDictOfStaff(this.openGlissDicts, currentNote);
                                 const slur: Slur = openGlissDict[slurNumber];
                                 if (slur && slur.StartNote !== currentNote) {
                                     const startNote: Note = slur.StartNote;
@@ -125,7 +130,8 @@ export class SlurReader {
                                     delete openGlissDict[slurNumber];
                                 }
                             } else {
-                                const slur: Slur = this.openSlurDict[slurNumber];
+                                const openDict: { [_: number]: Slur } = this.openSlurDictOfStop(currentNote, slurNumber);
+                                const slur: Slur = openDict?.[slurNumber];
                                 // A stop written after a start of its number on this note doesn't end an earlier slur whose
                                 // end isn't attached to a note: Dolet writes such slurs one after another with the same
                                 // number, so it's this note's own slur whose end isn't attached.
@@ -135,14 +141,14 @@ export class SlurReader {
                                     slur.EndNote = currentNote;
                                     slur.HasUnattachedEnd = false;
                                     this.linkSlurToNotes(slur);
-                                    delete this.openSlurDict[slurNumber];
+                                    delete openDict[slurNumber];
                                 } else if (!slur || endsOwnSlur) {
                                     // No open start with this number (or see endsOwnSlur). Either a cross-staff slur whose
                                     // start is written after the stop (completed in the start branch above), a start on this
                                     // note (a slur whose end isn't attached to a note, see there), or an orphan
                                     // stop with no start (e.g. a slur started on a grace note, whose start is
                                     // skipped by the reader - see VoiceGenerator). Defer it without touching
-                                    // openSlurDict, so it can't disturb normal slurs that reuse this number.
+                                    // the open slurs, so it can't disturb normal slurs that reuse this number.
                                     const deferredStop: Slur = new Slur();
                                     deferredStop.EndNote = currentNote;
                                     this.openStopBeforeStartDict[slurNumber] = deferredStop;
@@ -178,15 +184,30 @@ export class SlurReader {
         return slurNumber;
     }
 
-    /** The open glissandi and slides of the note's staff, by number (see openGlissDicts). */
-    private openGlissDictOfStaff(note: Note): { [_: number]: Slur } {
+    /** The open slurs or glissandi (see openSlurDicts, openGlissDicts) of the note's staff, by number. */
+    private openDictOfStaff(dicts: Map<Staff, { [_: number]: Slur }>, note: Note): { [_: number]: Slur } {
         const staff: Staff = note.ParentStaffEntry?.ParentStaff;
-        let openGlissDict: { [_: number]: Slur } = this.openGlissDicts.get(staff);
-        if (!openGlissDict) {
-            openGlissDict = {};
-            this.openGlissDicts.set(staff, openGlissDict);
+        let openDict: { [_: number]: Slur } = dicts.get(staff);
+        if (!openDict) {
+            openDict = {};
+            dicts.set(staff, openDict);
         }
-        return openGlissDict;
+        return openDict;
+    }
+
+    /** The open slurs of the staff whose slur with this number a stop on the note ends: the note's own staff if it has
+     * one open, otherwise another staff's (a cross-staff slur), otherwise undefined. */
+    private openSlurDictOfStop(note: Note, slurNumber: number): { [_: number]: Slur } {
+        const ownDict: { [_: number]: Slur } = this.openDictOfStaff(this.openSlurDicts, note);
+        if (ownDict[slurNumber]) {
+            return ownDict;
+        }
+        for (const openDict of this.openSlurDicts.values()) {
+            if (openDict[slurNumber]) {
+                return openDict;
+            }
+        }
+        return undefined;
     }
 
     /** Links a fully-defined slur (both StartNote and EndNote set) to its two notes, unless it duplicates an existing one
