@@ -1,26 +1,26 @@
 import { PointF2D } from "../../Common/DataObjects/PointF2D";
 
 export class GraphicalCurve {
-    private static bezierCurveStepSize: number = 1000;
-    private static tPow3: number[];
-    private static oneMinusTPow3: number[];
-    private static bezierFactorOne: number[];
-    private static bezierFactorTwo: number[];
+    private static readonly bezierCurveStepSize: number = 1000;
+    // Curve-independent factors, to be used later in the Slur- and TieCurvePoints calculation (calculateCurvePointAtIndex()).
+    //   They only depend on the constant bezierCurveStepSize, so they are constants, calculated once,
+    //   not again for every curve (each slur filled these 4 arrays of 1000 numbers with Math.pow).
+    private static readonly tPow3: number[] = GraphicalCurve.calculateBezierFactors(t => Math.pow(t, 3));
+    private static readonly oneMinusTPow3: number[] = GraphicalCurve.calculateBezierFactors(t => Math.pow((1 - t), 3));
+    private static readonly bezierFactorOne: number[] = GraphicalCurve.calculateBezierFactors(t => 3 * Math.pow((1 - t), 2) * t);
+    private static readonly bezierFactorTwo: number[] = GraphicalCurve.calculateBezierFactors(t => 3 * (1 - t) * Math.pow(t, 2));
 
-    // Pre-calculate Curve-independend factors, to be used later in the Slur- and TieCurvePoints calculation.
-    constructor() {
-        GraphicalCurve.tPow3 = new Array(GraphicalCurve.bezierCurveStepSize);
-        GraphicalCurve.oneMinusTPow3 = new Array(GraphicalCurve.bezierCurveStepSize);
-        GraphicalCurve.bezierFactorOne = new Array(GraphicalCurve.bezierCurveStepSize);
-        GraphicalCurve.bezierFactorTwo = new Array(GraphicalCurve.bezierCurveStepSize);
+    /**
+     * Calculates a curve-independent factor for each step t = i / bezierCurveStepSize of a Bezier curve.
+     * @param factorAt the factor at t
+     * @returns the factors of all steps
+     */
+    private static calculateBezierFactors(factorAt: (t: number) => number): number[] {
+        const factors: number[] = new Array(GraphicalCurve.bezierCurveStepSize);
         for (let i: number = 0; i < GraphicalCurve.bezierCurveStepSize; i++) {
-            const t: number =  i / GraphicalCurve.bezierCurveStepSize;
-
-            GraphicalCurve.tPow3[i] = Math.pow(t, 3);
-            GraphicalCurve.oneMinusTPow3[i] = Math.pow((1 - t), 3);
-            GraphicalCurve.bezierFactorOne[i] = 3 * Math.pow((1 - t), 2) * t;
-            GraphicalCurve.bezierFactorTwo[i] = 3 * (1 - t) * Math.pow(t, 2);
+            factors[i] = factorAt(i / GraphicalCurve.bezierCurveStepSize);
         }
+        return factors;
     }
 
     public bezierStartPt: PointF2D;
