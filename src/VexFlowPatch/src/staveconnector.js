@@ -46,6 +46,7 @@ export class StaveConnector extends Element {
       BOLD_DOUBLE_RIGHT: 6,
       THIN_DOUBLE: 7,
       NONE: 8,
+      DOUBLE_HEAVY_RIGHT: 9, // VexFlowPatch: two heavy lines at the right of the staves (heavy-heavy in MusicXML), as Barline.type.DOUBLE_HEAVY
     };
   }
 
@@ -61,6 +62,7 @@ export class StaveConnector extends Element {
       boldDoubleRight: StaveConnector.type.BOLD_DOUBLE_RIGHT,
       thinDouble: StaveConnector.type.THIN_DOUBLE,
       none: StaveConnector.type.NONE,
+      doubleHeavyRight: StaveConnector.type.DOUBLE_HEAVY_RIGHT, // VexFlowPatch
     };
   }
 
@@ -89,7 +91,8 @@ export class StaveConnector extends Element {
       ? StaveConnector.typeString[type]
       : type;
 
-    if (type >= StaveConnector.type.SINGLE_RIGHT && type <= StaveConnector.type.NONE) {
+    if ((type >= StaveConnector.type.SINGLE_RIGHT && type <= StaveConnector.type.NONE) ||
+      type === StaveConnector.type.DOUBLE_HEAVY_RIGHT) { // VexFlowPatch
       this.type = type;
     }
     return this;
@@ -129,7 +132,8 @@ export class StaveConnector extends Element {
     const isRightSidedConnector = (
       this.type === StaveConnector.type.SINGLE_RIGHT ||
       this.type === StaveConnector.type.BOLD_DOUBLE_RIGHT ||
-      this.type === StaveConnector.type.THIN_DOUBLE
+      this.type === StaveConnector.type.THIN_DOUBLE ||
+      this.type === StaveConnector.type.DOUBLE_HEAVY_RIGHT // VexFlowPatch
     );
 
     if (isRightSidedConnector) {
@@ -206,6 +210,11 @@ export class StaveConnector extends Element {
         break;
       case StaveConnector.type.NONE:
         break;
+      case StaveConnector.type.DOUBLE_HEAVY_RIGHT: // VexFlowPatch: the same two heavy lines as Barline.drawVerticalBar(double_heavy),
+        // so that the connector covers the end barlines of the staves it joins exactly
+        ctx.fillRect(topX - 5, topY, 3, attachment_height);
+        ctx.fillRect(topX, topY, 3, attachment_height);
+        break;
       default:
         throw new Vex.RERR(
           'InvalidType', `The provided StaveConnector.type (${this.type}) is invalid`
@@ -216,7 +225,8 @@ export class StaveConnector extends Element {
       this.type !== StaveConnector.type.BRACE &&
       this.type !== StaveConnector.type.BOLD_DOUBLE_LEFT &&
       this.type !== StaveConnector.type.BOLD_DOUBLE_RIGHT &&
-      this.type !== StaveConnector.type.NONE
+      this.type !== StaveConnector.type.NONE &&
+      this.type !== StaveConnector.type.DOUBLE_HEAVY_RIGHT // VexFlowPatch
     ) {
       ctx.fillRect(topX, topY, width, attachment_height);
     }

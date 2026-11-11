@@ -114,6 +114,8 @@ renderInitialLine false: a begin repeat barline without the line at the stave's 
 staveconnector.js (custom fix):
 BRACKET: apply x_shift like BRACE (setXShift() was ignored for a bracket), so that a nested group's bracket can stand
   a column further left (OSMD's VexFlowInstrumentBracket.Column)
+add DOUBLE_HEAVY_RIGHT (9): the two heavy lines of a heavy-heavy barline joining the staves, at the x of the staves'
+  Barline.type.DOUBLE_HEAVY end barlines (see stavebarline.js, VexFlowConverter.line())
 
 stavenote.js (custom addition):
 Fix stem/flag formatting. Instead of shifting notes by default, update the stem/flag rendering to render different voices aligned.
