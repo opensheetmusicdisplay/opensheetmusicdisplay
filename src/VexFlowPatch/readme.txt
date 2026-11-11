@@ -179,6 +179,7 @@ openGroup(cls, id, { strokeStyle: true }): the group gets the style of the lines
 tables.js (custom addition):
 add inverted triangle notehead ('TI')
 use scale parameter for x tabnote, offer alternative x note glyph option
+add normal noteheads with a fixed fill, 'N1' hollow and 'N2' black, for MusicXML <notehead filled="no|yes">normal</notehead>
 
 tabnote.js (merged Vexflow 3.x):
 Add a context group for each tabnote, so that it can be found in the SVG DOM ("vf-tabnote")

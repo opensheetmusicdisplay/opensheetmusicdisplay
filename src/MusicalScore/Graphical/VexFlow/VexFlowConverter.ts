@@ -206,8 +206,21 @@ export class VexFlowConverter {
         const codeStart: string = "/";
         const codeFilled: string = notehead.Filled ? "2" : "1"; // filled/unfilled notehead code in most vexflow glyphs
         switch (notehead.Shape) {
-            case NoteHeadShape.NORMAL:
+            case NoteHeadShape.NORMAL: {
+                // A normal head has a Notehead only if the XML gives its fill (filled="yes|no", see VoiceGenerator). VexFlow
+                //   draws the head from the duration (hollow for a half or longer, see Notehead.setShapeFromXml()), so the
+                //   head is only given (VexFlowPatch tables.js: N1 hollow, N2 black) where the XML fill differs from it,
+                //   e.g. a hollow eighth or a black half.
+                const typeLength: Fraction = notehead.SourceNote?.TypeLength ?? notehead.SourceNote?.Length;
+                if (!typeLength) {
+                    return "";
+                }
+                const hollowByDuration: boolean = typeLength.RealValue >= 0.5;
+                if (notehead.Filled === hollowByDuration) {
+                    return codeStart + (notehead.Filled ? "N2" : "N1");
+                }
                 return "";
+            }
             case NoteHeadShape.NONE:
                 return ""; // none noteheads are invisible, handled via transparency
             case NoteHeadShape.DIAMOND:
