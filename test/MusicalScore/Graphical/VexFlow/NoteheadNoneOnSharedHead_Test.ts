@@ -7,8 +7,9 @@ import { TestUtils } from "../../../Util/TestUtils";
 /**
  * A dotted quarter whose head is notehead="none", stem up, on the half note of the other voice, stem down
  * (test_notehead_none_dot.musicxml m1), and the same note with print-object="no" (m2). notehead="none" leaves out the
- * head only: the note's dot is drawn, after the shared head. Vexflow draws the dots of a head in that head's style, so
- * they were transparent with the head. A print-object="no" note keeps its dot hidden.
+ * head only: the note's dot is drawn, after the shared head, and its XML stem up from the shared head. Vexflow draws the
+ * dots of a head in that head's style, so they were transparent with the head, and only a beamed note's stem was drawn
+ * from another voice's head. A print-object="no" note keeps its dot and stem hidden.
  */
 describe("Notehead none on the head of another voice", () => {
     const transparent: string = "#00000000";
@@ -48,6 +49,16 @@ describe("Notehead none on the head of another voice", () => {
         const group: Element = document.getElementById("vf-" + headless.getAttribute("id"));
         const dot: SVGGraphicsElement = group.querySelector(".vf-modifiers path") as SVGGraphicsElement;
         expect(dot.getBBox().x).to.be.greaterThan(half.getNoteHeadEndX());
+    });
+
+    it("draws the XML stem of a notehead-none note from the shared head", () => {
+        const note: any = vfNote(0, 1);
+        expect(note.getStemDirection(), "stem up").to.equal(1);
+        expect(note.getStemStyle().strokeStyle, "stem").to.not.equal(transparent);
+    });
+
+    it("keeps the stem of a print-object=\"no\" note hidden", () => {
+        expect(vfNote(1, 1).getStemStyle().strokeStyle).to.equal(transparent);
     });
 
     it("keeps the dot of a print-object=\"no\" note hidden", () => {

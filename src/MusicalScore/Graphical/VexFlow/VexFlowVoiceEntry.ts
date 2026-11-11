@@ -114,6 +114,17 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         return this.inDrawnBeam && note.sharesNoteheadWithVisibleUnisonNote();
     }
 
+    /** Whether the note is printed with only its head left out (notehead "none"), with a stem up or down in the XML, on
+     * the visible head of another voice's unison note (Note.sharesNoteheadWithVisibleUnisonNote()): the shared head has
+     * this note's stem too, beamed or not, e.g. a quarter stem up on the head of a stem-down chord or half note. A
+     * print-object="no" note isn't printed, its stem stays hidden unless it's beamed (see drawnAsSharedUnisonNote). */
+    private stemOnSharedHeadFromXml(note: Note): boolean {
+        const stemDirectionXml: StemDirectionType = this.parentVoiceEntry.StemDirectionXml;
+        return note.PrintObject && note.Notehead?.Shape === NoteHeadShape.NONE &&
+            (stemDirectionXml === StemDirectionType.Up || stemDirectionXml === StemDirectionType.Down) &&
+            note.sharesNoteheadWithVisibleUnisonNote();
+    }
+
     /** Whether the Vexflow note is part of a beam that is drawn. VexFlowMeasure.finalizeBeams() creates a Vexflow beam
      * only for two or more notes, and Vexflow sets StemmableNote.beam for each of them. */
     private get inDrawnBeam(): boolean {
@@ -326,6 +337,12 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
             // notehead and is beamed (see drawnAsSharedUnisonNote): its stem emanates from the shared notehead and
             // has to reach the beam, otherwise the beam appears to hang in the air over a missing stem.
             if (this.drawnAsSharedUnisonNote(note)) {
+                stemTransparent = false;
+                break;
+            }
+            // A printed note with notehead "none" and an XML stem on another voice's head: that head has its stem (see
+            //   stemOnSharedHeadFromXml).
+            if (this.stemOnSharedHeadFromXml(note)) {
                 stemTransparent = false;
                 break;
             }
