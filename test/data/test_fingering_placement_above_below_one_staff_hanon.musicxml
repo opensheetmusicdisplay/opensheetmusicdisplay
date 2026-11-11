@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<!-- Both hands in the bass staff (Hanon, The Virtuoso Pianist No. 1, public domain): the right hand's fingerings are
+     placement="above", the left hand's placement="below", so they go above and below the staff, not all below it. -->
+<score-partwise version="3.1">
+  <work>
+    <work-title>test_fingering_placement_above_below_one_staff_hanon</work-title>
+  </work>
+  <identification>
+    <creator type="composer">Charles-Louis Hanon</creator>
+  </identification>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>4</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>2</beats><beat-type>4</beat-type></time>
+        <staves>2</staves>
+        <clef number="1"><sign>G</sign><line>2</line></clef>
+        <clef number="2"><sign>F</sign><line>4</line></clef>
+      </attributes>
+      <note>
+        <pitch><step>C</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><staff>2</staff>
+        <beam number="1">begin</beam><beam number="2">begin</beam>
+        <notations><technical><fingering placement="above">1</fingering></technical></notations>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><staff>2</staff>
+        <beam number="1">continue</beam><beam number="2">continue</beam>
+        <notations><technical><fingering placement="above">2</fingering></technical></notations>
+      </note>
+      <note>
+        <pitch><step>F</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><staff>2</staff>
+        <beam number="1">continue</beam><beam number="2">continue</beam>
+        <notations><technical><fingering placement="above">3</fingering></technical></notations>
+      </note>
+      <note>
+        <pitch><step>G</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><staff>2</staff>
+        <beam number="1">end</beam><beam number="2">end</beam>
+        <notations><technical><fingering placement="above">4</fingering></technical></notations>
+      </note>
+      <note>
+        <pitch><step>A</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><staff>2</staff>
+        <beam number="1">begin</beam><beam number="2">begin</beam>
+        <notations><technical><fingering placement="above">5</fingering></technical></notations>
+      </note>
+      <note>
+        <pitch><step>G</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><staff>2</staff>
+        <beam number="1">continue</beam><beam number="2">continue</beam>
+      </note>
+      <note>
+        <pitch><step>F</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><staff>2</staff>
+        <beam number="1">continue</beam><beam number="2">continue</beam>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><staff>2</staff>
+        <beam number="1">end</beam><beam number="2">end</beam>
+      </note>
+      <backup><duration>8</duration></backup>
+      <note>
+        <pitch><step>C</step><octave>2</octave></pitch>
+        <duration>1</duration><voice>2</voice><type>16th</type><stem>down</stem><staff>2</staff>
+        <beam number="1">begin</beam><beam number="2">begin</beam>
+        <notations><technical><fingering placement="below">5</fingering></technical></notations>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>2</octave></pitch>
+        <duration>1</duration><voice>2</voice><type>16th</type><stem>down</stem><staff>2</staff>
+        <beam number="1">continue</beam><beam number="2">continue</beam>
+        <notations><technical><fingering placement="below">4</fingering></technical></notations>
+      </note>
+      <note>
+        <pitch><step>F</step><octave>2</octave></pitch>
+        <duration>1</duration><voice>2</voice><type>16th</type><stem>down</stem><staff>2</staff>
+        <beam number="1">continue</beam><beam number="2">continue</beam>
+        <notations><technical><fingering placement="below">3</fingering></technical></notations>
+      </note>
+      <note>
+        <pitch><step>G</step><octave>2</octave></pitch>
+        <duration>1</duration><voice>2</voice><type>16th</type><stem>down</stem><staff>2</staff>
+        <beam number="1">end</beam><beam number="2">end</beam>
+        <notations><technical><fingering placement="below">2</fingering></technical></notations>
+      </note>
+      <note>
+        <pitch><step>A</step><octave>2</octave></pitch>
+        <duration>1</duration><voice>2</voice><type>16th</type><stem>down</stem><staff>2</staff>
+        <beam number="1">begin</beam><beam number="2">begin</beam>
+        <notations><technical><fingering placement="below">1</fingering></technical></notations>
+      </note>
+      <note>
+        <pitch><step>G</step><octave>2</octave></pitch>
+        <duration>1</duration><voice>2</voice><type>16th</type><stem>down</stem><staff>2</staff>
+        <beam number="1">continue</beam><beam number="2">continue</beam>
+      </note>
+      <note>
+        <pitch><step>F</step><octave>2</octave></pitch>
+        <duration>1</duration><voice>2</voice><type>16th</type><stem>down</stem><staff>2</staff>
+        <beam number="1">continue</beam><beam number="2">continue</beam>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>2</octave></pitch>
+        <duration>1</duration><voice>2</voice><type>16th</type><stem>down</stem><staff>2</staff>
+        <beam number="1">end</beam><beam number="2">end</beam>
+      </note>
+      <backup><duration>8</duration></backup>
+      <note>
+        <rest measure="yes"/>
+        <duration>8</duration><voice>3</voice><staff>1</staff>
+      </note>
+      <barline location="right"><bar-style>light-heavy</bar-style></barline>
+    </measure>
+  </part>
+</score-partwise>
