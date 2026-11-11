@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<!-- Beams across staves: in measure 1 the first beam starts in the upper staff (E4 D4) and ends in the lower one (C4 B3), the second
+     starts in the lower staff (A3 B3) and ends in the upper one (C4 D4). Each staff has two notes of each beam, so drawn per staff
+     (RenderCrossStaffBeams false) or across the staves, no note has a flag, and the measure has the same width. -->
+<score-partwise version="3.1">
+  <work>
+    <work-title>test_beam_cross_staff_starting_in_upper_staff</work-title>
+  </work>
+  <part-list>
+    <score-part id="P1">
+      <part-name>Piano</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>4</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>2</beats><beat-type>4</beat-type></time>
+        <staves>2</staves>
+        <clef number="1"><sign>G</sign><line>2</line></clef>
+        <clef number="2"><sign>F</sign><line>4</line></clef>
+      </attributes>
+      <note>
+        <pitch><step>E</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>16th</type><stem>down</stem><staff>1</staff>
+        <beam number="1">begin</beam><beam number="2">begin</beam>
+      </note>
+      <note>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>16th</type><stem>down</stem><staff>1</staff>
+        <beam number="1">continue</beam><beam number="2">continue</beam>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><staff>2</staff>
+        <beam number="1">continue</beam><beam number="2">continue</beam>
+      </note>
+      <note>
+        <pitch><step>B</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><staff>2</staff>
+        <beam number="1">end</beam><beam number="2">end</beam>
+      </note>
+      <note>
+        <pitch><step>A</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><staff>2</staff>
+        <beam number="1">begin</beam><beam number="2">begin</beam>
+      </note>
+      <note>
+        <pitch><step>B</step><octave>3</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>16th</type><stem>up</stem><staff>2</staff>
+        <beam number="1">continue</beam><beam number="2">continue</beam>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>16th</type><stem>down</stem><staff>1</staff>
+        <beam number="1">continue</beam><beam number="2">continue</beam>
+      </note>
+      <note>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>16th</type><stem>down</stem><staff>1</staff>
+        <beam number="1">end</beam><beam number="2">end</beam>
+      </note>
+      <barline location="right"><bar-style>light-heavy</bar-style></barline>
+    </measure>
+  </part>
+</score-partwise>

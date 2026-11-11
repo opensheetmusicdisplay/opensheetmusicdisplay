@@ -434,6 +434,21 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   /** Reserve after calculateSkyBottomLines() replaces the skyline and before measure numbers are placed above it. */
+  protected reserveSkyBottomLinesForCrossStaffBeams(): void {
+    if (!this.rules.RenderCrossStaffBeams) {
+      return;
+    }
+    for (const system of this.musicSystems) {
+      for (const staffLine of system.StaffLines) {
+        for (const measure of staffLine.Measures) {
+          if (measure instanceof VexFlowMeasure) {
+            measure.reserveCrossStaffBeamSpace();
+          }
+        }
+      }
+    }
+  }
+
   protected reserveSkylineForMeasureRepeats(): void {
     for (const display of this.measureRepeatUnitsPendingSkyline) {
       display.reserveSkyline();

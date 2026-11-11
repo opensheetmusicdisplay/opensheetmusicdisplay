@@ -543,6 +543,14 @@ export class EngravingRules {
      * [[RenderSlurs]]: with RenderSlurs = true and RenderSlursAcrossStaves = false, all slurs are rendered except
      * the ones across staves. */
     public RenderSlursAcrossStaves: boolean;
+    /** Whether to draw a beam whose notes are in two staves (e.g. a piano run going from the left hand's staff to the right
+     *  hand's) as one beam across the staves, instead of one beam per staff. With stems pointing both ways (e.g. down from the
+     *  upper staff and up from the lower one), the beam goes between the staves (see CrossStaffBeamMinStemLength).
+     *  Default true. Set it before load(), or call updateGraphic() before the next render(), as load() calculates the layout. */
+    public RenderCrossStaffBeams: boolean;
+    /** The minimum length of a stem to a beam between staves (see RenderCrossStaffBeams), from the note head to the nearest beam,
+     *  in staff spaces: the staves are kept far enough apart for it. Default 2.5. */
+    public CrossStaffBeamMinStemLength: number;
     public RenderGlissandi: boolean;
     /** Whether to draw hidden notes and rests (Note.PrintObject false, e.g. print-object="no" in the MusicXML) like visible
      *  ones, with their beams, ties, tuplets and fingerings, and to let the cursor stop at them. Default false.
@@ -1209,6 +1217,8 @@ export class EngravingRules {
         this.RenderArpeggios = true;
         this.RenderSlurs = true;
         this.RenderSlursAcrossStaves = true;
+        this.RenderCrossStaffBeams = true;
+        this.CrossStaffBeamMinStemLength = 2.5;
         this.RenderGlissandi = true;
         this.RenderHiddenNotes = false;
         this.HiddenNotesColor = "#A0A0A0CC";

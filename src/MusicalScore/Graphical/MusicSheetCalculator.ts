@@ -1362,6 +1362,8 @@ export abstract class MusicSheetCalculator {
         this.calculateSkyBottomLines();
         // Reserve space for multi-measure repeat counts before placing measure numbers.
         this.reserveSkylineForMeasureRepeats();
+        // Reserve the room of the beams between staves, which aren't in the sky and bottom lines (drawn after all staves).
+        this.reserveSkyBottomLinesForCrossStaffBeams();
 
         // calculate MeasureNumbers
         if (this.rules.RenderMeasureNumbers) {
@@ -4028,6 +4030,11 @@ export abstract class MusicSheetCalculator {
     }
 
     /** Reserves skyline space for measure-repeat counts. */
+    /** Reserves the room of the beams between staves in the sky and bottom lines (see VexFlowMeasure.reserveCrossStaffBeamSpace()). */
+    protected reserveSkyBottomLinesForCrossStaffBeams(): void {
+        // implemented in VexFlowMusicSheetCalculator
+    }
+
     protected reserveSkylineForMeasureRepeats(): void {
         // override
     }

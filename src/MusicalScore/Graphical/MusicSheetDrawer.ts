@@ -387,6 +387,7 @@ export abstract class MusicSheetDrawer {
                 }
             }
         }
+        this.drawCrossStaffBeams(musicSystem);
         for (const systemLine of musicSystem.SystemLines) {
             this.drawSystemLineObject(systemLine);
         }
@@ -440,6 +441,11 @@ export abstract class MusicSheetDrawer {
     }
 
     protected drawSystemLineObject(systemLine: SystemLine): void {
+        // empty
+    }
+
+    /** Draws the beams across the staves of the system, after all its staves (see VexFlowMeasure.drawCrossStaffBeams()). */
+    protected drawCrossStaffBeams(musicSystem: MusicSystem): void {
         // empty
     }
 
