@@ -121,6 +121,9 @@ export class OpenSheetMusicDisplay {
     private static warmKeeper: OpenSheetMusicDisplay = undefined;
     /** Whether the page's warm keeper was made or is scheduled, so that it's made once. */
     private static warmKeeperScheduled: boolean = false;
+    /** Counts the times the page's warm keeper was freed: a keeper scheduled before that isn't made (or kept) anymore, also
+     *  when another instance uses one again meanwhile, which schedules its own. */
+    private static warmKeeperFreeCount: number = 0;
     /** How many instances use the warm keeper (see usesWarmKeeper); the last one to stop frees it. A count, not references,
      *  so that it keeps no instance in memory. */
     private static warmKeeperUsers: number = 0;
@@ -487,6 +490,7 @@ export class OpenSheetMusicDisplay {
         const keeper: OpenSheetMusicDisplay = OpenSheetMusicDisplay.warmKeeper;
         OpenSheetMusicDisplay.warmKeeper = undefined;
         OpenSheetMusicDisplay.warmKeeperScheduled = false;
+        OpenSheetMusicDisplay.warmKeeperFreeCount++;
         keeper?.clear();
         keeper?.dispose();
     }
@@ -511,16 +515,21 @@ export class OpenSheetMusicDisplay {
             return; // made or scheduled already
         }
         OpenSheetMusicDisplay.warmKeeperScheduled = true;
+        const freeCount: number = OpenSheetMusicDisplay.warmKeeperFreeCount;
+        /** Whether the keeper scheduled here was freed meanwhile: no instance used it anymore. Checking only that some
+         *  instance uses one wasn't enough: after it was freed, another instance's render() schedules its own. Both
+         *  were made, and the later one replaced the other in warmKeeper, which then wasn't freed. */
+        const freed: () => boolean = (): boolean => OpenSheetMusicDisplay.warmKeeperFreeCount !== freeCount;
         const makeKeeper: () => void = (): void => {
-            if (OpenSheetMusicDisplay.warmKeeperUsers === 0 || !OpenSheetMusicDisplay.warmKeeperScheduled) {
-                return; // no instance uses it anymore
+            if (freed()) {
+                return;
             }
             const keeper: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(document.createElement("div"),
                 { autoResize: false, drawingParameters: "default", keepWarm: false });
             keeper.fixedLayoutWidth = 1200;
             keeper.load(atob(WarmKeeperScoreMxlBase64), "OSMD warm keeper").then(() => {
-                if (OpenSheetMusicDisplay.warmKeeperUsers === 0 || !OpenSheetMusicDisplay.warmKeeperScheduled) {
-                    keeper.clear(); // stopped meanwhile
+                if (freed()) {
+                    keeper.clear();
                     return;
                 }
                 keeper.render();

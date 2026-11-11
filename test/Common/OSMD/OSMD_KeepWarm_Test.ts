@@ -10,7 +10,9 @@ import { WarmKeeperScoreMxlBase64 } from "../../../src/OpenSheetMusicDisplay/War
  * engine keeps the code it compiled for OSMD's objects after clear(). One keeper per page, shared by the instances that use it,
  * freed when the last of them stops (dispose(), KeepWarm = false). KeepWarm "auto" (default) uses it in Chromium-based browsers
  * only, so the tests set KeepWarm = true where they need a keeper. These tests check when it's made and freed, not the speed.
- * Each test file runs in a page of its own, so other files' instances don't use this page's keeper.
+ * Test files share a page (isolate: false in vitest.config.mjs), and so the keeper: vitestSetup.mjs disposes each file's
+ * instances after the file, so that none of another file's uses it when this file starts. Objects are compared with ===, as
+ * to.equal() of two different instances prints both.
  */
 describe("OSMD KeepWarm", () => {
     const sampleName: string = "MuzioClementi_SonatinaOpus36No1_Part1.xml";
@@ -92,19 +94,19 @@ describe("OSMD KeepWarm", () => {
             second = await renderedInstance();
             await idle();
             await idle();
-            expect(pageKeeper(), "a second instance uses the same keeper").to.equal(keeper);
+            expect(pageKeeper() === keeper, "a second instance uses the same keeper").to.equal(true);
 
             first.KeepWarm = false;
-            expect(pageKeeper(), "the second instance still uses it").to.equal(keeper);
+            expect(pageKeeper() === keeper, "the second instance still uses it").to.equal(true);
             second.dispose();
-            expect(pageKeeper(), "the last instance to stop frees it").to.equal(undefined);
-            expect(keeper.GraphicSheet, "the freed keeper released its sheet").to.equal(undefined);
+            expect(pageKeeper() === undefined, "the last instance to stop frees it").to.equal(true);
+            expect(keeper.GraphicSheet === undefined, "the freed keeper released its sheet").to.equal(true);
 
             first.KeepWarm = true;
             first.render();
             expect(await waitFor(() => pageKeeper() !== undefined, 5000), "a render() makes a new one").to.equal(true);
             first.KeepWarm = false;
-            expect(pageKeeper(), "KeepWarm = false of the only instance that uses it frees it").to.equal(undefined);
+            expect(pageKeeper() === undefined, "KeepWarm = false of the only instance that uses it frees it").to.equal(true);
         } finally {
             remove(first);
             if (second) {
@@ -113,13 +115,44 @@ describe("OSMD KeepWarm", () => {
         }
     });
 
+    it("makes one keeper when an instance stops before its keeper was made and another one starts", async () => {
+        // e.g. the instances of a page that replaces its sheet's instance right after it rendered; or here a test file's
+        //   instances, which vitestSetup.mjs disposes after the file, and the next file's in the same page (isolate: false)
+        // the instances that loaded the built-in score: a Set, as load() of an MXL file calls load() again with the XML
+        const keepersMade: Set<OpenSheetMusicDisplay> = new Set();
+        const load: OpenSheetMusicDisplay["load"] = OpenSheetMusicDisplay.prototype.load;
+        OpenSheetMusicDisplay.prototype.load = function (this: OpenSheetMusicDisplay, ...args: any[]): Promise<{}> {
+            if (args[1] === "OSMD warm keeper") {
+                keepersMade.add(this);
+            }
+            return load.apply(this, args as Parameters<OpenSheetMusicDisplay["load"]>);
+        };
+        let second: OpenSheetMusicDisplay = undefined;
+        try {
+            const first: OpenSheetMusicDisplay = await renderedInstance();
+            remove(first); // before the page was idle: its keeper is scheduled, not made
+            second = await renderedInstance();
+            expect(await waitFor(() => pageKeeper() !== undefined, 5000), "a keeper is made when the page is idle").to.equal(true);
+            await idle();
+            await idle();
+            expect(keepersMade.size, "one keeper made").to.equal(1);
+            expect(keepersMade.has(pageKeeper()), "the page's keeper is the one made").to.equal(true);
+        } finally {
+            OpenSheetMusicDisplay.prototype.load = load;
+            if (second) {
+                remove(second);
+            }
+        }
+        expect(pageKeeper() === undefined, "the last instance to stop frees it").to.equal(true);
+    });
+
     it("the option keepWarm: false makes no keeper, also not with setOptions()", async () => {
         const osmd: OpenSheetMusicDisplay = await renderedInstance({ keepWarm: false });
         try {
             expect(osmd.KeepWarm).to.equal(false);
             await idle(); // where a keeper would be made
             await idle(); // and loaded (load() is asynchronous), before it renders
-            expect(pageKeeper(), "no keeper").to.equal(undefined);
+            expect(pageKeeper() === undefined, "no keeper").to.equal(true);
             osmd.setOptions({ keepWarm: true });
             expect(osmd.KeepWarm, "setOptions() turns it on").to.equal(true);
             osmd.setOptions({ keepWarm: false });
@@ -152,12 +185,12 @@ describe("OSMD KeepWarm", () => {
             expect(osmd.KeepWarm, "auto by default").to.equal("auto");
             await idle(); // where a keeper would be made
             await idle(); // and loaded, before it renders
-            expect(pageKeeper(), "no keeper outside Chromium").to.equal(undefined);
+            expect(pageKeeper() === undefined, "no keeper outside Chromium").to.equal(true);
             osmd.KeepWarm = true;
             osmd.render();
             expect(await waitFor(() => pageKeeper() !== undefined, 5000), "true makes one in any browser").to.equal(true);
             osmd.KeepWarm = "auto";
-            expect(pageKeeper(), "\"auto\" frees it outside Chromium").to.equal(undefined);
+            expect(pageKeeper() === undefined, "\"auto\" frees it outside Chromium").to.equal(true);
 
             chromium = true;
             osmd.render();
@@ -165,7 +198,7 @@ describe("OSMD KeepWarm", () => {
             osmd.KeepWarm = "auto";
             expect(pageKeeper() !== undefined, "\"auto\" keeps it in Chromium").to.equal(true);
             osmd.KeepWarm = false;
-            expect(pageKeeper(), "false frees it in Chromium too").to.equal(undefined);
+            expect(pageKeeper() === undefined, "false frees it in Chromium too").to.equal(true);
         } finally {
             (OpenSheetMusicDisplay as any).isChromiumBrowser = detection;
             if (osmd) {
