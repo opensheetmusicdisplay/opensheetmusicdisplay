@@ -13,6 +13,8 @@ import {EngravingRules} from "../../../src/MusicalScore/Graphical/EngravingRules
 
 describe("Music Sheet Reader", () => {
     const path: string = "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
+    // reads the sonatina only: the tests of other scores read with a reader of their own, as a reader keeps what it read
+    //   of the last score, e.g. CompleteNumberOfStaves, which "reads instruments" checks (also with shuffled tests)
     const reader: MusicSheetReader = new MusicSheetReader();
     let score: IXmlElement;
     let sheet: MusicSheet;
@@ -156,7 +158,7 @@ describe("Music Sheet Reader", () => {
             const doc: Document = getSheet(noneNoteheadPath);
             expect(doc).to.not.be.undefined;
             const noneScore: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
-            noneNoteheadSheet = reader.createMusicSheet(noneScore, noneNoteheadPath);
+            noneNoteheadSheet = new MusicSheetReader().createMusicSheet(noneScore, noneNoteheadPath);
         });
 
         it("loads file with notehead='none' without errors", () => {
@@ -269,7 +271,7 @@ describe("Music Sheet Reader", () => {
             const doc: Document = getSheet(tremoloBetweenNotesPath);
             expect(doc).to.not.be.undefined;
             const tremoloScore: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
-            tremoloSheet = reader.createMusicSheet(tremoloScore, tremoloBetweenNotesPath);
+            tremoloSheet = new MusicSheetReader().createMusicSheet(tremoloScore, tremoloBetweenNotesPath);
         });
 
         it("links start and stop notes of tremolos between two notes", () => {
@@ -325,7 +327,7 @@ describe("Music Sheet Reader", () => {
             const doc: Document = getSheet(noTypePath);
             expect(doc).to.not.be.undefined;
             const noTypeScore: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
-            const noTypeSheet: MusicSheet = reader.createMusicSheet(noTypeScore, noTypePath);
+            const noTypeSheet: MusicSheet = new MusicSheetReader().createMusicSheet(noTypeScore, noTypePath);
 
             const voiceEntries: VoiceEntry[] = noTypeSheet.Instruments[0].Voices[0].VoiceEntries;
             const noTypeNote: Note = voiceEntries[0].Notes[0]; // <tremolo>3</tremolo> (no type attribute)
@@ -347,7 +349,7 @@ describe("Music Sheet Reader", () => {
             const doc: Document = getSheet(enharmonicTiePath);
             expect(doc).to.not.be.undefined;
             const enharmonicTieScore: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
-            enharmonicTieSheet = reader.createMusicSheet(enharmonicTieScore, enharmonicTiePath);
+            enharmonicTieSheet = new MusicSheetReader().createMusicSheet(enharmonicTieScore, enharmonicTiePath);
             tiedNotes = enharmonicTieSheet.Instruments[0].Voices[0].VoiceEntries
                 .flatMap((voiceEntry: VoiceEntry): Note[] => voiceEntry.Notes)
                 .filter((note: Note): boolean => !note.isRest());
@@ -399,7 +401,7 @@ describe("Music Sheet Reader", () => {
             const doc: Document = getSheet("test/data/" + filename);
             expect(doc, filename + " should be in test/data").to.not.be.undefined;
             const fileScore: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
-            return reader.createMusicSheet(fileScore, "test/data/" + filename);
+            return new MusicSheetReader().createMusicSheet(fileScore, "test/data/" + filename);
         }
 
         function expectTripletThenTwoEighths(notes: Note[], label: string): void {
