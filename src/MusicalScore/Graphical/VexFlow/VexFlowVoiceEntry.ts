@@ -202,6 +202,9 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                     noteheadColor = this.rules.ColoringSetCurrent.getValue(fundamentalNote);
                 }
             }
+            // The color the head would be drawn in, for the dots of a note whose head is notehead="none" (see below).
+            const visibleNoteheadColor: string = !noteheadColor || noteheadColor === "#000000" ?
+                this.rules.DefaultColorNotehead : noteheadColor;
             if (!noteheadVisible) {
                 noteheadColor = transparentColor; // transparent (see noteheadVisible above)
             } else if (!noteheadColor // revert transparency after PrintObject was set to false, then true again
@@ -244,6 +247,29 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                     const notehead: any = vfStaveNote.note_heads[i];
                     if (notehead) {
                         notehead.setStyle({ fillStyle: noteheadColor, strokeStyle: noteheadColor });
+                    }
+                }
+                // notehead="none" leaves out the head only: a printed note keeps its augmentation dots (they follow
+                //   print-object / print-dot in MusicXML, not the notehead). Vexflow draws the modifiers of a head in that
+                //   head's style (StaveNote.drawModifiers()), so they were transparent with it, e.g. the dot of a dotted
+                //   quarter without head on the half note of another voice. Its dots get the color the head would have.
+                //   The other modifiers stay with the head: an accidental belongs to the head, which the note of the other
+                //   voice prints with its own. A print-object="no" note keeps transparent dots.
+                const headlessPrintedNote: boolean = note.sourceNote.PrintObject &&
+                    note.sourceNote.Notehead?.Shape === NoteHeadShape.NONE;
+                for (const modifier of vfStaveNote.getModifiers?.() ?? []) {
+                    if (modifier.getCategory?.() !== "dots" || modifier.getIndex?.() !== i) {
+                        continue;
+                    }
+                    if (headlessPrintedNote) {
+                        if (!("osmdBaseStyle" in modifier)) {
+                            modifier.osmdBaseStyle = modifier.getStyle();
+                        }
+                        modifier.setStyle({ fillStyle: visibleNoteheadColor, strokeStyle: visibleNoteheadColor });
+                    } else if ("osmdBaseStyle" in modifier) {
+                        // inherit the head's style again, e.g. after PrintObject was set to false
+                        modifier.setStyle(modifier.osmdBaseStyle);
+                        delete modifier.osmdBaseStyle;
                     }
                 }
                 // set ledger line color. TODO coordinate this with VexFlowConverter.StaveNote(), where there's also still code for this, maybe unnecessarily.
