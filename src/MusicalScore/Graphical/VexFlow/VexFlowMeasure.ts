@@ -99,6 +99,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
     /** The beams across staves whose last staff is this measure's (see isCrossStaffBeam()), with their VexFlow beams.
      *  Drawn after all staves of the system, when the notes of every staff are at their final y (see drawCrossStaffBeams()). */
     private crossStaffBeams: [Beam, VF.Beam][] = [];
+    /** The room reserved below the upper staff and above the lower staff for the beams between staves in crossStaffBeams, see
+     *  reserveCrossStaffBeamSpace(). */
+    private crossStaffBeamRooms: Map<VF.Beam, CrossStaffBeamRoom> = new Map<VF.Beam, CrossStaffBeamRoom>();
     /** The tuplets of notes on a beam across staves, drawn after that beam (see drawCrossStaffTuplets()). */
     private crossStaffTuplets: VF.Tuplet[] = [];
     /** Intermediate object to construct tuplets */
@@ -1199,6 +1202,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         // should the old beams be removed manually by the notes?
         this.vfbeams = {};
         this.crossStaffBeams = [];
+        this.crossStaffBeamRooms.clear();
         if (this.isTabMeasure && !this.rules.TabBeamsRendered) {
             return; // fixes tab beams rendered in test_slide_glissando when TabBeamsRendered = false
         }
@@ -1379,14 +1383,18 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
     /**
      * Lays out a beam whose notes have stems pointing both ways (e.g. down from the upper staff and up from the lower one) between
-     * them: flat, midway between the default stem tips of the two sides, at least CrossStaffBeamMinStemLength from the note heads
-     * on each side (see reserveCrossStaffBeamSpace()). The stems pointing up end at the beam nearest to the notes below it, the
-     * primary beam, and the beams of shorter notes stack under it; the stems pointing down reach through all of them.
-     * (VexFlow's Beam lays out a beam on one side of all its notes.)
+     * them, flat: midway between the default stem tips of the two sides, if nothing was placed between the staves where the beam
+     * is (see CrossStaffBeamRoom.isFree()). Else CrossStaffBeamMinStemLength below the lowest note head of the stems pointing
+     * down, where reserveCrossStaffBeamSpace() reserved its room below the upper staff, so that what was placed below it, e.g. a
+     * dynamic, is below the beam. At least CrossStaffBeamMinStemLength from the nearest note head on each side to the nearest beam.
+     * The stems pointing up end at the beam nearest to the notes below it, the primary beam, and the beams of shorter notes
+     * stack under it; the stems pointing down reach through all of them. (VexFlow's Beam lays out a beam on one side of all its
+     * notes.)
      */
     private placeBeamBetweenStems(beam: VF.Beam): void {
         const vfBeam: any = beam;
         const rules: EngravingRules = this.rules;
+        const rooms: Map<VF.Beam, CrossStaffBeamRoom> = this.crossStaffBeamRooms;
         vfBeam.stem_direction = VF.Stem.UP; // the beams stack downward from the primary beam's y (see Beam.drawBeamLines())
         let beamY: number;
         vfBeam.calculateSlope = function(): void {
@@ -1410,10 +1418,17 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     lowestDownHead = Math.max(lowestDownHead, ...note.getYs());
                 }
             }
-            const midway: number = (lowestDownTip - stackHeight + highestUpTip) / 2;
             const highest: number = lowestDownHead + minStemLength; // the primary beam's highest y, below the notes above
             const lowest: number = highestUpHead - minStemLength - stackHeight; // its lowest, above the notes below
-            beamY = highest <= lowest ? Math.min(Math.max(midway, highest), lowest) : (highest + lowest) / 2;
+            // (the staves are kept far enough apart for both, see reserveCrossStaffBeamSpace())
+            if (highest > lowest) {
+                beamY = (highest + lowest) / 2;
+            } else if (rooms.get(this)?.isFree()) {
+                const midway: number = (lowestDownTip - stackHeight + highestUpTip) / 2;
+                beamY = Math.min(Math.max(midway, highest), lowest);
+            } else {
+                beamY = highest;
+            }
             this.slope = 0;
             this.y_shift = 0;
         };
@@ -1434,24 +1449,26 @@ export class VexFlowMeasure extends GraphicalMeasure {
     }
 
     /**
-     * Reserves the room of the beams between staves (see placeBeamBetweenStems()) in the sky and bottom lines, so that the staves
-     * are kept far enough apart for them and the minimum stem length (CrossStaffBeamMinStemLength): half of the room below the
-     * upper staff's notes with stems down, half above the lower staff's notes with stems up. Called after the sky and bottom lines
-     * are calculated, which don't have these beams and stems: they are drawn after all staves (see drawCrossStaffBeams()).
+     * Reserves the room of the beams across staves in the sky and bottom lines, which don't have these beams and their stems:
+     * they are drawn after all staves (see drawCrossStaffBeams()). Called after the sky and bottom lines are calculated, before
+     * what is placed from them, e.g. dynamics and wedges, and before the staff distances are calculated from them.
+     * - Stems pointing both ways (see placeBeamBetweenStems()): the beam with CrossStaffBeamMinStemLength above it below the
+     *   upper staff's notes with stems down, where the beam is drawn, and CrossStaffBeamMinStemLength above the lower staff's
+     *   notes with stems up. So what is placed below the upper staff goes below the beam, and the staves are kept far enough
+     *   apart for the beam and the minimum stem length.
+     * - Stems all pointing one way: the beam at the stems' default length beyond the notes of the staff on that side, where VexFlow
+     *   lays it out (about: VexFlow slopes it), as a beam of one staff is in that staff's sky or bottom line.
      */
     public reserveCrossStaffBeamSpace(): void {
+        const staffLines: StaffLine[] = this.ParentStaffLine?.ParentMusicSystem?.StaffLines ?? [];
         for (const [beam, vfBeam] of this.crossStaffBeams) {
-            const notes: VF.StemmableNote[] = vfBeam.getNotes() as VF.StemmableNote[];
-            if (!VexFlowMeasure.hasStemsBothWays(notes)) {
-                continue; // the beam is on one side of all its notes, as VexFlow lays it out
-            }
-            // for each note: its staffline, x and the y of its head nearest to the beam (relative to the staffline)
+            // for each note with a stem: its staffline, x and the y of its head nearest to the beam (relative to the staffline)
             const placed: {staffLine: StaffLine, x: number, headY: number, up: boolean}[] = [];
             for (const sourceNote of beam.Notes) {
                 const graphicalNote: VexFlowGraphicalNote = this.rules.GNote(sourceNote) as VexFlowGraphicalNote;
                 const vfNote: VF.StaveNote = graphicalNote?.vfnote?.[0] as VF.StaveNote;
                 const staffEntry: GraphicalStaffEntry = graphicalNote?.parentVoiceEntry.parentStaffEntry;
-                if (!vfNote?.hasStem() || !staffEntry) {
+                if (!vfNote?.hasStem() || !staffEntry || staffLines.indexOf(staffEntry.parentMeasure.ParentStaffLine) < 0) {
                     continue;
                 }
                 const up: boolean = vfNote.getStemDirection() === VF.Stem.UP;
@@ -1465,24 +1482,56 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     up: up
                 });
             }
-            const staffLines: StaffLine[] = this.ParentStaffLine?.ParentMusicSystem?.StaffLines ?? [];
+            if (placed.length < 2) {
+                continue;
+            }
             const indices: number[] = placed.map(note => staffLines.indexOf(note.staffLine));
             const upperLine: StaffLine = staffLines[Math.min(...indices)];
             const lowerLine: StaffLine = staffLines[Math.max(...indices)];
-            if (!upperLine || !lowerLine || upperLine === lowerLine) {
-                continue;
+            // from the first stem to the last (a staff entry's x is about the middle of its note heads), with a margin
+            const start: number = Math.min(...placed.map(note => note.x)) - 1;
+            const end: number = Math.max(...placed.map(note => note.x)) + 1;
+            const stackHeight: number = VexFlowMeasure.getBeamStackHeight(vfBeam) / unitInPixels;
+            if (VexFlowMeasure.hasStemsBothWays(vfBeam.getNotes() as VF.StemmableNote[])) {
+                if (upperLine === lowerLine) {
+                    continue;
+                }
+                const minStemLength: number = this.rules.CrossStaffBeamMinStemLength;
+                const downAbove: number[] = placed.filter(note => note.staffLine === upperLine && !note.up)
+                    .map(note => note.headY + minStemLength + stackHeight);
+                const upBelow: number[] = placed.filter(note => note.staffLine === lowerLine && note.up).map(note => note.headY - minStemLength);
+                if (downAbove.length > 0 && upBelow.length > 0) {
+                    VexFlowMeasure.reserveBottomLine(upperLine, start, end, downAbove);
+                    VexFlowMeasure.reserveSkyLine(lowerLine, start, end, upBelow);
+                    this.crossStaffBeamRooms.set(vfBeam, new CrossStaffBeamRoom(upperLine, lowerLine, start, end,
+                        Math.max(...downAbove, upperLine.StaffHeight), Math.min(...upBelow, 0)));
+                }
+            } else {
+                const stemLength: number = (VF as any).STEM_HEIGHT / unitInPixels;
+                if (placed[0].up) { // the beam above the notes of the upper staff
+                    VexFlowMeasure.reserveSkyLine(upperLine, start, end,
+                        placed.filter(note => note.staffLine === upperLine).map(note => note.headY - stemLength));
+                } else { // below the notes of the lower staff
+                    VexFlowMeasure.reserveBottomLine(lowerLine, start, end,
+                        placed.filter(note => note.staffLine === lowerLine).map(note => note.headY + stemLength));
+                }
             }
-            const half: number = this.rules.CrossStaffBeamMinStemLength + VexFlowMeasure.getBeamStackHeight(vfBeam) / unitInPixels / 2;
-            const start: number = Math.min(...placed.map(note => note.x));
-            const end: number = Math.max(...placed.map(note => note.x)) + 1.5; // (about a note head's width)
-            const downAbove: number[] = placed.filter(note => note.staffLine === upperLine && !note.up).map(note => note.headY + half);
-            const upBelow: number[] = placed.filter(note => note.staffLine === lowerLine && note.up).map(note => note.headY - half);
-            if (downAbove.length > 0 && Math.max(...downAbove) > upperLine.StaffHeight) {
-                upperLine.SkyBottomLineCalculator.updateBottomLineInRange(start, end, Math.max(...downAbove));
-            }
-            if (upBelow.length > 0 && Math.min(...upBelow) < 0) {
-                lowerLine.SkyBottomLineCalculator.updateSkyLineInRange(start, end, Math.min(...upBelow));
-            }
+        }
+    }
+
+    /** Raises a staffline's sky line from start to end (relative to the staffline) to the highest of the values (the lowest y),
+     *  if that is above the staff. */
+    private static reserveSkyLine(staffLine: StaffLine, start: number, end: number, values: number[]): void {
+        if (values.length > 0 && Math.min(...values) < 0) {
+            staffLine.SkyBottomLineCalculator.updateSkyLineInRange(start, end, Math.min(...values));
+        }
+    }
+
+    /** Lowers a staffline's bottom line from start to end (relative to the staffline) to the lowest of the values (the highest y),
+     *  if that is below the staff. */
+    private static reserveBottomLine(staffLine: StaffLine, start: number, end: number, values: number[]): void {
+        if (values.length > 0 && Math.max(...values) > staffLine.StaffHeight) {
+            staffLine.SkyBottomLineCalculator.updateBottomLineInRange(start, end, Math.max(...values));
         }
     }
 
@@ -2497,4 +2546,33 @@ export enum StavePositionEnum {
     BELOW = 4,
     BEGIN = 5,
     END = 6
+}
+
+/** The room reserved for a beam between staves (see VexFlowMeasure.reserveCrossStaffBeamSpace()), relative to the stafflines. */
+class CrossStaffBeamRoom {
+    public upperLine: StaffLine;
+    public lowerLine: StaffLine;
+    /** From where to where (x) the room is reserved, relative to the stafflines. */
+    public start: number;
+    public end: number;
+    /** The reserved bottom line value of the upper staff and sky line value of the lower one. */
+    public bottom: number;
+    public sky: number;
+
+    constructor(upperLine: StaffLine, lowerLine: StaffLine, start: number, end: number, bottom: number, sky: number) {
+        this.upperLine = upperLine;
+        this.lowerLine = lowerLine;
+        this.start = start;
+        this.end = end;
+        this.bottom = bottom;
+        this.sky = sky;
+    }
+
+    /** Whether nothing was placed between the staves where the beam is since its room was reserved: below the upper staff,
+     *  where the bottom line is still the reserved one, and above the lower staff. The beam can then go midway between them. */
+    public isFree(): boolean {
+        const tolerance: number = 0.01;
+        return this.upperLine.SkyBottomLineCalculator.getBottomLineMaxInRange(this.start, this.end) <= this.bottom + tolerance &&
+            this.lowerLine.SkyBottomLineCalculator.getSkyLineMinInRange(this.start, this.end) >= this.sky - tolerance;
+    }
 }
