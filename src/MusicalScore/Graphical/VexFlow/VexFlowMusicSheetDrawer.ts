@@ -312,6 +312,23 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         this.addSVGClass(graphicalSlur.SVGElement, "osmd-slur");
     }
 
+    protected drawCrossStaffBeams(musicSystem: MusicSystem): void {
+        const measures: VexFlowMeasure[] = musicSystem.StaffLines
+            .flatMap((staffLine: StaffLine) => staffLine.Measures as VexFlowMeasure[])
+            .filter((measure: VexFlowMeasure) => this.lazyDrawsObject(measure.PositionAndShape)); // (drawn in this batch, see drawMeasure())
+        try {
+            for (const measure of measures) {
+                measure.drawCrossStaffBeams(this.backend.getContext());
+            }
+            // then the tuplets of their notes, placed from the stems the beams extended
+            for (const measure of measures) {
+                measure.drawCrossStaffTuplets(this.backend.getContext());
+            }
+        } catch (ex) {
+            log.warn("VexFlowMusicSheetDrawer.drawCrossStaffBeams", ex);
+        }
+    }
+
     protected drawMeasure(measure: VexFlowMeasure): void {
         if (!this.lazyDrawsObject(measure.PositionAndShape)) {
             return; // lazy horizontal: this measure is outside the batch's draw x-window
