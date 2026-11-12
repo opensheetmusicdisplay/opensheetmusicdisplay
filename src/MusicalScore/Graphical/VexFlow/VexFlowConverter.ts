@@ -1457,6 +1457,9 @@ export class VexFlowConverter {
                 //   Without a type, the connector kept VexFlow's default DOUBLE, a heavy line left of the measure's start.
                 return (VF.StaveConnector.type as any).DOUBLE_HEAVY_RIGHT;
             default:
+                // the other styles (dashed, heavy, dotted, ...) are drawn as a regular barline in the staves
+                //   (see VexFlowMeasure.addMeasureLine()). Without a type, the connector kept VexFlow's default DOUBLE.
+                return VexFlowConverter.line(SystemLinesEnum.SingleThin, linePosition);
         }
     }
 
