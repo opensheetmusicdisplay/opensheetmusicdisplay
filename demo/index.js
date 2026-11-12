@@ -15,6 +15,7 @@ import { IntervalTransposeCalculator } from '../src/Plugins/Transpose/IntervalTr
     var sampleFolder = "",
         samples = {
             "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
+            "Beethoven, L.v. - Ode to Joy (Voice, Piano, Guitar TAB)": "Beethoven_OdeToJoy.musicxml",
             "Clementi, M. - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
             "Clementi, M. - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
             "Clementi, M. - Sonatina Op.36 No.3 Pt.1": "MuzioClementi_SonatinaOpus36No3_Part1.xml",

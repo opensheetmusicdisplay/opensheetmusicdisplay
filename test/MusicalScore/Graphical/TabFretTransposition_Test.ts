@@ -75,6 +75,16 @@ describe("Tablature frets of a transposed sheet", () => {
         });
     }
 
+    it("moves a chord's fingering along the fretboard: D major on frets 2-3-2 is F major on frets 5-6-5", async () => {
+        // Beethoven_OdeToJoy.musicxml: the guitar's first chord is D major on the G, B and high E strings
+        const notes: TabNote[] = await renderTransposed("Beethoven_OdeToJoy.musicxml", 3);
+        const chord: TabNote[] = notes.find(note => note.ParentVoiceEntry.Notes.length === 3).ParentVoiceEntry.Notes as TabNote[];
+        chord.sort((a, b) => b.StringNumberTab - a.StringNumberTab);
+        expect(chord.map(note => note.FretNumber), "frets in the XML, from the G string").to.deep.equal([2, 3, 2]);
+        expect(chord.map(note => note.DisplayedFretNumber), "transposed frets").to.deep.equal([5, 6, 5]);
+        expect(chord.map(note => note.DisplayedStringNumberTab), "strings").to.deep.equal([3, 2, 1]);
+    });
+
     it("leaves the frets of the XML when the sheet isn't transposed, also after a transposition", async () => {
         const notes: TabNote[] = await renderTransposed("test_slides_standard_and_tab_staff.musicxml", 0);
         const xmlFrets: number[] = [3, 5, 7, 8, 10, 8, 7, 5];
