@@ -16,7 +16,7 @@
 
 ### A MusicXML renderer for the Browser
 [opensheetmusicdisplay.org](https://opensheetmusicdisplay.org/)<br>
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/opensheetmusicdisplay/opensheetmusicdisplay?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Discord](https://img.shields.io/twitter/url?label=Discord&logo=discord&style=social&url=https%3A%2F%2Ffwd.osmd.org%2Fdiscord)](https://fwd.osmd.org/discord)
 [![CI](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/opensheetmusicdisplay)](https://www.npmjs.com/package/opensheetmusicdisplay)
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)<br>
