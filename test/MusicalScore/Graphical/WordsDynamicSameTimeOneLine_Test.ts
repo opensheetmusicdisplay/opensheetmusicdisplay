@@ -154,6 +154,23 @@ describe("Words and a dynamic at the same time on one line", () => {
         expect(sempre.wordsRight).to.be.below(dolce.wordsLeft);
     });
 
+    it("keeps the second words on the dynamic's line where the bottom line is the same under both words (m. 17), " +
+       "after the first words moved the dynamic onto that line", async () => {
+        const osmd: OpenSheetMusicDisplay = await render();
+        const before: OpenSheetMusicDisplay = await render(sample, false);
+        const sempre: Pair = pair(osmd, 17, "sempre");
+        const dolce: Pair = pair(osmd, 17, "dolce");
+        // the fixture: the notes under both words stay inside the staff, so the bottom line under both is the staff's bottom line (4),
+        //   and "sempre" (taller than the ff) moved down onto it, taking the ff along
+        expect(sempre.wordsTop, "\"sempre\" on the staff's bottom line").to.be.closeTo(4, 0.01);
+        expect(sempre.d.RelativePosition.y, "the ff lower than without the words")
+            .to.be.above(pair(before, 17, "sempre").d.RelativePosition.y + 0.01);
+        expectBeside(osmd, before, 17, "sempre", true);
+        // "dolce" has the top of "sempre": 4 up to a rounding error, which doesn't count as a move off the ff's line
+        expectBeside(osmd, before, 17, "dolce", false);
+        expect(dolce.wordsTop, "\"dolce\" on the staff's bottom line too").to.be.closeTo(4, 0.01);
+    });
+
     it("reaches across the barline with words before a dynamic at the start of a measure (m. 2, 7)", async () => {
         const osmd: OpenSheetMusicDisplay = await render();
         for (const [measureNumber, text] of [[2, "dolce"], [7, "poco"]] as [number, string][]) {
