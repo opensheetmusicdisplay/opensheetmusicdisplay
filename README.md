@@ -32,7 +32,7 @@
 
 ## About OSMD
 
-<img title="How OSMD can look in the browser&#xA;(Mockup, OSMD on its own does not support playback)" src="https://user-images.githubusercontent.com/33069673/106186552-bd191300-61a4-11eb-8814-07019fcf1d5b.png" style="max-width: 100%; max-height: 100vh; width: auto; margin: auto;">
+<img title="How OSMD can look in the browser&#xA;(Mockup, OSMD on its own does not support playback)" alt="OSMD rendering Beethoven's Ode to Joy for voice, piano and guitar tab in light and dark mode, with a playback cursor" src="https://github.com/user-attachments/assets/6268e243-be9e-42ec-b62d-9067a0903e67" style="max-width: 100%; max-height: 100vh; width: auto; margin: auto;">
 
 OpenSheetMusicDisplay renders MusicXML sheet music in the browser. It is the missing link between [MusicXML](https://www.musicxml.com/) and [VexFlow](https://www.vexflow.com/). Built upon many years of experience in both sheet music interactivity and engraving, it is the perfect solution for app developers seeking to build digital sheet music services.
 
