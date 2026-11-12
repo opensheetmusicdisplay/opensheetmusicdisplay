@@ -35,8 +35,25 @@ export class TabNote extends Note {
         return this.stringNumberTab;
     }
 
+    /** The fret number given in the XML. A transposed sheet draws {@link DisplayedFretNumber}. */
     public get FretNumber(): number {
         return this.fretNumber;
+    }
+
+    /** The fret of the transposed note, undefined if the sheet isn't transposed (like Note.TransposedPitch), see TabFretTransposer. */
+    public TransposedFretNumber: number;
+    /** The string of the transposed note, undefined if the sheet isn't transposed. It's the XML's string (StringNumberTab)
+     *  unless the transposed note doesn't fit on that string, see TabFretTransposer. */
+    public TransposedStringNumberTab: number;
+
+    /** The fret number that is drawn: the transposed one if the sheet is transposed, otherwise the XML's. */
+    public get DisplayedFretNumber(): number {
+        return this.TransposedFretNumber ?? this.fretNumber;
+    }
+
+    /** The string the fret number is drawn on: the transposed note's if the sheet is transposed, otherwise the XML's. */
+    public get DisplayedStringNumberTab(): number {
+        return this.TransposedStringNumberTab ?? this.stringNumberTab;
     }
 
     public get BendArray(): TabBendSegment[] {
