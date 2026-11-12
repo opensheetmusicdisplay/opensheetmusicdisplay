@@ -1283,7 +1283,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             const startTieNote: TabNote = <TabNote> tie.StartNote.sourceNote;
             const endTieNote: TabNote = <TabNote> tie.EndNote.sourceNote;
             let slideDirection: number = 1;
-            if (startTieNote.FretNumber > endTieNote.FretNumber) {
+            if (startTieNote.DisplayedFretNumber > endTieNote.DisplayedFretNumber) {
               slideDirection = -1;
             }
             vfTie = new VF.TabSlide(
@@ -3463,7 +3463,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             }
 
             let slideDirection: number = 1;
-            if (startNote.FretNumber > endNote.FretNumber) {
+            if (startNote.DisplayedFretNumber > endNote.DisplayedFretNumber) {
               slideDirection = -1;
             }
             let first_indices: number[] = undefined;

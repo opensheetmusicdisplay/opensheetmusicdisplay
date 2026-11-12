@@ -10,6 +10,7 @@ import {MeasureRepeatInstruction, MeasureRepeatType} from "../VoiceData/Instruct
 import {RhythmInstruction} from "../VoiceData/Instructions/RhythmInstruction";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
 import {Fraction} from "../../Common/DataObjects/Fraction";
+import {NoteEnum} from "../../Common/DataObjects/Pitch";
 import {IXmlElement} from "../../Common/FileIO/Xml";
 import {ITextTranslation} from "../Interfaces/ITextTranslation";
 import {MusicSheetReadingException} from "../Exceptions";
@@ -231,14 +232,24 @@ export class InstrumentReader {
           }
           const staffDetailsNodes: IXmlElement[] = xmlNode.elements("staff-details"); // there can be multiple, even if redundant. see #1041
           for (const staffDetailsNode of staffDetailsNodes) {
+            let staffNumber: number = 1;
+            const staffNumberAttr: Attr = staffDetailsNode.attribute("number");
+            if (staffNumberAttr) {
+              staffNumber = parseInt(staffNumberAttr.value, 10);
+            }
+            const staff: Staff = this.instrument.Staves[staffNumber - 1];
+            // the open strings of a tablature staff, line 1 is the lowest
+            for (const tuningNode of staffDetailsNode.elements("staff-tuning")) {
+              const line: number = parseInt(tuningNode.attribute("line")?.value, 10);
+              const step: NoteEnum = NoteEnum[tuningNode.element("tuning-step")?.value];
+              const octave: number = parseInt(tuningNode.element("tuning-octave")?.value, 10);
+              const alter: number = parseFloat(tuningNode.element("tuning-alter")?.value ?? "0");
+              if (staff && line >= 1 && step !== undefined && !isNaN(octave)) {
+                staff.StringTuning[line - 1] = step + alter + octave * 12;
+              }
+            }
             const staffLinesNode: IXmlElement = staffDetailsNode.element("staff-lines");
             if (staffLinesNode) {
-              let staffNumber: number = 1;
-              const staffNumberAttr: Attr = staffDetailsNode.attribute("number");
-              if (staffNumberAttr) {
-                staffNumber = parseInt(staffNumberAttr.value, 10);
-              }
-              const staff: Staff = this.instrument.Staves[staffNumber - 1];
               staff.StafflineCount = parseInt(staffLinesNode.value, 10);
               staff.xmlStafflineCount = isNaN(staff.StafflineCount) ? undefined : staff.StafflineCount;
             }

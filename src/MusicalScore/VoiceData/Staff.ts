@@ -27,6 +27,9 @@ export class Staff {
      *  The percussion one-line layout keeps it, see EngravingRules.PercussionKeepXMLStafflineCount.
      */
     public xmlStafflineCount: number;
+    /** The open strings of a tablature staff in halftones (like Pitch.getHalfTone()), from the lowest string (the bottom line),
+     *  as the XML gives them (<staff-tuning>). Empty if it gives none. */
+    public StringTuning: number[] = [];
     public hasLyrics: boolean = false;
     public openTieDict: { [_: number]: Tie } = {};
 

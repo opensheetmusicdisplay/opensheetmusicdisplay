@@ -944,13 +944,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
      */
     private correctTabNotePositions(): void {
         const stringY: (note: GraphicalNote) => number = (note: GraphicalNote): number =>
-            ((note.sourceNote as TabNote).StringNumberTab - 1) * this.rules.TabStaffInterlineHeightForBboxes;
+            ((note.sourceNote as TabNote).DisplayedStringNumberTab - 1) * this.rules.TabStaffInterlineHeightForBboxes;
         // Measure-scoped, same reasoning as in correctNotePositions(): iterating Voice.VoiceEntries would walk every entry
         //   that voice has in the whole score, from a method that runs once per measure (quadratic in measure count).
         for (const gse of this.staffEntries) {
             for (const gve of gse.graphicalVoiceEntries) {
                 // rests and invalid tab notes (without string) keep their positions
-                const notesOnStrings: GraphicalNote[] = gve.notes.filter((note: GraphicalNote) => (note.sourceNote as TabNote).StringNumberTab >= 0);
+                const notesOnStrings: GraphicalNote[] = gve.notes.filter((note: GraphicalNote) => (note.sourceNote as TabNote).DisplayedStringNumberTab >= 0);
                 if (notesOnStrings.length === 0) {
                     continue;
                 }

@@ -1163,7 +1163,7 @@ export class VexFlowConverter {
             const tabNote: TabNote = note.sourceNote as TabNote;
             const tabPhrases: { type: number, text: string }[] = [];
             tabBends.push(tabPhrases);
-            let tabPosition: {str: number, fret: number} = {str: tabNote.StringNumberTab, fret: tabNote.FretNumber};
+            let tabPosition: {str: number, fret: number} = {str: tabNote.DisplayedStringNumberTab, fret: tabNote.DisplayedFretNumber};
             if (!(note.sourceNote instanceof TabNote)) {
                 log.info(`invalid tab note: ${note.sourceNote.Pitch.ToString()} in measure ${gve.parentStaffEntry.parentMeasure.MeasureNumber}` +
                     ", likely missing XML string+fret number.");
