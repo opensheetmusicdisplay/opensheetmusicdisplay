@@ -3,7 +3,7 @@
 // Writes red-overlay diff images for the worst offenders next to dirB as *_DIFF.png.
 import FS from "fs";
 import Path from "path";
-import canvasPkg from "canvas";
+import * as canvasPkg from "@napi-rs/canvas";
 
 const dirA = process.argv[2] || "export/ab_base";
 const dirB = process.argv[3] || "export/ab_new";

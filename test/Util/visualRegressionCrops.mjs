@@ -20,9 +20,7 @@
 
 import FS from "fs";
 import Path from "path";
-import canvasPkg from "canvas";
-
-const { loadImage, createCanvas } = canvasPkg;
+import { loadImage, createCanvas } from "@napi-rs/canvas";
 
 const ROW_GAP = 60; // changed rows less than this apart belong to one region
 const MAX_REGION_HEIGHT = 400; // a taller region is cropped to its start
@@ -38,10 +36,12 @@ const FONT = "14px sans-serif";
 // ---------------------------------------------------------------------------
 
 /**
- * Frees the pixel memory of a canvas once it's no longer needed (an image's: `img.src = Buffer.alloc(0)`). node-canvas
- * keeps the native memory of canvases and images, not even gc() frees it (node-canvas 3.2, measured in 2026-11 with a
- * release comparison: 89 changed extra scores, 5 of them 1440x32767 pages, made the crops grow to 10.5 GB, and
- * visualRegression.mjs then died without an error; its comparison of 261 pairs peaked at 11.8 GB).
+ * Frees the pixel memory of a canvas once it's no longer needed (an image's: `img.src = Buffer.alloc(0)`).
+ * The canvas package (node-canvas 3.2, used before @napi-rs/canvas) kept the native memory of canvases and images, not
+ * even gc() freed it (measured in 2026-11 with a release comparison: 89 changed extra scores, 5 of them 1440x32767 pages,
+ * made the crops grow to 10.5 GB, and visualRegression.mjs then died without an error). @napi-rs/canvas frees it when
+ * the objects are garbage collected, but later: decoding a 1440x32767 page 20 times stays at 1.2 GB without this,
+ * 0.46 GB with it.
  * @param {object} canvas the canvas
  */
 export function releaseCanvas(canvas) {
@@ -52,7 +52,7 @@ export function releaseCanvas(canvas) {
 /**
  * Decodes a PNG file into a canvas context and its RGBA pixels. Release its canvas with releaseCanvas(image.ctx.canvas)
  * when done.
- * Reads the file with Node's fs: node-canvas can't open paths longer than 260 characters on Windows.
+ * Reads the file with Node's fs, which also opens paths longer than 260 characters on Windows (node-canvas couldn't).
  * @param {string} file path of the PNG file
  * @returns {Promise<{ ctx: object, w: number, h: number, data: Uint8ClampedArray }>} the decoded image
  */
@@ -113,7 +113,7 @@ function findRegions(a, b, channelThreshold) {
 /**
  * Copies a part of an image into a new canvas.
  * Uses getImageData/putImageData, as drawImage with a large source offset draws nothing on very tall images
- * (a Cairo/pixman fixed-point limit), e.g. on the 32767 px tall page of ActorPreludeSample.
+ * with node-canvas (a Cairo/pixman fixed-point limit), e.g. on the 32767 px tall page of ActorPreludeSample.
  * @param {{ ctx: object }} image the image, from decode()
  * @param {number} x0 left edge of the part
  * @param {number} y0 top edge of the part
