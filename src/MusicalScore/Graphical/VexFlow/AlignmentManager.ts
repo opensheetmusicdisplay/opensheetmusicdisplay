@@ -168,7 +168,7 @@ export class AlignmentManager {
      * The y position by which a group member is aligned with the others: the center of a wedge, and for a text (a dynamic
      * like p, or cresc.) the middle of its lowercase letters, its optical center (as in MuseScore). So texts share their
      * baseline, and a wedge points at the middle of the letters next to it, e.g. at the bowl of the p in "p <",
-     * not at their top: the center of a text's box is about one x-height above its baseline.
+     * not at their top: the center of a text's box is 0.3 font heights above its baseline, more than half an x-height.
      * @param expression The group member
      */
     private getOpticalCenterY(expression: AbstractGraphicalExpression): number {
@@ -176,9 +176,9 @@ export class AlignmentManager {
         if (this.isWedge(expression) || !expression.Label) {
             return centerY;
         }
-        // A one-line label's baseline is 0.4 font heights below its center (see MusicSheetDrawer.drawLabel()),
+        // A one-line label's baseline is 0.3 font heights below its center (see MusicSheetDrawer.drawLabel()),
         //   and the x-height of Times New Roman is about 0.45 font heights.
-        return centerY + expression.Label.Label.fontHeight * (0.4 - 0.45 / 2);
+        return centerY + expression.Label.Label.fontHeight * (0.3 - 0.45 / 2);
     }
 
     /** Whether the expression is a crescendo or decrescendo wedge (a continuous dynamic without text). */

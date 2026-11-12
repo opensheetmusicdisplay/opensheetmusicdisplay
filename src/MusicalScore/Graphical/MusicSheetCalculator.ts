@@ -1178,16 +1178,18 @@ export abstract class MusicSheetCalculator {
     }
 
     /** Where the baseline of a label's first line of text is, relative to the label's position: the drawer puts the text's
-     *  top at the position, shifted up by the text's height or half of it for a bottom or center alignment (see
-     *  MusicSheetDrawer.drawLabel()), and draws the text with its baseline a font height below its top. */
+     *  top at the position, shifted up for a bottom or center alignment so that the text is in the label's box, with 0.2
+     *  font heights under the last baseline for the descenders (see MusicSheetDrawer.drawLabel()), and draws the text with
+     *  its baseline a font height below its top. */
     public static labelBaselineOffset(label: GraphicalLabel): number {
         const fontHeight: number = label.Label.fontHeight;
-        const height: number = fontHeight * (0.2 + Math.max(1, label.TextLines?.length ?? 1));
+        const lines: number = Math.max(1, label.TextLines?.length ?? 1);
+        const height: number = fontHeight * (0.2 + lines);
         switch (label.Label.textAlignment) {
             case TextAlignmentEnum.LeftCenter:
             case TextAlignmentEnum.CenterCenter:
             case TextAlignmentEnum.RightCenter:
-                return fontHeight - height / 2;
+                return fontHeight * (0.8 - lines / 2);
             case TextAlignmentEnum.LeftBottom:
             case TextAlignmentEnum.CenterBottom:
             case TextAlignmentEnum.RightBottom:
