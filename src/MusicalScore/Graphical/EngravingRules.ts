@@ -266,6 +266,9 @@ export class EngravingRules {
      */
     public TabRhythmRendered: boolean;
     public TabBeamsRendered: boolean;
+    /** The highest fret of the fretboard, for the tablature of a transposed sheet: a note whose transposed fret would be above it
+     *  (or below 0) is moved to another string, see TabFretTransposer. Default 24. */
+    public TabTransposeMaxFret: number;
     public TabKeySignatureRendered: boolean;
     /** Whether space should be reserved as if there was a key signature.
      * False basically only works for tab-only scores, as it prevents vertical x-alignment with other staves.
@@ -1036,6 +1039,7 @@ export class EngravingRules {
         this.TabTupletsBracketed = true;
         this.TabRhythmRendered = false;
         this.TabBeamsRendered = true;
+        this.TabTransposeMaxFret = 24;
         this.TabKeySignatureRendered = false; // standard not to render for tab scores
         this.TabKeySignatureSpacingAdded = true; // false only works for tab-only scores, as it will prevent vertical x-alignment.
         this.TabTimeSignatureRendered = false; // standard not to render for tab scores

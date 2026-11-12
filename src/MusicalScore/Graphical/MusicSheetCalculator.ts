@@ -167,7 +167,8 @@ export abstract class MusicSheetCalculator {
 
         this.graphicalMusicSheet.Initialize();
         // the notes' pitches are transposed when their graphical notes are created (checkNoteForAccidental()), the tablature frets here
-        TabFretTransposer.transposeFrets(musicSheet, MusicSheetCalculator.transposeCalculator !== undefined);
+        TabFretTransposer.transposeFrets(musicSheet, MusicSheetCalculator.transposeCalculator !== undefined,
+            this.rules.TabTransposeMaxFret);
         const measureList: GraphicalMeasure[][] = this.graphicalMusicSheet.MeasureList;
 
         // one AccidentalCalculator for each Staff (regardless of Instrument)
