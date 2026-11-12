@@ -28,7 +28,8 @@ import OSMD from "../../build/opensheetmusicdisplay.min.js"; // window needs to 
   Note: this script needs to "fake" quite a few browser elements, like window, document,
   and a Canvas HTMLElement (for PNG) or the DOM (for SVG)   ,
   which otherwise are missing in pure nodejs, causing errors in OSMD.
-  For PNG it needs the canvas package installed.
+  For PNG it needs the @napi-rs/canvas package installed (jsdom's canvas backend since jsdom 31; before, the canvas
+  package).
   There are also some hacks needed to set the container size (offsetWidth) correctly.
 
   Otherwise you'd need to run a headless browser, which is way slower,
@@ -114,10 +115,6 @@ async function init () {
     global.Node = window.Node;
     if (imageFormat === "png") {
         global.Canvas = window.Canvas;
-    }
-
-    if (process.platform === "win32") {
-        await addFontFallbackOnWindows();
     }
 
     // unnecessary in Node v18+:
@@ -316,36 +313,6 @@ function decodeXmlBuffer (buffer) {
         return buffer.toString("utf8", 3); // UTF-8 with BOM
     }
     return buffer.toString(); // default UTF-8 (no BOM)
-}
-
-/**
- * On Windows, lets node-canvas draw text that Times New Roman has no glyphs for, e.g. Chinese or ♭, instead of boxes
- * with hex codes. A browser falls back to any installed font, but node-canvas' text renderer (Pango) falls back there
- * only to the fonts in the font string and their Windows font links, and Times New Roman has no font links.
- * So fallback fonts are appended to the fonts with Times New Roman, OSMD's font for the texts from the file (e.g. title,
- * part names, words, lyrics): Segoe UI Symbol for symbols like ♭, as in a browser, and Microsoft YaHei for Chinese
- * and Japanese, whose font links cover e.g. Korean.
- * Not to other fonts: text in a font that isn't installed, like VexFlow's "times", would be drawn in a fallback font
- * instead of Pango's default font.
- */
-async function addFontFallbackOnWindows () {
-    let canvasPackage;
-    try {
-        canvasPackage = (await import("canvas")).default;
-    } catch {
-        return; // no canvas package: jsdom has no canvas that draws or measures text
-    }
-    const fallbackFonts = "'Segoe UI Symbol', 'Microsoft YaHei'";
-    const contextPrototype = canvasPackage.CanvasRenderingContext2D.prototype;
-    const fontProperty = Object.getOwnPropertyDescriptor(contextPrototype, "font");
-    Object.defineProperty(contextPrototype, "font", {
-        ...fontProperty,
-        set (font) {
-            // a font read from the context (e.g. saved to restore it later) already ends with the fallback fonts
-            const addFallback = typeof font === "string" && /times new roman/i.test(font) && !font.endsWith(fallbackFonts);
-            fontProperty.set.call(this, addFallback ? `${font}, ${fallbackFonts}` : font);
-        }
-    });
 }
 
 /**
@@ -597,7 +564,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
 }
 
 // OSMD cuts off a canvas at this height (and width) in pixels, the browsers' limit (see
-//   OpenSheetMusicDisplay.createOrRefreshRenderBackend()). node-canvas (Cairo) can't create a larger canvas either.
+//   OpenSheetMusicDisplay.createOrRefreshRenderBackend()).
 const canvasSizeLimit = 32767;
 
 /**

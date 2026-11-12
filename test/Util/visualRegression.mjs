@@ -4,8 +4,8 @@
 //
 // This is a drop-in replacement for test/Util/visual_regression.sh, which requires
 // bash + ImageMagick and therefore only runs on Linux/macOS (or a Linux VM on Windows).
-// This version needs only Node.js and node-canvas (already an OSMD dependency, also used
-// by generateImages_browserless.mjs and test/performance/compareImages.mjs).
+// This version needs only Node.js and @napi-rs/canvas (already an OSMD dependency, also used
+// by generateImages_browserless.mjs via jsdom and test/performance/compareImages.mjs).
 //
 // It produces the SAME diff/ output folder as the bash script, plus diffs.txt and crops/:
 //   diff/results.txt              - every compared image with its diff value, biggest change on top
@@ -64,10 +64,8 @@
 
 import FS from "fs";
 import Path from "path";
-import canvasPkg from "canvas";
+import { loadImage, createCanvas } from "@napi-rs/canvas";
 import { releaseCanvas, writeCrops } from "./visualRegressionCrops.mjs";
-
-const { loadImage, createCanvas } = canvasPkg;
 
 // ---------------------------------------------------------------------------
 // Configuration / arguments
@@ -125,9 +123,10 @@ function listPngs(dir, prefix) {
 }
 
 /**
- * Decodes a PNG into raw RGBA pixel data via node-canvas.
- * Takes the file's content rather than its path: node-canvas opens a path itself, which fails on Windows for paths
- * longer than 260 characters (e.g. a long sample name in a deep folder), where Node's fs reads the file fine.
+ * Decodes a PNG into raw RGBA pixel data via @napi-rs/canvas.
+ * Takes the file's content rather than its path: node-canvas (used before) opened a path itself, which failed on
+ * Windows for paths longer than 260 characters (e.g. a long sample name in a deep folder), where Node's fs reads the
+ * file fine.
  * @param {Buffer} png the content of a PNG file
  * @returns {Promise<{ w: number, h: number, data: Uint8ClampedArray }>} pixel buffer
  */
