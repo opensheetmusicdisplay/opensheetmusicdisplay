@@ -1124,9 +1124,14 @@ export abstract class MusicSheetCalculator {
         // where the notes, slurs etc. reach into the words (the sky/bottom line, which the expressions placed before raised
         //   too, but those are clear of the words), the words and the dynamic move away from the staff together
         const calculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
-        const shift: number = placement === PlacementEnum.Below ?
+        let shift: number = placement === PlacementEnum.Below ?
             Math.max(0, calculator.getBottomLineMaxForLabel(wordsLeft, wordsRight) - wordsRect[2]) :
             Math.min(0, calculator.getSkyLineMinForLabel(wordsLeft, wordsRight) - wordsRect[3]);
+        // a rounding error, not a move: e.g. words after a dynamic that the words before it moved onto the bottom line, where
+        //   the bottom line is the same under both (the second words' top 3.9999999999999996 at a bottom line of 4)
+        if (Math.abs(shift) < 0.001) {
+            shift = 0;
+        }
         if (shift !== 0) {
             if (dynamic.HasWordsBeside) {
                 return undefined; // the move would take the dynamic off the line of the words placed beside it before
