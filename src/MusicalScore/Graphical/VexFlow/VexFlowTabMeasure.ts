@@ -273,6 +273,7 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
 
      public draw(ctx: Vex.IRenderContext): void {
         this.configureBendSpans();
+        this.updateTabNoteBackgroundColors();
         super.draw(ctx);
 
         // draw multi-measure rest: unlike a classical measure, this is not a VexFlowMultiRestMeasure class,
@@ -289,4 +290,24 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
             ctx.closeGroup();
         }
      }
+
+    /**
+     * Gives the box behind each fret number, which interrupts the string line, the current page background color
+     * (EngravingRules.PageBackgroundColor, if UsePageBackgroundColorForTabNotes), read by TabNote.draw() in the VexFlowPatch.
+     * VexFlowConverter.CreateTabNote() sets the color of the time the note was created: this follows a later change, e.g.
+     * osmd.setOptions({darkMode: true}) or pageBackgroundColor after load(), which render() applies without creating the notes anew.
+     */
+    private updateTabNoteBackgroundColors(): void {
+        if (!this.rules.UsePageBackgroundColorForTabNotes) {
+            return;
+        }
+        for (const staffEntry of this.staffEntries) {
+            for (const gve of staffEntry.graphicalVoiceEntries) {
+                const vfnote: VF.StemmableNote = (gve as VexFlowVoiceEntry).vfStaveNote;
+                if (vfnote instanceof VF.TabNote) { // also a grace note (GraceTabNote), not a rest
+                    (vfnote as any).BackgroundColor = this.rules.PageBackgroundColor; // undefined (transparent page): a white box
+                }
+            }
+        }
+    }
 }

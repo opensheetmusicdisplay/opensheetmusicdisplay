@@ -754,6 +754,9 @@ export class EngravingRules {
     public SVGMergeSingleChildGroups: boolean;
     /** Whether dark mode is enabled. This is read-only, to set this, please use osmd.setOptions({darkMode: true}). */
     public DarkModeEnabled: boolean;
+    /** Whether the box behind each fret number of a TAB staff, which interrupts the string line, gets PageBackgroundColor,
+     *  e.g. black in dark mode. Default true. The color is applied in each render(). Without a PageBackgroundColor (transparent page),
+     *  the box is white (SVG) or cleared (canvas). */
     public UsePageBackgroundColorForTabNotes: boolean;
     /** Render the sheet on one horizontal staffline, without line breaks where the width is used up.
      *  Explicit system breaks still begin a new system below, if their rules are set: NewSystemAtXMLNewSystemAttribute,
