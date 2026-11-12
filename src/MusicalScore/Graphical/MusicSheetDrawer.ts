@@ -207,6 +207,13 @@ export abstract class MusicSheetDrawer {
         const widthInPixel: number = this.calculatePixelDistance(graphicalLabel.PositionAndShape.Size.width);
         const bitmapWidth: number = Math.ceil(widthInPixel);
         const bitmapHeight: number = Math.ceil(fontHeightInPixel * (0.2 + graphicalLabel.TextLines.length));
+        // The text is drawn with its baseline one font height below screenPosition.y (see renderLabel()), and the label's box
+        //   (GraphicalLabel.setLabelPositionAndShapeBorders()) is one font height per line: about 0.8 above the baseline for the
+        //   ascenders and 0.2 below it for the descenders. So the top of a bottom-aligned text is the whole bitmap height (lines + 0.2)
+        //   above the label's position, and that of a center-aligned one half the lines + 0.2: with only half of the bitmap height
+        //   (lines / 2 + 0.1) the text was drawn 0.1 font heights below its box, and the descender of e.g. the f of a dynamic
+        //   above the staff reached through the box's margin onto the note under it.
+        const centerAlignedTop: number = fontHeightInPixel * (0.2 + graphicalLabel.TextLines.length / 2);
 
         switch (label.textAlignment) {
             // Adjust the OSMD-calculated positions to rendering coordinates
@@ -215,7 +222,7 @@ export abstract class MusicSheetDrawer {
             case TextAlignmentEnum.LeftTop:
                 break;
             case TextAlignmentEnum.LeftCenter:
-                screenPosition.y -= bitmapHeight / 2;
+                screenPosition.y -= centerAlignedTop;
                 break;
             case TextAlignmentEnum.LeftBottom:
                 screenPosition.y -= bitmapHeight;
@@ -225,7 +232,7 @@ export abstract class MusicSheetDrawer {
                 break;
             case TextAlignmentEnum.CenterCenter:
                 screenPosition.x -= bitmapWidth / 2;
-                screenPosition.y -= bitmapHeight / 2;
+                screenPosition.y -= centerAlignedTop;
                 break;
             case TextAlignmentEnum.CenterBottom:
                 screenPosition.x -= bitmapWidth / 2;
@@ -236,7 +243,7 @@ export abstract class MusicSheetDrawer {
                 break;
             case TextAlignmentEnum.RightCenter:
                 screenPosition.x -= bitmapWidth;
-                screenPosition.y -= bitmapHeight / 2;
+                screenPosition.y -= centerAlignedTop;
                 break;
             case TextAlignmentEnum.RightBottom:
                 screenPosition.x -= bitmapWidth;
