@@ -94,8 +94,6 @@ interface IMetronomePlacement {
   mark: VF.StaveTempo;
   bounds: IMetronomeBounds;
   yShift: number;
-  /** Whether the mark is where the existing layout draws it, which already reserves space for it. */
-  existingPosition: boolean;
 }
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
@@ -1604,8 +1602,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const offset: number = clearance < 0 ? clearance - this.rules.TempoYSpacing : 0;
     bounds.top += offset * unitInPixels;
     bounds.bottom += offset * unitInPixels;
-    this.metronomePlacements.push({measure, expression, mark, bounds, yShift: (yShift + offset) * unitInPixels,
-      existingPosition: atMeasureStart && offset === 0});
+    this.metronomePlacements.push({measure, expression, mark, bounds, yShift: (yShift + offset) * unitInPixels});
   }
 
   protected layoutMetronomeMarks(): void {
@@ -1651,11 +1648,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         insertionIndex++;
       }
       occupied.splice(insertionIndex, 0, bounds);
-      // A mark left at its existing position keeps the existing reservation; others reserve their drawing.
-      if (!placement.existingPosition || offset !== 0) {
-        staffLine.SkyBottomLineCalculator.updateSkyLineInRange(
-          bounds.left / unitInPixels, bounds.right / unitInPixels, bounds.top / unitInPixels);
-      }
+      // Reserve the drawing, so that what is placed after it stays clear of it, e.g. a rehearsal mark at the same
+      //   measure start (calculateRehearsalMark()), which was drawn over the mark's number.
+      staffLine.SkyBottomLineCalculator.updateSkyLineInRange(
+        bounds.left / unitInPixels, bounds.right / unitInPixels, bounds.top / unitInPixels);
     }
   }
 

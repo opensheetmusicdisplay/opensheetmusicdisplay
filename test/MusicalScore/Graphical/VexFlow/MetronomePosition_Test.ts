@@ -229,6 +229,19 @@ describe("Metronome position rendering", (): void => {
         expect(marks().length).to.equal(1);
     });
 
+    it("lifts a rehearsal mark at the same measure start above the mark", async (): Promise<void> => {
+        // the mark is raised over the tempo text, to where the rehearsal mark is drawn by default: its box covered the number
+        await osmd.load(score(`<direction placement="above"><direction-type><rehearsal>A</rehearsal></direction-type></direction>
+            <direction placement="above"><direction-type><words>Allegro</words></direction-type><sound tempo="120"/></direction>` +
+            bpm(120) + note("C") + note("D") + note("E") + note("F")));
+        osmd.render();
+        expect(marks().length).to.equal(1);
+        const rehearsalMark: DOMRect = inkBox(div.querySelector<SVGGraphicsElement>(".vf-stavesection"));
+        expect(rehearsalMark.right, "the marks overlap horizontally").to.be.greaterThan(marks()[0].left);
+        expect(rehearsalMark.left, "the marks overlap horizontally").to.be.lessThan(marks()[0].right);
+        expect(rehearsalMark.bottom).to.be.lessThan(marks()[0].top);
+    });
+
     it("keeps a note equation inside the right edge of its staffline", async (): Promise<void> => {
         div.style.width = "300px";
         osmd.EngravingRules.StretchLastSystemLine = true;
