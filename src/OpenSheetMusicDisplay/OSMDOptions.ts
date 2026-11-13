@@ -34,10 +34,19 @@ export interface IOSMDOptions {
     autoBeam?: boolean;
     /** Options for autoBeaming like whether to beam over rests. See AutoBeamOptions interface. */
     autoBeamOptions?: AutoBeamOptions;
-    /** Automatically resize score with canvas size. Default is true.
-     *  Listens to the window's resize events. Meanwhile, the container keeps the instance in memory: it's freed together with its
+    /** Automatically render the score again when the width of its container changes. Default is true.
+     *  true: observes the container (ResizeObserver), so the score also adapts when the container changes its width without
+     *  a window resize, e.g. next to a sidebar that opens, in a split pane, or when a hidden container (a tab, display: none)
+     *  is shown: a render() while it's hidden is skipped, and done when it gets a width. Only width changes render again,
+     *  200 ms after the last one. In a browser without ResizeObserver, this listens to the window's resize events instead.
+     *  A sheet taller than the window makes the page's scrollbar appear, which narrows the container where scrollbars
+     *  take space: this doesn't render again, the sheet stays as wide as the container was (reserve the scrollbar's
+     *  space with the CSS `scrollbar-gutter: stable` or `overflow-y: scroll` on the scrolling element to avoid that).
+     *  false: the score is only rendered when you call render(), e.g. from your own resize handling.
+     *  An automatic render replaces the drawn elements: see onRender to do something after each one.
+     *  Meanwhile, the container keeps the instance in memory: it's freed together with its
      *  container, or call osmd.dispose() when you don't need it anymore but keep the container.
-     *  Setting this to false (also during runtime) removes the listener as well.
+     *  Setting this to false (also during runtime) removes the observer or listener as well.
      */
     autoResize?: boolean;
     /** Render Backend, will be SVG if given undefined, "SVG" or "svg", otherwise Canvas. */
@@ -216,6 +225,14 @@ export interface IOSMDOptions {
     newPageFromXML?: boolean;
     /** A custom function that is executed when the xml is read, modifies it, and returns a new xml string that OSMD then parses. */
     onXMLRead?(xml: string): string;
+    /** A function that is called after each render: at the end of render() and of each batch of renderNext(). Code after
+     *  your own render() call does the same; this also covers the renders OSMD starts itself: with autoResize, when the
+     *  container's width changed, and the batches of enableIncrementalRenderingOnScroll(). A render replaces the SVG
+     *  elements, so this is the place to color them or add listeners to them again. Also osmd.OnRender.
+     *  @example
+     *  new OpenSheetMusicDisplay(container, { onRender: () => highlightSelectedNotes() });
+     */
+    onRender?(info: IRenderInfo): void;
     /** The cutoff number for rendering percussion clef stafflines as a single line. Default is 3.
      *  This is the number of different note positions on the staff (usually one per instrument), e.g. a drumset:
      *     <score-part id="P1">
@@ -340,6 +357,14 @@ export enum SkyBottomLineBatchCalculatorBackendType {
 }
 
 /** Handles [[IOSMDOptions]], e.g. returning default options with OSMDOptionsStandard() */
+/** What a render that just ended has drawn, see IOSMDOptions.onRender. */
+export interface IRenderInfo {
+    /** Whether a batch of renderNext() was drawn (incremental rendering), not a render(). */
+    incremental: boolean;
+    /** Whether all measures to render are drawn: always after render(), and after the last batch of renderNext(). */
+    done: boolean;
+}
+
 export class OSMDOptions {
     /** Returns the default options for OSMD.
      * These are e.g. used if no options are given in the [[OpenSheetMusicDisplay]] constructor.
