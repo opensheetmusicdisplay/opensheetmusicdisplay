@@ -2567,8 +2567,9 @@ export abstract class MusicSheetCalculator {
      * Calculates the dashed lines after texts (MusicXML `<dashes>`, e.g. "cresc. - - - -" or "rit. - - - -", see Dashes) for
      * the texts placed so far, unless their line is calculated already. Called after each kind of text is placed (verbal
      * dynamics, words, tempo words), so that what is placed later stays clear of the lines (they update the sky/bottom line).
-     * The line starts after its text, level with the middle of its lowercase letters, and ends before its stop position.
-     * In the systems after its text's, it goes on from the start of the staffline, placed by the sky/bottom line there.
+     * The line starts after its text, on the text's baseline (DashesYOffsetFromTextCenter), and ends before its stop position.
+     * In the systems after its text's, it goes on from the start of the staffline, placed by the sky/bottom line there,
+     * with the text again in brackets if RenderDashesContinuationText is set.
      */
     protected calculateDashedLinesAfterTexts(): void {
         if (!this.rules.RenderDashes) {
@@ -2689,7 +2690,7 @@ export abstract class MusicSheetCalculator {
         const endStaffLine: StaffLine = end.measure.ParentStaffLine;
         const isBelow: boolean = dashes.Placement === PlacementEnum.Below;
         const fontHeight: number = textLabel.Label.fontHeight;
-        // The line is level with the middle of the text's lowercase letters. It takes the vertical space of the text in the
+        // The line is on the baseline of the text (DashesYOffsetFromTextCenter). It takes the vertical space of the text in the
         //   sky/bottom line: the text's height, from yOffsetFromCenter + half a text height above the line to the rest below it.
         const yOffsetFromCenter: number = fontHeight * this.rules.DashesYOffsetFromTextCenter;
         const spaceAbove: number = fontHeight / 2 + yOffsetFromCenter;
@@ -2756,7 +2757,31 @@ export abstract class MusicSheetCalculator {
                 partY = skyBottomLineCalculator.getSkyLineMinForLabel(partStartX, partEndX) - spaceBelow;
                 skyBottomLineCalculator.updateSkyLineWithLabel(partStartX, partEndX, partY - spaceAbove);
             }
-            new GraphicalDashes(dashes, partStaffLine, new PointF2D(partStartX, partY), new PointF2D(partEndX, partY), textLabel, true);
+            // "(cresc.)": the text again in brackets, as a reminder at the start of the system (Gould, Behind Bars, p. 106)
+            let lineStartX: number = partStartX;
+            let reminderLabel: GraphicalLabel;
+            if (this.rules.RenderDashesContinuationText && !textLabel.Label.text.includes("\n")) {
+                const reminder: Label = new Label(`(${textLabel.Label.text.trim()})`, TextAlignmentEnum.LeftBottom);
+                reminder.fontStyle = textLabel.Label.fontStyle;
+                reminder.font = textLabel.Label.font;
+                reminder.fontFamily = textLabel.Label.fontFamily;
+                reminder.fontHeight = fontHeight;
+                reminder.colorDefault = textLabel.Label.colorDefault;
+                reminder.language = textLabel.Label.language;
+                reminderLabel = new GraphicalLabel(reminder, fontHeight, reminder.textAlignment, this.rules, partStaffLine.PositionAndShape);
+                reminderLabel.SVGClass = textLabel.SVGClass;
+                reminderLabel.ColorXML = textLabel.ColorXML;
+                reminderLabel.setLabelPositionAndShapeBorders();
+                // bottom-aligned: its vertical center is half a text height above its position
+                reminderLabel.PositionAndShape.RelativePosition = new PointF2D(partStartX, partY - yOffsetFromCenter + fontHeight / 2);
+                lineStartX = partStartX + reminderLabel.PositionAndShape.BorderRight + this.rules.DashesTextPadding;
+                if (partEndX - lineStartX < this.rules.DashesMinLength) {
+                    continue; // (the reminder alone would say less than no line: the text is in the system before)
+                }
+            }
+            const part: GraphicalDashes = new GraphicalDashes(
+                dashes, partStaffLine, new PointF2D(lineStartX, partY), new PointF2D(partEndX, partY), textLabel, true);
+            part.ContinuationLabel = reminderLabel;
         }
     }
 

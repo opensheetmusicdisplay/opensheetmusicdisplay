@@ -960,6 +960,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             line.SVGElement = this.backend.renderLine(start, end, color, line.Width * unitInPixels, undefined,
                 [graphicalDashes.DashLength * unitInPixels, graphicalDashes.GapLength * unitInPixels]);
             this.addSVGClass(line.SVGElement, "osmd-dashes");
+            if (graphicalDashes.ContinuationLabel) {
+                graphicalDashes.ContinuationLabel.SVGNode = this.drawLabel(graphicalDashes.ContinuationLabel, <number>GraphicalLayers.Notes);
+            }
         }
     }
 

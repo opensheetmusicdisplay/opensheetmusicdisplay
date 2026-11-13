@@ -167,6 +167,31 @@ describe("Dashes after a text (cresc. - - - -)", () => {
         expect(longCresc.Line.SVGElement, "the part's drawn group").to.equal(groups[2]);
     });
 
+    it("draws the text again in brackets after a system break with RenderDashesContinuationText", async () => {
+        const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
+        osmd.setOptions({ newSystemFromXML: true });
+        osmd.EngravingRules.RenderDashesContinuationText = true;
+        await osmd.load(TestUtils.getScore(sample));
+        osmd.render();
+        const parts: GraphicalDashes[] = drawnParts(osmd);
+        expect(parts.filter((part: GraphicalDashes): boolean => part.ContinuationLabel !== undefined).length, "one line is continued").to.equal(1);
+        const continued: GraphicalDashes = parts[3];
+        expect(continued.ContinuationLabel.Label.text).to.equal("(cresc.)");
+        const staffLineBox: BoundingBox = continued.ParentStaffLine.PositionAndShape;
+        const labelBox: BoundingBox = continued.ContinuationLabel.PositionAndShape;
+        const measure9: GraphicalMeasure = osmd.GraphicSheet.MeasureList[8][0];
+        expect(labelBox.RelativePosition.x + labelBox.BorderLeft, "the reminder starts after the clef").to.be.closeTo(
+            measure9.PositionAndShape.RelativePosition.x + measure9.beginInstructionsWidth, 1e-6);
+        expect(staffLineBox.AbsolutePosition.x + continued.Line.Start.x, "the line starts after the reminder").to.be.closeTo(
+            labelBox.AbsolutePosition.x + labelBox.BorderRight + osmd.EngravingRules.DashesTextPadding, 1e-6);
+        // the line is as far below the middle of the reminder as below the middle of the text in the system before
+        const offset: (part: GraphicalDashes, box: BoundingBox) => number = (part: GraphicalDashes, box: BoundingBox): number =>
+            part.ParentStaffLine.PositionAndShape.AbsolutePosition.y + part.Line.Start.y - (box.AbsolutePosition.y + (box.BorderTop + box.BorderBottom) / 2);
+        expect(offset(continued, labelBox), "on the reminder's baseline").to.be.closeTo(offset(parts[2], parts[2].TextLabel.PositionAndShape), 1e-6);
+        const drawnTexts: string[] = Array.from(container.querySelectorAll("g.vf-text.osmd-dynamic")).map((group: Element): string => group.textContent);
+        expect(drawnTexts, "drawn with the class of the text").to.contain("(cresc.)");
+    });
+
     it("draws no lines with RenderDashes off, and skips a start without a stop and a stop without a start", async () => {
         let osmd: OpenSheetMusicDisplay = await renderSample(undefined, false);
         expect(drawnParts(osmd).length, "no lines with RenderDashes off").to.equal(0);

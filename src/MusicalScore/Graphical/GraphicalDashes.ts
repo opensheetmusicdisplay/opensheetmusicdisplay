@@ -45,6 +45,9 @@ export class GraphicalDashes {
     public TextLabel: GraphicalLabel;
     /** Whether this part goes on from the staffline of a system before, where the text and the start of the line are. */
     public IsContinuation: boolean;
+    /** The text again in brackets before a part that goes on from a system before, e.g. "(cresc.)", as a reminder.
+     *  Undefined unless EngravingRules.RenderDashesContinuationText is set. */
+    public ContinuationLabel: GraphicalLabel;
 
     /**
      * Returns the gap length closest to the given one with which dashes of the given length exactly fill a line, so that

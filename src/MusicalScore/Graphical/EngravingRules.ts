@@ -713,9 +713,14 @@ export class EngravingRules {
     public RenderDashes: boolean;
     /** The width of the dashed line after a text (see RenderDashes), in units (1.0 = distance between two staff lines). Default 0.12. */
     public DashesLineWidth: number;
-    /** The length of a dash of the dashed line after a text (see RenderDashes), in units. Default 0.7. */
+    /** Whether a dashed line after a text (see RenderDashes) that goes on after a system break starts with the text again
+     *  in brackets there, e.g. "(cresc.) - - - -", as a reminder (Elaine Gould, Behind Bars, p. 106, calls it useful).
+     *  Default false, like RenderPedalContinuationSign: MusicXML doesn't encode the reminder, and it takes space. */
+    public RenderDashesContinuationText: boolean;
+    /** The length of a dash of the dashed line after a text (see RenderDashes), in units. Default 0.8. */
     public DashesDashLength: number;
-    /** The gap between two dashes of the dashed line after a text (see RenderDashes), in units. Default 0.9.
+    /** The gap between two dashes of the dashed line after a text (see RenderDashes), in units. Default 1.4: widely spaced
+     *  dashes (Elaine Gould, Behind Bars, p. 106), which don't look like a staff or ledger line.
      *  The gaps are widened or narrowed a little so that the line starts and ends with a whole dash. */
     public DashesGapLength: number;
     /** The distance between a text and the start of its dashed line (see RenderDashes), in units. Default 0.5. */
@@ -725,8 +730,9 @@ export class EngravingRules {
     public DashesEndPadding: number;
     /** A dashed line after a text (see RenderDashes) that is shorter than this isn't drawn. In units, default 1.5. */
     public DashesMinLength: number;
-    /** How far below the vertical center of its text a dashed line (see RenderDashes) is drawn, in text heights. Default 0.1:
-     *  about the middle of the lowercase letters, which is 0.075 text heights below the center of the text. */
+    /** How far below the vertical center of its text a dashed line (see RenderDashes) is drawn, in text heights. Default 0.28:
+     *  on the baseline of the text (as in Elaine Gould, Behind Bars, p. 106), which is 0.3 text heights below its center.
+     *  0.075 is the middle of the lowercase letters (as in MuseScore). */
     public DashesYOffsetFromTextCenter: number;
     public DynamicExpressionMaxDistance: number;
     public DynamicExpressionSpacer: number;
@@ -1305,12 +1311,13 @@ export class EngravingRules {
         this.RenderWavyLines = true;
         this.RenderDashes = true;
         this.DashesLineWidth = 0.12;
-        this.DashesDashLength = 0.7;
-        this.DashesGapLength = 0.9;
+        this.RenderDashesContinuationText = false;
+        this.DashesDashLength = 0.8;
+        this.DashesGapLength = 1.4;
         this.DashesTextPadding = 0.5;
         this.DashesEndPadding = 0.6;
         this.DashesMinLength = 1.5;
-        this.DashesYOffsetFromTextCenter = 0.1;
+        this.DashesYOffsetFromTextCenter = 0.28;
         this.ArticulationPlacementFromXML = true;
         this.BreathMarkDistance = 0.8;
         this.FingeringPosition = PlacementEnum.AboveOrBelow; // AboveOrBelow = correct bounding boxes
