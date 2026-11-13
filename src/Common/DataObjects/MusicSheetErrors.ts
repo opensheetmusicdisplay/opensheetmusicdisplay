@@ -6,6 +6,11 @@ export class MusicSheetErrors {
     private errors: string[] = [];
     private tempErrors: string[] = [];
 
+    /** The errors that don't belong to a measure, e.g. a part that was skipped. */
+    public get Errors(): string[] {
+        return this.errors;
+    }
+
     public finalizeMeasure(measureNumber: number): void {
         let list: string[] = this.measureErrors[measureNumber];
         if (!list) {

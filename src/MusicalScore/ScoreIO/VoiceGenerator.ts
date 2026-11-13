@@ -286,7 +286,7 @@ export class VoiceGenerator {
         "ReaderErrorMessages/NoteError", "Ignored erroneous Note."
       );
       this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
-      this.musicSheet.SheetErrors.pushMeasureError(err);
+      this.musicSheet.SheetErrors.pushMeasureError(err?.message ?? String(err));
     }
 
     return this.currentNote;
@@ -391,6 +391,7 @@ export class VoiceGenerator {
     let playbackInstrumentId: string = undefined;
     let noteheadShapeXml: string = undefined;
     let noteheadFilledXml: boolean = undefined; // if undefined, the final filled parameter will be calculated from duration
+    let invalidStepElement: IXmlElement = undefined;
 
     const xmlnodeElementsArr: IXmlElement[] = node.elements();
     for (let idx: number = 0, len: number = xmlnodeElementsArr.length; idx < len; ++idx) {
@@ -404,14 +405,11 @@ export class VoiceGenerator {
             noteheadFilledXml = undefined;
             try {
               if (pitchElement.name === "step") {
-                noteStep = NoteEnum[pitchElement.value];
-                if (noteStep === undefined) { // don't replace undefined check
-                  const errorMsg: string = ITextTranslation.translateText(
-                    "ReaderErrorMessages/NotePitchError",
-                    "Invalid pitch while reading note."
-                  );
-                  this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
-                  throw new MusicSheetReadingException(errorMsg, undefined);
+                const step: NoteEnum = this.readStep(pitchElement);
+                if (step === undefined) { // don't replace undefined check
+                  invalidStepElement = pitchElement; // the note is left out, see below
+                } else {
+                  noteStep = step;
                 }
               } else if (pitchElement.name === "alter") {
                 noteAlter = parseFloat(pitchElement.value);
@@ -478,7 +476,12 @@ export class VoiceGenerator {
             }
           }
           if (displayStepElement) {
-            noteStep = NoteEnum[displayStepElement.value.toUpperCase()];
+            const step: NoteEnum = this.readStep(displayStepElement);
+            if (step === undefined) {
+              invalidStepElement = displayStepElement; // the note is left out, see below
+              continue;
+            }
+            noteStep = step;
             let octaveShift: number = 0;
             let noteValueShift: number = this.musicSheet.Rules.PercussionXMLDisplayStepNoteValueShift;
             if (stafflineCount === 1) {
@@ -506,6 +509,11 @@ export class VoiceGenerator {
       }
     }
 
+    if (invalidStepElement) {
+      // No note without a step (a note of any other step would be a guess, and one without can't be drawn):
+      //   read() leaves the note out and adds the message to the measure's errors.
+      throw this.createInvalidStepError(invalidStepElement);
+    }
     noteOctave -= Pitch.OctaveXmlDifference;
     const pitch: Pitch = new Pitch(noteStep, noteOctave, noteAccidental, accidentalValue);
     const noteLength: Fraction = Fraction.createFromFraction(noteDuration);
@@ -604,9 +612,16 @@ export class VoiceGenerator {
     let displayOctave: number;
     let pitch: Pitch = undefined;
     if (displayStepElement && octaveElement) {
-        displayStep = NoteEnum[displayStepElement.value.toUpperCase()];
-        displayOctave = parseInt(octaveElement.value, 10);
-        pitch = new Pitch(displayStep, displayOctave, AccidentalEnum.NONE, undefined, true);
+        displayStep = this.readStep(displayStepElement);
+        if (displayStep === undefined) {
+          // the rest stays, at its default position
+          const error: Error = this.createInvalidStepError(displayStepElement, "The rest is at its default position.");
+          log.warn(error.message);
+          this.musicSheet.SheetErrors.pushMeasureError(error.message);
+        } else {
+          displayOctave = parseInt(octaveElement.value, 10);
+          pitch = new Pitch(displayStep, displayOctave, AccidentalEnum.NONE, undefined, true);
+        }
     }
     const restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, pitch, this.currentMeasure, true);
     this.addNoteInfo(restNote, noteTypeXml, printObject, isCueNote, normalNotes, displayStep, displayOctave, noteheadColorXml, noteheadColorXml);
@@ -617,6 +632,31 @@ export class VoiceGenerator {
       this.openBeams.last().ExtendedNoteList.push(restNote);
     }
     return restNote;
+  }
+
+  /**
+   * Returns the step of a <step> or <display-step> element, or undefined if its value isn't one of A to G (in upper or
+   * lower case). Not NoteEnum[value]: that is also defined for "toString" (an object's method) and for "0" (the name "C").
+   */
+  private readStep(stepElement: IXmlElement): NoteEnum {
+    const step: string = stepElement.value?.trim().toUpperCase();
+    return step?.length === 1 && "CDEFGAB".includes(step) ? NoteEnum[step as keyof typeof NoteEnum] : undefined;
+  }
+
+  /**
+   * Creates the error for a <step> or <display-step> element that readStep() can't read. Its message names the measure, the
+   * part and the value, like InstrumentReader's warnings for a skipped element, e.g.
+   * 'Measure 12 of part "Flute" (P1): invalid step "H", a step is one of A to G. The note is left out.'
+   * @param consequence what the reader does about it, appended to the message
+   */
+  private createInvalidStepError(stepElement: IXmlElement, consequence: string = "The note is left out."): MusicSheetReadingException {
+    const instrument: Instrument = this.voice.Parent;
+    // the measure's number in the file, or its position if that isn't read (the measure is added to the sheet after it's read)
+    const measureNumber: string = this.currentMeasure.MeasureNumberXML?.toString() ?? `at position ${this.musicSheet.SourceMeasures.length + 1}`;
+    return new MusicSheetReadingException(
+      `Measure ${measureNumber} of part "${instrument.Name}" (${instrument.IdString}): ` +
+      `invalid ${stepElement.name} "${stepElement.value}", a step is one of A to G. ${consequence}`
+    );
   }
 
   // common for "normal" notes and rest notes
@@ -785,8 +825,8 @@ export class VoiceGenerator {
           for (let idx: number = 0, len: number = nextStaffEntry.VoiceEntries.length; idx < len; ++idx) {
             const voiceEntry: VoiceEntry = nextStaffEntry.VoiceEntries[idx];
             if (voiceEntry.ParentVoice === this.voice) {
-              const candidateNote: Note = voiceEntry.Notes[0];
-              if (candidateNote.Length.lte(new Fraction(1, 8))) {
+              const candidateNote: Note = voiceEntry.Notes[0]; // undefined if the entry's note was left out as erroneous
+              if (candidateNote?.Length.lte(new Fraction(1, 8))) {
                 this.openBeams.last().addNoteToBeam(candidateNote);
                 this.endBeam();
               } else {

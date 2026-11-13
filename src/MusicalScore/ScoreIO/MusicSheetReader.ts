@@ -93,8 +93,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             return this._createMusicSheet(root, path);
         } catch (e) {
             log.error("MusicSheetReader.CreateMusicSheet", e);
-            // (OSMD's own exceptions like MusicSheetReadingException have a message, but aren't instances of Error)
-            this.readingError = typeof e?.message === "string" ? e : new Error(String(e));
+            this.readingError = e instanceof Error ? e : new Error(String(e));
             return undefined;
         }
     }
@@ -384,6 +383,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
     private initializeReading(partList: IXmlElement[], partInst: IXmlElement[], instrumentReaders: InstrumentReader[]): void {
         const instrumentDict: { [_: string]: Instrument } = this.createInstrumentGroups(partList);
+        partInst = this.getPartsOfPartList(partInst, instrumentDict);
         this.completeNumberOfStaves = this.getCompleteNumberOfStavesFromXml(partInst);
         if (partInst.length !== 0) {
             this.repetitionInstructionReader.MusicSheet = this.musicSheet;
@@ -417,6 +417,47 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 counter++;
             }
         }
+    }
+
+    /**
+     * Returns the parts that can be read: those whose id is the id of a score-part of the part-list, which gives a part its
+     * instrument (name, group, sounds). Another part is skipped, with a warning and an entry in the sheet's errors: the
+     * other parts are still shown.
+     * Throws if a score-part of the part-list has no part: the sheet's instruments are the score-parts, and one without
+     * staves can't be laid out. The message names the skipped parts too, e.g. for a part id with a typo.
+     * @param instrumentDict the instruments of the part-list by their score-part's id
+     */
+    private getPartsOfPartList(partInst: IXmlElement[], instrumentDict: { [_: string]: Instrument }): IXmlElement[] {
+        const isScorePartId: (id: string) => boolean = (id: string): boolean => {
+            return id !== undefined && Object.prototype.hasOwnProperty.call(instrumentDict, id); // (not "toString" etc.)
+        };
+        const parts: IXmlElement[] = [];
+        const skippedParts: string[] = [];
+        const readIds: { [_: string]: boolean } = {};
+        for (const part of partInst) {
+            const id: string = part.attribute("id")?.value;
+            if (isScorePartId(id)) {
+                parts.push(part);
+                readIds[id] = true;
+            } else {
+                skippedParts.push(id === undefined ? "a part without an id" : `the part "${id}"`);
+            }
+        }
+        const skippedText: string = skippedParts.join(", ");
+        const scorePartsWithoutPart: string[] = Object.keys(instrumentDict).filter((id: string): boolean => !readIds[id]);
+        if (scorePartsWithoutPart.length > 0) {
+            let errorMsg: string = `No part for the score-part "${scorePartsWithoutPart.join('", "')}" of the part-list`;
+            if (skippedParts.length > 0) {
+                errorMsg += `, and no score-part in the part-list for ${skippedText}`;
+            }
+            throw new MusicSheetReadingException(errorMsg);
+        }
+        if (skippedParts.length > 0) {
+            const errorMsg: string = `Skipped ${skippedText}: the part-list has no score-part for it.`;
+            log.warn("[OSMD] MusicSheetReader: " + errorMsg);
+            this.musicSheet.SheetErrors.push(errorMsg);
+        }
+        return parts;
     }
 
     /**
@@ -1227,6 +1268,17 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         const entryArray: IXmlElement[] = this.orderPartGroupsByNesting(entryList);
         // The reader builds a nesting tree; crossing numbered groups cannot be named reliably.
         const canAssignGroupNames: boolean = this.groupNumbersAreProperlyNested(entryArray);
+        // Two score-parts with the same id: a part with that id could belong to either, and the second instrument would have no staves.
+        const scorePartIds: { [_: string]: boolean } = {};
+        for (const entry of entryArray) {
+            const scorePartId: string = entry.name === "score-part" ? entry.attribute("id")?.value : undefined;
+            if (scorePartId !== undefined) {
+                if (Object.prototype.hasOwnProperty.call(scorePartIds, scorePartId)) {
+                    throw new MusicSheetReadingException(`The part-list has more than one score-part with the id "${scorePartId}"`);
+                }
+                scorePartIds[scorePartId] = true;
+            }
+        }
         try {
             for (let idx: number = 0, len: number = entryArray.length; idx < len; ++idx) {
                 const node: IXmlElement = entryArray[idx];

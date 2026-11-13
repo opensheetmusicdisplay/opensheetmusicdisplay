@@ -14,7 +14,8 @@ import { Voice } from "../../../src/MusicalScore/VoiceData/Voice";
 import { GraphicalStaffEntry } from "../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
 import { GraphicalNote } from "../../../src/MusicalScore/Graphical/GraphicalNote";
 import { Fraction } from "../../../src/Common/DataObjects/Fraction";
-import { AccidentalEnum, Pitch } from "../../../src/Common/DataObjects/Pitch";
+import { AccidentalEnum, NoteEnum, Pitch } from "../../../src/Common/DataObjects/Pitch";
+import { VerticalSourceStaffEntryContainer } from "../../../src/MusicalScore/VoiceData/VerticalSourceStaffEntryContainer";
 
 describe("OpenSheetMusicDisplay Main Export", () => {
     let container1: HTMLElement;
@@ -275,17 +276,77 @@ describe("OpenSheetMusicDisplay Main Export", () => {
             expect(await loadOutcome(validOsmd, validXml), "the same score without the error").to.equal("resolved");
         });
 
-        it("an error while creating the graphic of an XML string or Document is a rejection, not a throw", async () => {
-            const badStepXml: string = validXml.replace("<step>C</step>", "<step>toString</step>"); // (no pitch of that name)
+        it("an error while creating the graphic of an XML string or Document is a rejection, not a throw, and leaves no sheet", async () => {
             const contents: [string, string | Document | Blob][] = [
-                ["string", badStepXml],
-                ["Document", new DOMParser().parseFromString(badStepXml, "application/xml")],
-                ["Blob", new Blob([badStepXml])],
+                ["string", validXml],
+                ["Document", new DOMParser().parseFromString(validXml, "application/xml")],
+                ["Blob", new Blob([validXml])],
             ];
             for (const [name, content] of contents) {
                 const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
-                expect(await loadOutcome(osmd, content), name).to.match(/^rejected: /);
+                osmd.updateGraphic = (): void => { throw new Error("no graphic"); };
+                expect(await loadOutcome(osmd, content), name).to.equal("rejected: no graphic");
+                expect(osmd.Sheet, name + ": no sheet without a graphic").to.equal(undefined);
+                expect(osmd.GraphicSheet, name + ": graphic").to.equal(undefined);
             }
+        });
+
+        it("a note whose pitch step isn't one of A to G is left out, with an error that names the value, the measure and the part", async () => {
+            // "toString": NoteEnum["toString"] is defined (an object's method), so a lookup in the enum doesn't find it invalid
+            const badStepXml: string = validXml.replace(/<note>.*<\/note>/,
+                "<note><pitch><step>toString</step><octave>4</octave></pitch><duration>2</duration><type>half</type></note>" +
+                "<note><pitch><step>d</step><octave>4</octave></pitch><duration>2</duration><type>half</type></note>");
+            const stepError: string = 'Measure 1 of part "Flute" (P1): invalid step "toString", a step is one of A to G. The note is left out.';
+            const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+            const logged: string[] = TestUtils.catchLogs();
+            expect(await loadOutcome(osmd, badStepXml)).to.equal("resolved");
+            osmd.render();
+            expect(logged).to.deep.equal(["MusicSheetReadingException: " + stepError]);
+            expect(osmd.Sheet.SheetErrors.measureErrors[1], "the measure's errors").to.deep.equal(["Ignored erroneous Note.", stepError]);
+            // the other note stays where it is, on the measure's second half (its step is read in lower case too)
+            const noteTimes: string[] = osmd.Sheet.SourceMeasures[0].VerticalSourceStaffEntryContainers.map(
+                (container: VerticalSourceStaffEntryContainer): string => {
+                    const notes: Note[] = container.StaffEntries[0].VoiceEntries[0].Notes;
+                    return `${container.Timestamp.RealValue}: ${notes.map((note: Note): string => NoteEnum[note.Pitch.FundamentalNote]).join()}`;
+                });
+            expect(noteTimes).to.deep.equal(["0.5: D"]);
+        });
+
+        it("a note without divisions whose duration isn't a number is skipped with a warning, instead of load() never returning", async () => {
+            const noDivisionsXml: string = validXml.replace("<attributes><divisions>1</divisions></attributes>", "")
+                .replace("<duration>4</duration>", "<duration>x</duration>");
+            const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+            const logged: string[] = TestUtils.catchLogs();
+            expect(await loadOutcome(osmd, noDivisionsXml)).to.equal("resolved");
+            expect(logged).to.deep.equal(['[OSMD] Measure 1 of part "Flute" (P1): skipped the <note> element (element 1 of the measure), ' +
+                "which could not be read: Invalid divisions value at Instrument: Flute"]);
+        });
+
+        it("a part that isn't in the part-list is skipped with a warning, a score-part without a part or with another's id is rejected by name", async () => {
+            const otherPart: string = `<part id="P2"><measure number="1"><attributes><divisions>1</divisions></attributes>
+                <note><pitch><step>E</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note></measure></part>`;
+            const skipped: string = 'Skipped the part "P2": the part-list has no score-part for it.';
+            const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+            const logged: string[] = TestUtils.catchLogs();
+            expect(await loadOutcome(osmd, validXml.replace("</score-partwise>", otherPart + "</score-partwise>"))).to.equal("resolved");
+            osmd.render();
+            expect(osmd.Sheet.Instruments.map((instrument: Instrument): string => instrument.Name), "parts").to.deep.equal(["Flute"]);
+            expect(osmd.Sheet.SheetErrors.Errors, "the sheet's errors").to.deep.equal([skipped]);
+            expect(logged).to.deep.equal(["[OSMD] MusicSheetReader: " + skipped]);
+
+            // the only part has another id than its score-part (e.g. a typo): nothing to show
+            let error: Error & { cause?: Error };
+            await osmd.load(validXml.replace('<part id="P1">', '<part id="P9">')).catch((e: Error): void => { error = e; });
+            const reason: string = 'No part for the score-part "P1" of the part-list, and no score-part in the part-list for the part "P9"';
+            expect(error?.message).to.equal("OpenSheetMusicDisplay: The given music sheet was incomplete or could not be loaded: " + reason);
+            // the reader's exceptions are Errors
+            expect(error.cause instanceof Error && error.cause.stack !== undefined, "the cause is an Error with a stack").to.equal(true);
+            expect(String(error.cause)).to.equal("MusicSheetReadingException: " + reason);
+
+            // two score-parts with the same id: the part could belong to either
+            const sameIdXml: string = validXml.replace("</part-list>", '<score-part id="P1"><part-name>Oboe</part-name></score-part></part-list>');
+            expect(await loadOutcome(osmd, sameIdXml)).to.equal("rejected: OpenSheetMusicDisplay: The given music sheet was incomplete " +
+                'or could not be loaded: The part-list has more than one score-part with the id "P1"');
         });
 
         it("an error of the reader is passed on in the rejection, as message and cause", async () => {
