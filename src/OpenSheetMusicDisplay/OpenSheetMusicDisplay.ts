@@ -83,6 +83,7 @@ export class OpenSheetMusicDisplay {
     public get Cursor(): Cursor {
         return this.cursor;
     }
+    /** The scale of the drawing, 1.0 by default: see Zoom, which sets it. */
     public zoom: number = 1.0;
     protected zoomUpdated: boolean = false;
     /** Timeout in milliseconds used in osmd.load(string) when string is a URL. */
@@ -166,6 +167,7 @@ export class OpenSheetMusicDisplay {
      *   what a Blob, an MXL file or the requested URL contains is never requested, it has to be MusicXML (or MXL).
      * @param tempTitle is used as the title for the piece if there is no title in the XML.
      *   The name or path of a MusicXML file (e.g. "scores/Sonata No. 1.musicxml") is used without its folder and extension.
+     *   (The options, the EngravingRules and the zoom, osmd.Zoom, stay as they are set when a score is loaded.)
      * @returns a promise that is rejected with an Error when the score can't be loaded, for every kind of content:
      *   e.g. for malformed XML (the message has the XML parser's line and column), for a file that isn't MusicXML or MXL,
      *   or when reading the score fails (the Error's `cause` is then the reader's error). load() itself doesn't throw.
@@ -2193,8 +2195,8 @@ export class OpenSheetMusicDisplay {
     }
 
     /**
-     * Initialize this object to default values
-     * FIXME: Probably unnecessary
+     * Releases the loaded sheet and its graphic, and ends incremental rendering: for load(), before it reads the new sheet,
+     * and for clear(). The settings stay: the options, the EngravingRules and the zoom.
      */
     protected reset(): void {
         this.resetIncrementalRendering(); // abandon any incremental session
@@ -2205,7 +2207,6 @@ export class OpenSheetMusicDisplay {
         }
         this.sheet = undefined;
         this.graphic = undefined;
-        this.zoom = 1.0;
         this.rules.RenderCount = 0;
         this.layoutContainerWidth = undefined; // no layout: the container's observer doesn't render a sheet before the app does
     }
@@ -2588,6 +2589,10 @@ export class OpenSheetMusicDisplay {
         this.autoResizeEnabled = value;
     }
 
+    /** The scale of the drawing: 1.0 by default, e.g. 0.5 draws the sheet at half the size, with more measures per system.
+     *  Call render() after setting it. Like the options, it stays set when another score is loaded (load()) and over
+     *  clear(), so it can also be set before the first load(). (Up to OSMD 2.3.1, load() and clear() set it back to 1.0.)
+     */
     public get Zoom(): number {
         return this.zoom;
     }
