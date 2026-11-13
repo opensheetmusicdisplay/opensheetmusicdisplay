@@ -189,7 +189,8 @@ export class OpenSheetMusicDisplay {
         if (typeof AbortController === "function") {
             this.loadAbortController = new AbortController();
         }
-        return this.continueLoad(content, tempTitle, generation).catch((error: Error) => {
+        // the app's own string, so it can be a URL
+        return this.continueLoad(content, { tempTitle, generation, isFileContent: false }).catch((error: Error) => {
             // e.g. the aborted request's error
             throw generation === this.loadGeneration ? error : this.createSupersededLoadError();
         });
@@ -220,18 +221,15 @@ export class OpenSheetMusicDisplay {
 
     /**
      * A step of load(): the first one, and each one that follows an asynchronous one (a request, unzipping, reading a Blob).
-     * @param generation the number of the load() the step belongs to (see loadGeneration)
-     * @param isFileContent whether a string `content` was read from a file (a Blob, an MXL archive, a URL's response)
-     *   instead of given by the app: then it is never taken as a URL (see loadContent())
+     * @param loadState what the steps of one load() pass along, with `isFileContent` set for the given content
      * @returns a promise that is rejected when the load() was superseded meanwhile, or when loadContent() throws or rejects
      */
-    private continueLoad(content: string | Document | Blob, tempTitle: string, generation: number,
-                         isFileContent: boolean = false): Promise<{}> {
-        if (generation !== this.loadGeneration) {
+    private continueLoad(content: string | Document | Blob, loadState: ILoadState): Promise<{}> {
+        if (loadState.generation !== this.loadGeneration) {
             return Promise.reject(this.createSupersededLoadError());
         }
         try {
-            return this.loadContent(content, tempTitle, generation, isFileContent);
+            return this.loadContent(content, loadState);
         } catch (error) {
             // string and Document content is read synchronously: without this, its errors would be thrown instead of rejected
             return Promise.reject(error);
@@ -240,13 +238,15 @@ export class OpenSheetMusicDisplay {
 
     /** Does the work of a step of load() (see continueLoad()). Can throw as well as reject: continueLoad() turns both into
      *  a rejected promise.
-     *  Only the string the app gave to load() can be a URL. A string that was read from a file (`isFileContent`: the text
+     *  Only the string the app gave to load() can be a URL. A string that was read from a file (`loadState.isFileContent`: the text
      *  of a Blob, of an MXL archive's score file or of a URL's response) has to be XML or MXL and is rejected otherwise:
      *  if it were requested as a URL too, a file that a user picks could make the page send a request of the file's
      *  choice to the app's own server (with the user's cookies), and a URL whose response is a URL would be followed. */
-    private loadContent(content: string | Document | Blob, tempTitle: string, generation: number, isFileContent: boolean): Promise<{}> {
+    private loadContent(content: string | Document | Blob, loadState: ILoadState): Promise<{}> {
         this.reset();
         const self: OpenSheetMusicDisplay = this;
+        /** For the steps that continue with what a file contains (a Blob, an MXL archive, a URL's response). */
+        const fileContentState: ILoadState = { ...loadState, isFileContent: true };
         /** The XML string that `content` was parsed from, if it was given as a string. */
         let parsedXml: string;
         if (content instanceof Blob) {
@@ -256,7 +256,7 @@ export class OpenSheetMusicDisplay {
                 if (mxlFile.unzipSuccessful) {
                     return mxlFile.getXmlString().then(
                         (xmlString) => {
-                            return self.continueLoad(xmlString, tempTitle, generation, true);
+                            return self.continueLoad(xmlString, fileContentState);
                         },
                         (err: Error) => {
                             throw this.createError("OpenSheetMusicDisplay: Invalid MXL file", err);
@@ -266,7 +266,7 @@ export class OpenSheetMusicDisplay {
                     // not a zip
                     if (content instanceof Blob) { // always true. unfortunately need to check again for linter
                         return content.text().then((blobString) => {
-                            return self.continueLoad(blobString, tempTitle, generation, true);
+                            return self.continueLoad(blobString, fileContentState);
                         });
                     }
                 }
@@ -279,7 +279,7 @@ export class OpenSheetMusicDisplay {
                 // This is a zip file, unpack it first
                 return MXLHelper.MXLtoXMLstring(str).then(
                     (x: string) => {
-                        return self.continueLoad(x, tempTitle, generation, true);
+                        return self.continueLoad(x, fileContentState);
                     },
                     (err: Error) => {
                         log.debug(err);
@@ -291,7 +291,7 @@ export class OpenSheetMusicDisplay {
             if (str.startsWith("\uf7ef\uf7bb\uf7bf")) {
                 log.debug("[OSMD] UTF with BOM detected, truncate first 3 bytes and pass along: " + str);
                 // UTF with BOM detected, truncate first three bytes and pass along
-                return self.continueLoad(str.substring(3), tempTitle, generation, isFileContent);
+                return self.continueLoad(str.substring(3), loadState); // (the same content)
             }
             let trimmedStr: string = str;
             if (/^\s/.test(trimmedStr)) { // only trim if we need to. (end of string is irrelevant)
@@ -307,7 +307,7 @@ export class OpenSheetMusicDisplay {
                 // (without the white space between the elements: fewer nodes to parse, see removeWhitespaceBetweenElements())
                 content = parser.parseFromString(removeWhitespaceBetweenElements(modifiedXml), "application/xml");
                 parsedXml = modifiedXml;
-            } else if (isFileContent) {
+            } else if (loadState.isFileContent) {
                 return Promise.reject(new Error("OpenSheetMusicDisplay: The file is not MusicXML: " + (trimmedStr.length === 0 ?
                     "it is empty" : `it starts with ${JSON.stringify(trimmedStr.substring(0, 20))} instead of "<"`)));
             } else if (trimmedStr.length < 2083) {
@@ -316,7 +316,7 @@ export class OpenSheetMusicDisplay {
                 //   2083 characters were the limit of Internet Explorer's URLs.
                 log.debug("[OSMD] Retrieve the file at the given URL: " + trimmedStr);
                 return AJAX.ajax(trimmedStr, this.loadUrlTimeout, this.loadAbortController?.signal).then(
-                    (s: string) => { return self.continueLoad(s, tempTitle, generation, true); },
+                    (s: string) => { return self.continueLoad(s, fileContentState); },
                     (exc: Error) => { throw exc; }
                 );
             } else {
@@ -357,7 +357,7 @@ export class OpenSheetMusicDisplay {
         const score: IXmlElement = new IXmlElement(scorePartwiseElement);
         const temposCalculator: TemposCalculator = new TemposCalculator();
         const reader: MusicSheetReader = new MusicSheetReader([temposCalculator], this.rules);
-        this.sheet = reader.createMusicSheet(score, tempTitle);
+        this.sheet = reader.createMusicSheet(score, loadState.tempTitle);
         if (this.sheet === undefined) {
             // error loading sheet, already logged by the reader
             return Promise.reject(this.createError(
@@ -2630,6 +2630,18 @@ export class OpenSheetMusicDisplay {
         return this.version;
     }
     //#endregion
+}
+
+/** What the steps of one load() pass along (see OpenSheetMusicDisplay.continueLoad()). Every field is required, so that
+ *  no step can leave out isFileContent, whose missing value would allow a request. */
+interface ILoadState {
+    /** load()'s tempTitle: the title for a score without one. */
+    tempTitle: string;
+    /** The number of the load() the steps belong to (see OpenSheetMusicDisplay.loadGeneration). */
+    generation: number;
+    /** Whether a string content was read from a file (a Blob, an MXL archive, a URL's response) instead of given by the
+     *  app: then it is never taken as a URL (see OpenSheetMusicDisplay.loadContent()). */
+    isFileContent: boolean;
 }
 
 /** Options for {@link OpenSheetMusicDisplay.renderNext} (incremental, "system by system" rendering). */
