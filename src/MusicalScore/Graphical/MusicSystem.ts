@@ -183,7 +183,10 @@ export abstract class MusicSystem extends GraphicalObject {
         const staffLineRelative: PointF2D = new PointF2D(staffLine.PositionAndShape.RelativePosition.x,
                                                          staffLine.PositionAndShape.RelativePosition.y);
         const staves: Staff[] = staffLine.ParentStaff.ParentInstrument.Staves;
-        if (staffLine.ParentStaff === staves[0]) {
+        // the line is created once per instrument, from its top staff line down to its bottom one. A hidden staff has no
+        //   staff line, so with the first staff hidden (e.g. "left hand only") the top one is the first visible staff's.
+        const topStaff: Staff = staves.find((staff: Staff) => staff?.Visible);
+        if (staffLine.ParentStaff === topStaff) {
             let bottomMeasure: GraphicalMeasure = undefined;
             if (staves.length > 1) {
                 bottomMeasure = this.getBottomStaffLine(staffLine).Measures[measureIndex];
