@@ -343,6 +343,20 @@ export class Cursor {
     }
   }
 
+  /**
+   * Takes over the image that another cursor has drawn, e.g. the cursor that this one replaces after a re-render.
+   * This cursor then only draws an image of its own if it would look different (see cursorImageOutdated()):
+   * drawing and encoding the image takes about as long as rendering a few measures.
+   */
+  public useImageOf(otherCursor: Cursor): void {
+    if (!otherCursor.cursorOptionsRendered) {
+      return; // it hasn't drawn one
+    }
+    this.cursorElement.src = otherCursor.cursorElement.src;
+    this.cursorOptionsRendered = otherCursor.cursorOptionsRendered;
+    this.cursorWidthRendered = otherCursor.cursorWidthRendered;
+  }
+
   /** Whether updateStyle() would draw a different image than the current one.
    *  The image only depends on the type, color and alpha options, and for the standard cursor's gradient on the width
    *  (a solid color image is a single pixel, stretched to the width).

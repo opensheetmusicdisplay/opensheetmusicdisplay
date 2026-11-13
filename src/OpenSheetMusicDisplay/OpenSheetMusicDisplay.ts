@@ -2063,7 +2063,11 @@ export class OpenSheetMusicDisplay {
                 }
                 // create new cursor
                 if (backendToDrawOn && backendToDrawOn.getRenderElement()) {
+                    const previousCursor: Cursor = this.cursors[i];
                     this.cursors[i] = new Cursor(backendToDrawOn.getRenderElement(), this, this.cursorsOptions[i]);
+                    if (previousCursor) {
+                        this.cursors[i].useImageOf(previousCursor); // usually the same image: no need to draw it again
+                    }
                 }
                 if (this.sheet && this.graphic && this.cursors[i]) { // else init is called in load()
                     this.cursors[i].init(this.sheet.MusicPartManager, this.graphic);
