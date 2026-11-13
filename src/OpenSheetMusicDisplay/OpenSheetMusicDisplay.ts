@@ -67,11 +67,13 @@ export class OpenSheetMusicDisplay {
             throw new Error("Please pass a valid div container to OpenSheetMusicDisplay");
         }
 
-        if (options.autoResize === undefined) {
-            options.autoResize = true;
+        // a copy: the object given isn't changed (it can be frozen, or used for another instance). Also for null as options.
+        const optionsWithDefaults: IOSMDOptions = { ...options };
+        if (optionsWithDefaults.autoResize === undefined) {
+            optionsWithDefaults.autoResize = true;
         }
         this.backendType = BackendType.SVG; // default, can be changed by options
-        this.setOptions(options);
+        this.setOptions(optionsWithDefaults);
     }
 
     /** Options from which OSMD creates cursors in enableOrDisableCursors(). */
@@ -1843,15 +1845,18 @@ export class OpenSheetMusicDisplay {
     /** Set OSMD rendering options using an IOSMDOptions object.
      *  Can be called during runtime. Also called by constructor.
      *  For example, setOptions({autoResize: false}) will disable autoResize even during runtime.
+     *  An option that is given is applied, also when it turns something back on (e.g. drawFingerings: true after false);
+     *  an option that is left out (or undefined) keeps its value. The options object isn't changed.
+     *  Without an options object (undefined or null), this does nothing but warn.
      */
     public setOptions(options: IOSMDOptions): void {
         if (!this.rules) {
             this.rules = new EngravingRules();
         }
-        if (!this.drawingParameters && !options.drawingParameters) {
+        if (!this.drawingParameters && !options?.drawingParameters) {
             this.drawingParameters = new DrawingParameters(DrawingParametersEnum.default, this.rules);
             // if "default", will be created below
-        } else if (options.drawingParameters) {
+        } else if (options?.drawingParameters) {
             if (!this.drawingParameters) {
                 this.drawingParameters = new DrawingParameters(DrawingParametersEnum[options.drawingParameters], this.rules);
             } else {
@@ -1886,8 +1891,8 @@ export class OpenSheetMusicDisplay {
         if (options.autoBeam !== undefined) { // only change an option if it was given in options, otherwise it will be undefined
             this.rules.AutoBeamNotes = options.autoBeam;
         }
-        const autoBeamOptions: AutoBeamOptions = options.autoBeamOptions;
-        if (autoBeamOptions) {
+        if (options.autoBeamOptions) {
+            const autoBeamOptions: AutoBeamOptions = { ...options.autoBeamOptions }; // a copy: the object given isn't changed
             if (autoBeamOptions.maintain_stem_directions === undefined) {
                 autoBeamOptions.maintain_stem_directions = false;
             }
@@ -1919,8 +1924,8 @@ export class OpenSheetMusicDisplay {
         if (options.colorStemsLikeNoteheads !== undefined) {
             this.rules.ColorStemsLikeNoteheads = options.colorStemsLikeNoteheads;
         }
-        if (options.disableCursor) {
-            this.drawingParameters.drawCursors = false;
+        if (options.disableCursor !== undefined) {
+            this.drawingParameters.drawCursors = !options.disableCursor; // false draws the cursors again, from the next render()
         }
 
         // alternative to if block: this.drawingsParameters.drawCursors = options.drawCursors !== false. No if, but always sets drawingParameters.
@@ -1960,8 +1965,8 @@ export class OpenSheetMusicDisplay {
         if (options.drawPartAbbreviations !== undefined) {
             this.rules.RenderPartAbbreviations = options.drawPartAbbreviations;
         }
-        if (options.drawFingerings === false) {
-            this.rules.RenderFingerings = false;
+        if (options.drawFingerings !== undefined) {
+            this.rules.RenderFingerings = options.drawFingerings;
         }
         if (options.drawMeasureNumbers !== undefined) {
             this.rules.RenderMeasureNumbers = options.drawMeasureNumbers;
@@ -2041,7 +2046,7 @@ export class OpenSheetMusicDisplay {
         if (options.defaultFontFamily) {
             this.rules.DefaultFontFamily = options.defaultFontFamily; // default "Times New Roman", also used if font family not found
         }
-        if (options.defaultFontStyle) {
+        if (options.defaultFontStyle !== undefined) { // FontStyles.Regular is 0
             this.rules.DefaultFontStyle = options.defaultFontStyle; // e.g. FontStyles.Bold
         }
         if (options.drawUpToMeasureNumber >= 0) {
@@ -2055,11 +2060,11 @@ export class OpenSheetMusicDisplay {
             //   depending on which measure you start rendering from (measure 2 for example, instead of 0),
             //   so it is currently useful to store this option value separately from the index, to readjust the index.
         }
-        if (options.drawUpToPageNumber) {
-            this.rules.MaxPageToDrawNumber = options.drawUpToPageNumber;
+        if (options.drawUpToPageNumber >= 0) { // not if undefined
+            this.rules.MaxPageToDrawNumber = options.drawUpToPageNumber || Number.MAX_VALUE; // 0: no limit
         }
-        if (options.drawUpToSystemNumber) {
-            this.rules.MaxSystemToDrawNumber = options.drawUpToSystemNumber;
+        if (options.drawUpToSystemNumber >= 0) {
+            this.rules.MaxSystemToDrawNumber = options.drawUpToSystemNumber || Number.MAX_VALUE; // 0: no limit
         }
         if (options.tupletsRatioed !== undefined) {
             this.rules.TupletsRatioed = options.tupletsRatioed;
