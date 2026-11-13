@@ -1383,9 +1383,8 @@ export abstract class MusicSheetCalculator {
                 this.calculateMeasureNumberPlacement(musicSystem);
             }
         }
-        if (this.rules.RenderFingerings) {
-            this.calculateFingerings(); // if this is done after slurs, fingerings can be on top of slurs
-        }
+        // also without RenderFingerings: removes the fingerings of the layout before
+        this.calculateFingerings(); // if this is done after slurs, fingerings can be on top of slurs
         // calculate Slurs
         if (!this.leadSheet && this.rules.RenderSlurs) {
             this.calculateSlurs();
@@ -4143,10 +4142,26 @@ export abstract class MusicSheetCalculator {
         return placement;
     }
 
+    /**
+     * Creates the labels of the fingerings above or below the notes (GraphicalStaffEntry.FingeringEntries), or removes
+     * the ones of the layout before when they aren't drawn anymore (EngravingRules.RenderFingerings off, e.g. by
+     * osmd.setOptions({drawFingerings: false}) after a render), or are drawn left or right of the notes instead.
+     */
     public calculateFingerings(): void {
-        if (this.rules.FingeringPosition === PlacementEnum.Left ||
+        if (!this.rules.RenderFingerings || this.rules.FingeringPosition === PlacementEnum.Left ||
             this.rules.FingeringPosition === PlacementEnum.Right) {
-                return;
+            for (const system of this.musicSystems) {
+                for (const line of system.StaffLines) {
+                    for (const measure of line.Measures) {
+                        for (const gse of measure.staffEntries) {
+                            if (gse.FingeringEntries.length > 0) {
+                                gse.FingeringEntries = [];
+                            }
+                        }
+                    }
+                }
+            }
+            return;
         }
         for (const system of this.musicSystems) {
             for (const line of system.StaffLines) {

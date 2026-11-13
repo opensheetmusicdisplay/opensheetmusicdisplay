@@ -13,6 +13,7 @@ export enum CursorType {
 /** Possible options for the OpenSheetMusicDisplay constructor and osmd.setOptions(). None are mandatory.
  *  Note that after using setOptions(), you have to call osmd.render() again to make changes visible.
  *  Example: osmd.setOptions({defaultColorRest: "#AAAAAA", drawSubtitle: false}); osmd.render();
+ *  An option that is left out (or undefined) keeps its value, and OSMD doesn't change the options object it is given.
  *
  *  Note that some additional, usually more small scale options are available in EngravingRules,
  *  though not all of them are meant to be manipulated.
@@ -92,7 +93,8 @@ export interface IOSMDOptions {
     defaultFontFamily?: string;
     /** Default font style, e.g. FontStyles.Bold (1). Default Regular (0). */
     defaultFontStyle?: FontStyles;
-    /** Don't show/load cursor. Will override disableCursor in drawingParameters. */
+    /** Don't show/load cursor. Will override disableCursor in drawingParameters.
+     *  false draws the cursors again from the next render(), also after true or a drawingParameters mode without cursors. */
     disableCursor?: boolean;
     /** Follow Cursor: Scroll the page when cursor.next() is called and the cursor moves into a new system outside of the current view frame. */
     followCursor?: boolean;
@@ -138,7 +140,10 @@ export interface IOSMDOptions {
     measureNumberInterval?: number;
     /** Whether to read measure numbers from the "number" attribute in the xml file as opposed to defaulting to start at measure 1. Default true. */
     useXMLMeasureNumbers?: boolean;
-    /** Whether to draw fingerings (only left to the note for now). Default true (unless solo part). */
+    /** Whether to draw fingerings (only left to the note for now). Default true (unless solo part).
+     *  Can be turned off and on again after load(), with a render(). Only with fingeringPosition left or right, where
+     *  the fingerings are created with the notes, call osmd.updateGraphic() before that render().
+     */
     drawFingerings?: boolean;
     /** Where to draw fingerings (above, below, aboveorbelow, left, right, or auto).
      * Default AboveOrBelow. Auto experimental
@@ -158,13 +163,17 @@ export interface IOSMDOptions {
     drawLyrics?: boolean;
     /** Whether to calculate extra slurs with bezier curves not covered by Vexflow slurs. Default true. */
     drawSlurs?: boolean;
-    /** Only draw measure n to m, where m is the number specified. (for n, see drawFromMeasureNumber) */
+    /** Only draw measure n to m, where m is the number specified. (for n, see drawFromMeasureNumber)
+     *  Number.MAX_VALUE (the default) draws up to the last measure again.
+     */
     drawUpToMeasureNumber?: number;
-    /** Only draw the first n systems, where n is the number specified. */
+    /** Only draw the first n systems, where n is the number specified. 0 (or Number.MAX_VALUE, the default) draws all systems again. */
     drawUpToSystemNumber?: number;
-    /** Only draw the first n pages, where n is the number specified. */
+    /** Only draw the first n pages, where n is the number specified. 0 (or Number.MAX_VALUE, the default) draws all pages again. */
     drawUpToPageNumber?: number;
-    /** Only draw measure n to m, where n is the number you specify. (for m, see drawUpToMeasureNumber) */
+    /** Only draw measure n to m, where n is the number you specify. (for m, see drawUpToMeasureNumber)
+     *  0 (the default) draws from the first measure again.
+     */
     drawFromMeasureNumber?: number;
     /** Whether to fill measures that don't have notes given in the XML with whole rests (visible = 1, invisible = 2, for layouting). Default No (0). */
     fillEmptyMeasuresWithWholeRest?: FillEmptyMeasuresWithWholeRests | number;

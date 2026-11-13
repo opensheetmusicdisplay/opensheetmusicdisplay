@@ -428,6 +428,28 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         }).to.throw(/load/);
     });
 
+    it("keeps the zoom when another score is loaded, and over clear()", async () => {
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        try {
+            div.style.width = "600px";
+            const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+            osmd.Zoom = 0.6; // also before the first load()
+            await osmd.load(TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml"));
+            expect(osmd.Zoom, "Zoom after the first load()").to.equal(0.6);
+            osmd.render();
+            await osmd.load(TestUtils.getScore("test_fingering_left_bach_short.musicxml"));
+            expect(osmd.Zoom, "Zoom after another load()").to.equal(0.6);
+            osmd.clear();
+            expect(osmd.Zoom, "Zoom after clear()").to.equal(0.6);
+            await osmd.load(TestUtils.getScore("test_fingering_left_bach_short.musicxml"));
+            osmd.render();
+            // the layout is made for the zoom: 600 px at zoom 0.6 are 100 units
+            expect(osmd.Sheet.pageWidth, "the page width of the layout in units").to.be.closeTo(100, 0.01);
+        } finally {
+            div.remove();
+        }
+    });
+
     beforeAll((): void => {
         // Create the container for the "test width" test
         container1 = TestUtils.getDivElement(document);
