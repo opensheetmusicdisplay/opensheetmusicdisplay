@@ -196,12 +196,46 @@ describe("OSMD instance lifecycle", () => {
 
         osmd.render(); // by the app: it starts with the scrollbar
         expect(osmd.Sheet.pageWidth * 10, "the layout's width of the app's next render").to.be.closeTo(784, 0.001);
+        expect(parseFloat(container.querySelector("svg").getAttribute("width")), "its page is as wide as the layout")
+            .to.be.closeTo(784, 0.001);
         // another width renders again
         delete (container as any).offsetWidth;
         container.style.width = "600px";
         await vi.waitFor(() => expect(osmd.EngravingRules.RenderCount, "renders after another change of the width").to.equal(3),
                          { timeout: 3000 });
         expect(osmd.Sheet.pageWidth * 10, "the layout's width after it").to.be.closeTo(600, 0.001);
+    });
+
+    it("a container as wide as its content (flex-basis: auto) is laid out for the space it has, not for its previous pages", async () => {
+        // a flexbox whose right item, the container, is as wide as its content wants and the flexbox allows
+        const flexbox: HTMLElement = document.createElement("div");
+        flexbox.style.cssText = "display: flex; width: 1100px;";
+        const sidebar: HTMLElement = document.createElement("div");
+        sidebar.style.cssText = "flex: 0 1 160px;";
+        container.style.cssText = "flex: 1 1 auto; min-width: 0;";
+        flexbox.appendChild(sidebar);
+        flexbox.appendChild(container);
+        document.body.appendChild(flexbox);
+        try {
+            const osmd: OpenSheetMusicDisplay = createInstance();
+            await osmd.load(TestUtils.getScore(sampleName));
+            osmd.render();
+            expect(container.offsetWidth, "the container's width in the flexbox of 1100 px").to.equal(940);
+            expect(osmd.Sheet.pageWidth * 10, "the layout's width").to.be.closeTo(940, 0.001);
+
+            flexbox.style.width = "800px";
+            // with the page of 940 px in it, the container gets more than the 640 px it has without: the sidebar shrinks too
+            expect(container.offsetWidth > 640, "the container's width with the previous page in it").to.equal(true);
+            osmd.render();
+            expect(osmd.Sheet.pageWidth * 10, "the layout's width in the flexbox of 800 px").to.be.closeTo(640, 0.001);
+            expect(parseFloat(container.querySelector("svg").getAttribute("width")), "the page's width").to.be.closeTo(640, 0.001);
+            expect(container.offsetWidth, "the container's width with the new page").to.equal(640);
+            expect(container.style.minHeight, "the container's min-height is as before").to.equal("");
+            expect((pages()[0] as HTMLElement).style.display, "the page is shown").to.equal("");
+        } finally {
+            document.body.appendChild(container); // removed by the test's cleanup
+            flexbox.remove();
+        }
     });
 
     it("onRender is called after render() and after each batch of renderNext()", async () => {
