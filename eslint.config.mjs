@@ -66,16 +66,6 @@ export default defineConfig(
             ],
             "@typescript-eslint/member-ordering": "off",
             "@typescript-eslint/naming-convention": "off",
-            // Array.prototype.last() is OSMD's own addition to the page's arrays (CollectionUtil.ts), deprecated: OSMD's code
-            //   doesn't use it, so that it can be removed. (Its siblings contains() and clear() share their names with DOM,
-            //   Map and Dictionary methods, which a syntax rule can't tell apart: they are marked @deprecated only.)
-            "no-restricted-syntax": [
-                "error",
-                {
-                    selector: "CallExpression[arguments.length=0] > MemberExpression.callee[property.name='last']",
-                    message: "Array.prototype.last() is deprecated: use CollectionUtil.getLastElement(array) or array[array.length - 1].",
-                },
-            ],
             "@typescript-eslint/no-empty-function": "error",
             "@typescript-eslint/no-empty-object-type": "off",
             "@typescript-eslint/no-explicit-any": "off",

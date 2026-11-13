@@ -1,61 +1,16 @@
 import { Dictionary } from "typescript-collections";
 
-// OSMD itself doesn't use these three additions to Array.prototype anymore: a library shouldn't change the arrays of the
-//   page it runs in, or the Array type of every TypeScript project that imports it. They stay defined for now, for apps
-//   that came to rely on them, and will be removed in a future major version.
-//   OSMD's code uses instead: CollectionUtil.getLastElement(array), array.includes(element), and array.length = 0, which
-//   empties an array in place (see clear() below).
-declare global {
-    interface Array<T> {
-        /** Returns the last element from an array.
-         *  @deprecated Added to Array.prototype by OSMD, to be removed in a future major version.
-         *  Use `array[array.length - 1]` (or `CollectionUtil.getLastElement(array)`). */
-        last(): T;
-        /** Deletes all elements from an array.
-         *  @deprecated Added to Array.prototype by OSMD, to be removed in a future major version. Use `array.length = 0`:
-         *  JavaScript's way to empty an array in place, and all this method did. It removes every element, so that they
-         *  can be garbage collected, and everyone holding the array sees it empty (`array = []` would make a new array
-         *  and leave the old one as it is). */
-        clear(): void;
-        /** Returns true if the element is found in the array.
-         *  @deprecated Added to Array.prototype by OSMD, to be removed in a future major version. Use `array.includes(elem)`. */
-        contains(elem: T): boolean;
-    }
-}
-
-if (!Array.prototype.last) {
-    // using Object.defineProperty instead of assigning Array.prototype.x directly prevents prototype pollution, see #980
-    Object.defineProperty(Array.prototype, "last", {
-        enumerable: false,
-        writable: true,
-        value: function<T>(): T {
-            return this[this.length - 1];
-        }
-    });
-}
-
-if (!Array.prototype.clear) {
-    Object.defineProperty(Array.prototype, "clear", {
-        enumerable: false,
-        writable: true,
-        value: function(): void {
-            this.length = 0;
-        }
-    });
-}
-
-if (!Array.prototype.contains) {
-    Object.defineProperty(Array.prototype, "contains", {
-        enumerable: false,
-        writable: true,
-        value: function<T>(elem: T): boolean {
-            return this.indexOf(elem) !== -1;
-        }
-    });
-}
-
 /**
  * This class implements static methods to perform useful operations on lists, dictionaries, ...
+ *
+ * Until OSMD 3.0, this file also added last(), contains() and clear() to Array.prototype, for all arrays of the page
+ * and of every TypeScript project importing OSMD. A library shouldn't change its host's built-ins, so they are gone.
+ * Instead:
+ * - `array.last()`: `CollectionUtil.getLastElement(array)` or `array[array.length - 1]`
+ * - `array.contains(element)`: `array.includes(element)`
+ * - `array.clear()`: `array.length = 0`, JavaScript's way to empty an array in place, and all clear() did. It removes
+ *   every element, so that they can be garbage collected, and everyone holding the array sees it empty
+ *   (`array = []` would make a new array and leave the old one as it is).
  */
 export class CollectionUtil {
 
