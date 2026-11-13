@@ -1,4 +1,4 @@
-import { IXmlElement } from "./../Common/FileIO/Xml";
+import { IXmlElement, removeWhitespaceBetweenElements } from "./../Common/FileIO/Xml";
 import { VexFlowMusicSheetCalculator } from "./../MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator";
 import { VexFlowBackend } from "./../MusicalScore/Graphical/VexFlow/VexFlowBackend";
 import { MusicSheetReader } from "./../MusicalScore/ScoreIO/MusicSheetReader";
@@ -198,7 +198,8 @@ export class OpenSheetMusicDisplay {
                 log.debug("[OSMD] Finally parsing XML content, length: " + modifiedXml.length);
                 // Parse the string representing an xml file
                 const parser: DOMParser = new DOMParser();
-                content = parser.parseFromString(modifiedXml, "application/xml");
+                // (without the white space between the elements: fewer nodes to parse, see removeWhitespaceBetweenElements())
+                content = parser.parseFromString(removeWhitespaceBetweenElements(modifiedXml), "application/xml");
             } else if (trimmedStr.length < 2083) { // TODO do proper URL format check
                 log.debug("[OSMD] Retrieve the file at the given URL: " + trimmedStr);
                 // Assume now "str" is a URL

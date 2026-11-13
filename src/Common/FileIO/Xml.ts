@@ -258,3 +258,24 @@ export class IXmlElement {
         return elements;
     }
 }
+
+/** White space between two tags, where the second one isn't a closing tag: `<a>  <b>`, `</a>  <b>`, `<a/>  <b>`. */
+const whitespaceBeforeOpeningTag: RegExp = />\s+(?=<[^/])/g;
+/** White space between a closing or self-closing tag and a closing tag: `</a>  </b>`, `<a/>  </b>`. */
+const whitespaceBetweenClosingTags: RegExp = /(<\/[^<>]*>|\/>)\s+(?=<\/)/g;
+
+/**
+ * Removes the white space between the elements of an XML string (line breaks and indentation), which is a third to a half
+ * of a typical MusicXML file. The parser creates a text node for each of them, though they mean nothing in MusicXML,
+ * whose elements contain either elements or text. Without them, the browser parses the file about a quarter faster
+ * and the document needs less memory.
+ * The text of elements is kept, also when it is only white space (`<words> </words>`): white space is only removed
+ * next to an element's child elements. A string with a CDATA section or entity declarations (rare in MusicXML)
+ * is returned unchanged, as tags inside of them are text.
+ */
+export function removeWhitespaceBetweenElements(xml: string): string {
+    if (xml.includes("<![CDATA[") || xml.includes("<!ENTITY")) {
+        return xml;
+    }
+    return xml.replace(whitespaceBeforeOpeningTag, ">").replace(whitespaceBetweenClosingTags, "$1");
+}
