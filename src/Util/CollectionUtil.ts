@@ -3,6 +3,8 @@ import { Dictionary } from "typescript-collections";
 // OSMD itself doesn't use these three additions to Array.prototype anymore: a library shouldn't change the arrays of the
 //   page it runs in, or the Array type of every TypeScript project that imports it. They stay defined for now, for apps
 //   that came to rely on them, and will be removed in a future major version.
+//   OSMD's code uses instead: CollectionUtil.getLastElement(array), array.includes(element), and array.length = 0, which
+//   empties an array in place (see clear() below).
 declare global {
     interface Array<T> {
         /** Returns the last element from an array.
@@ -10,7 +12,10 @@ declare global {
          *  Use `array[array.length - 1]` (or `CollectionUtil.getLastElement(array)`). */
         last(): T;
         /** Deletes all elements from an array.
-         *  @deprecated Added to Array.prototype by OSMD, to be removed in a future major version. Use `array.length = 0`. */
+         *  @deprecated Added to Array.prototype by OSMD, to be removed in a future major version. Use `array.length = 0`:
+         *  JavaScript's way to empty an array in place, and all this method did. It removes every element, so that they
+         *  can be garbage collected, and everyone holding the array sees it empty (`array = []` would make a new array
+         *  and leave the old one as it is). */
         clear(): void;
         /** Returns true if the element is found in the array.
          *  @deprecated Added to Array.prototype by OSMD, to be removed in a future major version. Use `array.includes(elem)`. */
