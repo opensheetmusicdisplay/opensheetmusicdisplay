@@ -99,10 +99,14 @@ export class MXLHelper {
             xmlText = xmlText.substring(1);
         }
 
-        if (!xmlText.substring(0, 1).startsWith("<")) {
-            // assume UTF-16
+        if (!xmlText.startsWith("<")) {
+            // maybe UTF-16. If that doesn't give XML either, the text stays as it is: XML after white space, or not XML,
+            //   which load() then names in its error as it is written in the file
             const uint8Array: Uint8Array = await zip.file(rootFile).async("uint8array");
-            return new TextDecoder("utf-16").decode(uint8Array);
+            const utf16Text: string = new TextDecoder("utf-16").decode(uint8Array);
+            if (utf16Text.trimStart().startsWith("<")) {
+                return utf16Text;
+            }
         }
         return xmlText;
     }
