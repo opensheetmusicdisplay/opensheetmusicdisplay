@@ -542,8 +542,8 @@ export class OpenSheetMusicDisplay {
 
         [this.rules.MinMeasureToDrawIndex, this.rules.MaxMeasureToDrawIndex] = drawRange;
 
-        // Set page width
-        let width: number = this.getContainerContentWidth();
+        // Set page width: the one the pages get as well (see createOrRefreshRenderBackend() below)
+        let width: number = this.getContainerContentWidthWithoutPages();
         this.layoutContainerWidth = width;
         if (this.rules.RenderSingleHorizontalStaffline) {
             width = this.rules.SheetMaximumWidth; // set safe maximum (browser limit), will be reduced later
@@ -579,7 +579,7 @@ export class OpenSheetMusicDisplay {
         //   backends also need an update when this.zoom was set from outside, which unfortunately doesn't have a setter method to set this in.
         //   so just for compatibility, we need to assume users set osmd.zoom, so we'd need to check whether it was changed compared to last time.
         if (true || this.needBackendUpdate) {
-            this.createOrRefreshRenderBackend();
+            this.createOrRefreshRenderBackend(this.layoutContainerWidth); // pages as wide as the layout
             this.needBackendUpdate = false;
         }
         // The pages, sized for the layout, can change the container's width, e.g. when the page's scrollbar appears:
@@ -1677,6 +1677,44 @@ export class OpenSheetMusicDisplay {
         const contentWidth: number = this.container.offsetWidth - pixels(style.borderLeftWidth) - pixels(style.borderRightWidth)
             - pixels(style.paddingLeft) - pixels(style.paddingRight);
         return Math.max(0, contentWidth); // e.g. a hidden container: offsetWidth 0
+    }
+
+    /**
+     * Returns the container's content width (see getContainerContentWidth()) that doesn't depend on the pages this instance
+     * drew into it before: the width render() lays the sheet out for, and makes its pages as wide as.
+     * A container can be as wide as its content needs, e.g. a flex item with `flex-basis: auto`, a float or an inline-block:
+     * with the previous render's pages in it, its width follows theirs, not the space it has now. So the pages are taken
+     * out of the layout for the measurement (display: none). Meanwhile the container keeps its height, and with it a
+     * scrollbar that the pages cause, e.g. the web page's for a sheet taller than the window: the new pages will cause
+     * it again.
+     * Before, render() read the width with the previous pages for the layout, and createOrRefreshRenderBackend() read it
+     * again without them (and without their scrollbar) for the pages: the two differed for such containers, and
+     * by the scrollbar's width from the second render on.
+     */
+    private getContainerContentWidthWithoutPages(): number {
+        const pageElements: HTMLElement[] = [];
+        for (const backend of this.drawer?.Backends ?? []) {
+            const element: HTMLElement = backend.getRenderElement();
+            if (element?.parentElement === this.container) {
+                pageElements.push(element);
+            }
+        }
+        if (pageElements.length === 0 || this.fixedLayoutWidth !== undefined) {
+            return this.getContainerContentWidth();
+        }
+        const containerStyle: CSSStyleDeclaration = this.container.style;
+        const minHeight: string = containerStyle.minHeight;
+        containerStyle.minHeight = this.container.offsetHeight + "px";
+        const displays: string[] = pageElements.map((element: HTMLElement) => element.style.display);
+        for (const element of pageElements) {
+            element.style.display = "none";
+        }
+        const width: number = this.getContainerContentWidth();
+        pageElements.forEach((element: HTMLElement, index: number) => {
+            element.style.display = displays[index];
+        });
+        containerStyle.minHeight = minHeight;
+        return width;
     }
 
     // for now SVG only, see generateImages_browserless (PNG/SVG)
