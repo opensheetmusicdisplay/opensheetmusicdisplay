@@ -15,7 +15,7 @@ import log from "loglevel";
 import { DrawingParameters } from "../MusicalScore/Graphical/DrawingParameters";
 import { DrawingParametersEnum } from "../Common/Enums/DrawingParametersEnum";
 import { ColoringModes } from "../Common/Enums/ColoringModes";
-import { IOSMDOptions, OSMDOptions, AutoBeamOptions, BackendType, CursorOptions, CursorType } from "./OSMDOptions";
+import { IOSMDOptions, OSMDOptions, AutoBeamOptions, BackendType, CursorOptions, CursorType, IRenderInfo } from "./OSMDOptions";
 import { EngravingRules, PageFormat } from "../MusicalScore/Graphical/EngravingRules";
 import { AbstractExpression } from "../MusicalScore/VoiceData/Expressions/AbstractExpression";
 import { MultiExpression } from "../MusicalScore/VoiceData/Expressions/MultiExpression";
@@ -104,8 +104,20 @@ export class OpenSheetMusicDisplay {
     /** The container's content width (getContainerContentWidth()) the last layout was made for: by render(), or at the start
      *  of incremental rendering. Turning autoResize on re-renders a rendered sheet only if the width differs from it. */
     protected layoutContainerWidth: number;
-    /** Removes the window's resize listener added for autoResize (see handleResize()), e.g. in dispose(). */
+    /** Removes the container's ResizeObserver or the window's resize listener added for autoResize (see handleResize()),
+     *  e.g. in dispose(). */
     private disposeResizeListener: () => void;
+    /** The container's content width with the pages of the last render() in it, if they changed it: a sheet taller than
+     *  the window makes the page's scrollbar appear (where scrollbars take space), which narrows a container as wide as the
+     *  page. The container's observer (autoResize) doesn't render again for this width, which the render itself caused:
+     *  the sheet stays laid out for the width without the scrollbar, as without autoResize, until the width changes for
+     *  another reason or the app renders again. Another layout for it would cost about a third of a render (measured for
+     *  PR 1992), and could change the width back, without end. */
+    private containerWidthWithPages: number;
+    /** Whether this instance has removed the pages that other instances left in the container (see removeLeftoverPages()). */
+    private leftoverPagesRemoved: boolean = false;
+    /** Whether destroy() was called: the instance can't load or render anymore. */
+    private destroyed: boolean = false;
     /** The callbacks of the window's resize listener (see handleResize()), which reaches them only through this instance. */
     private resizeStartCallback: () => void;
     private resizeEndCallback: () => void;
@@ -135,6 +147,10 @@ export class OpenSheetMusicDisplay {
      * By default it returns the XML unchanged. It can also be set by the onXMLRead option,
      * and osmd.setOptions() keeps it when the option is left out. */
     public OnXMLRead: (xml: string) => string = (xml: string): string => xml;
+    /** A function that is called after each render: at the end of render() and of each batch of renderNext(), also of
+     *  the renders OSMD starts itself (autoResize, enableIncrementalRenderingOnScroll()). A render replaces the SVG
+     *  elements, so this is the place to color them or add listeners to them again. Also the option onRender. */
+    public OnRender: (info: IRenderInfo) => void = undefined;
     /** Counts the calls of load(), clear() and dispose(). A load() whose number isn't the current one anymore was superseded:
      *  it doesn't set the sheet, and its promise is rejected (see load()). */
     private loadGeneration: number = 0;
@@ -163,6 +179,9 @@ export class OpenSheetMusicDisplay {
      * });
      */
     public load(content: string | Document | Blob, tempTitle: string = "Untitled Score"): Promise<{}> {
+        if (this.destroyed) {
+            return Promise.reject(this.createDestroyedError("load"));
+        }
         this.cancelPendingLoad();
         const generation: number = this.loadGeneration;
         if (typeof AbortController === "function") {
@@ -182,6 +201,11 @@ export class OpenSheetMusicDisplay {
         this.loadGeneration++;
         this.loadAbortController?.abort();
         this.loadAbortController = undefined;
+    }
+
+    /** The Error for a call of the given method (e.g. "render") after destroy(). */
+    private createDestroyedError(method: string): Error {
+        return new Error(`OpenSheetMusicDisplay: ${method}() was called after destroy(). Create a new instance to show a score again.`);
     }
 
     /** The Error a superseded load() is rejected with (see load()). */
@@ -457,6 +481,29 @@ export class OpenSheetMusicDisplay {
     private lazyScrollHandler: (() => void) | undefined;
     private lazyScrollTarget: HTMLElement | Window | undefined;
 
+    /** Whether the container is observed for autoResize (see handleResize()), instead of the window. */
+    private observesContainer(): boolean {
+        return this.resizeHandlerAttached && typeof ResizeObserver === "function";
+    }
+
+    /**
+     * Whether a render is skipped because the container has no width, e.g. a hidden one (display: none, a tab that isn't
+     * shown) or one that isn't in the document: a layout for width 0 puts one measure into each system. Logs a warning then.
+     * With autoResize, the container's observer renders the sheet (render()) once the container has a width.
+     * A single horizontal staffline doesn't depend on the width: it's rendered.
+     * @param method the method that renders, for the warning: "render" or "renderNext"
+     */
+    private skipsRenderWithoutWidth(method: string): boolean {
+        if (this.getContainerContentWidth() !== 0 || this.rules.RenderSingleHorizontalStaffline) {
+            return false;
+        }
+        this.layoutContainerWidth = 0; // the width of the layout that is due: the observer renders at another one
+        log.warn(`[OSMD] ${method}(): the container's width is 0 (e.g. it's hidden, or not in the document), so the sheet wasn't rendered. ` +
+            (this.observesContainer() ? "It will be rendered when the container gets a width (autoResize)."
+                : "Call render() again when the container has a width."));
+        return true;
+    }
+
     /** Render the loaded music sheet to the container.
      *  A changed transposition (osmd.Sheet.Transpose, Instrument.Transpose, osmd.TransposeCalculator) or a voice shown or hidden
      *  (Voice.Visible, Instrument.Visible) is applied without updateGraphic(): render() creates the graphic again then,
@@ -465,8 +512,14 @@ export class OpenSheetMusicDisplay {
      *  or one was divided for the previous draw range (see MusicSheetCalculator.multiRestsFitDrawRange()).
      */
     public render(): void {
+        if (this.destroyed) {
+            throw this.createDestroyedError("render");
+        }
         if (!this.graphic) {
             throw new Error("OSMD: load() needs to be called before render()");
+        }
+        if (this.skipsRenderWithoutWidth("render")) {
+            return;
         }
         // drawing range, adjusted for a pickup measure
         const drawRange: [number, number] = this.getDrawRangeIndices();
@@ -529,6 +582,15 @@ export class OpenSheetMusicDisplay {
             this.createOrRefreshRenderBackend();
             this.needBackendUpdate = false;
         }
+        // The pages, sized for the layout, can change the container's width, e.g. when the page's scrollbar appears:
+        //   the container's observer doesn't render again for that (see containerWidthWithPages).
+        this.containerWidthWithPages = undefined;
+        if (this.observesContainer()) {
+            const widthWithPages: number = this.getContainerContentWidth();
+            if (widthWithPages !== this.layoutContainerWidth) {
+                this.containerWidthWithPages = widthWithPages;
+            }
+        }
 
         this.drawer.setZoom(this.zoom);
 
@@ -550,6 +612,9 @@ export class OpenSheetMusicDisplay {
         this.rules.RenderCount++;
         //console.log("[OSMD] render finished");
         this.useWarmKeeper();
+        if (this.OnRender) {
+            this.OnRender({ incremental: false, done: true });
+        }
     }
 
     /**
@@ -735,12 +800,25 @@ export class OpenSheetMusicDisplay {
      * to finish synchronously (e.g. before PDF/image export). Works for the endless vertical-scroll page
      * format and for RenderSingleHorizontalStaffline (one staffline scrolling right).
      *
+     * In a container without a width (e.g. a hidden one), no session starts: like render(), the call is skipped with a
+     * warning, and returns `done: true` with 0 measures, so that a loop over the batches ends. With autoResize, render()
+     * draws the whole sheet once the container has a width.
+     *
      * @param options batch options; defaults to 8 visual measures (a multi-rest counts as one). Pass
      *   `systems` instead to advance by whole music systems (vertical only); see {@link IRenderNextOptions}.
      */
     public renderNext(options?: IRenderNextOptions): IRenderNextResult {
+        if (this.destroyed) {
+            throw this.createDestroyedError("renderNext");
+        }
         if (!this.graphic) {
             throw new Error("OSMD: load() needs to be called before renderNext()");
+        }
+        // A session can't start in a container without a width (see skipsRenderWithoutWidth()). There is no batch to ask
+        //   for then (done), so that a loop over the batches ends; with autoResize, render() draws the sheet when the
+        //   container gets a width, as it does after a resize during a session.
+        if (!this.lazyIncrementalActive && this.skipsRenderWithoutWidth("renderNext")) {
+            return { done: true, renderedMeasures: 0, totalMeasures: 0, lastRenderedMeasure: [], nextUnrenderedMeasure: [] };
         }
         const batchMeasures: number = Math.max(1, options?.measures ?? 8);
         // `systems` (vertical only) advances the frontier by whole music systems instead of measures. A single
@@ -791,6 +869,9 @@ export class OpenSheetMusicDisplay {
         const totalMeasures: number = this.visualMeasureCount(this.lazyFirstMeasureIndex, this.lazyLayoutLastMeasureIndex + 1);
         const renderedMeasures: number = done ? totalMeasures : this.visualMeasureCount(this.lazyFirstMeasureIndex, lastDrawnMeasureIndex + 1);
         this.useWarmKeeper();
+        if (this.OnRender) {
+            this.OnRender({ incremental: true, done });
+        }
         return {
             done, renderedMeasures, totalMeasures,
             lastRenderedMeasure: this.graphicalMeasuresAtOrBefore(lastDrawnMeasureIndex),
@@ -907,6 +988,9 @@ export class OpenSheetMusicDisplay {
         const batchOptions: IRenderNextOptions = { measures: options?.measures };
         if (!this.IncrementalRenderingActive) {
             this.renderNext(batchOptions); // paint the first batch so there is something to scroll
+            if (!this.IncrementalRenderingActive) {
+                return; // skipped: the container has no width (see renderNext())
+            }
         }
         if (this.IncrementalRenderingComplete) {
             return; // all measures fit in the first batch; nothing to load on scroll
@@ -1457,6 +1541,37 @@ export class OpenSheetMusicDisplay {
     }
 
     /**
+     * Removes this instance's pages from the container: the element of each backend (SVG or canvas), with the cursors in it.
+     * Not the container's other children, e.g. an overlay or a loading indicator of the app. The backends are known by
+     * reference, so none is missed (before, all children of the container were removed instead, see #678).
+     */
+    private removeOwnPages(): void {
+        if (!this.drawer?.Backends) {
+            return;
+        }
+        for (const backend of this.drawer.Backends) {
+            backend.removeFromContainer(this.container);
+            backend.free();
+        }
+        this.drawer.Backends.clear();
+    }
+
+    /**
+     * Removes the pages that other OpenSheetMusicDisplay instances left in the container: its children with the id
+     * "osmdCanvasPage" + page number, which every instance gives its page elements. E.g. the drawing of an instance that
+     * was disposed (dispose() keeps the drawing) before this one was made for the same container, as a component does
+     * that is mounted, unmounted and mounted again (React's StrictMode): the container would show two scores.
+     * Called at this instance's first render, after removeOwnPages(); later renders only remove its own pages.
+     */
+    private removeLeftoverPages(): void {
+        for (const child of Array.from(this.container.children)) {
+            if (/^osmdCanvasPage\d+$/.test(child.id)) {
+                child.remove();
+            }
+        }
+    }
+
+    /**
      * Removes the backends (SVG or canvas) from the container and creates a new one for each page drawn.
      * @param pageWidth the width of the pages in pixels. By default the container's content width, read after removing the
      *  backends. An incremental render passes the width all its batches lay the sheet out at (see lazyLayoutWidth).
@@ -1465,18 +1580,10 @@ export class OpenSheetMusicDisplay {
         // console.log("[OSMD] createOrRefreshRenderBackend()");
 
         // Remove old backends
-        if (this.drawer && this.drawer.Backends) {
-            // removing single children to remove all is error-prone, because sometimes a random SVG-child remains.
-            // for (const backend of this.drawer.Backends) {
-            //     backend.removeFromContainer(this.container);
-            // }
-            if (this.drawer.Backends[0]) {
-                this.drawer.Backends[0].removeAllChildrenFromContainer(this.container);
-            }
-            for (const backend of this.drawer.Backends) {
-                backend.free();
-            }
-            this.drawer.Backends.clear();
+        this.removeOwnPages();
+        if (!this.leftoverPagesRemoved) {
+            this.removeLeftoverPages();
+            this.leftoverPagesRemoved = true;
         }
 
         // Create the drawer
@@ -1623,7 +1730,11 @@ export class OpenSheetMusicDisplay {
      * your code references neither. Except while incremental rendering on scroll (enableIncrementalRenderingOnScroll()) hasn't
      * drawn the whole sheet: its scroll listener keeps the instance. And in browsers without WeakRef (Chrome before 84,
      * Firefox before 79, Safari before 14.1), the window's resize listener keeps it.
-     * The drawing stays in the container. To remove it and free the sheet's memory while you keep the instance, call clear().
+     * A load() that hasn't finished is aborted (see load()).
+     * The drawing stays in the container, and the instance stays usable: load() and render() work, and
+     * setOptions({autoResize: true}) adds the listeners again. To free the sheet's memory while you keep the instance,
+     * call clear(). To remove the instance's elements from the container as well and end its use, call destroy() instead:
+     * that is the call for a component's cleanup (e.g. React's useEffect cleanup, Vue's onUnmounted).
      * @example
      * osmd.dispose();
      * container.innerHTML = ""; // the instance can be garbage collected now, once your code doesn't reference it anymore
@@ -1636,6 +1747,38 @@ export class OpenSheetMusicDisplay {
         this.disableIncrementalRenderingOnScroll(); // the scroll listener of enableIncrementalRenderingOnScroll(), if on
         this.resetIncrementalRendering(); // so that a batch it scheduled (requestAnimationFrame) doesn't render anymore
         this.stopUsingWarmKeeper();
+    }
+
+    /**
+     * Ends the use of this instance and leaves the container as OSMD found it: does what clear() and dispose() do (releases
+     * the sheet, aborts a load() in progress, removes OSMD's listeners and observers), and removes the instance's page
+     * elements and cursors from the container. The container's other children stay, e.g. elements of your app.
+     * Afterwards load() is rejected and render() throws, with an Error that names destroy(): create a new instance to
+     * show a score again, in the same container or another one. Calling destroy() again does nothing.
+     * @example
+     * // React
+     * useEffect(() => {
+     *     const osmd = new OpenSheetMusicDisplay(containerRef.current);
+     *     osmd.load(url).then(() => osmd.render()).catch((error) => {
+     *         if (error.name !== "AbortError") { // not an error: destroy() aborted the load
+     *             console.error(error);
+     *         }
+     *     });
+     *     return () => osmd.destroy();
+     * }, [url]);
+     */
+    public destroy(): void {
+        if (this.destroyed) {
+            return;
+        }
+        this.clear();
+        this.dispose();
+        for (const cursor of this.cursors) {
+            cursor?.Dispose(); // also removes its image
+        }
+        this.cursors.length = 0;
+        this.removeOwnPages();
+        this.destroyed = true;
     }
 
     /** Set OSMD rendering options using an IOSMDOptions object.
@@ -1665,6 +1808,9 @@ export class OpenSheetMusicDisplay {
         }
         if (options.onXMLRead) {
             this.OnXMLRead = options.onXMLRead;
+        }
+        if (options.onRender) {
+            this.OnRender = options.onRender;
         }
 
         const backendNotInitialized: boolean = !this.drawer || !this.drawer.Backends || this.drawer.Backends.length < 1;
@@ -2004,13 +2150,17 @@ export class OpenSheetMusicDisplay {
         this.graphic = undefined;
         this.zoom = 1.0;
         this.rules.RenderCount = 0;
+        this.layoutContainerWidth = undefined; // no layout: the container's observer doesn't render a sheet before the app does
     }
 
     /**
-     * Attach the appropriate handler to the window.onResize event
+     * Attach the appropriate handler for autoResize: an observer of the container's size, or a listener to the window.onResize
+     * event (see handleResize())
      */
     protected autoResize(): void {
-
+        if (this.destroyed) {
+            return;
+        }
         const self: OpenSheetMusicDisplay = this;
         this.handleResize(
             () => {
@@ -2059,7 +2209,23 @@ export class OpenSheetMusicDisplay {
     }
 
     /**
-     * Helper function for managing window's onResize events.
+     * Whether the sheet needs a new layout because the container's content width isn't the one of the last layout anymore
+     * (see layoutContainerWidth): what the container's observer of autoResize renders again for.
+     * Not before the first render() (or the start of incremental rendering): the app renders a loaded sheet when it
+     * chooses to. And not while the container has no width, e.g. while it's hidden: render() would skip that; when it's
+     * shown again at the width of the layout, nothing is to do.
+     */
+    private containerWidthNeedsLayout(): boolean {
+        if (this.layoutContainerWidth === undefined || !this.graphic) {
+            return false;
+        }
+        const width: number = this.getContainerContentWidth();
+        return width > 0 && width !== this.layoutContainerWidth && width !== this.containerWidthWithPages;
+    }
+
+    /**
+     * Helper function for managing the resize events of autoResize: those of a ResizeObserver on the container, or the
+     * window's onResize events in browsers without ResizeObserver (see addResizeListener()).
      * The window keeps its listeners as long as the page is open, so the listener reaches this instance only through a WeakRef:
      * it doesn't keep an instance in memory, with its sheet and drawing, that the app has dropped. Instead, the container keeps
      * the instance until the listener is removed (e.g. by dispose()), so that the drawing adapts to the window's size as long as
@@ -2074,8 +2240,8 @@ export class OpenSheetMusicDisplay {
         this.resizeEndCallback = endCallback;
         const instanceRef: { deref(): OpenSheetMusicDisplay } = typeof WeakRef === "function" ?
             new WeakRef(this) : { deref: (): OpenSheetMusicDisplay => this };
-        const removeListener: () => void = OpenSheetMusicDisplay.addWindowResizeListener(instanceRef);
         const container: HTMLElement = this.container;
+        const removeListener: () => void = OpenSheetMusicDisplay.addResizeListener(instanceRef, container);
         const key: symbol = OpenSheetMusicDisplay.containerInstanceKey;
         // not enumerable. Replaces the reference to an older instance made for the same container.
         Object.defineProperty(container, key, { value: this, configurable: true });
@@ -2103,19 +2269,35 @@ export class OpenSheetMusicDisplay {
     }
 
     /**
-     * Adds a listener to the window's resize events that calls the instance's resize callbacks (see handleResize()):
-     * the start callback when a resize starts, the end callback once no resize event came for 200 ms.
+     * Adds a listener that calls the instance's resize callbacks (see handleResize()): the start callback when a resize
+     * starts, the end callback once no resize event came for 200 ms.
+     * With ResizeObserver in the browser, the resize events are the changes of the container's width
+     * that need a new layout (see containerWidthNeedsLayout()), whatever their cause: the window, a sidebar, a split pane,
+     * a hidden container that is shown. Changes of its height don't count: each render changes it. If the width is back at
+     * the layout's after the 200 ms, the end callback isn't called.
+     * Otherwise they are the window's resize events, each of which ends in the end callback.
      * The listener and its timers reach the instance only through `instanceRef`. When it's a WeakRef and the instance has been
      * freed, the listener removes itself at the next resize event.
      * It's made here, not in handleResize(), because all closures made in one function call share the variables that any of
      * them uses: next to the closures there that reference `this`, the listener would keep the instance in memory too.
      * @param instanceRef a WeakRef to the instance, or (without WeakRef) an object that keeps it
+     * @param container the instance's container, which is observed
      * @returns a function that removes the listener
      */
-    private static addWindowResizeListener(instanceRef: { deref(): OpenSheetMusicDisplay }): () => void {
+    private static addResizeListener(instanceRef: { deref(): OpenSheetMusicDisplay }, container: HTMLElement): () => void {
         let rtime: number;
         let timeout: number = undefined;
         const delta: number = 200;
+        let observer: ResizeObserver;
+
+        function containerResized(): void {
+            const osmd: OpenSheetMusicDisplay = instanceRef.deref();
+            if (!osmd) {
+                removeListener(); // the instance was freed
+            } else if (osmd.containerWidthNeedsLayout()) {
+                resizeStart();
+            }
+        }
 
         function resizeStart(): void {
             const osmd: OpenSheetMusicDisplay = instanceRef.deref();
@@ -2142,13 +2324,15 @@ export class OpenSheetMusicDisplay {
                 removeListener(); // the instance was freed
             } else if ((new Date()).getTime() - rtime < delta) {
                 timeout = window.setTimeout(resizeEnd, delta);
-            } else {
+            } else if (!observer || osmd.containerWidthNeedsLayout()) {
                 osmd.resizeEndCallback();
             }
         }
 
         function removeListener(): void {
-            if ((<any>window).detachEvent) {
+            if (observer) {
+                observer.disconnect();
+            } else if ((<any>window).detachEvent) {
                 // Support IE<9
                 (<any>window).detachEvent("onresize", resizeStart);
             } else {
@@ -2156,7 +2340,10 @@ export class OpenSheetMusicDisplay {
             }
         }
 
-        if ((<any>window).attachEvent) {
+        if (typeof ResizeObserver === "function") {
+            observer = new ResizeObserver(containerResized);
+            observer.observe(container);
+        } else if ((<any>window).attachEvent) {
             // Support IE<9
             (<any>window).attachEvent("onresize", resizeStart);
         } else {
@@ -2332,8 +2519,8 @@ export class OpenSheetMusicDisplay {
         return this.autoResizeEnabled;
     }
     /** Turns autoResize on or off, also during runtime, like setOptions({autoResize}).
-     *  Off removes the window's resize listener and the container's reference to this instance (see handleResize());
-     *  on adds them again.
+     *  Off removes the container's observer (or the window's resize listener) and the container's reference to this
+     *  instance (see handleResize()); on adds them again.
      */
     public set AutoResizeEnabled(value: boolean) {
         if (value && !this.resizeHandlerAttached) {

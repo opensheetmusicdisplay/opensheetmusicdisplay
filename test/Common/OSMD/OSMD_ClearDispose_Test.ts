@@ -1,4 +1,4 @@
-import { expect, vi } from "vitest";
+import { expect, onTestFinished, vi } from "vitest";
 import * as OSMDExports from "../../../src";
 import { TestUtils } from "../../Util/TestUtils";
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
@@ -182,10 +182,18 @@ describe("OSMD clear() and dispose()", () => {
         };
     }
 
+    /** Until the test ends, autoResize listens to the window's resize events, as in a browser without ResizeObserver
+     *  (Chrome before 64, Firefox before 69, Safari before 13.1). With it, autoResize observes the container instead. */
+    function listenToWindow(): void {
+        vi.stubGlobal("ResizeObserver", undefined);
+        onTestFinished((): void => { vi.unstubAllGlobals(); });
+    }
+
     it("dispose() removes the listeners on the window and ends incremental rendering, and the drawing stays", async () => {
         const container: HTMLElement = TestUtils.getDivElement(document);
         const windowListeners: IListenerRecord = recordListeners(window);
         try {
+            listenToWindow();
             const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(container); // autoResize is on by default
             expect(windowListeners.count("resize"), "with autoResize").to.equal(1);
             await osmd.load(TestUtils.getScore(sampleName));
@@ -208,6 +216,7 @@ describe("OSMD clear() and dispose()", () => {
         const container: HTMLElement = TestUtils.getDivElement(document);
         const windowListeners: IListenerRecord = recordListeners(window);
         try {
+            listenToWindow();
             const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(container); // autoResize is on by default
             expect(windowListeners.count("resize"), "with autoResize").to.equal(1);
             osmd.setOptions({ autoResize: false });
@@ -224,6 +233,13 @@ describe("OSMD clear() and dispose()", () => {
             expect(windowListeners.count("resize"), "after dispose()").to.equal(0);
             new OpenSheetMusicDisplay(container, { autoResize: false }).dispose();
             expect(windowListeners.count("resize"), "created with autoResize false").to.equal(0);
+            // with ResizeObserver, autoResize observes the container instead of listening to the window
+            vi.unstubAllGlobals();
+            if (typeof ResizeObserver === "function") {
+                const observing: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(container);
+                expect(windowListeners.count("resize"), "with autoResize and ResizeObserver").to.equal(0);
+                observing.dispose();
+            }
         } finally {
             windowListeners.restore();
             container.remove();
@@ -279,6 +295,7 @@ describe("OSMD clear() and dispose()", () => {
         const instances: OpenSheetMusicDisplay[] = [];
         try {
             global.WeakRef = ReleasableWeakRef;
+            listenToWindow();
             instances.push(new OpenSheetMusicDisplay(containers[0])); // autoResize is on by default
             global.WeakRef = undefined; // like browsers before 2021: then the listener keeps the instance
             instances.push(new OpenSheetMusicDisplay(containers[1]));
