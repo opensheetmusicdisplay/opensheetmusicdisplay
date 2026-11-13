@@ -172,7 +172,7 @@ export class OpenSheetMusicDisplay {
                             return self.load(xmlString, tempTitle);
                         },
                         (err: Error) => {
-                            throw OpenSheetMusicDisplay.createError("OpenSheetMusicDisplay: Invalid MXL file", err);
+                            throw this.createError("OpenSheetMusicDisplay: Invalid MXL file", err);
                         }
                     );
                 } else {
@@ -196,7 +196,7 @@ export class OpenSheetMusicDisplay {
                     },
                     (err: Error) => {
                         log.debug(err);
-                        throw OpenSheetMusicDisplay.createError("OpenSheetMusicDisplay: Invalid MXL file", err);
+                        throw this.createError("OpenSheetMusicDisplay: Invalid MXL file", err);
                     }
                 );
             }
@@ -238,11 +238,11 @@ export class OpenSheetMusicDisplay {
         }
         const xmlDocument: Document = (<Document>content);
         if (typeof xmlDocument.getElementsByTagName === "function") { // (not for a node given instead of a document)
-            let parserError: string = OpenSheetMusicDisplay.getXmlParserError(xmlDocument);
+            let parserError: string = this.getXmlParserError(xmlDocument);
             if (parserError) {
                 if (parsedXml) {
                     // parse the string as it was given (with its line breaks), so that the error's line and column are the file's
-                    parserError = OpenSheetMusicDisplay.getXmlParserError(new DOMParser().parseFromString(parsedXml, "application/xml")) ?? parserError;
+                    parserError = this.getXmlParserError(new DOMParser().parseFromString(parsedXml, "application/xml")) ?? parserError;
                 }
                 return Promise.reject(new Error("OpenSheetMusicDisplay: The XML is malformed: " + parserError));
             }
@@ -268,7 +268,7 @@ export class OpenSheetMusicDisplay {
         this.sheet = reader.createMusicSheet(score, tempTitle);
         if (this.sheet === undefined) {
             // error loading sheet, already logged by the reader
-            return Promise.reject(OpenSheetMusicDisplay.createError(
+            return Promise.reject(this.createError(
                 "OpenSheetMusicDisplay: The given music sheet was incomplete or could not be loaded", reader.ReadingError));
         }
         // if (this.sheet.TitleString === "osmd.Version") {
@@ -283,7 +283,7 @@ export class OpenSheetMusicDisplay {
     }
 
     /** Creates an Error with the given message, followed by the message of the error that caused it, which is kept as `cause`. */
-    private static createError(message: string, cause: Error): Error {
+    private createError(message: string, cause: Error): Error {
         const causeMessage: string = cause?.message ?? (cause ? String(cause) : undefined);
         const error: Error & { cause?: unknown } = new Error(causeMessage ? `${message}: ${causeMessage}` : message);
         if (cause) {
@@ -300,7 +300,7 @@ export class OpenSheetMusicDisplay {
      * element, Chrome and Safari inside of the document as far as it was read (so the root can still be <score-partwise>,
      * with the rest of the score missing).
      */
-    private static getXmlParserError(xmlDocument: Document): string {
+    private getXmlParserError(xmlDocument: Document): string {
         const errorElement: Element = xmlDocument.getElementsByTagName("parsererror")[0];
         if (!errorElement) {
             return undefined;
