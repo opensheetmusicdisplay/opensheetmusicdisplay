@@ -182,6 +182,9 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         const zip: JSZip = new JSZip();
         zip.file("META-INF/container.xml", "<container><rootfiles><rootfile full-path='score.xml'/></rootfiles></container>");
         zip.file("score.xml", doctype + scorePartwise);
+        const zipWithNewline: JSZip = new JSZip(); // (was taken for UTF-16, as it doesn't start with "<")
+        zipWithNewline.file("META-INF/container.xml", "<container><rootfiles><rootfile full-path='score.xml'/></rootfiles></container>");
+        zipWithNewline.file("score.xml", "\n" + scorePartwise);
         const contents: [string, string | Blob][] = [
             ["<!DOCTYPE", doctype + scorePartwise],
             ["<score-partwise>", scorePartwise],
@@ -189,6 +192,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
             ["byte order mark and newline", "\uFEFF\n" + doctype + "\n" + scorePartwise],
             ["Blob", new Blob([doctype + scorePartwise])],
             ["MXL Blob", await zip.generateAsync({type: "blob"})],
+            ["MXL Blob, score file starting with a newline", await zipWithNewline.generateAsync({type: "blob"})],
             ["URL", URL.createObjectURL(new Blob([scorePartwise]))],
         ];
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
@@ -307,6 +311,51 @@ describe("OpenSheetMusicDisplay Main Export", () => {
                 const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
                 expect(await loadOutcome(osmd, content), name).to.equal(expected);
             }
+        });
+
+        it("the text of a file is never requested as a URL: a Blob, an MXL file or a URL's response that isn't XML is rejected", async () => {
+            // e.g. a wrong or crafted file that a user picks in a file input: its text was requested like a URL given by the app
+            const path: string = "/account/delete?confirm=1";
+            const zip: JSZip = new JSZip();
+            zip.file("META-INF/container.xml", "<container><rootfiles><rootfile full-path='score.xml'/></rootfiles></container>");
+            zip.file("score.xml", path);
+            const pathUrl: string = URL.createObjectURL(new Blob([path]));
+            const emptyUrl: string = URL.createObjectURL(new Blob([" \n"]));
+            const notMusicXml: string = 'rejected: OpenSheetMusicDisplay: The file is not MusicXML: it starts with "/account/delete?conf" instead of "<"';
+            const contents: [string, string | Blob, string, string[]][] = [
+                ["Blob", new Blob([path]), notMusicXml, []],
+                ["Blob with byte order mark", new Blob(["﻿" + path]), notMusicXml, []],
+                ["MXL Blob", await zip.generateAsync({type: "blob"}), notMusicXml, []],
+                ["MXL string", await zip.generateAsync({type: "binarystring"}), notMusicXml, []],
+                ["URL", pathUrl, notMusicXml, [pathUrl]],
+                ["URL of an empty file", emptyUrl, "rejected: OpenSheetMusicDisplay: The file is not MusicXML: it is empty", [emptyUrl]],
+            ];
+            const logged: string[] = TestUtils.catchLogs();
+            const requestedUrls: string[] = [];
+            const open: typeof XMLHttpRequest.prototype.open = XMLHttpRequest.prototype.open;
+            XMLHttpRequest.prototype.open = function (this: XMLHttpRequest, method: string, url: string | URL, ...rest: any[]): void {
+                requestedUrls.push(String(url));
+                return open.call(this, method, url, ...rest);
+            };
+            try {
+                for (const [name, content, expected, expectedRequests] of contents) {
+                    requestedUrls.length = 0;
+                    const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+                    expect(await loadOutcome(osmd, content), name).to.equal(expected);
+                    expect(requestedUrls, name + ": requested URLs").to.deep.equal(expectedRequests);
+                }
+            } finally {
+                XMLHttpRequest.prototype.open = open;
+            }
+            expect(logged).to.deep.equal([]);
+        });
+
+        it("a long string that is neither XML nor a URL is rejected with its own message", async () => {
+            const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+            const logged: string[] = TestUtils.catchLogs();
+            expect(await loadOutcome(osmd, "score-partwise ".repeat(200))).to.equal("rejected: OpenSheetMusicDisplay: " +
+                "The string is neither XML nor a URL: it doesn't start with \"<\", and is too long for a URL (3000 characters)");
+            expect(logged).to.deep.equal([]);
         });
     });
 
