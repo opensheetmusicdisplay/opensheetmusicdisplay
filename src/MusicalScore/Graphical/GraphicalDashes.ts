@@ -12,7 +12,7 @@ import { StaffLine } from "./StaffLine";
 export class GraphicalDashes {
     /**
      * @param dashes the line this is a part of
-     * @param staffLine the staffline of the part, which adds it to its Dashes
+     * @param staffLine the staffline of the part, which adds it to its ExpressionDashes
      * @param start the start of the line, relative to the staffline
      * @param end the end of the line, relative to the staffline
      * @param textLabel the label of the text the line follows
@@ -25,10 +25,10 @@ export class GraphicalDashes {
         this.TextLabel = textLabel;
         this.IsContinuation = isContinuation;
         const rules: EngravingRules = staffLine.ParentMusicSystem.rules;
-        this.Line = new GraphicalLine(start, end, rules.DashesLineWidth);
-        this.DashLength = rules.DashesDashLength;
-        this.GapLength = GraphicalDashes.fitGapLength(end.x - start.x, rules.DashesDashLength, rules.DashesGapLength);
-        staffLine.Dashes.push(this);
+        this.Line = new GraphicalLine(start, end, rules.ExpressionDashesLineWidth);
+        this.DashLength = rules.ExpressionDashesDashLength;
+        this.GapLength = GraphicalDashes.fitGapLength(end.x - start.x, rules.ExpressionDashesDashLength, rules.ExpressionDashesGapLength);
+        staffLine.ExpressionDashes.push(this);
     }
 
     /** The line this is a part of. */
@@ -38,7 +38,7 @@ export class GraphicalDashes {
     public Line: GraphicalLine;
     /** The length of a dash, in units. */
     public DashLength: number;
-    /** The gap between two dashes, in units: EngravingRules.DashesGapLength, fitted so that the line ends with a whole dash. */
+    /** The gap between two dashes, in units: EngravingRules.ExpressionDashesGapLength, fitted so that the line ends with a whole dash. */
     public GapLength: number;
     /** The label of the text the line follows: in this staffline, or for a part that goes on from a system before
      *  (IsContinuation) in the staffline where the line starts. */
@@ -46,7 +46,7 @@ export class GraphicalDashes {
     /** Whether this part goes on from the staffline of a system before, where the text and the start of the line are. */
     public IsContinuation: boolean;
     /** The text again in brackets before a part that goes on from a system before, e.g. "(cresc.)", as a reminder.
-     *  Undefined unless EngravingRules.RenderDashesContinuationText is set. */
+     *  Undefined unless EngravingRules.RenderExpressionDashesContinuationText is set. */
     public ContinuationLabel: GraphicalLabel;
 
     /**

@@ -179,7 +179,7 @@ export abstract class StaffLine extends GraphicalObject {
     public WavyLines: GraphicalWavyLine[] = [];
     /** The dashed lines that extend a text in this staffline, e.g. "cresc. - - - -", and the parts of such lines that go on
      *  from a system before. */
-    public Dashes: GraphicalDashes[] = [];
+    public ExpressionDashes: GraphicalDashes[] = [];
 
     public get StaffHeight(): number {
         return this.staffHeight;

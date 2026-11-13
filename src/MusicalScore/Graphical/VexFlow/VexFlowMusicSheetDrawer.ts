@@ -942,7 +942,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     protected drawDashedLinesAfterTexts(staffLine: StaffLine): void {
-        for (const graphicalDashes of staffLine.Dashes) {
+        for (const graphicalDashes of staffLine.ExpressionDashes) {
             const line: GraphicalLine = graphicalDashes.Line;
             const staffLinePosition: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
             // (lazy horizontal: each part is drawn by the batch that reaches its end)
@@ -959,7 +959,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             }
             line.SVGElement = this.backend.renderLine(start, end, color, line.Width * unitInPixels, undefined,
                 [graphicalDashes.DashLength * unitInPixels, graphicalDashes.GapLength * unitInPixels]);
-            this.addSVGClass(line.SVGElement, "osmd-dashes");
+            this.addSVGClass(line.SVGElement, "osmd-expression-dashes");
             if (graphicalDashes.ContinuationLabel) {
                 graphicalDashes.ContinuationLabel.SVGNode = this.drawLabel(graphicalDashes.ContinuationLabel, <number>GraphicalLayers.Notes);
             }

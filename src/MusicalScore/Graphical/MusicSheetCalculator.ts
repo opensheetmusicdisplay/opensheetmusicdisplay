@@ -2567,12 +2567,12 @@ export abstract class MusicSheetCalculator {
      * Calculates the dashed lines after texts (MusicXML `<dashes>`, e.g. "cresc. - - - -" or "rit. - - - -", see Dashes) for
      * the texts placed so far, unless their line is calculated already. Called after each kind of text is placed (verbal
      * dynamics, words, tempo words), so that what is placed later stays clear of the lines (they update the sky/bottom line).
-     * The line starts after its text, on the text's baseline (DashesYOffsetFromTextCenter), and ends before its stop position.
+     * The line starts after its text, on the text's baseline (ExpressionDashesYOffsetFromTextCenter), and ends before its stop position.
      * In the systems after its text's, it goes on from the start of the staffline, placed by the sky/bottom line there,
-     * with the text again in brackets if RenderDashesContinuationText is set.
+     * with the text again in brackets if RenderExpressionDashesContinuationText is set.
      */
     protected calculateDashedLinesAfterTexts(): void {
-        if (!this.rules.RenderDashes) {
+        if (!this.rules.RenderExpressionDashes) {
             return;
         }
         for (const musicSystem of this.musicSystems) {
@@ -2613,7 +2613,7 @@ export abstract class MusicSheetCalculator {
 
     /**
      * Returns where a dashed line after a text (see Dashes) ends: the last measure it reaches and the x position of its end
-     * relative to that measure's staffline, DashesEndPadding before the notes at its stop position or before the barline.
+     * relative to that measure's staffline, ExpressionDashesEndPadding before the notes at its stop position or before the barline.
      * A line that stops in a measure that isn't drawn ends with the last measure drawn before it.
      * Undefined if the line has no stop or none of its measures is drawn.
      * @param dashes the line
@@ -2653,18 +2653,18 @@ export abstract class MusicSheetCalculator {
                 }
             }
         }
-        return { measure: endMeasure, x: endX - this.rules.DashesEndPadding };
+        return { measure: endMeasure, x: endX - this.rules.ExpressionDashesEndPadding };
     }
 
     /**
      * Returns the x position (relative to the staffline) up to which a dashed line after a text (see Dashes) runs in the
      * staffline of its text: its end, or the end of the staffline if it goes on in a later system. Undefined if no line is
-     * drawn (RenderDashes, a line without a stop).
+     * drawn (RenderExpressionDashes, a line without a stop).
      * @param dashes the line
      * @param staffLine the staffline of the text
      */
     protected getDashesEndXInStaffLine(dashes: Dashes, staffLine: StaffLine): number {
-        if (!this.rules.RenderDashes) {
+        if (!this.rules.RenderExpressionDashes) {
             return undefined;
         }
         const end: { measure: GraphicalMeasure, x: number } = this.getDashesEnd(dashes, staffLine.ParentStaff.idInMusicSheet);
@@ -2690,9 +2690,9 @@ export abstract class MusicSheetCalculator {
         const endStaffLine: StaffLine = end.measure.ParentStaffLine;
         const isBelow: boolean = dashes.Placement === PlacementEnum.Below;
         const fontHeight: number = textLabel.Label.fontHeight;
-        // The line is on the baseline of the text (DashesYOffsetFromTextCenter). It takes the vertical space of the text in the
+        // The line is on the baseline of the text (ExpressionDashesYOffsetFromTextCenter). It takes the vertical space of the text in the
         //   sky/bottom line: the text's height, from yOffsetFromCenter + half a text height above the line to the rest below it.
-        const yOffsetFromCenter: number = fontHeight * this.rules.DashesYOffsetFromTextCenter;
+        const yOffsetFromCenter: number = fontHeight * this.rules.ExpressionDashesYOffsetFromTextCenter;
         const spaceAbove: number = fontHeight / 2 + yOffsetFromCenter;
         const spaceBelow: number = fontHeight - spaceAbove;
 
@@ -2704,7 +2704,7 @@ export abstract class MusicSheetCalculator {
             textPosition.y += box.RelativePosition.y;
         }
         const textBox: BoundingBox = textLabel.PositionAndShape;
-        const startX: number = textPosition.x + textBox.BorderRight + this.rules.DashesTextPadding;
+        const startX: number = textPosition.x + textBox.BorderRight + this.rules.ExpressionDashesTextPadding;
         const y: number = textPosition.y + (textBox.BorderTop + textBox.BorderBottom) / 2 + yOffsetFromCenter;
         let endX: number = endStaffLine === staffLine ? end.x : staffLine.PositionAndShape.Size.width;
         // The line ends before an expression on its level, e.g. the dynamic it leads to, whose left half is before its note.
@@ -2719,12 +2719,12 @@ export abstract class MusicSheetCalculator {
                 continue;
             }
             const otherLeft: number = otherBox.RelativePosition.x + otherBox.BorderLeft;
-            if (otherLeft > startX && otherLeft - this.rules.DashesEndPadding < endX &&
+            if (otherLeft > startX && otherLeft - this.rules.ExpressionDashesEndPadding < endX &&
                 otherBox.RelativePosition.y + otherBox.BorderTop < y && otherBox.RelativePosition.y + otherBox.BorderBottom > y) {
-                endX = otherLeft - this.rules.DashesEndPadding;
+                endX = otherLeft - this.rules.ExpressionDashesEndPadding;
             }
         }
-        if (endX - startX >= this.rules.DashesMinLength) {
+        if (endX - startX >= this.rules.ExpressionDashesMinLength) {
             new GraphicalDashes(dashes, staffLine, new PointF2D(startX, y), new PointF2D(endX, y), textLabel);
             if (isBelow) {
                 staffLine.SkyBottomLineCalculator.updateBottomLineWithLabel(startX, endX, y + spaceBelow);
@@ -2745,7 +2745,7 @@ export abstract class MusicSheetCalculator {
             const firstMeasure: GraphicalMeasure = partStaffLine.Measures[0];
             const partStartX: number = firstMeasure.PositionAndShape.RelativePosition.x + firstMeasure.beginInstructionsWidth;
             const partEndX: number = partStaffLine === endStaffLine ? end.x : partStaffLine.PositionAndShape.Size.width;
-            if (partEndX - partStartX < this.rules.DashesMinLength) {
+            if (partEndX - partStartX < this.rules.ExpressionDashesMinLength) {
                 continue;
             }
             const skyBottomLineCalculator: SkyBottomLineCalculator = partStaffLine.SkyBottomLineCalculator;
@@ -2760,7 +2760,7 @@ export abstract class MusicSheetCalculator {
             // "(cresc.)": the text again in brackets, as a reminder at the start of the system (Gould, Behind Bars, p. 106)
             let lineStartX: number = partStartX;
             let reminderLabel: GraphicalLabel;
-            if (this.rules.RenderDashesContinuationText && !textLabel.Label.text.includes("\n")) {
+            if (this.rules.RenderExpressionDashesContinuationText && !textLabel.Label.text.includes("\n")) {
                 const reminder: Label = new Label(`(${textLabel.Label.text.trim()})`, TextAlignmentEnum.LeftBottom);
                 reminder.fontStyle = textLabel.Label.fontStyle;
                 reminder.font = textLabel.Label.font;
@@ -2774,8 +2774,8 @@ export abstract class MusicSheetCalculator {
                 reminderLabel.setLabelPositionAndShapeBorders();
                 // bottom-aligned: its vertical center is half a text height above its position
                 reminderLabel.PositionAndShape.RelativePosition = new PointF2D(partStartX, partY - yOffsetFromCenter + fontHeight / 2);
-                lineStartX = partStartX + reminderLabel.PositionAndShape.BorderRight + this.rules.DashesTextPadding;
-                if (partEndX - lineStartX < this.rules.DashesMinLength) {
+                lineStartX = partStartX + reminderLabel.PositionAndShape.BorderRight + this.rules.ExpressionDashesTextPadding;
+                if (partEndX - lineStartX < this.rules.ExpressionDashesMinLength) {
                     continue; // (the reminder alone would say less than no line: the text is in the system before)
                 }
             }

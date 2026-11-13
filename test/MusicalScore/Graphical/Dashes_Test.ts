@@ -34,7 +34,7 @@ describe("Dashes after a text (cresc. - - - -)", () => {
     async function renderSample(score: Document = TestUtils.getScore(sample), renderDashes: boolean = true): Promise<OpenSheetMusicDisplay> {
         const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
         osmd.setOptions({ newSystemFromXML: true });
-        osmd.EngravingRules.RenderDashes = renderDashes;
+        osmd.EngravingRules.RenderExpressionDashes = renderDashes;
         await osmd.load(score);
         osmd.render();
         return osmd;
@@ -71,7 +71,7 @@ describe("Dashes after a text (cresc. - - - -)", () => {
     function drawnParts(osmd: OpenSheetMusicDisplay): GraphicalDashes[] {
         const parts: GraphicalDashes[] = [];
         for (const system of osmd.GraphicSheet.MusicPages[0].MusicSystems) {
-            parts.push(...system.StaffLines[0].Dashes);
+            parts.push(...system.StaffLines[0].ExpressionDashes);
         }
         return parts;
     }
@@ -122,7 +122,7 @@ describe("Dashes after a text (cresc. - - - -)", () => {
             // whole dashes fill the line, with a gap close to the rule's
             const dashCount: number = (part.Line.End.x - part.Line.Start.x + part.GapLength) / (part.DashLength + part.GapLength);
             expect(dashCount, "a whole number of dashes: " + textOf(part.Dashes)).to.be.closeTo(Math.round(dashCount), 1e-6);
-            expect(part.GapLength, "gap: " + textOf(part.Dashes)).to.be.closeTo(rules.DashesGapLength, rules.DashesGapLength / 2);
+            expect(part.GapLength, "gap: " + textOf(part.Dashes)).to.be.closeTo(rules.ExpressionDashesGapLength, rules.ExpressionDashesGapLength / 2);
             if (part.IsContinuation) {
                 continue;
             }
@@ -130,7 +130,7 @@ describe("Dashes after a text (cresc. - - - -)", () => {
             const staffLineBox: BoundingBox = part.ParentStaffLine.PositionAndShape;
             const labelBox: BoundingBox = part.TextLabel.PositionAndShape;
             expect(staffLineBox.AbsolutePosition.x + part.Line.Start.x, "starts after the text: " + textOf(part.Dashes))
-                .to.be.closeTo(labelBox.AbsolutePosition.x + labelBox.BorderRight + rules.DashesTextPadding, 1e-6);
+                .to.be.closeTo(labelBox.AbsolutePosition.x + labelBox.BorderRight + rules.ExpressionDashesTextPadding, 1e-6);
             const y: number = staffLineBox.AbsolutePosition.y + part.Line.Start.y;
             expect(y, "below the top of the text: " + textOf(part.Dashes)).to.be.greaterThan(labelBox.AbsolutePosition.y + labelBox.BorderTop);
             expect(y, "above the bottom of the text: " + textOf(part.Dashes)).to.be.lessThan(labelBox.AbsolutePosition.y + labelBox.BorderBottom);
@@ -139,7 +139,7 @@ describe("Dashes after a text (cresc. - - - -)", () => {
         // a stop at the start of measure 3 (before the f there): the line ends before the barline of measure 2
         const measure2: BoundingBox = osmd.GraphicSheet.MeasureList[1][0].PositionAndShape;
         expect(cresc.Line.End.x, "cresc. ends before the barline").to.be.closeTo(
-            measure2.RelativePosition.x + measure2.BorderRight - rules.DashesEndPadding, 1e-6);
+            measure2.RelativePosition.x + measure2.BorderRight - rules.ExpressionDashesEndPadding, 1e-6);
         // a stop within a measure: the line ends before the note at the stop, after the note before it
         expect(dim.Line.End.x, "dim. ends before the note of its stop").to.be.lessThan(entryX(osmd, 4, 5));
         expect(dim.Line.End.x, "dim. goes on after the note before its stop").to.be.greaterThan(entryX(osmd, 4, 4));
@@ -159,7 +159,7 @@ describe("Dashes after a text (cresc. - - - -)", () => {
         expect(longCresc.Line.Start.y, "lower than the cresc. of measure 1: clear of the low notes").to.be.greaterThan(cresc.Line.Start.y + 1);
 
         // drawn as dashed lines with their own class
-        const groups: Element[] = Array.from(container.querySelectorAll("g.vf-line.osmd-dashes"));
+        const groups: Element[] = Array.from(container.querySelectorAll("g.vf-line.osmd-expression-dashes"));
         expect(groups.length, "drawn lines").to.equal(6);
         for (const group of groups) {
             expect(group.querySelector("path").getAttribute("stroke-dasharray"), "dashed").to.match(/^[\d.]+, [\d.]+$/);
@@ -167,10 +167,10 @@ describe("Dashes after a text (cresc. - - - -)", () => {
         expect(longCresc.Line.SVGElement, "the part's drawn group").to.equal(groups[2]);
     });
 
-    it("draws the text again in brackets after a system break with RenderDashesContinuationText", async () => {
+    it("draws the text again in brackets after a system break with RenderExpressionDashesContinuationText", async () => {
         const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(container);
         osmd.setOptions({ newSystemFromXML: true });
-        osmd.EngravingRules.RenderDashesContinuationText = true;
+        osmd.EngravingRules.RenderExpressionDashesContinuationText = true;
         await osmd.load(TestUtils.getScore(sample));
         osmd.render();
         const parts: GraphicalDashes[] = drawnParts(osmd);
@@ -183,7 +183,7 @@ describe("Dashes after a text (cresc. - - - -)", () => {
         expect(labelBox.RelativePosition.x + labelBox.BorderLeft, "the reminder starts after the clef").to.be.closeTo(
             measure9.PositionAndShape.RelativePosition.x + measure9.beginInstructionsWidth, 1e-6);
         expect(staffLineBox.AbsolutePosition.x + continued.Line.Start.x, "the line starts after the reminder").to.be.closeTo(
-            labelBox.AbsolutePosition.x + labelBox.BorderRight + osmd.EngravingRules.DashesTextPadding, 1e-6);
+            labelBox.AbsolutePosition.x + labelBox.BorderRight + osmd.EngravingRules.ExpressionDashesTextPadding, 1e-6);
         // the line is as far below the middle of the reminder as below the middle of the text in the system before
         const offset: (part: GraphicalDashes, box: BoundingBox) => number = (part: GraphicalDashes, box: BoundingBox): number =>
             part.ParentStaffLine.PositionAndShape.AbsolutePosition.y + part.Line.Start.y - (box.AbsolutePosition.y + (box.BorderTop + box.BorderBottom) / 2);
@@ -192,10 +192,10 @@ describe("Dashes after a text (cresc. - - - -)", () => {
         expect(drawnTexts, "drawn with the class of the text").to.contain("(cresc.)");
     });
 
-    it("draws no lines with RenderDashes off, and skips a start without a stop and a stop without a start", async () => {
+    it("draws no lines with RenderExpressionDashes off, and skips a start without a stop and a stop without a start", async () => {
         let osmd: OpenSheetMusicDisplay = await renderSample(undefined, false);
-        expect(drawnParts(osmd).length, "no lines with RenderDashes off").to.equal(0);
-        expect(container.querySelectorAll("g.osmd-dashes").length, "nothing drawn").to.equal(0);
+        expect(drawnParts(osmd).length, "no lines with RenderExpressionDashes off").to.equal(0);
+        expect(container.querySelectorAll("g.osmd-expression-dashes").length, "nothing drawn").to.equal(0);
         expect(readDashes(osmd).length, "the lines are still read").to.equal(5);
         osmd.clear();
 
