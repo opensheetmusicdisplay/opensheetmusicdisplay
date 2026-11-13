@@ -1,5 +1,5 @@
 import { expect } from "vitest";
-import {IXmlElement} from "../../../src/Common/FileIO/Xml";
+import {IXmlElement, removeWhitespaceBetweenElements} from "../../../src/Common/FileIO/Xml";
 import {TestUtils} from "../../Util/TestUtils";
 import {OpenSheetMusicDisplay} from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 
@@ -73,5 +73,29 @@ describe("XML interface", () => {
         expect(creditWords.attributes().length).to.equal(2);
         // Test value attribute
         expect(creditWords.attribute("justify").value).to.equal("center");
+    });
+
+    it("removeWhitespaceBetweenElements() removes the white space next to child elements and keeps the text", () => {
+        const xml: string = "<?xml version=\"1.0\"?>\n<score-partwise>\n  <part id=\"P1\">\n    <measure number=\"1\">\n" +
+            "      <print/>\n      <words> </words>\n      <text>a b</text>\n      <empty>\n</empty>\n    </measure>\n  </part>\n" +
+            "</score-partwise>";
+        expect(removeWhitespaceBetweenElements(xml)).to.equal("<?xml version=\"1.0\"?><score-partwise><part id=\"P1\">" +
+            "<measure number=\"1\"><print/><words> </words><text>a b</text><empty>\n</empty></measure></part></score-partwise>");
+        // the wrapper reads the same values with and without the white space
+        for (const xmlString of [xml, removeWhitespaceBetweenElements(xml)]) {
+            const measure: IXmlElement = new IXmlElement(parser.parseFromString(xmlString, "text/xml").documentElement)
+                .element("part").element("measure");
+            expect(measure.elements().length).to.equal(4);
+            expect(measure.value).to.equal("");
+            expect(measure.element("words").value).to.equal(" ");
+            expect(measure.element("text").value).to.equal("a b");
+            expect(measure.element("print").hasElements).to.equal(false);
+            expect(measure.element("empty").hasElements).to.equal(true);
+        }
+    });
+
+    it("removeWhitespaceBetweenElements() leaves XML with a CDATA section unchanged", () => {
+        const xml: string = "<score-partwise>\n  <words><![CDATA[<a> <b>]]></words>\n</score-partwise>";
+        expect(removeWhitespaceBetweenElements(xml)).to.equal(xml);
     });
 });
