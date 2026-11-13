@@ -221,8 +221,93 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
         const logged: string[] = TestUtils.catchLogs();
-        await expect(opensheetmusicdisplay.load(xml), "corrupted XML").rejects.toThrow(/partwise/i);
+        await expect(opensheetmusicdisplay.load(xml), "corrupted XML").rejects.toThrow(/XML is malformed.* 1\b/);
+        expect(logged).to.deep.equal([]);
+    });
+
+    it("load XML that isn't partwise MusicXML", async () => {
+        const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+        const logged: string[] = TestUtils.catchLogs();
+        await expect(opensheetmusicdisplay.load("<score-timewise/>"), "timewise MusicXML").rejects.toThrow(/partwise/i);
         expect(logged).to.deep.equal(["Could not parse MusicXML, no valid partwise element found"]);
+    });
+
+    describe("load() says what went wrong, always by rejecting", () => {
+        const validXml: string = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <work><work-title>Black and White</work-title></work>
+  <part-list><score-part id="P1"><part-name>Flute</part-name></score-part></part-list>
+  <part id="P1"><measure number="1"><attributes><divisions>1</divisions></attributes>
+    <note><pitch><step>C</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note></measure></part>
+</score-partwise>`;
+        /** The outcome of load(): "resolved", "rejected: <message>", or "threw: <message>" if load() threw instead of returning a promise. */
+        async function loadOutcome(osmd: OpenSheetMusicDisplay, content: string | Document | Blob): Promise<string> {
+            let promise: Promise<{}>;
+            try {
+                promise = osmd.load(content);
+            } catch (error) {
+                return "threw: " + error.message;
+            }
+            return promise.then((): string => "resolved", (error: Error): string => "rejected: " + error.message);
+        }
+
+        it("malformed XML is rejected with the XML parser's line and column, instead of loading the score up to the error", async () => {
+            // an unescaped "&" in line 3, column 28. Chrome's document for it still has <score-partwise> as its root, without parts.
+            const malformedXml: string = validXml.replace("Black and White", "Black & White");
+            const contents: [string, string | Document | Blob][] = [
+                ["string", malformedXml],
+                ["Blob", new Blob([malformedXml])],
+                ["Document", new DOMParser().parseFromString(malformedXml, "application/xml")],
+            ];
+            const logged: string[] = TestUtils.catchLogs();
+            for (const [name, content] of contents) {
+                const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+                // Chrome: "error on line 3 at column 28: ...", Firefox: "XML Parsing Error: not well-formed Line Number 3, Column 28"
+                expect(await loadOutcome(osmd, content), name).to.match(/^rejected: OpenSheetMusicDisplay: The XML is malformed: .*\b3\b.*\b28\b/);
+                expect(osmd.Sheet, name + ": sheet").to.equal(undefined);
+            }
+            expect(logged).to.deep.equal([]);
+            const validOsmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+            expect(await loadOutcome(validOsmd, validXml), "the same score without the error").to.equal("resolved");
+        });
+
+        it("an error while creating the graphic of an XML string or Document is a rejection, not a throw", async () => {
+            const badStepXml: string = validXml.replace("<step>C</step>", "<step>toString</step>"); // (no pitch of that name)
+            const contents: [string, string | Document | Blob][] = [
+                ["string", badStepXml],
+                ["Document", new DOMParser().parseFromString(badStepXml, "application/xml")],
+                ["Blob", new Blob([badStepXml])],
+            ];
+            for (const [name, content] of contents) {
+                const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+                expect(await loadOutcome(osmd, content), name).to.match(/^rejected: /);
+            }
+        });
+
+        it("an error of the reader is passed on in the rejection, as message and cause", async () => {
+            const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+            const logged: string[] = TestUtils.catchLogs();
+            let error: Error & { cause?: Error };
+            await osmd.load(validXml.replace(/<part-list>.*<\/part-list>/, "")).catch((e: Error): void => { error = e; });
+            expect(error?.message).to.equal("OpenSheetMusicDisplay: The given music sheet was incomplete or could not be loaded: Undefined partListNode");
+            expect(error.cause?.message, "cause").to.equal("Undefined partListNode");
+            expect(logged.length, "the reader still logs its error").to.equal(1);
+        });
+
+        it("a zip file that isn't MXL is rejected with what is missing", async () => {
+            const zip: JSZip = new JSZip();
+            zip.file("notes.txt", "not a score");
+            const expected: string = "rejected: OpenSheetMusicDisplay: Invalid MXL file: META-INF/container.xml is missing, " +
+                "and the archive has no other .musicxml or .xml file";
+            const contents: [string, string | Blob][] = [
+                ["Blob", await zip.generateAsync({type: "blob"})],
+                ["binary string", await zip.generateAsync({type: "binarystring"})],
+            ];
+            for (const [name, content] of contents) {
+                const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(TestUtils.getDivElement(document));
+                expect(await loadOutcome(osmd, content), name).to.equal(expected);
+            }
+        });
     });
 
     it("render without loading", () => {

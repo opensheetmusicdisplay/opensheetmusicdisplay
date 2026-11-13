@@ -143,19 +143,38 @@ export class OpenSheetMusicDisplay {
      *   A string that starts with "<" (after whitespace) is read as XML, also without the XML declaration (<?xml ...?>).
      * @param tempTitle is used as the title for the piece if there is no title in the XML.
      *   The name or path of a MusicXML file (e.g. "scores/Sonata No. 1.musicxml") is used without its folder and extension.
+     * @returns a promise that is rejected with an Error when the score can't be loaded, for every kind of content:
+     *   e.g. for malformed XML (the message has the XML parser's line and column), for a file that isn't MusicXML or MXL,
+     *   or when reading the score fails (the Error's `cause` is then the reader's error). load() itself doesn't throw.
      */
     public load(content: string | Document | Blob, tempTitle: string = "Untitled Score"): Promise<{}> {
-        // Warning! This function is asynchronous! No error handling is done here.
+        try {
+            return this.loadContent(content, tempTitle);
+        } catch (error) {
+            // string and Document content is read synchronously: without this, its errors would be thrown instead of rejected
+            return Promise.reject(error);
+        }
+    }
+
+    /** Does the work of load(). Can throw as well as reject: load() turns both into a rejected promise. */
+    private loadContent(content: string | Document | Blob, tempTitle: string): Promise<{}> {
         this.reset();
         const self: OpenSheetMusicDisplay = this;
+        /** The XML string that `content` was parsed from, if it was given as a string. */
+        let parsedXml: string;
         if (content instanceof Blob) {
             const mxlFile: MXLFile = new MXLFile(content);
             // check if this is a zip / mxl file
             return mxlFile.tryUnzip().then(() => {
                 if (mxlFile.unzipSuccessful) {
-                    return mxlFile.getXmlString().then((xmlString) => {
-                        return self.load(xmlString, tempTitle);
-                    });
+                    return mxlFile.getXmlString().then(
+                        (xmlString) => {
+                            return self.load(xmlString, tempTitle);
+                        },
+                        (err: Error) => {
+                            throw this.createError("OpenSheetMusicDisplay: Invalid MXL file", err);
+                        }
+                    );
                 } else {
                     // not a zip
                     if (content instanceof Blob) { // always true. unfortunately need to check again for linter
@@ -175,9 +194,9 @@ export class OpenSheetMusicDisplay {
                     (x: string) => {
                         return self.load(x, tempTitle);
                     },
-                    (err: any) => {
+                    (err: Error) => {
                         log.debug(err);
-                        throw new Error("OpenSheetMusicDisplay: Invalid MXL file");
+                        throw this.createError("OpenSheetMusicDisplay: Invalid MXL file", err);
                     }
                 );
             }
@@ -200,6 +219,7 @@ export class OpenSheetMusicDisplay {
                 const parser: DOMParser = new DOMParser();
                 // (without the white space between the elements: fewer nodes to parse, see removeWhitespaceBetweenElements())
                 content = parser.parseFromString(removeWhitespaceBetweenElements(modifiedXml), "application/xml");
+                parsedXml = modifiedXml;
             } else if (trimmedStr.length < 2083) { // TODO do proper URL format check
                 log.debug("[OSMD] Retrieve the file at the given URL: " + trimmedStr);
                 // Assume now "str" is a URL
@@ -217,6 +237,16 @@ export class OpenSheetMusicDisplay {
             return Promise.reject(new Error("OpenSheetMusicDisplay: The document which was provided is invalid"));
         }
         const xmlDocument: Document = (<Document>content);
+        if (typeof xmlDocument.getElementsByTagName === "function") { // (not for a node given instead of a document)
+            let parserError: string = this.getXmlParserError(xmlDocument);
+            if (parserError) {
+                if (parsedXml) {
+                    // parse the string as it was given (with its line breaks), so that the error's line and column are the file's
+                    parserError = this.getXmlParserError(new DOMParser().parseFromString(parsedXml, "application/xml")) ?? parserError;
+                }
+                return Promise.reject(new Error("OpenSheetMusicDisplay: The XML is malformed: " + parserError));
+            }
+        }
         const xmlDocumentNodes: NodeList = xmlDocument.childNodes;
         log.debug("[OSMD] load(), Document url: " + xmlDocument.URL);
 
@@ -237,8 +267,9 @@ export class OpenSheetMusicDisplay {
         const reader: MusicSheetReader = new MusicSheetReader([temposCalculator], this.rules);
         this.sheet = reader.createMusicSheet(score, tempTitle);
         if (this.sheet === undefined) {
-            // error loading sheet, probably already logged, do nothing
-            return Promise.reject(new Error("given music sheet was incomplete or could not be loaded."));
+            // error loading sheet, already logged by the reader
+            return Promise.reject(this.createError(
+                "OpenSheetMusicDisplay: The given music sheet was incomplete or could not be loaded", reader.ReadingError));
         }
         // if (this.sheet.TitleString === "osmd.Version") {
         //     this.sheet.TitleString = "OSMD version: " + this.Version; // useful for debug e.g. when console not available
@@ -249,6 +280,40 @@ export class OpenSheetMusicDisplay {
         this.updateGraphic();
 
         return Promise.resolve({});
+    }
+
+    /** Creates an Error with the given message, followed by the message of the error that caused it, which is kept as `cause`. */
+    private createError(message: string, cause: Error): Error {
+        const causeMessage: string = cause?.message ?? (cause ? String(cause) : undefined);
+        const error: Error & { cause?: unknown } = new Error(causeMessage ? `${message}: ${causeMessage}` : message);
+        if (cause) {
+            error.cause = cause; // (the constructor's cause option is ES2022)
+        }
+        return error;
+    }
+
+    /**
+     * Returns the XML parser's message if the document isn't well-formed XML, e.g. "error on line 3 at column 28:
+     * Unexpected token inside entity" (Chrome) or "XML Parsing Error: not well-formed Line Number 3, Column 28" (Firefox),
+     * and undefined for a well-formed document.
+     * DOMParser doesn't throw for malformed XML, it returns a document with a <parsererror> element: Firefox as the root
+     * element, Chrome and Safari inside of the document as far as it was read (so the root can still be <score-partwise>,
+     * with the rest of the score missing).
+     */
+    private getXmlParserError(xmlDocument: Document): string {
+        const errorElement: Element = xmlDocument.getElementsByTagName("parsererror")[0];
+        if (!errorElement) {
+            return undefined;
+        }
+        // Chrome, Safari: <h3>This page contains the following errors:</h3><div>the message</div><h3>Below is a rendering ...</h3>
+        // Firefox: the message as text ("XML Parsing Error: ...", "Location: <the page's URL>", "Line Number ..., Column ...:"),
+        //   then <sourcetext> with the line of the error, which can be the whole file
+        const messageNode: Node = errorElement.getElementsByTagName("div")[0] ?? errorElement.firstChild ?? errorElement;
+        const lines: string[] = (messageNode.textContent ?? "").split("\n")
+            .map((line: string): string => line.trim())
+            .filter((line: string): boolean => line.length > 0 && !line.startsWith("Location:"));
+        const message: string = lines.join(" ").replace(/:$/, "");
+        return message.length > 0 ? message.substring(0, 300) : "unknown error";
     }
 
     /**

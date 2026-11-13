@@ -41,6 +41,40 @@ describe("MXL Tests", () => {
     expect(xmlString).to.equal(xml);
   });
 
+  describe("a zip file without a usable META-INF/container.xml", () => {
+    const xml: string = "<score-partwise version=\"4.0\"/>";
+    const container: (rootFile: string) => string = (rootFile: string): string =>
+      `<container><rootfiles><rootfile full-path="${rootFile}"/></rootfiles></container>`;
+    async function read(files: {[name: string]: string}): Promise<string> {
+      const zip: JSZip = new JSZip();
+      for (const name of Object.keys(files)) {
+        zip.file(name, files[name]);
+      }
+      return MXLHelper.jszipToXMLstring(zip).catch((error: Error): string => "rejected: " + error.message);
+    }
+
+    it("reads the first .musicxml file instead, or else the first .xml file, with a warning", async () => {
+      const logged: string[] = TestUtils.catchLogs();
+      expect(await read({"notes.xml": "<notes/>", "score.musicxml": xml}), "no container file").to.equal(xml);
+      expect(await read({"META-INF/container.xml": "", "score.xml": xml}), "empty container file").to.equal(xml);
+      expect(await read({"META-INF/container.xml": container("Score.xml"), "score.xml": xml}), "rootfile not in the zip").to.equal(xml);
+      expect(logged).to.deep.equal([
+        "[OSMD] MXL file: META-INF/container.xml is missing, reading \"score.musicxml\" instead.",
+        "[OSMD] MXL file: META-INF/container.xml names no rootfile, reading \"score.xml\" instead.",
+        "[OSMD] MXL file: the rootfile \"Score.xml\" of META-INF/container.xml is not in the archive, reading \"score.xml\" instead.",
+      ]);
+    });
+
+    it("rejects with what is missing if the zip has no other MusicXML file", async () => {
+      const noOtherFile: string = ", and the archive has no other .musicxml or .xml file";
+      expect(await read({"notes.txt": "x"})).to.equal("rejected: META-INF/container.xml is missing" + noOtherFile);
+      expect(await read({"META-INF/container.xml": "<container/>", "notes.txt": "x"}))
+        .to.equal("rejected: META-INF/container.xml names no rootfile" + noOtherFile);
+      expect(await read({"META-INF/container.xml": container("score.xml")}))
+        .to.equal("rejected: the rootfile \"score.xml\" of META-INF/container.xml is not in the archive" + noOtherFile);
+    });
+  });
+
   // Test failure
   it("Corrupted file", async () => {
     const logged: string[] = TestUtils.catchLogs();

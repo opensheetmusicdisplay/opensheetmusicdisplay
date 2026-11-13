@@ -46,6 +46,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     private repetitionCalculator: RepetitionCalculator;
     private afterSheetReadingModules: IAfterSheetReadingModule[];
     private musicSheet: MusicSheet;
+    private readingError: Error;
     private completeNumberOfStaves: number = 0;
     private currentMeasure: SourceMeasure;
     private previousMeasure: SourceMeasure;
@@ -84,15 +85,23 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
      * Read a music XML file and saves the values in the MusicSheet class.
      * @param root
      * @param path
-     * @returns {MusicSheet}
+     * @returns {MusicSheet} the sheet, or undefined if reading failed: the error is logged and kept in ReadingError.
      */
     public createMusicSheet(root: IXmlElement, path: string): MusicSheet {
+        this.readingError = undefined;
         try {
             return this._createMusicSheet(root, path);
         } catch (e) {
             log.error("MusicSheetReader.CreateMusicSheet", e);
+            // (OSMD's own exceptions like MusicSheetReadingException have a message, but aren't instances of Error)
+            this.readingError = typeof e?.message === "string" ? e : new Error(String(e));
             return undefined;
         }
+    }
+
+    /** The error that made the last createMusicSheet() return undefined. Undefined if it returned a sheet. */
+    public get ReadingError(): Error {
+        return this.readingError;
     }
 
     private _removeFromArray(list: any[], elem: any): void {
