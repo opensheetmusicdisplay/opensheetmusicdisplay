@@ -1,4 +1,5 @@
 import { SourceMeasure } from "../SourceMeasure";
+import { Dashes } from "./ContinuousExpressions/Dashes";
 
 export class AbstractExpression {
     protected placement: PlacementEnum;
@@ -9,6 +10,9 @@ export class AbstractExpression {
     /** The vertical position the file gives the words or dynamic, in tenths of a staff space, up from the top line of the
      *  staff: MusicXML default-y plus relative-y. Undefined without a default-y (see ExpressionReader.readYPositionXml()). */
     public YPositionXml: number;
+    /** The dashed line that extends the expression's text up to where it stops applying, e.g. "cresc. - - - -":
+     *  MusicXML `<dashes>`. Undefined if the text has none. */
+    public Dashes: Dashes;
 
     constructor(placement: PlacementEnum) {
         this.placement = placement;

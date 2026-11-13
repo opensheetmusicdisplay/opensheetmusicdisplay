@@ -15,6 +15,7 @@ import { GraphicalSlur } from "./GraphicalSlur";
 import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
 import { GraphicalPedal } from "./GraphicalPedal";
 import { GraphicalGlissando } from "./GraphicalGlissando";
+import { GraphicalDashes } from "./GraphicalDashes";
 import { GraphicalWavyLine } from "./GraphicalWavyLine";
 
 /**
@@ -176,6 +177,9 @@ export abstract class StaffLine extends GraphicalObject {
 
     public Pedals: GraphicalPedal[] = [];
     public WavyLines: GraphicalWavyLine[] = [];
+    /** The dashed lines that extend a text in this staffline, e.g. "cresc. - - - -", and the parts of such lines that go on
+     *  from a system before. */
+    public ExpressionDashes: GraphicalDashes[] = [];
 
     public get StaffHeight(): number {
         return this.staffHeight;

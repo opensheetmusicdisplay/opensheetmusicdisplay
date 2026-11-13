@@ -12,7 +12,7 @@ import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {InstantaneousTempoExpression, MetronomeNote, MetronomeNoteGroup, MetronomeTuplet} from "../../VoiceData/Expressions/InstantaneousTempoExpression";
 import {MoodExpression} from "../../VoiceData/Expressions/MoodExpression";
 import {UnknownExpression} from "../../VoiceData/Expressions/UnknownExpression";
-import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
+import {AbstractExpression, PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {TextAlignmentEnum} from "../../../Common/Enums/TextAlignment";
 import {ITextTranslation} from "../../Interfaces/ITextTranslation";
 import log from "loglevel";
@@ -20,6 +20,7 @@ import { FontStyles } from "../../../Common/Enums/FontStyles";
 import { RehearsalExpression } from "../../VoiceData/Expressions/RehearsalExpression";
 import { Pedal } from "../../VoiceData/Expressions/ContinuousExpressions/Pedal";
 import { WavyLine } from "../../VoiceData/Expressions/ContinuousExpressions/WavyLine";
+import { Dashes } from "../../VoiceData/Expressions/ContinuousExpressions/Dashes";
 import { musicXmlColorToCss } from "../../../Common/DataObjects/XmlColor";
 
 export class ExpressionReader {
@@ -45,6 +46,12 @@ export class ExpressionReader {
     private WedgeYPosXml: number;
     private openPedal: Pedal;
     private openWavyLine: WavyLine;
+    /** The dashed lines after a text (`<dashes>`, e.g. "cresc. - - - -") that started and didn't stop yet, by their number. */
+    private openDashes: Map<number, Dashes> = new Map();
+    /** The expression of the last `<words>` read, for the `<dashes>` that follow them, with their measure and position. */
+    private lastWordsExpression: AbstractExpression;
+    private lastWordsMeasure: SourceMeasure;
+    private lastWordsFraction: Fraction;
     /** Unicode text for SMuFL note symbols between words, e.g. metNote8thUp in "Fast (Straight ♪)".
      *  Notes use the text's font or a fallback font. Stem-down variants use the same note value's stem-up character.
      *  Unsupported names are omitted without removing the surrounding words. */
@@ -268,6 +275,9 @@ export class ExpressionReader {
                 // an exporter may split the words where their formatting changes, and put a note symbol between them
                 const text: string = dirNode.elements().map((node: IXmlElement): string => node.name === "words" ? node.value :
                     node.name === "symbol" ? ExpressionReader.noteSymbolTexts.get(node.value.trim().replace(/Down$/, "Up")) ?? "" : "").join("");
+                this.lastWordsExpression = undefined; // set where the words get an expression, for dashes after them (readDashes())
+                this.lastWordsMeasure = currentMeasure;
+                this.lastWordsFraction = inSourceMeasureCurrentFraction.clone();
                 if (isTempoInstruction) {
                     this.directionTimestamp = this.readDirectionTimestamp(
                         dirContentNode.attribute("default-x") ? undefined : offsetNode, inSourceMeasureCurrentFraction);
@@ -277,6 +287,7 @@ export class ExpressionReader {
                         text, this.placement, this.staffNumber, this.soundTempo, this.currentMultiTempoExpression);
                     instantaneousTempoExpression.language = dirContentNode.attribute("xml:lang")?.value;
                     this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, "");
+                    this.lastWordsExpression = instantaneousTempoExpression;
                 } else {
                     this.interpretWords(dirContentNode, text, currentMeasure, timestampFraction);
                 }
@@ -287,6 +298,12 @@ export class ExpressionReader {
             if (dirContentNode) {
                 this.directionTimestamp = this.readDirectionTimestamp(offsetNode, inSourceMeasureCurrentFraction); // see dynamics
                 this.interpretWedge(directionNode, dirContentNode, currentMeasure, inSourceMeasurePreviousFraction, currentMeasure.MeasureNumber);
+                continue;
+            }
+
+            dirContentNode = dirNode.element("dashes");
+            if (dirContentNode) {
+                this.readDashes(dirContentNode, currentMeasure, inSourceMeasureCurrentFraction, timestampFraction);
                 continue;
             }
 
@@ -314,6 +331,50 @@ export class ExpressionReader {
         if (this.openContinuousTempoExpression) {
             this.closeOpenContinuousTempo(Fraction.plus(sourceMeasure.AbsoluteTimestamp, timestamp));
         }
+        this.openDashes.forEach((dashes: Dashes) => {
+            log.warn(`ExpressionReader: <dashes type="start" number="${dashes.NumberXml}"> in measure ` +
+                `${dashes.StartMeasure.MeasureNumberXML} has no stop: its line isn't drawn.`);
+        });
+        this.openDashes.clear();
+    }
+
+    /**
+     * Reads a `<dashes>` element: the start or stop of the dashed line that extends a text, e.g. "cresc. - - - -".
+     * The line belongs to the words read before it at the same position, usually in the same `<direction>` (see
+     * AbstractExpression.Dashes). A start without words, a second start of a number or a stop without a start is skipped
+     * with a log message.
+     * @param dashesNode the `<dashes>` element
+     * @param currentMeasure the measure of the direction
+     * @param directionFraction the position of the direction in the measure
+     * @param timestamp the position of the direction in the measure with its offset
+     */
+    private readDashes(dashesNode: IXmlElement, currentMeasure: SourceMeasure, directionFraction: Fraction, timestamp: Fraction): void {
+        const numberXml: number = this.readNumber(dashesNode);
+        const type: string = dashesNode.attribute("type")?.value;
+        const measureNumber: number = currentMeasure.MeasureNumberXML;
+        if (type === "start") {
+            const textExpression: AbstractExpression = this.lastWordsExpression;
+            if (!textExpression || this.lastWordsMeasure !== currentMeasure || !this.lastWordsFraction.Equals(directionFraction)) {
+                log.info(`ExpressionReader: <dashes type="start"> in measure ${measureNumber} follows no words: skipped.`);
+                return;
+            }
+            if (this.openDashes.has(numberXml)) {
+                log.warn(`ExpressionReader: <dashes type="start" number="${numberXml}"> in measure ${measureNumber} ` +
+                    "starts before the dashes of this number stopped: the line before isn't drawn.");
+            }
+            const dashes: Dashes = new Dashes(textExpression, this.staffNumber, numberXml, currentMeasure, timestamp.clone());
+            textExpression.Dashes = dashes;
+            this.openDashes.set(numberXml, dashes);
+        } else if (type === "stop") {
+            const dashes: Dashes = this.openDashes.get(numberXml);
+            if (!dashes) {
+                log.warn(`ExpressionReader: <dashes type="stop" number="${numberXml}"> in measure ${measureNumber} has no start: skipped.`);
+                return;
+            }
+            dashes.EndMeasure = currentMeasure;
+            dashes.EndTimestamp = timestamp.clone();
+            this.openDashes.delete(numberXml);
+        } // type "continue" needs nothing: the line goes on up to its stop
     }
     public addOctaveShift(directionNode: IXmlElement, currentMeasure: SourceMeasure, endTimestamp: Fraction,
                           endVoiceEntryCount: number = 0): void {
@@ -1059,6 +1120,7 @@ export class ExpressionReader {
                 instantaneousTempoExpression.ColorXML = fontColor;
                 instantaneousTempoExpression.language = language;
                 this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, prefix);
+                this.lastWordsExpression = instantaneousTempoExpression;
                 return true;
             }
             if (isContinuousTempo) {
@@ -1070,6 +1132,7 @@ export class ExpressionReader {
                 continuousTempoExpression.ColorXML = fontColor;
                 continuousTempoExpression.language = language;
                 this.currentMultiTempoExpression.addExpression(continuousTempoExpression, prefix);
+                this.lastWordsExpression = continuousTempoExpression;
                 return true;
             }
         }
@@ -1112,6 +1175,7 @@ export class ExpressionReader {
             this.openContinuousDynamicExpressions.push(continuousDynamicExpression);
             continuousDynamicExpression.StartMultiExpression = this.getMultiExpression;
             this.getMultiExpression.addExpression(continuousDynamicExpression, prefix);
+            this.lastWordsExpression = continuousDynamicExpression;
             return true;
         }
         if (MoodExpression.isInputStringMood(stringTrimmed)) {
@@ -1123,6 +1187,7 @@ export class ExpressionReader {
             moodExpression.language = language;
             moodExpression.YPositionXml = yPositionXml;
             multiExpression.addExpression(moodExpression, prefix);
+            this.lastWordsExpression = moodExpression;
             return true;
         }
 
@@ -1161,6 +1226,7 @@ export class ExpressionReader {
         unknownExpression.YPositionXml = yPositionXml;
         unknownExpression.parentMeasure = currentMeasure;
         unknownMultiExpression.addExpression(unknownExpression, prefix);
+        this.lastWordsExpression = unknownExpression;
         return false;
     }
     private closeOpenContinuousDynamic(openContinuousDynamicExpression: ContinuousDynamicExpression, endMeasure: SourceMeasure, timestamp: Fraction): void {

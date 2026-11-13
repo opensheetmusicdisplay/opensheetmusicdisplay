@@ -109,7 +109,11 @@ public abstract getContext(): Vex.IRenderContext;
    */
   public abstract renderRectangle(rectangle: RectangleF2D, styleId: number, colorHex: string, alpha: number): Node;
 
-  public abstract renderLine(start: PointF2D, stop: PointF2D, color: string, lineWidth: number, id?: string): Node;
+  /**
+   * Draws a line.
+   * @param dashes the lengths of a dash and of the gap after it (in pixels) for a dashed line, undefined for a solid one
+   */
+  public abstract renderLine(start: PointF2D, stop: PointF2D, color: string, lineWidth: number, id?: string, dashes?: number[]): Node;
 
   public abstract renderCurve(points: PointF2D[], isSlur?: boolean, startNote?: VexFlowGraphicalNote): Node;
 

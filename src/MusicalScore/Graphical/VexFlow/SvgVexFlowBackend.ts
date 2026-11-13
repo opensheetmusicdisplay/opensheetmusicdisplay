@@ -187,7 +187,8 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         return node;
     }
 
-    public renderLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 2, id?: string): Node {
+    public renderLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 2, id?: string,
+                      dashes?: number[]): Node {
         this.ctx.save();
         const node: Node = this.ctx.openGroup("line", id);
         this.ctx.beginPath();
@@ -195,6 +196,9 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.ctx.lineTo(stop.x, stop.y);
 
         this.ctx.attributes.stroke = color;
+        if (dashes) {
+            (this.ctx as any).setLineDash(dashes); // (typed as a string; restore() below removes it again)
+        }
         //this.ctx.attributes.strokeStyle = color;
         //this.ctx.attributes["font-weight"] = "bold";
         //this.ctx.attributes["stroke-linecap"] = "round";

@@ -359,6 +359,8 @@ export class EngravingRules {
     public BetweenSyllableMaximumDistance: number;
     public BetweenSyllableMinimumDistance: number;
     public LyricOverlapAllowedIntoNextMeasure: number;
+    /** The minimum distance between the dashes of a lyric word whose syllables are far apart ("glo - - ri - a"), in units.
+     *  Not the dashed line after a text like "cresc. - - - -": see the ExpressionDashes rules, e.g. ExpressionDashesGapLength. */
     public MinimumDistanceBetweenDashes: number;
     public MaximumLyricsElongationFactor: number;
 
@@ -708,6 +710,32 @@ export class EngravingRules {
      * the line or the signs of the pedal show it anyway, and (Ped.) takes space at the system's start. */
     public RenderPedalContinuationSign: boolean;
     public RenderWavyLines: boolean;
+    /** Whether to draw the dashed line that extends a text up to where it stops applying, e.g. "cresc. - - - -" or
+     *  "rit. - - - -" (MusicXML `<dashes>`). Default true. */
+    public RenderExpressionDashes: boolean;
+    /** The width of the dashed line after a text (see RenderExpressionDashes), in units (1.0 = distance between two staff lines). Default 0.12. */
+    public ExpressionDashesLineWidth: number;
+    /** Whether a dashed line after a text (see RenderExpressionDashes) that goes on after a system break starts with the text again
+     *  in brackets there, e.g. "(cresc.) - - - -", as a reminder (Elaine Gould, Behind Bars, p. 106, calls it useful).
+     *  Default false, like RenderPedalContinuationSign: MusicXML doesn't encode the reminder, and it takes space. */
+    public RenderExpressionDashesContinuationText: boolean;
+    /** The length of a dash of the dashed line after a text (see RenderExpressionDashes), in units. Default 0.8. */
+    public ExpressionDashesDashLength: number;
+    /** The gap between two dashes of the dashed line after a text (see RenderExpressionDashes), in units. Default 1.4: widely spaced
+     *  dashes (Elaine Gould, Behind Bars, p. 106), which don't look like a staff or ledger line.
+     *  The gaps are widened or narrowed a little so that the line starts and ends with a whole dash. */
+    public ExpressionDashesGapLength: number;
+    /** The distance between a text and the start of its dashed line (see RenderExpressionDashes), in units. Default 0.5. */
+    public ExpressionDashesTextPadding: number;
+    /** The distance between the end of a dashed line after a text (see RenderExpressionDashes) and the note or barline it stops at, or
+     *  an expression on the same level that it would otherwise run into, e.g. the dynamic it leads to. In units, default 0.6. */
+    public ExpressionDashesEndPadding: number;
+    /** A dashed line after a text (see RenderExpressionDashes) that is shorter than this isn't drawn. In units, default 1.5. */
+    public ExpressionDashesMinLength: number;
+    /** How far below the vertical center of its text a dashed line (see RenderExpressionDashes) is drawn, in text heights. Default 0.28:
+     *  on the baseline of the text (as in Elaine Gould, Behind Bars, p. 106), which is 0.3 text heights below its center.
+     *  0.075 is the middle of the lowercase letters (as in MuseScore). */
+    public ExpressionDashesYOffsetFromTextCenter: number;
     public DynamicExpressionMaxDistance: number;
     public DynamicExpressionSpacer: number;
     /** Whether words and an instantaneous dynamic of the same staff, placement and time are drawn on one line, in the order
@@ -1283,6 +1311,15 @@ export class EngravingRules {
         this.PedalReleaseSignMarginToPedSign = 0.5;
         this.RenderPedalContinuationSign = false;
         this.RenderWavyLines = true;
+        this.RenderExpressionDashes = true;
+        this.ExpressionDashesLineWidth = 0.12;
+        this.RenderExpressionDashesContinuationText = false;
+        this.ExpressionDashesDashLength = 0.8;
+        this.ExpressionDashesGapLength = 1.4;
+        this.ExpressionDashesTextPadding = 0.5;
+        this.ExpressionDashesEndPadding = 0.6;
+        this.ExpressionDashesMinLength = 1.5;
+        this.ExpressionDashesYOffsetFromTextCenter = 0.28;
         this.ArticulationPlacementFromXML = true;
         this.BreathMarkDistance = 0.8;
         this.FingeringPosition = PlacementEnum.AboveOrBelow; // AboveOrBelow = correct bounding boxes

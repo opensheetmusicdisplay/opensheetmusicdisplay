@@ -193,14 +193,21 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         return undefined; // can't return dom node like with SVG
     }
 
-    public renderLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 2, id?: string): Node {
+    public renderLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 2, id?: string,
+                      dashes?: number[]): Node {
         const oldStyle: string | CanvasGradient | CanvasPattern = this.CanvasRenderingCtx.strokeStyle;
         this.CanvasRenderingCtx.strokeStyle = color;
+        if (dashes) {
+            this.CanvasRenderingCtx.setLineDash(dashes);
+        }
         this.CanvasRenderingCtx.beginPath();
         this.CanvasRenderingCtx.moveTo(start.x, start.y);
         this.CanvasRenderingCtx.lineTo(stop.x, stop.y);
         this.CanvasRenderingCtx.stroke();
         this.CanvasRenderingCtx.strokeStyle = oldStyle;
+        if (dashes) {
+            this.CanvasRenderingCtx.setLineDash([]);
+        }
         return undefined; // can't return svg dom node
     }
 
