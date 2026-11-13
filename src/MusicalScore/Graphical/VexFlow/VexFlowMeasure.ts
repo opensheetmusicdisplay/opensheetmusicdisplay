@@ -40,6 +40,7 @@ import { Arpeggio } from "../../VoiceData/Arpeggio";
 import { GraphicalTie } from "../GraphicalTie";
 import { Note } from "../../VoiceData/Note";
 import { TabNote } from "../../VoiceData/TabNote";
+import { CollectionUtil } from "../../../Util/CollectionUtil";
 
 // type StemmableNote = VF.StemmableNote;
 
@@ -633,7 +634,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             // all the passes it's played on, e.g. "1, 3", unless the score gives a text for it, e.g. "1., 3." (VexFlow draws it as given)
             const label: string = repetitionInstruction.Words ?? repetitionInstruction.endingIndices.join(", ");
             this.stave.setVoltaType(voltaType, label as any, vexFlowVoltaHeight);
-            const volta: VF.StaveModifier = this.stave.getModifiers().last();
+            const volta: VF.StaveModifier = CollectionUtil.getLastElement(this.stave.getModifiers());
             VexFlowConverter.setVexFlowTextFontFamily((volta as any).font, this.rules);
             skyBottomLineCalculator.updateSkyLineInRange(start, end, newSkylineValueForMeasure);
         }
@@ -1617,7 +1618,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 const unbeamableNote: boolean =
                     gve.parentVoiceEntry.IsGrace || // don't beam grace notes
                     noteIsQuarterOrLonger || // don't beam quarter or longer notes
-                    beamedNotes.contains(vfStaveNote);
+                    beamedNotes.includes(vfStaveNote);
                 if (unbeamableNote || isOnBeat) { // end beam
                     if (haveTwoOrMoreNotesToBeamAlready) {
                         // if we already have at least 2 notes to beam, beam them. don't beam notes surrounded by quarter notes etc.

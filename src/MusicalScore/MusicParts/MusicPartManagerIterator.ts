@@ -18,6 +18,7 @@ import {MusicSheet} from "../MusicSheet";
 import {NoteHeadShape} from "../VoiceData/Notehead";
 import {PlaybackSettings} from "../../Common/DataObjects/PlaybackSettings";
 import {Note} from "../VoiceData/Note";
+import { CollectionUtil } from "../../Util/CollectionUtil";
 
 export class MusicPartManagerIterator {
     constructor(musicSheet: MusicSheet, startTimestamp?: Fraction, endTimestamp?: Fraction) {
@@ -296,7 +297,7 @@ export class MusicPartManagerIterator {
         this.recursiveMove();
         if (!this.currentMeasure) {
             this.currentTimeStamp = new Fraction(99999, 1);
-            this.currentMeasure = this.musicSheet.SourceMeasures.last();
+            this.currentMeasure = CollectionUtil.getLastElement(this.musicSheet.SourceMeasures);
         }
 
         this.updateCurrentBpm();
@@ -450,7 +451,7 @@ export class MusicPartManagerIterator {
                     this.restartNestedRepetition(currentRepetition);
                 }
 
-                if (this.repetitionIterationCountDictKeys.contains(currentRepetition)) {
+                if (this.repetitionIterationCountDictKeys.includes(currentRepetition)) {
                     const forwardJumpTargetMeasureIndex: number = currentRepetition.getForwardJumpTargetForIteration(
                         this.getRepetitionIterationCount(currentRepetition));
 
@@ -511,7 +512,7 @@ export class MusicPartManagerIterator {
             // (only a repeat's: endings that the repetition of a D.C. or D.S. took, e.g. one with no forward repeat after its
             //   segno, are played as they come)
             if (instruction.type !== RepetitionInstructionEnum.Ending || instruction.alignment !== AlignmentType.Begin ||
-                !repetition || repetition.FromWords || repetition.SkipRepetition || !this.repetitionIterationCountDictKeys.contains(repetition)) {
+                !repetition || repetition.FromWords || repetition.SkipRepetition || !this.repetitionIterationCountDictKeys.includes(repetition)) {
                 continue;
             }
             const pass: number = this.getRepetitionIterationCount(repetition);

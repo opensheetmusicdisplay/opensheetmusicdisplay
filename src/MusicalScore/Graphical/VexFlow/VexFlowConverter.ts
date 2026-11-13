@@ -37,6 +37,7 @@ import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 import { GraphicalMeasure } from "../GraphicalMeasure";
 import { Staff } from "../../VoiceData/Staff";
 import { VexFlowStaffEntry } from "./VexFlowStaffEntry";
+import { CollectionUtil } from "../../../Util/CollectionUtil";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -369,7 +370,7 @@ export class VexFlowConverter {
                                 const previousNote: Note = previousVoiceEntry.Notes[0];
                                 const followingNote: Note = followingVoiceEntry.Notes[0];
                                 if (previousNote.NoteBeam?.Notes.includes(followingNote)) {
-                                    const previousNotePitch: Pitch = previousVoiceEntry.Notes.last().Pitch;
+                                    const previousNotePitch: Pitch = CollectionUtil.getLastElement(previousVoiceEntry.Notes).Pitch;
                                     const clef: ClefInstruction = (note as VexFlowGraphicalNote).Clef();
                                     const vfpitch: [string, string, ClefInstruction] = VexFlowConverter.pitch(
                                         VexFlowConverter.restToNotePitch(previousNotePitch.getTransposedPitch(-2), clef.ClefType),
@@ -1003,7 +1004,7 @@ export class VexFlowConverter {
         const isInvertedFermata: (articulation: Articulation) => boolean =
             (articulation: Articulation): boolean => articulation.articulationEnum === ArticulationEnum.invertedfermata;
         const staffVoiceEntries: VoiceEntry[] = voiceEntry.ParentSourceStaffEntry?.VoiceEntries ?? [voiceEntry];
-        if (voiceEntry !== staffVoiceEntries.last()) {
+        if (voiceEntry !== CollectionUtil.getLastElement(staffVoiceEntries)) {
             return voiceEntry.Articulations.filter((articulation: Articulation): boolean => !isInvertedFermata(articulation));
         }
         const articulations: Articulation[] = voiceEntry.Articulations.slice();

@@ -629,7 +629,7 @@ export class VoiceGenerator {
     //  (e.g. quarter rest - but length different due to tuplet). see MusicSheetCalculator.calculateTupletNumbers()
     this.currentVoiceEntry.Notes.push(restNote);
     if (this.openBeams.length > 0) {
-      this.openBeams.last().ExtendedNoteList.push(restNote);
+      CollectionUtil.getLastElement(this.openBeams).ExtendedNoteList.push(restNote);
     }
     return restNote;
   }
@@ -733,11 +733,11 @@ export class VoiceGenerator {
         const currentBeamTag: string = mainBeamNode[0].value;
         if (mainBeamNode) {
           if (currentBeamTag === "begin") {
-            if (beamNumber === this.openBeams.last()?.BeamNumber) {
+            if (beamNumber === CollectionUtil.getLastElement(this.openBeams)?.BeamNumber) {
               // beam with same number already existed (error in XML), bump beam number
               this.beamNumberOffset++;
               beamNumber += this.beamNumberOffset;
-            } else if (this.openBeams.last()) {
+            } else if (CollectionUtil.getLastElement(this.openBeams)) {
                 this.handleOpenBeam();
             }
             this.openBeams.push(new Beam(beamNumber, this.beamNumberOffset));
@@ -798,7 +798,7 @@ export class VoiceGenerator {
    * Check for open [[Beam]]s at end of [[SourceMeasure]] and closes them explicity.
    */
   private handleOpenBeam(): void {
-    const openBeam: Beam = this.openBeams.last();
+    const openBeam: Beam = CollectionUtil.getLastElement(this.openBeams);
     if (openBeam.Notes.length === 0) {
       // TODO why is there such a beam? sample: test_percussion_display_step_from_xml
       this.endBeam(); // otherwise beamLastNote.ParentStaffEntry will throw an undefined error
@@ -827,7 +827,7 @@ export class VoiceGenerator {
             if (voiceEntry.ParentVoice === this.voice) {
               const candidateNote: Note = voiceEntry.Notes[0]; // undefined if the entry's note was left out as erroneous
               if (candidateNote?.Length.lte(new Fraction(1, 8))) {
-                this.openBeams.last().addNoteToBeam(candidateNote);
+                CollectionUtil.getLastElement(this.openBeams).addNoteToBeam(candidateNote);
                 this.endBeam();
               } else {
                 this.endBeam();

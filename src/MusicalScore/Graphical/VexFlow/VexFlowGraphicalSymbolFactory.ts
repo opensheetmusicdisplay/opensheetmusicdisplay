@@ -33,6 +33,7 @@ import { VexFlowMultiRestMeasure } from "./VexFlowMultiRestMeasure";
 import { BoundingBox } from "../BoundingBox";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import { VexFlowKeySignatureNote } from "./VexFlowKeySignatureNote";
+import { CollectionUtil } from "../../../Util/CollectionUtil";
 
 export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     /**
@@ -94,7 +95,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     public createExtraGraphicalMeasure(staffLine: StaffLine): GraphicalMeasure {
         const extraGraphicalMeasure: GraphicalMeasure = new VexFlowMeasure(staffLine.ParentStaff, undefined, staffLine);
         extraGraphicalMeasure.IsExtraGraphicalMeasure = true; // this also means that MeasureNumber < 0 because unchanged
-        extraGraphicalMeasure.ExtraGraphicalMeasurePreviousMeasure = staffLine.Measures.last();
+        extraGraphicalMeasure.ExtraGraphicalMeasurePreviousMeasure = CollectionUtil.getLastElement(staffLine.Measures);
         return extraGraphicalMeasure;
     }
 

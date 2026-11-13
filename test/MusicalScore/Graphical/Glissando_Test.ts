@@ -9,6 +9,7 @@ import { VexFlowGlissando } from "../../../src/MusicalScore/Graphical/VexFlow/Ve
 import { VexFlowGraphicalNote } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
 import { StaffLine } from "../../../src/MusicalScore/Graphical/StaffLine";
 import { GraphicalMeasure } from "../../../src/MusicalScore/Graphical/GraphicalMeasure";
+import { CollectionUtil } from "../../../src/Util/CollectionUtil";
 
 /**
  * test_glissando_without_slur_or_slide.musicxml has a glissando on notes without a <slur> or <slide> of their own,
@@ -98,7 +99,7 @@ describe("Glissandi across systems with courtesy signatures", () => {
             for (const page of osmd.GraphicSheet.MusicPages) {
                 for (const system of page.MusicSystems) {
                     for (const staffLine of system.StaffLines) {
-                        if (!staffLine.Measures.last().IsExtraGraphicalMeasure) {
+                        if (!CollectionUtil.getLastElement(staffLine.Measures).IsExtraGraphicalMeasure) {
                             continue;
                         }
                         for (const glissando of staffLine.GraphicalGlissandi) {
@@ -108,7 +109,7 @@ describe("Glissandi across systems with courtesy signatures", () => {
                                 expect(glissando.Line, "the glissando segment before the system break is drawn")
                                     .to.not.equal(undefined);
                                 expect(glissando.Line.End.x, "the segment ends at the barline, before the courtesy signature")
-                                    .to.be.closeTo(staffLine.Measures.last().PositionAndShape.RelativePosition.x, 0.01);
+                                    .to.be.closeTo(CollectionUtil.getLastElement(staffLine.Measures).PositionAndShape.RelativePosition.x, 0.01);
                             }
                         }
                     }

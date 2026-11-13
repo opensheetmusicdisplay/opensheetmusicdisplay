@@ -13,6 +13,7 @@ import {VoiceEntry} from "../VoiceData/VoiceEntry";
 import {SystemLinesEnum} from "./SystemLinesEnum";
 import {BoundingBox} from "./BoundingBox";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
+import { CollectionUtil } from "../../Util/CollectionUtil";
 
 /**
  * Represents a measure in the music sheet (one measure in one staff line)
@@ -386,7 +387,7 @@ export abstract class GraphicalMeasure extends GraphicalObject {
             return false; // technically this could be true as well, but we want this to be treated as upper and not return the same value.
             // e.g. for a violin, fingerings should go above.
         }
-        return this.ParentStaff === this.ParentStaff.ParentInstrument.Staves.last();
+        return this.ParentStaff === CollectionUtil.getLastElement(this.ParentStaff.ParentInstrument.Staves);
     }
 
     public beginsWithLineRepetition(): boolean {

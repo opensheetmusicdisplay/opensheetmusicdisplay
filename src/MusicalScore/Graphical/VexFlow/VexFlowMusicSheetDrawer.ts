@@ -40,6 +40,7 @@ import { VexFlowConverter } from "./VexFlowConverter";
 import { VexFlowVibratoBracket } from "./VexFlowVibratoBracket";
 import { TremoloBetweenNotes } from "../../VoiceData/Note";
 import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
+import { CollectionUtil } from "../../../Util/CollectionUtil";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -414,7 +415,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                     let currentPoint: PointF2D = new PointF2D(buzzStartX, buzzStartY);
                     pathPoints.push(currentPoint);
                     for (const movement of movements) {
-                        currentPoint = pathPoints.last();
+                        currentPoint = CollectionUtil.getLastElement(pathPoints);
                         pathPoints.push(new PointF2D(currentPoint.x + movement.x, currentPoint.y - movement.y));
                     }
                     const node: Node = this.DrawPath(pathPoints, vfNote.ParentMusicPage, true);
@@ -877,7 +878,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 //   in a later system (the end measure of a part before is the pedal's own, in that system)
                 const endMeasure: GraphicalMeasure = vexFlowPedal.endMeasure;
                 const endMeasureOnStaffLine: GraphicalMeasure = !endMeasure || endMeasure.ParentStaffLine === staffLine
-                    ? endMeasure : staffLine.Measures.last();
+                    ? endMeasure : CollectionUtil.getLastElement(staffLine.Measures);
                 if (!this.lazyDrawsSpanToMeasure(endMeasureOnStaffLine)) {
                     continue; // lazy horizontal: span not yet fully in the frontier
                 }

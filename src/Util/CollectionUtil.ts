@@ -1,12 +1,19 @@
 import { Dictionary } from "typescript-collections";
 
+// OSMD itself doesn't use these three additions to Array.prototype anymore: a library shouldn't change the arrays of the
+//   page it runs in, or the Array type of every TypeScript project that imports it. They stay defined for now, for apps
+//   that came to rely on them, and will be removed in a future major version.
 declare global {
     interface Array<T> {
-        /** Returns the last element from an array */
+        /** Returns the last element from an array.
+         *  @deprecated Added to Array.prototype by OSMD, to be removed in a future major version.
+         *  Use `array[array.length - 1]` (or `CollectionUtil.getLastElement(array)`). */
         last(): T;
-        /** Deletes all elements from an array */
+        /** Deletes all elements from an array.
+         *  @deprecated Added to Array.prototype by OSMD, to be removed in a future major version. Use `array.length = 0`. */
         clear(): void;
-        /** Returns true if the element is found in the array */
+        /** Returns true if the element is found in the array.
+         *  @deprecated Added to Array.prototype by OSMD, to be removed in a future major version. Use `array.includes(elem)`. */
         contains(elem: T): boolean;
     }
 }
