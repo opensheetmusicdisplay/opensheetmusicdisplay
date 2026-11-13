@@ -708,6 +708,26 @@ export class EngravingRules {
      * the line or the signs of the pedal show it anyway, and (Ped.) takes space at the system's start. */
     public RenderPedalContinuationSign: boolean;
     public RenderWavyLines: boolean;
+    /** Whether to draw the dashed line that extends a text up to where it stops applying, e.g. "cresc. - - - -" or
+     *  "rit. - - - -" (MusicXML `<dashes>`). Default true. */
+    public RenderDashes: boolean;
+    /** The width of the dashed line after a text (see RenderDashes), in units (1.0 = distance between two staff lines). Default 0.12. */
+    public DashesLineWidth: number;
+    /** The length of a dash of the dashed line after a text (see RenderDashes), in units. Default 0.7. */
+    public DashesDashLength: number;
+    /** The gap between two dashes of the dashed line after a text (see RenderDashes), in units. Default 0.9.
+     *  The gaps are widened or narrowed a little so that the line starts and ends with a whole dash. */
+    public DashesGapLength: number;
+    /** The distance between a text and the start of its dashed line (see RenderDashes), in units. Default 0.5. */
+    public DashesTextPadding: number;
+    /** The distance between the end of a dashed line after a text (see RenderDashes) and the note or barline it stops at, or
+     *  an expression on the same level that it would otherwise run into, e.g. the dynamic it leads to. In units, default 0.6. */
+    public DashesEndPadding: number;
+    /** A dashed line after a text (see RenderDashes) that is shorter than this isn't drawn. In units, default 1.5. */
+    public DashesMinLength: number;
+    /** How far below the vertical center of its text a dashed line (see RenderDashes) is drawn, in text heights. Default 0.1:
+     *  about the middle of the lowercase letters, which is 0.075 text heights below the center of the text. */
+    public DashesYOffsetFromTextCenter: number;
     public DynamicExpressionMaxDistance: number;
     public DynamicExpressionSpacer: number;
     /** Whether words and an instantaneous dynamic of the same staff, placement and time are drawn on one line, in the order
@@ -1283,6 +1303,14 @@ export class EngravingRules {
         this.PedalReleaseSignMarginToPedSign = 0.5;
         this.RenderPedalContinuationSign = false;
         this.RenderWavyLines = true;
+        this.RenderDashes = true;
+        this.DashesLineWidth = 0.12;
+        this.DashesDashLength = 0.7;
+        this.DashesGapLength = 0.9;
+        this.DashesTextPadding = 0.5;
+        this.DashesEndPadding = 0.6;
+        this.DashesMinLength = 1.5;
+        this.DashesYOffsetFromTextCenter = 0.1;
         this.ArticulationPlacementFromXML = true;
         this.BreathMarkDistance = 0.8;
         this.FingeringPosition = PlacementEnum.AboveOrBelow; // AboveOrBelow = correct bounding boxes

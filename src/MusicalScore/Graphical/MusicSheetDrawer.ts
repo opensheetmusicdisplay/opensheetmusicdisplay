@@ -264,7 +264,8 @@ export abstract class MusicSheetDrawer {
      * Adds a class naming what a drawn element shows (e.g. "osmd-slur") to the SVG group it was drawn into, next to the
      * class naming its shape (e.g. vf-curve), so that CSS and code can find e.g. all slurs. Labels get theirs from
      * GraphicalLabel.SVGClass (see drawLabel()); the drawer names slurs (osmd-slur), the lines of wedges (osmd-wedge),
-     * lyric extender lines (osmd-extender) and the strokes of tremolos between notes and buzz rolls (osmd-tremolo).
+     * the dashed lines after texts like "cresc. - - - -" (osmd-dashes), lyric extender lines (osmd-extender) and the strokes
+     * of tremolos between notes and buzz rolls (osmd-tremolo).
      * @param node the group, undefined if nothing was drawn, e.g. with the canvas backend
      * @param className the class
      */
@@ -474,6 +475,8 @@ export abstract class MusicSheetDrawer {
 
         this.drawExpressions(staffLine);
 
+        this.drawDashedLinesAfterTexts(staffLine);
+
         // (lazy horizontal: the staffline's whole lines, once, by the first batch reaching it)
         if (this.skyLineVisible && this.lazyDrawsLeftEdgeOnce()) {
             this.drawSkyLine(staffLine);
@@ -507,6 +510,11 @@ export abstract class MusicSheetDrawer {
     }
 
     protected drawExpressions(staffline: StaffLine): void {
+        // implemented by subclass (VexFlowMusicSheetDrawer)
+    }
+
+    /** Draws the dashed lines after texts in the staffline (StaffLine.Dashes), e.g. "cresc. - - - -". */
+    protected drawDashedLinesAfterTexts(staffLine: StaffLine): void {
         // implemented by subclass (VexFlowMusicSheetDrawer)
     }
 

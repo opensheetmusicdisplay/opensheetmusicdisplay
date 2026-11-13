@@ -18,6 +18,7 @@ import { VexFlowInstrumentBrace } from "./VexFlowInstrumentBrace";
 import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { StaffLine } from "../StaffLine";
+import { GraphicalLine } from "../GraphicalLine";
 import { GraphicalSlur } from "../GraphicalSlur";
 import { GraphicalNote } from "../GraphicalNote";
 import { GraphicalMeasure } from "../GraphicalMeasure";
@@ -937,6 +938,28 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             } else {
                 log.warn("Unkown type of expression!");
             }
+        }
+    }
+
+    protected drawDashedLinesAfterTexts(staffLine: StaffLine): void {
+        for (const graphicalDashes of staffLine.Dashes) {
+            const line: GraphicalLine = graphicalDashes.Line;
+            const staffLinePosition: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
+            // (lazy horizontal: each part is drawn by the batch that reaches its end)
+            if (!this.lazyDrawsAtX(staffLinePosition.x + line.End.x)) {
+                continue;
+            }
+            const start: PointF2D = this.applyScreenTransformation(new PointF2D(staffLinePosition.x + line.Start.x, staffLinePosition.y + line.Start.y));
+            const end: PointF2D = this.applyScreenTransformation(new PointF2D(staffLinePosition.x + line.End.x, staffLinePosition.y + line.End.y));
+            // the color of the text, so that the text and its line stay one marking
+            const textLabel: GraphicalLabel = graphicalDashes.TextLabel;
+            let color: string = "#000000";
+            if (this.rules.ColoringEnabled) { // as for the text, see renderLabel()
+                color = textLabel.ColorXML ?? textLabel.Label.colorDefault ?? this.rules.DefaultColorLabel ?? color;
+            }
+            line.SVGElement = this.backend.renderLine(start, end, color, line.Width * unitInPixels, undefined,
+                [graphicalDashes.DashLength * unitInPixels, graphicalDashes.GapLength * unitInPixels]);
+            this.addSVGClass(line.SVGElement, "osmd-dashes");
         }
     }
 

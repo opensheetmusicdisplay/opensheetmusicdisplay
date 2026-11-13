@@ -73,6 +73,8 @@ import { GraphicalContinuousDynamicExpression } from "./GraphicalContinuousDynam
 import { FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSMDOptions";
 import { IStafflineNoteCalculator } from "../Interfaces/IStafflineNoteCalculator";
 import { GraphicalUnknownExpression } from "./GraphicalUnknownExpression";
+import { GraphicalDashes } from "./GraphicalDashes";
+import { Dashes } from "../VoiceData/Expressions/ContinuousExpressions/Dashes";
 import { GraphicalChordSymbolContainer } from "./GraphicalChordSymbolContainer";
 import { LyricsEntry } from "../VoiceData/Lyrics/LyricsEntry";
 import { Voice } from "../VoiceData/Voice";
@@ -1029,11 +1031,15 @@ export abstract class MusicSheetCalculator {
         const besideDynamic: GraphicalLabel = insideStaffFromXml ? undefined :
             this.placeWordsBesideSameTimeDynamic(multiExpression, staffLine, measures[staffIndex], combinedExprString,
                                                  fontStyle, placement, fontHeight, firstWords);
+        const dashes: Dashes = wordsEntries.find((entry: MultiExpressionEntry): boolean => entry.expression.Dashes !== undefined)?.expression.Dashes;
         const graphLabel: GraphicalLabel  = besideDynamic ?? this.calculateLabel(staffLine,
                                                                 relative, combinedExprString,
                                                                 fontStyle,
                                                                 placement,
-                                                                fontHeight);
+                                                                fontHeight,
+                                                                undefined,
+                                                                undefined,
+                                                                dashes ? this.getDashesEndXInStaffLine(dashes, staffLine) : undefined);
         graphLabel.SVGClass = "osmd-words";
         const colorXML: string = firstWords.ColorXML;
         if (this.rules.ExpressionsUseXMLColor && colorXML) {
@@ -1412,13 +1418,17 @@ export abstract class MusicSheetCalculator {
         // calculate StaffEntry ChordSymbols
         this.calculateChordSymbols();
         if (!this.leadSheet) {
+            this.calculatedDashes.clear();
             // calculate all Instantaneous/Continuous Dynamics Expressions
             this.calculateDynamicExpressions();
             // Calculate the alignment of close dynamics, before the words are placed:
             //   it moves dynamics away from the staff, where words placed before could be.
             this.calculateExpressionAlignements();
+            // the dashed lines after "cresc." and "dim.", now that these have their final position
+            this.calculateDashedLinesAfterTexts();
             // calculate all Mood and Unknown Expression
             this.calculateMoodAndUnknownExpressions();
+            this.calculateDashedLinesAfterTexts(); // the dashed lines after words
             if (this.rules.RenderPedals) {
                 // calculate all Pedal Expressions
                 this.calculatePedals();
@@ -1429,6 +1439,7 @@ export abstract class MusicSheetCalculator {
         // calcualte all Tempo Expressions
         if (!this.leadSheet) {
             this.calculateTempoExpressions();
+            this.calculateDashedLinesAfterTexts(); // the dashed lines after tempo words, e.g. "rit. - - - -"
             // calculate RepetitionInstructions (Dal Segno, Coda, etc), after the tempo texts: they are shifted above what's in
             //   their way (see VexFlowMusicSheetCalculator.placeWordRepetitionInSkyline()), e.g. a segno above Tempo I, but
             //   reserve no skyline space in their default position, so a tempo text placed after them overlapped them
@@ -1887,10 +1898,15 @@ export abstract class MusicSheetCalculator {
         //   like the box of an instantaneous dynamic: the alignment of close dynamics compares and moves the boxes.
         const box: BoundingBox = graphicalContinuousDynamic.PositionAndShape;
         const left: number = startPosInStaffline.x + box.BorderMarginLeft;
-        const right: number = startPosInStaffline.x + box.BorderMarginRight;
+        let right: number = startPosInStaffline.x + box.BorderMarginRight;
         // placement always below the currentStaffLine, with the exception of Voice Instrument (-> above)
         const placement: PlacementEnum = graphicalContinuousDynamic.ContinuousDynamic.Placement;
         const staffLine: StaffLine = graphicalContinuousDynamic.ParentStaffLine;
+        const dashes: Dashes = graphicalContinuousDynamic.ContinuousDynamic.Dashes;
+        if (dashes) {
+            // "cresc. - - - -": the text is placed clear of what is along its dashed line too, which is drawn level with it
+            right = Math.max(right, this.getDashesEndXInStaffLine(dashes, staffLine) ?? right);
+        }
         const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
 
         let drawingHeight: number;
@@ -2504,7 +2520,8 @@ export abstract class MusicSheetCalculator {
                              placement: PlacementEnum,
                              fontHeight: number,
                              textAlignment: TextAlignmentEnum = TextAlignmentEnum.CenterBottom,
-                             yPadding: number = 0): GraphicalLabel {
+                             yPadding: number = 0,
+                             reservedRight: number = undefined): GraphicalLabel {
         const graphLabel: GraphicalLabel = this.createExpressionLabel(staffLine, combinedString, style, placement, fontHeight, textAlignment);
 
         let left: number = relative.x + graphLabel.PositionAndShape.BorderMarginLeft;
@@ -2524,12 +2541,14 @@ export abstract class MusicSheetCalculator {
         }
 
         // find allowed position (where the Label can be positioned) from Sky- BottomLine
+        //   (up to reservedRight: also clear of what is along the dashed line after the label, which is drawn level with it)
         let drawingHeight: number;
         const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
+        const clearRight: number = Math.max(right, reservedRight ?? right);
         if (placement === PlacementEnum.Below) {
-            drawingHeight = skyBottomLineCalculator.getBottomLineMaxForLabel(left, right) + yPadding;
+            drawingHeight = skyBottomLineCalculator.getBottomLineMaxForLabel(left, clearRight) + yPadding;
         } else {
-            drawingHeight = skyBottomLineCalculator.getSkyLineMinForLabel(left, right) - yPadding;
+            drawingHeight = skyBottomLineCalculator.getSkyLineMinForLabel(left, clearRight) - yPadding;
         }
 
         // set RelativePosition
@@ -2542,6 +2561,203 @@ export abstract class MusicSheetCalculator {
             skyBottomLineCalculator.updateSkyLineWithLabel(left, right, graphLabel.PositionAndShape.BorderMarginTop + drawingHeight);
         }
         return graphLabel;
+    }
+
+    /**
+     * Calculates the dashed lines after texts (MusicXML `<dashes>`, e.g. "cresc. - - - -" or "rit. - - - -", see Dashes) for
+     * the texts placed so far, unless their line is calculated already. Called after each kind of text is placed (verbal
+     * dynamics, words, tempo words), so that what is placed later stays clear of the lines (they update the sky/bottom line).
+     * The line starts after its text, level with the middle of its lowercase letters, and ends before its stop position.
+     * In the systems after its text's, it goes on from the start of the staffline, placed by the sky/bottom line there.
+     */
+    protected calculateDashedLinesAfterTexts(): void {
+        if (!this.rules.RenderDashes) {
+            return;
+        }
+        for (const musicSystem of this.musicSystems) {
+            for (const staffLine of musicSystem.StaffLines) {
+                for (const graphicalExpression of staffLine.AbstractExpressions) {
+                    const dashes: Dashes = this.getDashesOfGraphicalExpression(graphicalExpression);
+                    if (!dashes?.EndMeasure || !graphicalExpression.Label || this.calculatedDashes.has(dashes)) {
+                        continue; // (no line, one without a stop, or a wedge)
+                    }
+                    this.calculatedDashes.add(dashes);
+                    try {
+                        this.calculateDashesOfLabel(dashes, graphicalExpression.Label, staffLine);
+                    } catch (ex) {
+                        // a line whose calculation fails isn't drawn, instead of failing the whole render
+                        log.warn("MusicSheetCalculator.calculateDashedLinesAfterTexts: ", ex);
+                    }
+                }
+            }
+        }
+    }
+
+    /** The dashed lines calculated in the current calculation, see calculateDashedLinesAfterTexts(). */
+    private calculatedDashes: Set<Dashes> = new Set();
+
+    /** Returns the dashed line after the text of a graphical expression (see Dashes), undefined if it has none. */
+    private getDashesOfGraphicalExpression(graphicalExpression: AbstractGraphicalExpression): Dashes {
+        if (graphicalExpression instanceof GraphicalUnknownExpression) {
+            // its label combines the words of a MultiExpression (see calculateMoodAndUnknownExpression())
+            for (const entry of graphicalExpression.sourceMultiExpression?.EntriesList ?? []) {
+                if ((entry.expression instanceof MoodExpression || entry.expression instanceof UnknownExpression) && entry.expression.Dashes) {
+                    return entry.expression.Dashes;
+                }
+            }
+            return undefined;
+        }
+        return graphicalExpression.SourceExpression?.Dashes;
+    }
+
+    /**
+     * Returns where a dashed line after a text (see Dashes) ends: the last measure it reaches and the x position of its end
+     * relative to that measure's staffline, DashesEndPadding before the notes at its stop position or before the barline.
+     * A line that stops in a measure that isn't drawn ends with the last measure drawn before it.
+     * Undefined if the line has no stop or none of its measures is drawn.
+     * @param dashes the line
+     * @param staffIndex the index of the staff in the sheet
+     */
+    protected getDashesEnd(dashes: Dashes, staffIndex: number): { measure: GraphicalMeasure, x: number } {
+        if (!dashes.EndMeasure) {
+            return undefined;
+        }
+        const startIndex: number = dashes.StartMeasure.measureListIndex;
+        let endIndex: number = dashes.EndMeasure.measureListIndex;
+        // a stop at the start of a measure, e.g. before the dynamic there: the line ends with the measure before
+        let endsWithMeasure: boolean = dashes.EndTimestamp.RealValue <= 0 && endIndex > startIndex;
+        if (endsWithMeasure) {
+            endIndex--;
+        }
+        let endMeasure: GraphicalMeasure;
+        for (; endIndex >= startIndex; endIndex--) {
+            endMeasure = this.graphicalMusicSheet.MeasureList[endIndex]?.[staffIndex];
+            if (endIndex <= this.rules.MaxMeasureToDrawIndex && endMeasure?.ParentStaffLine &&
+                this.musicSystems.includes(endMeasure.ParentStaffLine.ParentMusicSystem)) {
+                break;
+            }
+            endMeasure = undefined;
+            endsWithMeasure = true; // e.g. after drawUpToMeasureNumber, or within a multiple rest
+        }
+        if (!endMeasure) {
+            return undefined;
+        }
+        const measureBox: BoundingBox = endMeasure.PositionAndShape;
+        let endX: number = measureBox.RelativePosition.x + measureBox.BorderRight;
+        if (!endsWithMeasure) {
+            for (const staffEntry of endMeasure.staffEntries) {
+                if (staffEntry.relInMeasureTimestamp?.RealValue >= dashes.EndTimestamp.RealValue) {
+                    endX = measureBox.RelativePosition.x + staffEntry.PositionAndShape.RelativePosition.x + staffEntry.PositionAndShape.BorderLeft;
+                    break;
+                }
+            }
+        }
+        return { measure: endMeasure, x: endX - this.rules.DashesEndPadding };
+    }
+
+    /**
+     * Returns the x position (relative to the staffline) up to which a dashed line after a text (see Dashes) runs in the
+     * staffline of its text: its end, or the end of the staffline if it goes on in a later system. Undefined if no line is
+     * drawn (RenderDashes, a line without a stop).
+     * @param dashes the line
+     * @param staffLine the staffline of the text
+     */
+    protected getDashesEndXInStaffLine(dashes: Dashes, staffLine: StaffLine): number {
+        if (!this.rules.RenderDashes) {
+            return undefined;
+        }
+        const end: { measure: GraphicalMeasure, x: number } = this.getDashesEnd(dashes, staffLine.ParentStaff.idInMusicSheet);
+        if (!end) {
+            return undefined;
+        }
+        return end.measure.ParentStaffLine === staffLine ? end.x : staffLine.PositionAndShape.Size.width;
+    }
+
+    /**
+     * Calculates the dashed line after a placed text (see calculateDashedLinesAfterTexts()): its part in the text's staffline and the parts
+     * in the stafflines of the following systems up to its end, and updates the sky/bottom lines with them.
+     * @param dashes the line
+     * @param textLabel the placed label of the text
+     * @param staffLine the staffline of the label
+     */
+    protected calculateDashesOfLabel(dashes: Dashes, textLabel: GraphicalLabel, staffLine: StaffLine): void {
+        const staffIndex: number = staffLine.ParentStaff.idInMusicSheet;
+        const end: { measure: GraphicalMeasure, x: number } = this.getDashesEnd(dashes, staffIndex);
+        if (!end) {
+            return;
+        }
+        const endStaffLine: StaffLine = end.measure.ParentStaffLine;
+        const isBelow: boolean = dashes.Placement === PlacementEnum.Below;
+        const fontHeight: number = textLabel.Label.fontHeight;
+        // The line is level with the middle of the text's lowercase letters. It takes the vertical space of the text in the
+        //   sky/bottom line: the text's height, from yOffsetFromCenter + half a text height above the line to the rest below it.
+        const yOffsetFromCenter: number = fontHeight * this.rules.DashesYOffsetFromTextCenter;
+        const spaceAbove: number = fontHeight / 2 + yOffsetFromCenter;
+        const spaceBelow: number = fontHeight - spaceAbove;
+
+        // the part after the text: the label's position relative to the staffline (the label of a verbal dynamic is in the
+        //   dynamic's box)
+        const textPosition: PointF2D = new PointF2D(0, 0);
+        for (let box: BoundingBox = textLabel.PositionAndShape; box && box !== staffLine.PositionAndShape; box = box.Parent) {
+            textPosition.x += box.RelativePosition.x;
+            textPosition.y += box.RelativePosition.y;
+        }
+        const textBox: BoundingBox = textLabel.PositionAndShape;
+        const startX: number = textPosition.x + textBox.BorderRight + this.rules.DashesTextPadding;
+        const y: number = textPosition.y + (textBox.BorderTop + textBox.BorderBottom) / 2 + yOffsetFromCenter;
+        let endX: number = endStaffLine === staffLine ? end.x : staffLine.PositionAndShape.Size.width;
+        // The line ends before an expression on its level, e.g. the dynamic it leads to, whose left half is before its note.
+        for (const otherExpression of staffLine.AbstractExpressions) {
+            if (otherExpression.Label === textLabel) {
+                continue;
+            }
+            const isDynamic: boolean = otherExpression instanceof GraphicalInstantaneousDynamicExpression ||
+                otherExpression instanceof GraphicalContinuousDynamicExpression;
+            const otherBox: BoundingBox = isDynamic ? otherExpression.PositionAndShape : otherExpression.Label?.PositionAndShape;
+            if (!otherBox || otherBox.Parent !== staffLine.PositionAndShape) {
+                continue;
+            }
+            const otherLeft: number = otherBox.RelativePosition.x + otherBox.BorderLeft;
+            if (otherLeft > startX && otherLeft - this.rules.DashesEndPadding < endX &&
+                otherBox.RelativePosition.y + otherBox.BorderTop < y && otherBox.RelativePosition.y + otherBox.BorderBottom > y) {
+                endX = otherLeft - this.rules.DashesEndPadding;
+            }
+        }
+        if (endX - startX >= this.rules.DashesMinLength) {
+            new GraphicalDashes(dashes, staffLine, new PointF2D(startX, y), new PointF2D(endX, y), textLabel);
+            if (isBelow) {
+                staffLine.SkyBottomLineCalculator.updateBottomLineWithLabel(startX, endX, y + spaceBelow);
+            } else {
+                staffLine.SkyBottomLineCalculator.updateSkyLineWithLabel(startX, endX, y - spaceAbove);
+            }
+        }
+
+        // the parts in the following systems, without the text: from the start of the staffline, placed like a text there
+        const partStaffLines: StaffLine[] = [staffLine];
+        const endIndex: number = end.measure.parentSourceMeasure.measureListIndex;
+        for (let measureIndex: number = dashes.StartMeasure.measureListIndex + 1; measureIndex <= endIndex; measureIndex++) {
+            const partStaffLine: StaffLine = this.graphicalMusicSheet.MeasureList[measureIndex]?.[staffIndex]?.ParentStaffLine;
+            if (!partStaffLine || partStaffLines.includes(partStaffLine) || !this.musicSystems.includes(partStaffLine.ParentMusicSystem)) {
+                continue;
+            }
+            partStaffLines.push(partStaffLine);
+            const firstMeasure: GraphicalMeasure = partStaffLine.Measures[0];
+            const partStartX: number = firstMeasure.PositionAndShape.RelativePosition.x + firstMeasure.beginInstructionsWidth;
+            const partEndX: number = partStaffLine === endStaffLine ? end.x : partStaffLine.PositionAndShape.Size.width;
+            if (partEndX - partStartX < this.rules.DashesMinLength) {
+                continue;
+            }
+            const skyBottomLineCalculator: SkyBottomLineCalculator = partStaffLine.SkyBottomLineCalculator;
+            let partY: number;
+            if (isBelow) {
+                partY = skyBottomLineCalculator.getBottomLineMaxForLabel(partStartX, partEndX) + spaceAbove;
+                skyBottomLineCalculator.updateBottomLineWithLabel(partStartX, partEndX, partY + spaceBelow);
+            } else {
+                partY = skyBottomLineCalculator.getSkyLineMinForLabel(partStartX, partEndX) - spaceBelow;
+                skyBottomLineCalculator.updateSkyLineWithLabel(partStartX, partEndX, partY - spaceAbove);
+            }
+            new GraphicalDashes(dashes, partStaffLine, new PointF2D(partStartX, partY), new PointF2D(partEndX, partY), textLabel, true);
+        }
     }
 
     protected calculateTempoExpressionsForMultiTempoExpression(sourceMeasure: SourceMeasure, multiTempoExpression: MultiTempoExpression,
@@ -2628,7 +2844,9 @@ export abstract class MusicSheetCalculator {
                                                                        entry.Expression.Placement,
                                                                        this.rules.UnknownTextHeight,
                                                                        textAlignment,
-                                                                       this.rules.TempoYSpacing);
+                                                                       this.rules.TempoYSpacing,
+                                                                       entry.Expression.Dashes ?
+                                                                           this.getDashesEndXInStaffLine(entry.Expression.Dashes, staffLine) : undefined);
                 graphLabel.SVGClass = "osmd-tempo";
                 if (entry.Expression.ColorXML && this.rules.ExpressionsUseXMLColor) {
                     graphLabel.ColorXML = entry.Expression.ColorXML;
