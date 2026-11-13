@@ -272,7 +272,7 @@ async function init () {
                 await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
                     darkMode: true, fileNameAddition: "darkmode_"}, DEBUG);
             } else if (sampleFilename.startsWith("JohannSebastianBach_PraeludiumInCDur") ||
-                sampleFilename.startsWith("test_hidden_staff_clef_key_time")) {
+                sampleFilename.startsWith("test_hidden_staff_")) { // test_hidden_staff_clef_key_time, test_hidden_staff_dynamics
                 // generate two more testing images, left hand only and right hand only
                 await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestMode, {
                     staffVisibility: { 0: true, 1: false}, fileNameAddition: "right_hand_only_"}, DEBUG);
