@@ -369,7 +369,12 @@ export class OpenSheetMusicDisplay {
         log.info(`[OSMD] Loaded sheet ${this.sheet.TitleString} successfully.`);
 
         this.needBackendUpdate = true;
-        this.updateGraphic();
+        try {
+            this.updateGraphic();
+        } catch (error) {
+            this.reset(); // no sheet without a graphic: after a failed load(), the instance has neither, as before its first load()
+            throw error;
+        }
 
         return Promise.resolve({});
     }

@@ -643,7 +643,7 @@ export class InstrumentReader {
       }
     } catch (e) {
       if (divisionsException) {
-        throw new MusicSheetReadingException(e.Message);
+        throw new MusicSheetReadingException(e.message);
       }
       // an error outside of the measure's elements (those are skipped one by one above), e.g. when finishing the measure
       const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/MeasureError", "Error while reading Measure.");
@@ -1699,7 +1699,7 @@ export class InstrumentReader {
           break;
         }
       }
-      if (divisionsFromNote === 0) {
+      if (!read) { // (not `divisionsFromNote === 0`: it is NaN for a duration that isn't a number, which never ended this loop)
         xmlMeasureIndex++;
         if (xmlMeasureIndex === this.xmlMeasureList.length) {
           const errorMsg: string = ITextTranslation.translateText("ReaderErrorMEssages/DivisionsError", "Invalid divisions value at Instrument: ");
