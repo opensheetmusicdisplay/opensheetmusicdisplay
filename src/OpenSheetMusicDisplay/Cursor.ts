@@ -16,6 +16,7 @@ import { VexFlowMeasure } from "../MusicalScore/Graphical/VexFlow/VexFlowMeasure
 import { CursorOptions, CursorType } from "./OSMDOptions";
 import { BoundingBox } from "../MusicalScore/Graphical/BoundingBox";
 import { GraphicalNote } from "../MusicalScore/Graphical/GraphicalNote";
+import { CollectionUtil } from "../Util/CollectionUtil";
 
 /** A cursor which can iterate through the music sheet. */
 export class Cursor {
@@ -504,7 +505,7 @@ export class Cursor {
       timestamp = new Fraction(0, 0);
     }
     for (const page of this.graphic.MusicPages) {
-      const lastSystemTimestamp: Fraction = page.MusicSystems.last().GetSystemsLastTimeStamp();
+      const lastSystemTimestamp: Fraction = CollectionUtil.getLastElement(page.MusicSystems).GetSystemsLastTimeStamp();
       if (lastSystemTimestamp.gt(timestamp)) {
         // gt: the last timestamp of the last system is equal to the first of the next page,
         //   so we do need to use gt, not gte here.

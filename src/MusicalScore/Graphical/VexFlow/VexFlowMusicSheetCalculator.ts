@@ -1752,7 +1752,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
       // fontSize and minBottomY are extra arguments from VexFlowPatch (stave.js / stavesection.js)
       (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize, minBottomY);
-      const section: VF.StaveModifier = vfStave.getModifiers().last();
+      const section: VF.StaveModifier = CollectionUtil.getLastElement(vfStave.getModifiers());
       VexFlowConverter.setVexFlowTextFontFamily((section as any).font, this.rules);
       return; // only draw one rehearsal mark at top (visible) instrument
     }
@@ -2140,7 +2140,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               const pedalInBetween: VexFlowPedal = new VexFlowPedal(pedal, staffline.Measures[0].PositionAndShape);
               pedalInBetween.setStartNote(firstNoteInBetween);
               pedalInBetween.setEndNote(this.findBoundaryNoteEntry(staffline.Measures, true));
-              pedalInBetween.setEndMeasure(staffline.Measures.last());
+              pedalInBetween.setEndMeasure(CollectionUtil.getLastElement(staffline.Measures));
               pedalInBetween.DepressText = " ";
               pedalInBetween.ReleaseText = " ";
               pedalInBetween.ContinuesFromSystemBefore = true;
@@ -2232,7 +2232,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                 nextPedal.setEndMeasure(endMeasure);
                 lastNote = endStaffEntry;
               } else {
-                nextPedal.setEndMeasure(nextPedalStaffline.Measures.last());
+                nextPedal.setEndMeasure(CollectionUtil.getLastElement(nextPedalStaffline.Measures));
               }
               if(!nextPedal.setStartNote(firstNote)){
                 break;
@@ -3457,7 +3457,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             const startNote: TabNote = <TabNote> gGliss.Glissando.StartNote;
             const endNote: TabNote = <TabNote> gGliss.Glissando.EndNote;
             const vfStartNote: VexFlowGraphicalNote = gGliss.staffEntries[0].findGraphicalNoteFromNote(startNote) as VexFlowGraphicalNote;
-            const vfEndNote: VexFlowGraphicalNote = gGliss.staffEntries.last().findGraphicalNoteFromNote(endNote) as VexFlowGraphicalNote;
+            const vfEndNote: VexFlowGraphicalNote =
+                CollectionUtil.getLastElement(gGliss.staffEntries).findGraphicalNoteFromNote(endNote) as VexFlowGraphicalNote;
             if (!vfStartNote && !vfEndNote) {
               continue; // otherwise causes Vexflow error. continue, not return: that would skip all following slides
             }

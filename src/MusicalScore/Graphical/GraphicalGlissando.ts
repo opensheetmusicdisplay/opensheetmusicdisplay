@@ -7,6 +7,7 @@ import { GraphicalMeasure } from "./GraphicalMeasure";
 import { GraphicalNote } from "./GraphicalNote";
 import { GraphicalStaffEntry } from "./GraphicalStaffEntry";
 import { StaffLine } from "./StaffLine";
+import { CollectionUtil } from "../../Util/CollectionUtil";
 
 export class GraphicalGlissando {
     public Glissando: Glissando;
@@ -81,7 +82,7 @@ export class GraphicalGlissando {
         } else {
             // The staff line can end in an extra measure that only shows a courtesy key or time signature. It has no source
             //   measure, and the line ends before it, at the end of the last measure.
-            let lastMeasure: GraphicalMeasure = staffLine.Measures.last();
+            let lastMeasure: GraphicalMeasure = CollectionUtil.getLastElement(staffLine.Measures);
             if (lastMeasure.IsExtraGraphicalMeasure) {
                 lastMeasure = lastMeasure.ExtraGraphicalMeasurePreviousMeasure;
             }

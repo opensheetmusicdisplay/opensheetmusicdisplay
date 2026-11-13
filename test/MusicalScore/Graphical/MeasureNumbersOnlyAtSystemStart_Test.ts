@@ -4,6 +4,7 @@ import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSh
 import { IOSMDOptions } from "../../../src/OpenSheetMusicDisplay/OSMDOptions";
 import { MusicSystem } from "../../../src/MusicalScore/Graphical/MusicSystem";
 import { GraphicalLabel } from "../../../src/MusicalScore/Graphical/GraphicalLabel";
+import { CollectionUtil } from "../../../src/Util/CollectionUtil";
 
 /**
  * drawMeasureNumbersOnlyAtSystemStart (EngravingRules.RenderMeasureNumbersOnlyAtSystemStart) draws one measure number
@@ -84,7 +85,7 @@ describe("Measure numbers only at system start", () => {
         const systems: MusicSystem[] = await renderSystems("test_measure_numbers_only_at_system_start_pickup_courtesy_key.musicxml",
             { newSystemFromXML: true }, undefined, 2);
         const firstSystem: MusicSystem = systems[0];
-        expect(firstSystem.StaffLines[0].Measures.last().parentSourceMeasure === undefined, "courtesy measure has no source measure")
+        expect(CollectionUtil.getLastElement(firstSystem.StaffLines[0].Measures).parentSourceMeasure === undefined, "courtesy measure has no source measure")
             .to.equal(true);
         expect(measureNumberTexts(firstSystem), "the pickup system has no measure number").to.deep.equal([]);
     });

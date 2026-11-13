@@ -80,6 +80,7 @@ import { LyricsEntry } from "../VoiceData/Lyrics/LyricsEntry";
 import { Voice } from "../VoiceData/Voice";
 import { TabNote } from "../VoiceData/TabNote";
 import { TabFretTransposer } from "./TabFretTransposer";
+import { CollectionUtil } from "../../Util/CollectionUtil";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
@@ -2314,7 +2315,7 @@ export abstract class MusicSheetCalculator {
         // now we have the correct placement Height for the Expression
         // the idealY is calculated relative to the currentStaffLine
 
-        graphicalContinuousDynamic.Lines.clear();
+        graphicalContinuousDynamic.Lines.length = 0;
         // create wedges (crescendo / decrescendo lines)
         if (isSoftAccent) {
             graphicalContinuousDynamic.createFirstHalfCrescendoLines(upperStartX, upperEndX, idealY);
@@ -2832,7 +2833,7 @@ export abstract class MusicSheetCalculator {
                     staffLine.ParentMusicSystem === this.musicSystems[0]) {
                     const firstInstructionEntry: GraphicalStaffEntry = staffLine.Measures[0].FirstInstructionStaffEntry;
                     if (firstInstructionEntry) {
-                        const lastInstruction: AbstractGraphicalInstruction = firstInstructionEntry.GraphicalInstructions.last();
+                        const lastInstruction: AbstractGraphicalInstruction = CollectionUtil.getLastElement(firstInstructionEntry.GraphicalInstructions);
                         relative.x = lastInstruction.PositionAndShape.RelativePosition.x;
                     }
                     if (this.rules.CompactMode) {
@@ -2959,7 +2960,7 @@ export abstract class MusicSheetCalculator {
                 for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
                     const staffLine: StaffLine = musicSystem.StaffLines[idx3];
                     if (!staffLine.ParentStaff.Visible) {
-                        staffLine.Measures.clear();
+                        staffLine.Measures.length = 0;
                         // musicSystem.PositionAndShape.ChildElements = musicSystem.PositionAndShape.ChildElements.filter(
                         //     (child) => child !== staffLine.PositionAndShape
                         // );
@@ -3626,8 +3627,8 @@ export abstract class MusicSheetCalculator {
                             staffIndex, measureIndex, sourceStaffEntry
                         );
                         if (startStaffEntry) {
-                            startStaffEntry.GraphicalTies.clear(); // don't duplicate ties when calling render() again
-                            startStaffEntry.ties.clear();
+                            startStaffEntry.GraphicalTies.length = 0; // don't duplicate ties when calling render() again
+                            startStaffEntry.ties.length = 0;
                         }
 
                         for (let idx: number = 0, len: number = sourceStaffEntry.VoiceEntries.length; idx < len; ++idx) {
@@ -3635,7 +3636,7 @@ export abstract class MusicSheetCalculator {
                             for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
                                 const note: Note = voiceEntry.Notes[idx2];
                                 for (const tie of note.NoteTies) {
-                                    if (note === tie.Notes.last()) {
+                                    if (note === CollectionUtil.getLastElement(tie.Notes)) {
                                         continue; // nothing to do on last note. don't create last tie twice.
                                     }
                                     this.handleTie(tie, startStaffEntry, staffIndex, measureIndex, tie.Notes.indexOf(note));
@@ -4019,7 +4020,7 @@ export abstract class MusicSheetCalculator {
                     );
                     if (drawAsWholeMeasureRest && graphicalStaffEntry.graphicalVoiceEntries.length > 0) {
                         // only the drawn length changes: the source rests keep their length and time
-                        for (const graphicalNote of graphicalStaffEntry.graphicalVoiceEntries.last().notes) {
+                        for (const graphicalNote of CollectionUtil.getLastElement(graphicalStaffEntry.graphicalVoiceEntries).notes) {
                             graphicalNote.graphicalNoteLength = sourceMeasure.ActiveTimeSignature.clone();
                             graphicalNote.numberOfDots = 0;
                             wholeMeasureRestNote = graphicalNote;

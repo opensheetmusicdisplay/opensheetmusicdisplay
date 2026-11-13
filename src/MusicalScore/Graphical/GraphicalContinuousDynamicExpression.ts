@@ -181,7 +181,7 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
      */
     public recalculateCrescendoLines(startX: number, endX: number, y: number): void {
         const isSecondHalfSplit: boolean = Math.abs(this.lines[0].Start.y - this.lines[1].Start.y) > 0.0001;
-        this.lines.clear();
+        this.lines.length = 0;
 
         if (isSecondHalfSplit) {
             this.createSecondHalfCrescendoLines(startX, endX, y);
@@ -253,7 +253,7 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
      */
     public recalculateDiminuendoLines(startX: number, endX: number, yPosition: number): void {
         const isFirstHalfSplit: boolean = Math.abs(this.lines[0].End.y - this.lines[1].End.y) > 0.0001;
-        this.lines.clear();
+        this.lines.length = 0;
         if (isFirstHalfSplit) {
             this.createFirstHalfDiminuendoLines(startX, endX, yPosition);
         } else if (this.isSplittedPart) {
@@ -352,7 +352,7 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
      * Clear Lines
      */
     public cleanUp(): void {
-        this.lines.clear();
+        this.lines.length = 0;
     }
 
     /**

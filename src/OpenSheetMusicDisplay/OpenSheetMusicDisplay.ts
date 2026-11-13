@@ -30,6 +30,7 @@ import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalcu
 import { NoteEnum } from "../Common/DataObjects/Pitch";
 import { TemposCalculator } from "../MusicalScore/ScoreIO/MusicSymbolModules/TemposCalculator";
 import { WarmKeeperScoreMxlBase64 } from "./WarmKeeperScore";
+import { CollectionUtil } from "../Util/CollectionUtil";
 
 /** WeakRef (ES2021) isn't in the TypeScript lib of OSMD's target, es2020. Older browsers don't have it: Chrome before 84,
  *  Firefox before 79, Safari before 14.1. */
@@ -1576,7 +1577,7 @@ export class OpenSheetMusicDisplay {
             backend.removeFromContainer(this.container);
             backend.free();
         }
-        this.drawer.Backends.clear();
+        this.drawer.Backends.length = 0;
     }
 
     /**
@@ -2158,7 +2159,8 @@ export class OpenSheetMusicDisplay {
         for (let i: number = 0; i < noteIndices.length; i++) {
             coloringSetCurrent.setValue(noteIndices[i], colorSetString[i]);
         }
-        coloringSetCurrent.setValue(-1, colorSetString.last()); // index 7. Unfortunately -1 is not a NoteEnum value, so we can't put it into noteIndices
+        // index 7. Unfortunately -1 is not a NoteEnum value, so we can't put it into noteIndices
+        coloringSetCurrent.setValue(-1, CollectionUtil.getLastElement(colorSetString));
         this.rules.ColoringSetCurrent = coloringSetCurrent;
         this.rules.ColoringMode = options.coloringMode;
     }
