@@ -48,16 +48,13 @@
     "test:visual:singletest": "node ./test/Util/visualRegression.mjs ./visual_regression Beethoven",
     "test:visual:singletest:old": "sh ./test/Util/visual_regression.sh ./visual_regression Beethoven"
   },
-  "pre-commit": [
-    "lint"
-  ],
   "files": [
     "build/dist/src",
     "build/opensheetmusicdisplay.min.js",
+    "build/opensheetmusicdisplay.min.js.LICENSE.txt",
     "AUTHORS",
     "CHANGELOG.md",
-    "README.md",
-    "external"
+    "README.md"
   ],
   "repository": {
     "type": "git",
