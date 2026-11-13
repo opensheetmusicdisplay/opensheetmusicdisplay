@@ -2405,7 +2405,7 @@ export abstract class MusicSheetCalculator {
             // if StaffLine part of multiStaff Instrument and not the first one, ideal yPosition middle of distance between Staves
             if (staffLine.isPartOfMultiStaffInstrument() && staffLine.ParentStaff !== staffLine.ParentStaff.ParentInstrument.Staves[0]) {
                 const formerStaffLine: StaffLine = staffLine.ParentMusicSystem.StaffLines[staffLine.ParentMusicSystem.StaffLines.indexOf(staffLine) - 1];
-                if (formerStaffLine) { // can be undefined if staff.Visible = false (e.g. piano)
+                if (formerStaffLine) { // undefined if the staff above is hidden (Staff.Visible = false, e.g. piano left hand only)
                     const difference: number = staffLine?.PositionAndShape.RelativePosition.y -
                         formerStaffLine.PositionAndShape.RelativePosition.y - this.rules.StaffHeight;
                     // take always into account the size of the Dynamic
@@ -2414,6 +2414,9 @@ export abstract class MusicSheetCalculator {
                     } else {
                         yPosition = skyLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom;
                     }
+                } else {
+                    // no staff line above to center between (its staff is hidden): above the sky line, like in a single-staff instrument
+                    yPosition = skyLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom;
                 }
             } else {
                 yPosition = skyLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom;
@@ -2426,8 +2429,7 @@ export abstract class MusicSheetCalculator {
             const lastStaff: Staff = staffLine.ParentStaff.ParentInstrument.Staves[staffLine.ParentStaff.ParentInstrument.Staves.length - 1];
             if (staffLine.isPartOfMultiStaffInstrument() && staffLine.ParentStaff !== lastStaff) {
                 const nextStaffLine: StaffLine = staffLine.ParentMusicSystem.StaffLines[staffLine.ParentMusicSystem.StaffLines.indexOf(staffLine) + 1];
-                if (nextStaffLine) {
-                    // nextStaffLine can be undefined if one staff of an instrument (e.g. piano left hand) is invisible (Visible = false)
+                if (nextStaffLine) { // undefined if the staff below is hidden (Staff.Visible = false, e.g. piano right hand only)
                     const difference: number = nextStaffLine.PositionAndShape.RelativePosition.y -
                         staffLine.PositionAndShape.RelativePosition.y - this.rules.StaffHeight;
                     const border: number = graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom;
@@ -2437,6 +2439,9 @@ export abstract class MusicSheetCalculator {
                     } else {
                         yPosition = bottomLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginTop;
                     }
+                } else {
+                    // no staff line below to center between (its staff is hidden): below the bottom line, like in a single-staff instrument
+                    yPosition = bottomLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginTop;
                 }
             } else {
                 yPosition = bottomLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginTop;
