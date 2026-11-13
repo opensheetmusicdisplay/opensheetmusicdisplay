@@ -135,6 +135,11 @@ export class OpenSheetMusicDisplay {
      * By default it returns the XML unchanged. It can also be set by the onXMLRead option,
      * and osmd.setOptions() keeps it when the option is left out. */
     public OnXMLRead: (xml: string) => string = (xml: string): string => xml;
+    /** Counts the calls of load(), clear() and dispose(). A load() whose number isn't the current one anymore was superseded:
+     *  it doesn't set the sheet, and its promise is rejected (see load()). */
+    private loadGeneration: number = 0;
+    /** Aborts the URL request of the load() in progress, if any (see cancelPendingLoad()). */
+    private loadAbortController: AbortController;
 
     /**
      * Load a MusicXML file
@@ -146,18 +151,67 @@ export class OpenSheetMusicDisplay {
      * @returns a promise that is rejected with an Error when the score can't be loaded, for every kind of content:
      *   e.g. for malformed XML (the message has the XML parser's line and column), for a file that isn't MusicXML or MXL,
      *   or when reading the score fails (the Error's `cause` is then the reader's error). load() itself doesn't throw.
+     *   A URL, a Blob and an MXL string are read asynchronously. When load(), clear() or dispose() is called before that
+     *   has finished, the earlier load() doesn't set the sheet anymore, whichever file arrives first: its request is aborted,
+     *   and its promise is rejected with an Error whose `name` is "AbortError" (like an aborted fetch()), so that a
+     *   `.then(() => osmd.render())` of it doesn't run.
+     * @example
+     * osmd.load(url).then(() => osmd.render()).catch((error) => {
+     *     if (error.name !== "AbortError") { // not an error: another score was loaded meanwhile
+     *         showError(error.message);
+     *     }
+     * });
      */
     public load(content: string | Document | Blob, tempTitle: string = "Untitled Score"): Promise<{}> {
+        this.cancelPendingLoad();
+        const generation: number = this.loadGeneration;
+        if (typeof AbortController === "function") {
+            this.loadAbortController = new AbortController();
+        }
+        return this.continueLoad(content, tempTitle, generation).catch((error: Error) => {
+            // e.g. the aborted request's error
+            throw generation === this.loadGeneration ? error : this.createSupersededLoadError();
+        });
+    }
+
+    /**
+     * Supersedes a load() that hasn't finished: aborts its URL request, and makes its remaining steps reject instead of
+     * setting the sheet (see load()).
+     */
+    private cancelPendingLoad(): void {
+        this.loadGeneration++;
+        this.loadAbortController?.abort();
+        this.loadAbortController = undefined;
+    }
+
+    /** The Error a superseded load() is rejected with (see load()). */
+    private createSupersededLoadError(): Error {
+        const error: Error = new Error(
+            "OpenSheetMusicDisplay: load() was aborted, because load(), clear() or dispose() was called before it finished");
+        error.name = "AbortError";
+        return error;
+    }
+
+    /**
+     * A step of load(): the first one, and each one that follows an asynchronous one (a request, unzipping, reading a Blob).
+     * @param generation the number of the load() the step belongs to (see loadGeneration)
+     * @returns a promise that is rejected when the load() was superseded meanwhile, or when loadContent() throws or rejects
+     */
+    private continueLoad(content: string | Document | Blob, tempTitle: string, generation: number): Promise<{}> {
+        if (generation !== this.loadGeneration) {
+            return Promise.reject(this.createSupersededLoadError());
+        }
         try {
-            return this.loadContent(content, tempTitle);
+            return this.loadContent(content, tempTitle, generation);
         } catch (error) {
             // string and Document content is read synchronously: without this, its errors would be thrown instead of rejected
             return Promise.reject(error);
         }
     }
 
-    /** Does the work of load(). Can throw as well as reject: load() turns both into a rejected promise. */
-    private loadContent(content: string | Document | Blob, tempTitle: string): Promise<{}> {
+    /** Does the work of a step of load() (see continueLoad()). Can throw as well as reject: continueLoad() turns both into
+     *  a rejected promise. */
+    private loadContent(content: string | Document | Blob, tempTitle: string, generation: number): Promise<{}> {
         this.reset();
         const self: OpenSheetMusicDisplay = this;
         /** The XML string that `content` was parsed from, if it was given as a string. */
@@ -169,7 +223,7 @@ export class OpenSheetMusicDisplay {
                 if (mxlFile.unzipSuccessful) {
                     return mxlFile.getXmlString().then(
                         (xmlString) => {
-                            return self.load(xmlString, tempTitle);
+                            return self.continueLoad(xmlString, tempTitle, generation);
                         },
                         (err: Error) => {
                             throw this.createError("OpenSheetMusicDisplay: Invalid MXL file", err);
@@ -179,7 +233,7 @@ export class OpenSheetMusicDisplay {
                     // not a zip
                     if (content instanceof Blob) { // always true. unfortunately need to check again for linter
                         return content.text().then((blobString) => {
-                            return self.load(blobString, tempTitle);
+                            return self.continueLoad(blobString, tempTitle, generation);
                         });
                     }
                 }
@@ -192,7 +246,7 @@ export class OpenSheetMusicDisplay {
                 // This is a zip file, unpack it first
                 return MXLHelper.MXLtoXMLstring(str).then(
                     (x: string) => {
-                        return self.load(x, tempTitle);
+                        return self.continueLoad(x, tempTitle, generation);
                     },
                     (err: Error) => {
                         log.debug(err);
@@ -204,7 +258,7 @@ export class OpenSheetMusicDisplay {
             if (str.startsWith("\uf7ef\uf7bb\uf7bf")) {
                 log.debug("[OSMD] UTF with BOM detected, truncate first 3 bytes and pass along: " + str);
                 // UTF with BOM detected, truncate first three bytes and pass along
-                return self.load(str.substring(3), tempTitle);
+                return self.continueLoad(str.substring(3), tempTitle, generation);
             }
             let trimmedStr: string = str;
             if (/^\s/.test(trimmedStr)) { // only trim if we need to. (end of string is irrelevant)
@@ -224,8 +278,8 @@ export class OpenSheetMusicDisplay {
                 log.debug("[OSMD] Retrieve the file at the given URL: " + trimmedStr);
                 // Assume now "str" is a URL
                 // Retrieve the file at the given URL
-                return AJAX.ajax(trimmedStr, this.loadUrlTimeout).then(
-                    (s: string) => { return self.load(s, tempTitle); },
+                return AJAX.ajax(trimmedStr, this.loadUrlTimeout, this.loadAbortController?.signal).then(
+                    (s: string) => { return self.continueLoad(s, tempTitle, generation); },
                     (exc: Error) => { throw exc; }
                 );
             } else {
@@ -1543,6 +1597,7 @@ export class OpenSheetMusicDisplay {
      * When you don't need the instance anymore, call dispose(), which removes OSMD's listeners on the window.
      */
     public clear(): void {
+        this.cancelPendingLoad(); // otherwise a file that is still being fetched or unzipped would be set as the sheet later
         const sheet: MusicSheet = this.sheet;
         this.drawer?.clear(); // also releases the drawn sheet
         this.reset(); // without this, resize will draw loaded sheet again
@@ -1574,6 +1629,7 @@ export class OpenSheetMusicDisplay {
      * container.innerHTML = ""; // the instance can be garbage collected now, once your code doesn't reference it anymore
      */
     public dispose(): void {
+        this.cancelPendingLoad();
         if (this.disposeResizeListener) {
             this.disposeResizeListener();
         }
