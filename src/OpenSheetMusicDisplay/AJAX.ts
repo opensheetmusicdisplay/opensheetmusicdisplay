@@ -5,9 +5,12 @@ export class AJAX {
     /**
      * Retrieve the content of the file at url
      * @param url
+     * @param timeout in milliseconds
+     * @param abortSignal the signal of an AbortController. Its abort() cancels the request, and the promise is rejected
+     *   with an Error whose name is "AbortError" (like fetch()).
      * @returns {any}
      */
-    public static ajax(url: string, timeout: number = 9000): Promise<string> {
+    public static ajax(url: string, timeout: number = 9000, abortSignal?: AbortSignal): Promise<string> {
         let xhttp: XMLHttpRequest;
         const mimeType: string = url.indexOf(".mxl") > -1 ? "text/plain; charset=x-user-defined" : "application/xml";
         if (XMLHttpRequest) {
@@ -20,6 +23,19 @@ export class AJAX {
         }
         xhttp.timeout = timeout;
         return new Promise((resolve: (value: string) => void, reject: (error: any) => void) => {
+            if (abortSignal) {
+                const abort: () => void = (): void => {
+                    const error: Error = new Error("The request was aborted");
+                    error.name = "AbortError";
+                    reject(error); // before abort(), which sets the request to DONE with status 0
+                    xhttp.abort();
+                };
+                if (abortSignal.aborted) {
+                    abort();
+                    return;
+                }
+                abortSignal.addEventListener("abort", abort, { once: true });
+            }
             xhttp.onreadystatechange = (): void => {
                 if (xhttp.readyState === XMLHttpRequest.DONE) {
                     if (xhttp.status === 200) {
