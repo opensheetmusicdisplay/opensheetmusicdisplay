@@ -81,4 +81,30 @@ describe("Cursor image redraw", () => {
         cursor.update();
         expect(redraws.mock.calls.map((call: unknown[]) => call[0]), "widths of the redraws").to.deep.equal([3 * 10 * 1.5]);
     });
+
+    it("keeps the image over a re-render, which replaces the cursor, and redraws it if it would look different", async () => {
+        const { osmd, cursor } = await showCursor();
+        const image: string = cursor.cursorElement.src;
+        const redraws: MockInstance = vi.spyOn(Cursor.prototype as any, "updateStyle");
+        try {
+            osmd.render();
+            expect(osmd.cursor !== cursor, "render() created a new cursor").to.equal(true);
+            expect(redraws, "redraws with unchanged width and options").not.toHaveBeenCalled();
+            expect(osmd.cursor.cursorElement.src).to.equal(image);
+            osmd.cursor.next();
+            expect(redraws, "redraws on the next step").not.toHaveBeenCalled();
+
+            osmd.cursor.CursorOptions.color = "#ff0000";
+            osmd.render();
+            expect(redraws, "redraws after changing the color").toHaveBeenCalledOnce();
+            expect(osmd.cursor.cursorElement.src).to.not.equal(image);
+
+            redraws.mockClear();
+            osmd.zoom = 1.5;
+            osmd.render();
+            expect(redraws.mock.calls.map((call: unknown[]) => call[0]), "widths of the redraws after zooming").to.deep.equal([3 * 10 * 1.5]);
+        } finally {
+            redraws.mockRestore();
+        }
+    });
 });
