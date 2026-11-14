@@ -78,11 +78,11 @@ export class ExpressionReader {
         this.divisions = divisions;
         const offsetNode: IXmlElement = xmlNode.element("offset");
         if (offsetNode !== undefined && !ignoreDivisionsOffset) {
-            try {
-                this.offsetDivisions = parseInt(offsetNode.value, 10);
-            } catch (ex) {
+            this.offsetDivisions = parseInt(offsetNode.value, 10);
+            // (parseInt() doesn't throw: NaN for a value that isn't a number, Infinity for 309 or more digits)
+            if (!Number.isFinite(this.offsetDivisions)) {
                 const errorMsg: string = "ReaderErrorMessages/ExpressionOffsetError" + ", Invalid expression offset -> set to default.";
-                log.debug("ExpressionReader.readExpressionParameters", errorMsg, ex);
+                log.debug("ExpressionReader.readExpressionParameters", errorMsg, offsetNode.value);
                 this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                 this.offsetDivisions = 0;
             }
@@ -169,7 +169,9 @@ export class ExpressionReader {
         const offsetNode: IXmlElement = directionNode.element("offset");
         if (offsetNode?.value) {
           const offsetValue: number = Number.parseInt(offsetNode.value, 10);
-          timestampFraction.Add(new Fraction(offsetValue, 4 * this.divisions));
+          if (Number.isFinite(offsetValue)) { // as in readDirectionTimestamp()
+            timestampFraction.Add(new Fraction(offsetValue, 4 * this.divisions));
+          }
         }
         const n: IXmlElement = directionNode.name === "sound" ? directionNode : directionNode.element("sound");
         if (n) {

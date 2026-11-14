@@ -84,14 +84,18 @@ export class Fraction {
       return a; // >= 1: a starts >= 1 and the loop ends with a = gcd
     }
 
-    // Non-integer inputs (rare, e.g. a = 2.666666666666667 from tuplet arithmetic, see #1478):
-    // keep the tolerant subtraction loop, whose behaviour for these cases is unchanged.
+    // Non-integer inputs (rare, e.g. a = 2.666666666666667 from tuplet arithmetic, see #1478, or Infinity from a
+    //   number with 309 or more digits): the tolerant subtraction loop, which ends when a or b gets below 1.
+    //   A run of more than 1000 subtractions of the same number is done as one remainder: one by one, it took a / b
+    //   steps, 9 s for a = 1.5, b = 4e9 (an <offset> of 1.5 with <divisions> 1000000000), and never ended for
+    //   a = Infinity (Infinity % b is NaN, which ends the loop: NaN >= 1 is false). Shorter runs keep subtracting,
+    //   whose rounding the results depend on (gcd(2.666666666666667, 48) is 3, by remainders 1).
     while (Math.abs(b) >= 1 && Math.abs(a) >= 1) { // accounts for floating point inaccuracies. smallest GCD is 1.
       // if we don't check a > 1e-8, we infinite loop for e.g. a = 2.666666666666667, b = 4. See #1478 (rare)
       if (a > b) {
-        a -= b;
+        a = a > b * 1000 ? a % b || b : a - b; // (a -= b while a > b ends at b, not 0, for a multiple of b)
       } else {
-        b -= a;
+        b = b > a * 1000 ? b % a : b - a;
       }
     }
 

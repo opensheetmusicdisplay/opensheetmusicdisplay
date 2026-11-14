@@ -17,7 +17,7 @@ import { Note } from "../../../src/MusicalScore/VoiceData/Note";
  */
 describe("Measure elements that can't be read", () => {
     /** A quarter note of the fixture (a whole note with duration 4), with more child elements, or another <type>. */
-    function note(step: string, moreElements: string = "", type: string = "quarter", duration: number = 1): string {
+    function note(step: string, moreElements: string = "", type: string = "quarter", duration: number | string = 1): string {
         return `<note>${moreElements}<pitch><step>${step}</step><octave>4</octave></pitch><duration>${duration}</duration>` +
             `<voice>1</voice><type>${type}</type></note>`;
     }
@@ -135,5 +135,15 @@ describe("Measure elements that can't be read", () => {
         expect(logged.length, logged.join("\n")).to.equal(2);
         expect(logged[0]).to.match(new RegExp("^\\[OSMD\\] " + skipped("note", 3) + "Invalid note duration\\.$"));
         expect(logged[1]).to.match(new RegExp("^\\[OSMD\\] " + skipped("note", 4) + "it belongs to the chord of the skipped note before it$"));
+    });
+
+    it("a note with a 310-digit <duration> is skipped with a warning, and the rest of the measure is read", async () => {
+        // parseInt() reads it as Infinity: load() never returned (new Fraction(Infinity, 4) looped forever)
+        const { osmd, logged } = await load(note("G", "", "quarter", "1" + "0".repeat(309)));
+        // no time can be taken from it: the following notes follow C4, as if there were no G4
+        expect(measureRead(osmd, 0, 0)).to.equal(fluteMeasure1);
+        expect(measureRead(osmd, 1, 0)).to.equal(fluteMeasure2);
+        expect(logged.length, logged.join("\n")).to.equal(1);
+        expect(logged[0]).to.match(new RegExp("^\\[OSMD\\] " + skipped("note", 3) + "its <duration> has 310 digits, too many to compute with$"));
     });
 });
