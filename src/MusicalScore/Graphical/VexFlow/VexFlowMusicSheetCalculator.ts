@@ -123,15 +123,22 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // the deprecated static one, for apps that use it: with default rules, as an instance's rules would keep that instance in memory
       MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer(new EngravingRules());
     }
+  }
 
-    // prepare Vexflow font (doesn't affect Vexflow 1.x). It seems like this has to be done here for now, otherwise it's too slow for the generateImages script.
-    //   (first image will have the non-updated font, in this case the Vexflow default Bravura, while we want Gonville here)
-    if (this.rules.DefaultVexFlowNoteFont?.toLowerCase() === "gonville") {
-      (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura, (Vex.Flow as any).Fonts?.Custom];
-    } else if (this.rules.DefaultVexFlowNoteFont?.toLowerCase() === "petaluma") {
-      (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Petaluma, (Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura];
-    }
-    // else keep new vexflow default Bravura (more cursive, bold)
+  /** Creates the graphical measures, staff entries and notes, with this instance's VexFlow settings (see
+   *  VexFlowConverter.applyRulesToVexFlow()): the VexFlow notes get their glyph scale when they are created.
+   */
+  public prepareGraphicalMusicSheet(): void {
+    VexFlowConverter.applyRulesToVexFlow(this.rules);
+    super.prepareGraphicalMusicSheet();
+  }
+
+  /** Calculates the layout, with this instance's VexFlow settings (see VexFlowConverter.applyRulesToVexFlow()):
+   *  another OSMD instance on the page may have set its own since this one's last layout.
+   */
+  public calculate(): void {
+    VexFlowConverter.applyRulesToVexFlow(this.rules);
+    super.calculate();
   }
 
   protected clearRecreatedObjects(): void {

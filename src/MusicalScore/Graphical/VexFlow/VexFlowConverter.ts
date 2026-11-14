@@ -44,6 +44,37 @@ import { CollectionUtil } from "../../../Util/CollectionUtil";
  * from OSMD objects to VexFlow objects.
  */
 export class VexFlowConverter {
+    /** Sets VexFlow's page-wide settings to the given rules: the scale of the note glyphs (VexFlowDefaultNotationFontScale), the
+     *  widths of the staff lines and the stems, and the font of the glyphs (DefaultVexFlowNoteFont, from VexFlow 3 on).
+     *  VexFlow has them once per page (Vex.Flow.*), shared by all OSMD instances, and reads them when notes and staves are created,
+     *  formatted and drawn. So every OSMD instance sets them before it creates its graphical sheet, before each layout and before
+     *  it draws: otherwise an instance would use the values of the instance rendered before it (or VexFlow's defaults).
+     */
+    public static applyRulesToVexFlow(rules: EngravingRules): void {
+        const flow: any = Vex.Flow;
+        // the font of the glyphs: every value sets its stack (also Bravura, after another instance set Gonville).
+        //   VexFlow 1.x has one font and no font stacks (no Vex.Flow.Fonts).
+        const fonts: any = flow.Fonts;
+        if (fonts) {
+            switch (rules.DefaultVexFlowNoteFont?.toLowerCase()) {
+                case "gonville":
+                    flow.DEFAULT_FONT_STACK = [fonts.Gonville, fonts.Bravura, fonts.Custom];
+                    break;
+                case "petaluma":
+                    flow.DEFAULT_FONT_STACK = [fonts.Petaluma, fonts.Gonville, fonts.Bravura];
+                    break;
+                default: // Bravura, VexFlow's default from 3.0 on (more cursive, bold)
+                    flow.DEFAULT_FONT_STACK = [fonts.Bravura, fonts.Gonville, fonts.Custom];
+            }
+        }
+        // sizing defaults in VexFlow
+        flow.STAVE_LINE_THICKNESS = rules.StaffLineWidth * unitInPixels;
+        flow.STEM_WIDTH = rules.StemWidth * unitInPixels;
+        // sets scale/size of notes/rest notes:
+        flow.DEFAULT_NOTATION_FONT_SCALE = rules.VexFlowDefaultNotationFontScale; // default 39
+        flow.DEFAULT_TAB_FONT_SCALE = rules.VexFlowDefaultTabFontScale; // default 39 // TODO doesn't seem to do anything
+    }
+
     /**
      * Mapping from numbers of alterations on the key signature to major keys
      * @type {[alterationsNo: number]: string; }
