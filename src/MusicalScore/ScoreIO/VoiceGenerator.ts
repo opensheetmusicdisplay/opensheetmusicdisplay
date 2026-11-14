@@ -189,6 +189,13 @@ export class VoiceGenerator {
           if (glissElements.length > 0) {
             this.slurReader.addSlur(glissElements, this.currentNote);
           }
+        } else if (this.slurReader !== undefined && this.currentNote.ParentVoiceEntry.IsGrace) {
+          // A slur that starts on a grace note is drawn by VexFlow, from the grace notes to their main note (see VoiceEntry.GraceSlur).
+          //   One that stops on a grace note (e.g. from a trilled note to its termination) is read like any other slur.
+          const slurStopElements: IXmlElement[] = slurElements.filter((slurElement: IXmlElement) => slurElement.attribute("type")?.value === "stop");
+          if (slurStopElements.length > 0) {
+            this.slurReader.addSlur(slurStopElements, this.currentNote);
+          }
         }
         // read Tuplets
         const tupletElements: IXmlElement[] = notationNode.elements("tuplet");
