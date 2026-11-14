@@ -43,25 +43,32 @@ export class MusicPartManagerIterator {
             do {
                 this.moveToNext();
             } while ((!this.currentVoiceEntries || this.currentTimeStamp.lt(startTimestamp)) && !this.endReached);
-            this.currentDynamicChangingExpressions.length = 0;
-            for (let staffIndex: number = 0; staffIndex < this.activeDynamicExpressions.length; staffIndex++) {
-                if (this.activeDynamicExpressions[staffIndex]) {
-                    if (this.activeDynamicExpressions[staffIndex] instanceof ContinuousDynamicExpression) {
-                        const continuousDynamic: ContinuousDynamicExpression =
-                            <ContinuousDynamicExpression>this.activeDynamicExpressions[staffIndex];
-                        this.currentDynamicChangingExpressions.push(new DynamicsContainer(continuousDynamic, staffIndex));
-                    } else {
-                        const instantaneousDynamic: InstantaneousDynamicExpression =
-                            <InstantaneousDynamicExpression>this.activeDynamicExpressions[staffIndex];
-                        this.currentDynamicChangingExpressions.push(new DynamicsContainer(instantaneousDynamic, staffIndex));
-                    }
-                }
-            }
-            this.currentTempoChangingExpression = this.activeTempoExpression;
+            this.setChangingExpressionsToActiveOnes();
         } catch (err) {
             log.info("MusicPartManagerIterator: " + err);
         }
 
+    }
+
+    /** Sets the dynamics and the tempo that change at the current position to the active ones,
+     *  as for the start position of a new iterator: there, all active expressions are new.
+     */
+    private setChangingExpressionsToActiveOnes(): void {
+        this.currentDynamicChangingExpressions.length = 0;
+        for (let staffIndex: number = 0; staffIndex < this.activeDynamicExpressions.length; staffIndex++) {
+            if (this.activeDynamicExpressions[staffIndex]) {
+                if (this.activeDynamicExpressions[staffIndex] instanceof ContinuousDynamicExpression) {
+                    const continuousDynamic: ContinuousDynamicExpression =
+                        <ContinuousDynamicExpression>this.activeDynamicExpressions[staffIndex];
+                    this.currentDynamicChangingExpressions.push(new DynamicsContainer(continuousDynamic, staffIndex));
+                } else {
+                    const instantaneousDynamic: InstantaneousDynamicExpression =
+                        <InstantaneousDynamicExpression>this.activeDynamicExpressions[staffIndex];
+                    this.currentDynamicChangingExpressions.push(new DynamicsContainer(instantaneousDynamic, staffIndex));
+                }
+            }
+        }
+        this.currentTempoChangingExpression = this.activeTempoExpression;
     }
     public backJumpOccurred: boolean;
     public forwardJumpOccurred: boolean;
@@ -162,9 +169,24 @@ export class MusicPartManagerIterator {
 
     /**
      * Creates a clone of this iterator which has the same actual position.
+     * Without a startTimeStamp, the clone walks to this iterator's enrolled timestamp, so it is in the same pass of a repeat
+     * (e.g. the second one); with a startTimeStamp (a source timestamp), it stops at the first position at or after it.
      */
     public clone(startTimeStamp: Fraction = undefined, endTimeStamp: Fraction = undefined): MusicPartManagerIterator {
-        const ret: MusicPartManagerIterator = new MusicPartManagerIterator(this.musicSheet, startTimeStamp ?? this.currentTimeStamp, endTimeStamp);
+        let ret: MusicPartManagerIterator;
+        if (startTimeStamp) {
+            ret = new MusicPartManagerIterator(this.musicSheet, startTimeStamp, endTimeStamp);
+        } else {
+            ret = new MusicPartManagerIterator(this.musicSheet, undefined, endTimeStamp);
+            const enrolledTimestamp: Fraction = this.CurrentEnrolledTimestamp;
+            if (ret.CurrentEnrolledTimestamp.lt(enrolledTimestamp)) {
+                // walk like the constructor does, but to the enrolled (played) timestamp instead of the source timestamp
+                do {
+                    ret.moveToNext();
+                } while ((!ret.currentVoiceEntries || ret.CurrentEnrolledTimestamp.lt(enrolledTimestamp)) && !ret.endReached);
+                ret.setChangingExpressionsToActiveOnes();
+            }
+        }
         ret.currentVoiceEntryIndex = this.currentVoiceEntryIndex;
         ret.currentMappingPart = this.currentMappingPart;
         ret.currentPartIndex = this.currentPartIndex;
