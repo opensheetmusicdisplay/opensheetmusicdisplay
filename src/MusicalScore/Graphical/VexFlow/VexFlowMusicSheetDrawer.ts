@@ -64,17 +64,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     public drawSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
-        // vexflow 3.x: change default font
-        if (this.rules.DefaultVexFlowNoteFont === "gonville") {
-            (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura, (Vex.Flow as any).Fonts?.Custom];
-        } // else keep new vexflow default Bravura (more cursive, bold).
-
-        // sizing defaults in Vexflow
-        (Vex.Flow as any).STAVE_LINE_THICKNESS = this.rules.StaffLineWidth * unitInPixels;
-        (Vex.Flow as any).STEM_WIDTH = this.rules.StemWidth * unitInPixels;
-        // sets scale/size of notes/rest notes:
-        (Vex.Flow as any).DEFAULT_NOTATION_FONT_SCALE = this.rules.VexFlowDefaultNotationFontScale; // default 39
-        (Vex.Flow as any).DEFAULT_TAB_FONT_SCALE = this.rules.VexFlowDefaultTabFontScale; // default 39 // TODO doesn't seem to do anything
+        // this instance's sizes and font, which VexFlow has once per page: another instance may have rendered since the layout
+        VexFlowConverter.applyRulesToVexFlow(this.rules);
 
         this.pageIdx = 0;
         for (const graphicalMusicPage of graphicalMusicSheet.MusicPages) {

@@ -86,4 +86,92 @@ describe("Multiple OSMD instances on a web page", () => {
         cursor.reset(); // back to the first page
         expectOnOwnPage();
     });
+
+    // VexFlow has the glyph scale and the widths of the staff lines and stems once per page (Vex.Flow.*), and reads them when
+    //   the notes are created (load()), in the layout and while drawing. Each instance sets its own before each of these
+    //   (VexFlowConverter.applyRulesToVexFlow()): they were only set before drawing, so the notes and the layout of an instance
+    //   had the values of the instance drawn before it.
+    describe("with different sizes (VexFlowDefaultNotationFontScale, StemWidth, StaffLineWidth)", () => {
+        const smallScale: number = 30; // default 39
+
+        /** Creates an instance in a new container: with small note heads and thick stems and staff lines, or with the defaults. */
+        function createInstance(smallHeadsThickLines: boolean): OpenSheetMusicDisplay {
+            const container: HTMLElement = document.createElement("div");
+            container.style.width = "1000px";
+            document.body.appendChild(container);
+            containers.push(container);
+            const osmd: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(container, { autoResize: false, backend: "svg" });
+            if (smallHeadsThickLines) {
+                osmd.EngravingRules.VexFlowDefaultNotationFontScale = smallScale;
+                osmd.EngravingRules.StemWidth = 0.3; // default 0.15
+                osmd.EngravingRules.StaffLineWidth = 0.3; // default 0.1
+            }
+            return osmd;
+        }
+
+        /** What the instance has drawn and laid out: sizes that follow the three rules, and positions that follow the layout. */
+        function getSizesAndLayout(osmd: OpenSheetMusicDisplay): {
+            headWidth: number; stemWidth: string; staffLineWidth: string; layout: string;
+        } {
+            const svg: HTMLElement = osmd.Drawer.Backends[0].getInnerElement();
+            const staffEntryXs: string = osmd.GraphicSheet.MeasureList[0][0].staffEntries
+                .map(staffEntry => staffEntry.PositionAndShape.RelativePosition.x.toFixed(3)).join(" ");
+            return {
+                headWidth: (svg.querySelector("path.vf-notehead") as SVGGraphicsElement).getBBox().width,
+                stemWidth: svg.querySelector("path.vf-stem").getAttribute("stroke-width"),
+                staffLineWidth: getComputedStyle(svg.querySelector("g.vf-stave path")).strokeWidth,
+                layout: `page height ${osmd.GraphicSheet.MusicPages[0].PositionAndShape.Size.height.toFixed(3)}, x of the first measure's` +
+                    ` staff entries ${staffEntryXs}`,
+            };
+        }
+
+        /** Checks that the instance has drawn with its own sizes, and the same layout as in its render before (if given). */
+        function expectOwnSizes(osmd: OpenSheetMusicDisplay, smallHeadsThickLines: boolean, defaultHeadWidth: number, step: string,
+                                layoutBefore?: string): string {
+            const sizes: ReturnType<typeof getSizesAndLayout> = getSizesAndLayout(osmd);
+            const scale: number = smallHeadsThickLines ? smallScale / 39 : 1;
+            expect(sizes.headWidth, `${step}: width of a note head`).to.be.closeTo(defaultHeadWidth * scale, 0.05);
+            expect(sizes.stemWidth, `${step}: stem width`).to.equal(smallHeadsThickLines ? "3" : "1.5");
+            expect(sizes.staffLineWidth, `${step}: staff line width`).to.equal(smallHeadsThickLines ? "3px" : "1px");
+            if (layoutBefore) {
+                expect(sizes.layout, `${step}: the layout of the instance's render before`).to.equal(layoutBefore);
+            }
+            return sizes.layout;
+        }
+
+        it("each instance keeps its own when they are loaded and rendered in turn", async () => {
+            const score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
+            // the default sizes, from an instance that is loaded and rendered right after another default one
+            let defaultHeadWidth: number;
+            for (let i: number = 0; i < 2; i++) {
+                const defaultSheet: OpenSheetMusicDisplay = createInstance(false);
+                await defaultSheet.load(score);
+                defaultSheet.render();
+                defaultHeadWidth = getSizesAndLayout(defaultSheet).headWidth;
+            }
+
+            // loaded after instances with other sizes were drawn: the notes get their glyph scale when they are created
+            const small: OpenSheetMusicDisplay = createInstance(true);
+            await small.load(score);
+            small.render();
+            const smallLayout: string = expectOwnSizes(small, true, defaultHeadWidth, "small heads, first render");
+            const normal: OpenSheetMusicDisplay = createInstance(false);
+            await normal.load(score);
+            normal.render();
+            const normalLayout: string = expectOwnSizes(normal, false, defaultHeadWidth, "default sizes, first render");
+            expect(normalLayout !== smallLayout, `the sizes change the layout: ${normalLayout}`).to.equal(true);
+
+            // rendered again after the other one: the layout reads the staff line width
+            small.render();
+            expectOwnSizes(small, true, defaultHeadWidth, "small heads, second render", smallLayout);
+            normal.render();
+            expectOwnSizes(normal, false, defaultHeadWidth, "default sizes, second render", normalLayout);
+
+            // drawn again after the other one's render, without a layout in between
+            small.render();
+            normal.Drawer.clear();
+            normal.Drawer.drawSheet(normal.GraphicSheet);
+            expectOwnSizes(normal, false, defaultHeadWidth, "default sizes, drawn again", normalLayout);
+        });
+    });
 });
