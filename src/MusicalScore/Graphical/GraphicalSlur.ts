@@ -172,6 +172,9 @@ export class GraphicalSlur extends GraphicalCurve {
         if (!slurStartNote) {
             slurStartNote = startStaffEntry.findEndTieGraphicalNoteFromNoteWithStartingSlur(this.slur.StartNote, this.slur);
         }
+        // a slur that stops on a grace note, e.g. from a trilled note to its termination (a slur that starts on one is drawn by
+        //   Vexflow, see VoiceEntry.GraceSlur)
+        this.graceEnd = this.slur.EndNote?.ParentVoiceEntry?.IsGrace === true;
         let slurEndNote: GraphicalNote = endStaffEntry.findGraphicalNoteFromNote(this.slur.EndNote);
         if (!slurEndNote && this.graceEnd) {
             slurEndNote = endStaffEntry.findGraphicalNoteFromGraceNote(this.slur.EndNote);
@@ -241,7 +244,9 @@ export class GraphicalSlur extends GraphicalCurve {
             const endUpperLeft: PointF2D = new PointF2D(this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.RelativePosition.x
                                                         + this.staffEntries[this.staffEntries.length - 1].PositionAndShape.RelativePosition.x,
                                                         endY);
-            if (slurEndNote) {
+            if (slurEndNote && this.graceEnd) {
+                    endUpperLeft.x = this.graceVoiceEntryX(slurEndNote) + slurEndNote.parentVoiceEntry.PositionAndShape.BorderLeft;
+            } else if (slurEndNote) {
                     endUpperLeft.x += this.staffEntries[this.staffEntries.length - 1].PositionAndShape.BorderLeft;
             } else if (!this.slur.EndNote) {
                     endUpperLeft.x = this.getUnattachedEndX();
@@ -251,10 +256,6 @@ export class GraphicalSlur extends GraphicalCurve {
                     + this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.Size.width;
             }
 
-            // must also add the GraceStaffEntry's ParentStaffEntry Position
-            if (this.graceEnd) {
-                endUpperLeft.x += endStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
-            }
 
             // above or beside the fingerings of the start and end notes the curve ran into, see retryPastEndFingerings()
             const start: PointF2D = this.placePastEndFingerings(slurStartNote, true, startX, startY, startUpperRight.x, endX,
@@ -447,7 +448,9 @@ export class GraphicalSlur extends GraphicalCurve {
             const endLowerLeft: PointF2D = new PointF2D(this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.RelativePosition.x
                                                         + this.staffEntries[this.staffEntries.length - 1].PositionAndShape.RelativePosition.x,
                                                         endY);
-            if (slurEndNote) {
+            if (slurEndNote && this.graceEnd) {
+                endLowerLeft.x = this.graceVoiceEntryX(slurEndNote) + slurEndNote.parentVoiceEntry.PositionAndShape.BorderLeft;
+            } else if (slurEndNote) {
                 endLowerLeft.x += this.staffEntries[this.staffEntries.length - 1].PositionAndShape.BorderLeft;
             } else if (!this.slur.EndNote) {
                 endLowerLeft.x = this.getUnattachedEndX();
@@ -457,10 +460,6 @@ export class GraphicalSlur extends GraphicalCurve {
                     + this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.Size.width;
             }
 
-            // must also add the GraceStaffEntry's ParentStaffEntry Position
-            if (this.graceEnd) {
-                endLowerLeft.x += endStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
-            }
 
             // below or beside the fingerings of the start and end notes the curve ran into, see retryPastEndFingerings()
             const start: PointF2D = this.placePastEndFingerings(slurStartNote, true, startX, startY, startLowerRight.x, endX,
@@ -729,6 +728,15 @@ export class GraphicalSlur extends GraphicalCurve {
      * @param rules
      * @param skyBottomLineCalculator
      */
+    /** The x of a grace note's voice entry in its staff line. Grace notes are drawn beside the main note of their staff entry, left
+     *  of it or, after it, right of it (see VexFlowStaffEntry.positionGraceEntries()).
+     */
+    private graceVoiceEntryX(graceNote: GraphicalNote): number {
+        const staffEntry: GraphicalStaffEntry = graceNote.parentVoiceEntry.parentStaffEntry;
+        return staffEntry.parentMeasure.PositionAndShape.RelativePosition.x + staffEntry.PositionAndShape.RelativePosition.x +
+            graceNote.parentVoiceEntry.PositionAndShape.RelativePosition.x;
+    }
+
     private calculateStartAndEnd(   slurStartNote: GraphicalNote,
                                     slurEndNote: GraphicalNote,
                                     staffLine: StaffLine,
@@ -797,9 +805,9 @@ export class GraphicalSlur extends GraphicalCurve {
             endX = slurEndNote.PositionAndShape.RelativePosition.x + slurEndNote.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x
                 + slurEndNote.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
 
-            // If Slur ends in a Gracenote
+            // a grace note is drawn beside its staff entry's main note: its voice entry has its own position (unlike a main note's)
             if (this.graceEnd) {
-                endX += slurEndNote.parentVoiceEntry.parentStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
+                endX += slurEndNote.parentVoiceEntry.PositionAndShape.RelativePosition.x;
             }
 
             const slurEndVE: GraphicalVoiceEntry = slurEndNote.parentVoiceEntry;
@@ -1263,7 +1271,11 @@ export class GraphicalSlur extends GraphicalCurve {
         // single Voice, opposite to StemDirection
         // here should only be one voiceEntry, so we can take graphicalVoiceEntries[0]:
         const startStemDirection: StemDirectionType = startStaffEntry.graphicalVoiceEntries[0].parentVoiceEntry.StemDirection;
-        const endStemDirection: StemDirectionType = endStaffEntry.graphicalVoiceEntries[0].parentVoiceEntry.StemDirection;
+        // A slur that stops on a grace note (whose stem is up whatever its pitch, mostly) is placed by its start note, like MuseScore
+        //   does: e.g. above from a note with its stem down. (The end staff entry's first voice entry would be its main note's or another
+        //   grace note's.)
+        const endStemDirection: StemDirectionType = this.graceEnd ? startStemDirection :
+            endStaffEntry.graphicalVoiceEntries[0].parentVoiceEntry.StemDirection;
         if (startStemDirection  ===
             endStemDirection) {
             this.placement = (startStemDirection === StemDirectionType.Up) ? PlacementEnum.Below : PlacementEnum.Above;
@@ -1274,14 +1286,11 @@ export class GraphicalSlur extends GraphicalCurve {
             // Placement at the side with the minimum border
             let sX: number = startStaffEntry.PositionAndShape.BorderLeft + startStaffEntry.PositionAndShape.RelativePosition.x
                         + startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
-            let eX: number = endStaffEntry.PositionAndShape.BorderRight + endStaffEntry.PositionAndShape.RelativePosition.x
+            const eX: number = endStaffEntry.PositionAndShape.BorderRight + endStaffEntry.PositionAndShape.RelativePosition.x
                         + endStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
 
             if (this.graceStart) {
                 sX += endStaffEntry.PositionAndShape.RelativePosition.x;
-            }
-            if (this.graceEnd) {
-                eX += endStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
             }
 
             // get SkyBottomLine borders

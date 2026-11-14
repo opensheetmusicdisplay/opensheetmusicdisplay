@@ -393,7 +393,8 @@ export class InstrumentReader {
 
               noteDuration = this.getNoteDurationFromTypeNode(xmlNode);
 
-              if (notationsNode && notationsNode.element("slur")) {
+              // Only a slur that starts on the grace note: one that stops on it is read and drawn like other slurs (see VoiceGenerator).
+              if (notationsNode?.elements("slur").some((slur: IXmlElement) => slur.attribute("type")?.value === "start")) {
                 graceSlur = true;
                 // grace slurs could be non-binary, but VexFlow.GraceNoteGroup modifier system is currently only boolean for slurs.
               }
