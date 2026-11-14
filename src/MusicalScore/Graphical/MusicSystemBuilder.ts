@@ -18,6 +18,7 @@ import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNot
 import {SystemLinesEnum} from "./SystemLinesEnum";
 import {GraphicalMusicSheet} from "./GraphicalMusicSheet";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
+import { ITransposeCalculator } from "../Interfaces/ITransposeCalculator";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {CollectionUtil} from "../../Util/CollectionUtil";
 import {SystemLinePosition} from "./SystemLinePosition";
@@ -562,11 +563,12 @@ export class MusicSystemBuilder {
 
     protected transposeKeyInstruction(keyInstruction: KeyInstruction, graphicalMeasure: GraphicalMeasure): KeyInstruction {
         const transposeHalftones: number = graphicalMeasure.getTransposedHalftones();
+        const transposeCalculator: ITransposeCalculator = this.rules.TransposeCalculator;
         if (transposeHalftones !== keyInstruction.isTransposedBy
             && graphicalMeasure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion
-            && MusicSheetCalculator.transposeCalculator !== undefined
+            && transposeCalculator !== undefined
         ) {
-            MusicSheetCalculator.transposeCalculator.transposeKey(
+            transposeCalculator.transposeKey(
                 keyInstruction,
                 transposeHalftones
             );

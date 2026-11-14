@@ -16,15 +16,12 @@ import { VexFlowGraphicalNote } from "../../../src/MusicalScore/Graphical/VexFlo
 describe("Tablature frets of a transposed sheet", () => {
     let container: HTMLElement;
     let osmd: OpenSheetMusicDisplay;
-    let previousCalculator: ITransposeCalculator;
 
     beforeEach(() => {
         container = TestUtils.getDivElement(document);
         osmd = TestUtils.createOpenSheetMusicDisplay(container);
-        previousCalculator = osmd.TransposeCalculator;
     });
     afterEach(() => {
-        osmd.TransposeCalculator = previousCalculator; // it's static, shared with the other tests
         osmd.clear();
         container.remove();
     });

@@ -213,7 +213,7 @@ export class GraphicalMusicSheet {
         this.musicPages = [];
         this.measureList = [];
         this.preparedTransposition = this.currentTransposition();
-        this.preparedTransposeCalculator = MusicSheetCalculator.transposeCalculator;
+        this.preparedTransposeCalculator = this.musicSheet.Rules.TransposeCalculator;
         this.preparedVoiceVisibility = this.currentVoiceVisibility();
     }
 
@@ -230,7 +230,7 @@ export class GraphicalMusicSheet {
             return true;
         }
         return transposition.some((halftones: number): boolean => halftones !== 0) &&
-            MusicSheetCalculator.transposeCalculator !== this.preparedTransposeCalculator;
+            this.musicSheet.Rules.TransposeCalculator !== this.preparedTransposeCalculator;
     }
 
     /** The halftones the sheet is transposed by: MusicSheet.Transpose, followed by each instrument's Transpose. */

@@ -919,7 +919,7 @@ function setOsmdTestOptionsAfterLoad(sampleFilename, options, osmdInstance) {
     const isTestTransposingFsharpMajorEsharp = sampleFilename.includes("test_transposing_fsharp_major_e_sharp");
     const isTestTransposingIntervalSpelling = sampleFilename.includes("test_transposing_interval_spelling");
     const isTestTransposingIntervalChordSpelling = sampleFilename.includes("test_transposing_interval_chord_spelling");
-    // osmd.TransposeCalculator is static, shared by all samples: set it for each sample,
+    // one OSMD instance renders all samples: set its TransposeCalculator for each sample,
     //   so that the samples after the interval samples (in directory order) don't use their calculator.
     osmdInstance.TransposeCalculator = isTestTransposingIntervalSpelling || isTestTransposingIntervalChordSpelling ?
         new OSMD.IntervalTransposeCalculator() : new OSMD.TransposeCalculator();

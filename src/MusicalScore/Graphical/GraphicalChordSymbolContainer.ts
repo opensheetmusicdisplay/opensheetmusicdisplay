@@ -67,7 +67,8 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
         boundingBox.calculateBoundingBox();
     }
     private calculateLabel(textHeight: number, transposeHalftones: number, keyInstruction: KeyInstruction): void {
-        const text: string = ChordSymbolContainer.calculateChordText(this.chordSymbolContainer, transposeHalftones, keyInstruction);
+        const text: string = ChordSymbolContainer.calculateChordText(this.chordSymbolContainer, transposeHalftones, keyInstruction,
+            this.rules.TransposeCalculator);
         const placement: PlacementEnum = this.GetChordSymbolContainer.Placement;
         const textAlignment: TextAlignmentEnum = placement === PlacementEnum.Above ?
             this.rules.ChordSymbolTextAlignmentTop : this.rules.ChordSymbolTextAlignmentBottom;

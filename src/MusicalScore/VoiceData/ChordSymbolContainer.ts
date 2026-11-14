@@ -1,6 +1,6 @@
 import {Pitch} from "../../Common/DataObjects/Pitch";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
-import {MusicSheetCalculator} from "../Graphical/MusicSheetCalculator";
+import { ITransposeCalculator } from "../Interfaces/ITransposeCalculator";
 import {AccidentalEnum} from "../../Common/DataObjects/Pitch";
 import { EngravingRules } from "../Graphical/EngravingRules";
 import { PlacementEnum } from "./Expressions/AbstractExpression";
@@ -46,7 +46,12 @@ export class ChordSymbolContainer {
         return this.degrees;
     }
 
-    public static calculateChordText(chordSymbol: ChordSymbolContainer, transposeHalftones: number, keyInstruction: KeyInstruction): string {
+    /** The text of the chord symbol, its root and bass transposed by transposeHalftones with transposeCalculator
+     *  (OSMD passes its instance's calculator, EngravingRules.TransposeCalculator). Without a calculator,
+     *  the pitches aren't transposed.
+     */
+    public static calculateChordText(chordSymbol: ChordSymbolContainer, transposeHalftones: number, keyInstruction: KeyInstruction,
+                                     transposeCalculator?: ITransposeCalculator): string {
         // if (!chordSymbol) { // undefined
         //     return; // handled in VexFlowGraphicalSymbolFactory.createChordSymbols
         // }
@@ -55,8 +60,8 @@ export class ChordSymbolContainer {
         }
         let transposedRootPitch: Pitch = chordSymbol.RootPitch;
 
-        if (MusicSheetCalculator.transposeCalculator) {
-            transposedRootPitch = MusicSheetCalculator.transposeCalculator.transposePitch(
+        if (transposeCalculator) {
+            transposedRootPitch = transposeCalculator.transposePitch(
                 chordSymbol.RootPitch,
                 keyInstruction,
                 transposeHalftones,
@@ -148,8 +153,8 @@ export class ChordSymbolContainer {
         // bass
         if (chordSymbol.BassPitch) {
             let transposedBassPitch: Pitch = chordSymbol.BassPitch;
-            if (MusicSheetCalculator.transposeCalculator) {
-                transposedBassPitch = MusicSheetCalculator.transposeCalculator.transposePitch(
+            if (transposeCalculator) {
+                transposedBassPitch = transposeCalculator.transposePitch(
                     chordSymbol.BassPitch,
                     keyInstruction,
                     transposeHalftones,

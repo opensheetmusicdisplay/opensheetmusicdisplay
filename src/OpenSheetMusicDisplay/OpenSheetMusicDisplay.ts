@@ -2619,12 +2619,17 @@ export class OpenSheetMusicDisplay {
         return this.followCursor;
     }
 
+    /** Sets this instance's calculator for transposing (osmd.Sheet.Transpose, Instrument.Transpose),
+     *  e.g. new TransposeCalculator() or new IntervalTransposeCalculator(). Other OSMD instances on the page keep their own.
+     *  Undefined (the default): no transposition. Stored in EngravingRules.TransposeCalculator.
+     */
     public set TransposeCalculator(calculator: ITransposeCalculator) {
-        MusicSheetCalculator.transposeCalculator = calculator;
+        this.rules.TransposeCalculator = calculator;
     }
 
+    /** This instance's calculator for transposing, see the setter. */
     public get TransposeCalculator(): ITransposeCalculator {
-        return MusicSheetCalculator.transposeCalculator;
+        return this.rules.TransposeCalculator;
     }
 
     public get Sheet(): MusicSheet {
