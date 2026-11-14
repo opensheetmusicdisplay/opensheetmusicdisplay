@@ -5,7 +5,6 @@ import {Pitch} from "../../Common/DataObjects/Pitch";
 import {NoteEnum} from "../../Common/DataObjects/Pitch";
 import { Dictionary } from "typescript-collections";
 // import { Dictionary } from "typescript-collections/dist/lib";
-import { MusicSheetCalculator } from "./MusicSheetCalculator";
 import { Tie } from "../VoiceData/Tie";
 
 /**
@@ -185,7 +184,7 @@ export class AccidentalCalculator {
             this.hiddenNoteWithAccidentalDict.setValue(pitchKey, { note: graphicalNote, accidental: pitch.Accidental });
             return;
         }
-        MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
+        graphicalNote.rules.SymbolFactory.addGraphicalAccidental(graphicalNote, pitch);
         if (!graphicalNote.parentVoiceEntry.parentVoiceEntry.IsGrace) {
             this.lastNoteWithAccidentalDict.setValue(pitchKey, graphicalNote);
         }

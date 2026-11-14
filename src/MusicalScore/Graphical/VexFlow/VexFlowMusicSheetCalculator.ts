@@ -115,7 +115,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   constructor(rules: EngravingRules) {
     super();
     this.rules = rules;
-    MusicSheetCalculator.symbolFactory = new VexFlowGraphicalSymbolFactory();
+    // per instance, not static: see EngravingRules.SymbolFactory. A factory set by the app is kept.
+    if (!this.rules.SymbolFactory) {
+      this.rules.SymbolFactory = new VexFlowGraphicalSymbolFactory();
+    }
     if (!this.rules.TextMeasurer) {
       // rules that weren't created by an OSMD instance, which sets its rules' measurer (per instance, not static:
       //   see EngravingRules.TextMeasurer)

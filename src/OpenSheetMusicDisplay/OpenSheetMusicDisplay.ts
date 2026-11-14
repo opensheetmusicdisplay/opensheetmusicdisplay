@@ -2494,8 +2494,10 @@ export class OpenSheetMusicDisplay {
         return backend;
     }
 
-    /** Standard page format options like A4 or Letter, in portrait and landscape. E.g. PageFormatStandards["A4_P"] or PageFormatStandards["Letter_L"]. */
-    public static PageFormatStandards: { [type: string]: PageFormat } = {
+    /** Standard page format options like A4 or Letter, in portrait and landscape. E.g. PageFormatStandards["A4_P"] or PageFormatStandards["Letter_L"].
+     *  One table for all OSMD instances on the page: a format added here, e.g. PageFormatStandards["B5_P"] = new PageFormat(176, 250, "B5_P"),
+     *  can be used by all of them (setOptions({pageFormat: "B5_P"})). The table itself can't be replaced (readonly). */
+    public static readonly PageFormatStandards: { [type: string]: PageFormat } = {
         "A3_L": new PageFormat(420, 297, "A3_L"), // id strings should use underscores instead of white spaces to facilitate use as URL parameters.
         "A3_P": new PageFormat(297, 420, "A3_P"),
         "A4_L": new PageFormat(297, 210, "A4_L"),

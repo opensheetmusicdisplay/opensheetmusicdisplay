@@ -5,40 +5,9 @@ import {DynamicExpressionSymbolEnum} from "./DynamicExpressionSymbolEnum";
 import {InvalidEnumArgumentException} from "../../Exceptions";
 import { log } from "../../../Common/Logging";
 import { SourceMeasure } from "../SourceMeasure";
-import { Dictionary } from "typescript-collections";
 import { Fraction } from "../../../Common/DataObjects/Fraction";
 
 export class InstantaneousDynamicExpression extends AbstractExpression {
-    public static staticConstructor(): void {
-
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.ffffff, 127.0 / 127.0);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.fffff,  126.0 / 127.0);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.ffff,   125.0 / 127.0);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.fff,    124.0 / 127.0);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.ff,     122.0 / 127.0);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.f,      108.0 / 127.0);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.mf,      76.0 / 127.0);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.sf,     0.5);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.sfp,    0.5);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.sfpp,   0.5);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.fp,     0.5);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.rf,     0.5);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.rfz,    0.5);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.sfz,    0.5);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.sffz,   0.5);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.fz,     0.5);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.sfzp,   0.5);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.pf,      92.0 / 127.0); // poco forte: between mf and f
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.mp,      60 / 127.0);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.p,       28.0 / 127.0);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.pp,      12.0 / 127.0);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.ppp,     10.0 / 127.0);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.pppp,    7.0 / 127.0);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.ppppp,    5.0 / 127.0);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.pppppp,   4.0 / 127.0);
-        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.n,        0.0); // niente
-    }
-
     constructor(dynamicExpression: string, soundDynamics: number, placement: PlacementEnum, staffNumber: number,
                 measure: SourceMeasure, dynamicEnum?: DynamicEnum) {
         super(placement);
@@ -48,8 +17,6 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
         this.soundDynamic = soundDynamics;
         this.staffNumber = staffNumber;
     }
-
-    public static dynamicToRelativeVolumeDict: Dictionary<DynamicEnum, number> = new Dictionary<DynamicEnum, number>();
 
     private multiExpression: MultiExpression;
     private dynamicExpression: string;
@@ -106,8 +73,12 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
         return this.Volume * 127;
     }
 
+    /** The relative volume (0 to 1) of this marking, from its OSMD instance's table (EngravingRules.DynamicToRelativeVolumeDict,
+     *  e.g. osmd.EngravingRules.DynamicToRelativeVolumeDict.setValue(DynamicEnum.p, 0.3)). Undefined for a marking created
+     *  without a measure (and so without rules), which the MusicXML reader doesn't do.
+     */
     public get Volume(): number {
-        return InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.getValue(this.dynamicEnum);
+        return this.parentMeasure?.Rules?.DynamicToRelativeVolumeDict.getValue(this.dynamicEnum);
     }
 
     public static isInputStringInstantaneousDynamic(inputString: string): boolean {
@@ -130,7 +101,7 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
         }
         if (!InstantaneousDynamicExpression.knownDynamicNames) {
             // built lazily: DynamicEnum is declared after this class in the module, so it isn't available while the
-            //   class's statics are initialized (same reason staticConstructor() is called at the end of the module)
+            //   class's statics are initialized
             InstantaneousDynamicExpression.knownDynamicNames = Object.keys(DynamicEnum)
                 .filter((key: string): boolean => isNaN(Number(key)) && key !== "other")
                 .sort((a: string, b: string): number => b.length - a.length); // longest first: "sff" before "sf" before... ("s" is none)
@@ -246,4 +217,3 @@ export enum DynamicEnum {
     n = 27
 }
 
-InstantaneousDynamicExpression.staticConstructor();

@@ -18,6 +18,8 @@ import { GraphicalNote } from "./GraphicalNote";
 import { Note } from "../VoiceData/Note";
 import { ITextMeasurer } from "../Interfaces/ITextMeasurer";
 import { ITransposeCalculator } from "../Interfaces/ITransposeCalculator";
+import { IGraphicalSymbolFactory } from "../Interfaces/IGraphicalSymbolFactory";
+import { DynamicEnum } from "../VoiceData/Expressions/InstantaneousDynamicExpression";
 
 /** Rendering and Engraving options, more fine-grained than [[IOSMDOptions]].
  *  Not all of these options are meant to be modified by users of the library,
@@ -26,8 +28,9 @@ import { ITransposeCalculator } from "../Interfaces/ITransposeCalculator";
  *  like Render* to (not) render certain elements (e.g. osmd.rules.RenderRehearsalMarks = false)
  */
 export class EngravingRules {
-    /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow at osmd.Zoom = 1 (default). */
-    public static unit: number = 1.0;
+    /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow at osmd.Zoom = 1 (default).
+     *  A constant (readonly): the layout assumes 1.0 in many places. To change the size of the score, use osmd.Zoom. */
+    public static readonly unit: number = 1.0;
     public SamplingUnit: number;
     public StaccatoShorteningFactor: number;
     /** Height (size) of the sheet title. */
@@ -810,6 +813,17 @@ export class EngravingRules {
      *  a static one transposed all instances on the page. Undefined: no transposition.
      */
     public TransposeCalculator: ITransposeCalculator;
+    /** Creates the graphical objects of this instance (systems, staff lines, measures, staff entries, notes, ...), set by the
+     *  VexFlowMusicSheetCalculator if the app didn't set one. Owned here (per OSMD instance) instead of statically (the former
+     *  MusicSheetCalculator.symbolFactory): a static one was replaced for all instances on the page by each new instance.
+     */
+    public SymbolFactory: IGraphicalSymbolFactory;
+    /** The relative volume (0 to 1) of each dynamic marking in this instance's score (InstantaneousDynamicExpression.Volume),
+     *  e.g. DynamicToRelativeVolumeDict.setValue(DynamicEnum.p, 0.3). Owned here (per OSMD instance) instead of statically (the
+     *  former InstantaneousDynamicExpression.dynamicToRelativeVolumeDict): a value changed in a static table changed all
+     *  instances on the page.
+     */
+    public DynamicToRelativeVolumeDict: Dictionary<DynamicEnum, number>;
     /** How many times osmd.render() was already called on the currently loaded score.
      * Resets after osmd.load() (via osmd.reset()).
      * Can be relevant for transposition or generally informative.
@@ -841,9 +855,42 @@ export class EngravingRules {
         this.loadDefaultValues();
     }
 
+    /** A new table of the default relative volume (0 to 1) of each dynamic marking, see DynamicToRelativeVolumeDict. */
+    private createDefaultDynamicVolumes(): Dictionary<DynamicEnum, number> {
+        const volumeDict: Dictionary<DynamicEnum, number> = new Dictionary<DynamicEnum, number>();
+        volumeDict.setValue(DynamicEnum.ffffff, 127.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.fffff,  126.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.ffff,   125.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.fff,    124.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.ff,     122.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.f,      108.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.mf,      76.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.sf,     0.5);
+        volumeDict.setValue(DynamicEnum.sfp,    0.5);
+        volumeDict.setValue(DynamicEnum.sfpp,   0.5);
+        volumeDict.setValue(DynamicEnum.fp,     0.5);
+        volumeDict.setValue(DynamicEnum.rf,     0.5);
+        volumeDict.setValue(DynamicEnum.rfz,    0.5);
+        volumeDict.setValue(DynamicEnum.sfz,    0.5);
+        volumeDict.setValue(DynamicEnum.sffz,   0.5);
+        volumeDict.setValue(DynamicEnum.fz,     0.5);
+        volumeDict.setValue(DynamicEnum.sfzp,   0.5);
+        volumeDict.setValue(DynamicEnum.pf,      92.0 / 127.0); // poco forte: between mf and f
+        volumeDict.setValue(DynamicEnum.mp,      60 / 127.0);
+        volumeDict.setValue(DynamicEnum.p,       28.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.pp,      12.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.ppp,     10.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.pppp,    7.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.ppppp,    5.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.pppppp,   4.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.n,        0.0); // niente
+        return volumeDict;
+    }
+
     public loadDefaultValues(): void {
         // global variables
         this.SamplingUnit = EngravingRules.unit * 3;
+        this.DynamicToRelativeVolumeDict = this.createDefaultDynamicVolumes();
 
         // Page Label Variables
         this.SheetTitleHeight = 4.0;

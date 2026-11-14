@@ -16,7 +16,6 @@ import {AbstractGraphicalInstruction} from "./AbstractGraphicalInstruction";
 import {GraphicalStaffEntryLink} from "./GraphicalStaffEntryLink";
 import {CollectionUtil} from "../../Util/CollectionUtil";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
-import { MusicSheetCalculator } from "./MusicSheetCalculator";
 import { Tie } from "../VoiceData/Tie";
 import { GraphicalLabel } from "./GraphicalLabel";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
@@ -263,7 +262,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
             }
         }
         // if not found in list, create new one and add to list:
-        const graphicalVoiceEntry: GraphicalVoiceEntry = MusicSheetCalculator.symbolFactory.createVoiceEntry(voiceEntry, this);
+        const graphicalVoiceEntry: GraphicalVoiceEntry = this.parentMeasure.parentSourceMeasure.Rules.SymbolFactory.createVoiceEntry(voiceEntry, this);
         this.graphicalVoiceEntries.push(graphicalVoiceEntry);
 
         return graphicalVoiceEntry;
@@ -281,7 +280,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
             }
         }
         // if not found in list, create new one and add to list:
-        const graphicalVoiceEntry: GraphicalVoiceEntry = MusicSheetCalculator.symbolFactory.createVoiceEntry(graphicalNote.sourceNote.ParentVoiceEntry, this);
+        const graphicalVoiceEntry: GraphicalVoiceEntry = graphicalNote.rules.SymbolFactory.createVoiceEntry(graphicalNote.sourceNote.ParentVoiceEntry, this);
         this.graphicalVoiceEntries.push(graphicalVoiceEntry);
 
         return graphicalVoiceEntry;

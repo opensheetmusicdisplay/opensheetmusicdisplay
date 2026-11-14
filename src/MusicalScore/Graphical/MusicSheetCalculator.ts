@@ -42,7 +42,6 @@ import { TechnicalInstruction, TechnicalInstructionType } from "../VoiceData/Ins
 import { Pitch } from "../../Common/DataObjects/Pitch";
 import { LinkedVoice } from "../VoiceData/LinkedVoice";
 import { ColDirEnum } from "./BoundingBox";
-import { IGraphicalSymbolFactory } from "../Interfaces/IGraphicalSymbolFactory";
 import { ITransposeCalculator } from "../Interfaces/ITransposeCalculator";
 import { OctaveShiftParams } from "./OctaveShiftParams";
 import { AccidentalCalculator } from "./AccidentalCalculator";
@@ -85,7 +84,6 @@ import { CollectionUtil } from "../../Util/CollectionUtil";
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
  */
 export abstract class MusicSheetCalculator {
-    public static symbolFactory: IGraphicalSymbolFactory;
     /** Tracks the pitches on each percussion staff, to put them on one line if there are few of them (PercussionOneLineCutoff). */
     protected stafflineNoteCalculator: IStafflineNoteCalculator;
 
@@ -3033,9 +3031,9 @@ export abstract class MusicSheetCalculator {
             }
             let graphicalNote: GraphicalNote;
             if (voiceEntry.IsGrace) {
-                graphicalNote = MusicSheetCalculator.symbolFactory.createGraceNote(note, gve, activeClef, this.rules, octaveShiftValue);
+                graphicalNote = this.rules.SymbolFactory.createGraceNote(note, gve, activeClef, this.rules, octaveShiftValue);
             } else {
-                graphicalNote = MusicSheetCalculator.symbolFactory.createNote(note, gve, activeClef, octaveShiftValue, this.rules, undefined);
+                graphicalNote = this.rules.SymbolFactory.createNote(note, gve, activeClef, octaveShiftValue, this.rules, undefined);
                 this.stafflineNoteCalculator.trackNote(graphicalNote);
             }
             if (note.Pitch) {
@@ -3069,7 +3067,7 @@ export abstract class MusicSheetCalculator {
             // handle TabNotes:
             if (graphicalTabVoiceEntry) {
                 // notes should be either TabNotes or RestNotes -> add all:
-                const graphicalTabNote: GraphicalNote = MusicSheetCalculator.symbolFactory.createNote(
+                const graphicalTabNote: GraphicalNote = this.rules.SymbolFactory.createNote(
                     note,
                     graphicalTabVoiceEntry,
                     activeClef,
@@ -3869,13 +3867,13 @@ export abstract class MusicSheetCalculator {
         let measure: GraphicalMeasure = undefined;
         if (activeClefs[staffIndex].ClefType === ClefEnum.TAB || staff.isTab) {
             staff.isTab = true;
-            measure = MusicSheetCalculator.symbolFactory.createTabStaffMeasure(sourceMeasure, staff);
+            measure = this.rules.SymbolFactory.createTabStaffMeasure(sourceMeasure, staff);
         } else if (sourceMeasure.multipleRestMeasures && this.rules.RenderMultipleRestMeasures) {
-            measure = MusicSheetCalculator.symbolFactory.createMultiRestMeasure(sourceMeasure, staff);
+            measure = this.rules.SymbolFactory.createMultiRestMeasure(sourceMeasure, staff);
         } else if (sourceMeasure.multipleRestMeasureNumber > 1) {
             return undefined; // don't need to create a graphical measure that is within a multiple rest measure
         } else {
-            measure = MusicSheetCalculator.symbolFactory.createGraphicalMeasure(sourceMeasure, staff);
+            measure = this.rules.SymbolFactory.createGraphicalMeasure(sourceMeasure, staff);
         }
         measure.hasError = sourceMeasure.getErrorInMeasure(staffIndex);
         // check for key instruction changes
@@ -3947,7 +3945,7 @@ export abstract class MusicSheetCalculator {
                     }
                 }
                 // create new GraphicalStaffEntry
-                const graphicalStaffEntry: GraphicalStaffEntry = MusicSheetCalculator.symbolFactory.createStaffEntry(sourceStaffEntry, measure);
+                const graphicalStaffEntry: GraphicalStaffEntry = this.rules.SymbolFactory.createStaffEntry(sourceStaffEntry, measure);
                 if (entryIndex < measure.staffEntries.length) {
                     // a GraphicalStaffEntry has been inserted already at this Index (from Tie)
                     measure.addGraphicalStaffEntryAtTimestamp(graphicalStaffEntry);
@@ -3966,7 +3964,7 @@ export abstract class MusicSheetCalculator {
                 for (const instruction of sourceStaffEntry.Instructions) {
                     if (instruction instanceof KeyInstruction) {
                         const key: KeyInstruction = this.keyForGraphicalMeasure(instruction, measure);
-                        MusicSheetCalculator.symbolFactory.createInStaffKey(
+                        this.rules.SymbolFactory.createInStaffKey(
                             graphicalStaffEntry, key, accidentalCalculator.ActiveKeyInstruction, activeClefs[staffIndex]);
                         accidentalCalculator.ActiveKeyInstruction = key;
                     }
@@ -4015,7 +4013,7 @@ export abstract class MusicSheetCalculator {
                 // SourceStaffEntry has inStaff ClefInstruction -> create graphical clef
                 for (const instruction of sourceStaffEntry.Instructions) {
                     if (instruction instanceof ClefInstruction) {
-                        MusicSheetCalculator.symbolFactory.createInStaffClef(
+                        this.rules.SymbolFactory.createInStaffClef(
                             graphicalStaffEntry, instruction as ClefInstruction
                         );
                         break;
@@ -4023,7 +4021,7 @@ export abstract class MusicSheetCalculator {
                 }
                 if (this.rules.RenderChordSymbols && sourceStaffEntry.ChordContainers?.length > 0) {
                     sourceStaffEntry.ParentStaff.ParentInstrument.HasChordSymbols = true;
-                    MusicSheetCalculator.symbolFactory.createChordSymbols(
+                    this.rules.SymbolFactory.createChordSymbols(
                         sourceStaffEntry,
                         graphicalStaffEntry,
                         accidentalCalculator.ActiveKeyInstruction,
@@ -4115,12 +4113,12 @@ export abstract class MusicSheetCalculator {
                 note.PrintObject = this.rules.FillEmptyMeasuresWithWholeRest === FillEmptyMeasuresWithWholeRests.YesVisible;
                   // don't display whole rest that wasn't given in XML, only for layout/voice completion
                 voiceEntry.Notes.push(note);
-                const graphicalStaffEntry: GraphicalStaffEntry = MusicSheetCalculator.symbolFactory.createStaffEntry(sourceStaffEntry, measure);
+                const graphicalStaffEntry: GraphicalStaffEntry = this.rules.SymbolFactory.createStaffEntry(sourceStaffEntry, measure);
                 measure.addGraphicalStaffEntry(graphicalStaffEntry);
                 graphicalStaffEntry.relInMeasureTimestamp = voiceEntry.Timestamp;
-                const gve: GraphicalVoiceEntry = MusicSheetCalculator.symbolFactory.createVoiceEntry(voiceEntry, graphicalStaffEntry);
+                const gve: GraphicalVoiceEntry = this.rules.SymbolFactory.createVoiceEntry(voiceEntry, graphicalStaffEntry);
                 graphicalStaffEntry.graphicalVoiceEntries.push(gve);
-                const graphicalNote: GraphicalNote = MusicSheetCalculator.symbolFactory.createNote(
+                const graphicalNote: GraphicalNote = this.rules.SymbolFactory.createNote(
                     note,
                     gve,
                     new ClefInstruction(),
@@ -4223,7 +4221,7 @@ export abstract class MusicSheetCalculator {
 
     // private createStaffEntryForTieNote(measure: StaffMeasure, absoluteTimestamp: Fraction, openTie: Tie): GraphicalStaffEntry {
     //     let graphicalStaffEntry: GraphicalStaffEntry;
-    //     graphicalStaffEntry = MusicSheetCalculator.symbolFactory.createStaffEntry(openTie.Start.ParentStaffEntry, measure);
+    //     graphicalStaffEntry = this.rules.SymbolFactory.createStaffEntry(openTie.Start.ParentStaffEntry, measure);
     //     graphicalStaffEntry.relInMeasureTimestamp = Fraction.minus(absoluteTimestamp, measure.parentSourceMeasure.AbsoluteTimestamp);
     //     this.resetYPositionForLeadSheet(graphicalStaffEntry.PositionAndShape);
     //     measure.addGraphicalStaffEntryAtTimestamp(graphicalStaffEntry);
