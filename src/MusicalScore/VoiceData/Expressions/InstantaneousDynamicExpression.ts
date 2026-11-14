@@ -49,7 +49,9 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
         this.staffNumber = staffNumber;
     }
 
-    public static dynamicToRelativeVolumeDict: Dictionary<DynamicEnum, number> = new Dictionary<DynamicEnum, number>();
+    /** The relative volume (0 to 1) of each dynamic marking, see Volume. One table for all OSMD instances on the page:
+     *  a changed value changes the volume of that marking in every instance. The table itself can't be replaced (readonly). */
+    public static readonly dynamicToRelativeVolumeDict: Dictionary<DynamicEnum, number> = new Dictionary<DynamicEnum, number>();
 
     private multiExpression: MultiExpression;
     private dynamicExpression: string;

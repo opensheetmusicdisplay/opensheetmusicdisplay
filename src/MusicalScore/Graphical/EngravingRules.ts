@@ -27,8 +27,9 @@ import { IGraphicalSymbolFactory } from "../Interfaces/IGraphicalSymbolFactory";
  *  like Render* to (not) render certain elements (e.g. osmd.rules.RenderRehearsalMarks = false)
  */
 export class EngravingRules {
-    /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow at osmd.Zoom = 1 (default). */
-    public static unit: number = 1.0;
+    /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow at osmd.Zoom = 1 (default).
+     *  A constant (readonly): the layout assumes 1.0 in many places. To change the size of the score, use osmd.Zoom. */
+    public static readonly unit: number = 1.0;
     public SamplingUnit: number;
     public StaccatoShorteningFactor: number;
     /** Height (size) of the sheet title. */
