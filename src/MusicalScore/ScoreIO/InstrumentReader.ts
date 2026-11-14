@@ -199,7 +199,7 @@ export class InstrumentReader {
             const divisionsNode: IXmlElement = xmlNode.element("divisions");
             if (divisionsNode) {
               this.divisions = parseInt(divisionsNode.value, 10);
-              if (isNaN(this.divisions)) {
+              if (!Number.isFinite(this.divisions)) { // (Infinity for 309 or more digits)
                 const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DivisionError",
                     "Invalid divisions value at Instrument: ");
                 log.debug("InstrumentReader.readNextXmlMeasure", errorMsg);
@@ -336,7 +336,7 @@ export class InstrumentReader {
                   ITextTranslation.translateText("ReaderErrorMessages/DivisionError", "Invalid divisions value at Instrument: ")
                     + this.instrument.Name);
               }
-              noteDivisions = parseInt(xmlNode.element("duration").value, 10);
+              noteDivisions = this.readDurationDivisions(xmlNode);
               if (!isNaN(noteDivisions)) {
                 noteDuration = new Fraction(noteDivisions, 4 * this.divisions);
                 if (restNote && noteDuration.RealValue > this.ActiveRhythm?.Rhythm.RealValue) {
@@ -484,10 +484,10 @@ export class InstrumentReader {
               }
             }
           } else if (xmlNode.name === "forward") {
-            const forFraction: number = parseInt(xmlNode.element("duration").value, 10);
+            const forFraction: number = this.readDurationDivisions(xmlNode);
             currentFraction.Add(new Fraction(forFraction, 4 * this.divisions));
           } else if (xmlNode.name === "backup") {
-            const backFraction: number = parseInt(xmlNode.element("duration").value, 10);
+            const backFraction: number = this.readDurationDivisions(xmlNode);
             currentFraction.Sub(new Fraction(backFraction, 4 * this.divisions));
             if (currentFraction.IsNegative()) {
               currentFraction = new Fraction(0, 1);
@@ -694,10 +694,24 @@ export class InstrumentReader {
       return undefined;
     }
     const noteDivisions: number = parseInt(noteNode.element("duration")?.value, 10);
-    if (!(noteDivisions > 0) || !(this.divisions > 0)) {
+    if (!(noteDivisions > 0) || noteDivisions === Infinity || !(this.divisions > 0)) {
       return undefined;
     }
     return new Fraction(noteDivisions, 4 * this.divisions);
+  }
+
+  /**
+   * The `<duration>` of a `<note>`, `<forward>` or `<backup>` in divisions, NaN if it isn't a number.
+   * Throws for a number too large to compute with (309 or more digits, which parseInt() reads as Infinity), so that the
+   * element is skipped with a warning: a time of Infinity would make the following timestamps NaN.
+   */
+  private readDurationDivisions(xmlNode: IXmlElement): number {
+    const value: string = xmlNode.element("duration").value;
+    const divisions: number = parseInt(value, 10);
+    if (divisions === Infinity || divisions === -Infinity) {
+      throw new Error(`its <duration> has ${value.trim().length} digits, too many to compute with`);
+    }
+    return divisions;
   }
 
   /**
@@ -1561,7 +1575,8 @@ export class InstrumentReader {
       const typeDuration: Fraction = this.getDottedNoteDurationFromTypeNode(xmlNode);
       // A correctly encoded tuplet note is shorter (or, for augmentation tuplets, longer) than its
       // written type; only an un-reduced <duration> equals the note's dotted type duration exactly.
-      if (actualNotes > 0 && normalNotes > 0 && actualNotes !== normalNotes && typeDuration.RealValue > 0 &&
+      if (actualNotes > 0 && normalNotes > 0 && Number.isFinite(actualNotes * normalNotes) &&
+          actualNotes !== normalNotes && typeDuration.RealValue > 0 &&
           Math.abs(xmlDuration.RealValue - typeDuration.RealValue) < 1e-6) {
         let ratioNumerator: number = normalNotes;
         let ratioDenominator: number = actualNotes;
