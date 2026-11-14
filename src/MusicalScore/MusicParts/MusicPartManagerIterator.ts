@@ -213,7 +213,6 @@ export class MusicPartManagerIterator {
                 for (const entry of this.currentVoiceEntries) {
                     if (entry.ParentVoice.Parent.IdString === instrument.IdString) {
                         this.getAudibleEntries(entry, voiceEntries);
-                        return voiceEntries;
                     }
                 }
             } else {
@@ -248,7 +247,6 @@ export class MusicPartManagerIterator {
             for (const entry of this.currentVoiceEntries) {
                 if (entry.ParentVoice.Parent.IdString === instrument.IdString) {
                     this.getScoreFollowingEntries(entry, voiceEntries);
-                    return voiceEntries;
                 }
             }
         } else {
