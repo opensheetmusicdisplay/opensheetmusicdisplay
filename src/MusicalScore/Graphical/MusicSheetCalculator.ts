@@ -3690,12 +3690,18 @@ export abstract class MusicSheetCalculator {
                 const voiceEntry: VoiceEntry = note.ParentVoiceEntry;
                 const voiceId: number = voiceEntry.ParentVoice.VoiceId;
                 const hasStem: boolean = note.TypeLength?.RealValue < 1 && voiceEntry.StemDirectionXml !== StemDirectionType.None;
+                // Where another voice is drawn in the measure on the staff, i.e. the same scope as for the stems
+                //   (calculateStemDirectionFromVoices()) and slurs (GraphicalSlur.calculatePlacement()):
+                const otherVoicePresent: boolean = this.otherVoicePresentInMeasure(voiceEntry, true);
                 // put ties of second voices (e.g. 2 for right hand, 6 left hand) below by default
                 //   TODO could be more precise but also more complex by checking lower notes, other notes, etc.
-                //   Not where the voice is laid out without the voice above it, which is hidden (see isLeftOutOfLayout()).
-                if ((voiceId === 2 || voiceId === 6) && !this.leftOutVoicePresentInMeasure(voiceEntry)) {
+                //   Not where the voice is alone in the measure, e.g. a left hand numbered 6, or voice 2 in a measure without
+                //   voice 1: there its ties curve away from the stem like those of any single voice (left to Vexflow),
+                //   not below the stem of a stem-down note. Nor where the voice is laid out without the voice above it, which
+                //   is hidden (see isLeftOutOfLayout()).
+                if ((voiceId === 2 || voiceId === 6) && otherVoicePresent && !this.leftOutVoicePresentInMeasure(voiceEntry)) {
                     tie.TieDirection = PlacementEnum.Below;
-                } else if (hasStem && this.otherVoicePresentInMeasure(voiceEntry, true)) {
+                } else if (hasStem && otherVoicePresent) {
                     // Where two parts share a staff, a tie curves on its stem side, away from the other part: upwards in
                     //   the upper part, downwards in the lower (#1141). Left to Vexflow, it curved away from the stem, i.e.
                     //   a tie of a stem-up note in the upper part curved down into the other part, e.g. Schumann's

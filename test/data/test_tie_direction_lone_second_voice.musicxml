@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0">
+<work><work-title>Tie direction of a lone second voice</work-title></work>
+<part-list>
+<score-part id="P1"><part-name>Voice 2 alone</part-name></score-part>
+<score-part id="P2"><part-name>Piano, LH voice 2</part-name></score-part>
+<score-part id="P3"><part-name>Piano, LH voice 6</part-name></score-part>
+<score-part id="P4"><part-name>Two voices, then voice 2 alone</part-name></score-part>
+</part-list>
+<part id="P1">
+<measure number="1"><attributes><divisions>2</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><clef number="1"><sign>G</sign><line>2</line></clef></attributes>
+<note><pitch><step>G</step><octave>4</octave></pitch><duration>4</duration><tie type="start"/><voice>2</voice><type>half</type><stem>up</stem><notations><tied type="start"/></notations></note>
+<note><pitch><step>G</step><octave>4</octave></pitch><duration>4</duration><tie type="stop"/><voice>2</voice><type>half</type><stem>up</stem><notations><tied type="stop"/></notations></note>
+</measure>
+<measure number="2"><note><pitch><step>D</step><octave>5</octave></pitch><duration>4</duration><tie type="start"/><voice>2</voice><type>half</type><stem>down</stem><notations><tied type="start"/></notations></note>
+<note><pitch><step>D</step><octave>5</octave></pitch><duration>4</duration><tie type="stop"/><voice>2</voice><type>half</type><stem>down</stem><notations><tied type="stop"/></notations></note>
+</measure>
+<measure number="3"><note><pitch><step>A</step><octave>4</octave></pitch><duration>2</duration><tie type="start"/><voice>2</voice><type>quarter</type><stem>up</stem><notations><tied type="start"/></notations></note>
+<note><pitch><step>A</step><octave>4</octave></pitch><duration>2</duration><tie type="stop"/><voice>2</voice><type>quarter</type><stem>up</stem><notations><tied type="stop"/></notations></note>
+<note><pitch><step>E</step><octave>5</octave></pitch><duration>2</duration><tie type="start"/><voice>2</voice><type>quarter</type><stem>down</stem><notations><tied type="start"/></notations></note>
+<note><pitch><step>E</step><octave>5</octave></pitch><duration>2</duration><tie type="stop"/><voice>2</voice><type>quarter</type><stem>down</stem><notations><tied type="stop"/></notations></note>
+</measure>
+</part>
+<part id="P2">
+<measure number="1"><attributes><divisions>2</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><staves>2</staves><clef number="1"><sign>G</sign><line>2</line></clef><clef number="2"><sign>F</sign><line>4</line></clef></attributes>
+<note><pitch><step>C</step><octave>5</octave></pitch><duration>8</duration><voice>1</voice><type>whole</type><staff>1</staff></note>
+<backup><duration>8</duration></backup><note><pitch><step>C</step><octave>3</octave></pitch><duration>4</duration><tie type="start"/><voice>2</voice><type>half</type><stem>up</stem><staff>2</staff><notations><tied type="start"/></notations></note>
+<note><pitch><step>C</step><octave>3</octave></pitch><duration>4</duration><tie type="stop"/><voice>2</voice><type>half</type><stem>up</stem><staff>2</staff><notations><tied type="stop"/></notations></note>
+</measure>
+<measure number="2"><note><pitch><step>C</step><octave>5</octave></pitch><duration>8</duration><voice>1</voice><type>whole</type><staff>1</staff></note>
+<backup><duration>8</duration></backup><note><pitch><step>A</step><octave>3</octave></pitch><duration>4</duration><tie type="start"/><voice>2</voice><type>half</type><stem>down</stem><staff>2</staff><notations><tied type="start"/></notations></note>
+<note><pitch><step>A</step><octave>3</octave></pitch><duration>4</duration><tie type="stop"/><voice>2</voice><type>half</type><stem>down</stem><staff>2</staff><notations><tied type="stop"/></notations></note>
+</measure>
+<measure number="3"><note><pitch><step>C</step><octave>5</octave></pitch><duration>8</duration><voice>1</voice><type>whole</type><staff>1</staff></note>
+<backup><duration>8</duration></backup><note><pitch><step>E</step><octave>3</octave></pitch><duration>2</duration><tie type="start"/><voice>2</voice><type>quarter</type><stem>down</stem><staff>2</staff><notations><tied type="start"/></notations></note>
+<note><pitch><step>E</step><octave>3</octave></pitch><duration>2</duration><tie type="stop"/><voice>2</voice><type>quarter</type><stem>down</stem><staff>2</staff><notations><tied type="stop"/></notations></note>
+<note><pitch><step>G</step><octave>2</octave></pitch><duration>2</duration><tie type="start"/><voice>2</voice><type>quarter</type><stem>up</stem><staff>2</staff><notations><tied type="start"/></notations></note>
+<note><pitch><step>G</step><octave>2</octave></pitch><duration>2</duration><tie type="stop"/><voice>2</voice><type>quarter</type><stem>up</stem><staff>2</staff><notations><tied type="stop"/></notations></note>
+</measure>
+</part>
+<part id="P3">
+<measure number="1"><attributes><divisions>2</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><staves>2</staves><clef number="1"><sign>G</sign><line>2</line></clef><clef number="2"><sign>F</sign><line>4</line></clef></attributes>
+<note><pitch><step>C</step><octave>5</octave></pitch><duration>8</duration><voice>1</voice><type>whole</type><staff>1</staff></note>
+<backup><duration>8</duration></backup><note><pitch><step>C</step><octave>3</octave></pitch><duration>4</duration><tie type="start"/><voice>6</voice><type>half</type><stem>up</stem><staff>2</staff><notations><tied type="start"/></notations></note>
+<note><pitch><step>C</step><octave>3</octave></pitch><duration>4</duration><tie type="stop"/><voice>6</voice><type>half</type><stem>up</stem><staff>2</staff><notations><tied type="stop"/></notations></note>
+</measure>
+<measure number="2"><note><pitch><step>C</step><octave>5</octave></pitch><duration>8</duration><voice>1</voice><type>whole</type><staff>1</staff></note>
+<backup><duration>8</duration></backup><note><pitch><step>A</step><octave>3</octave></pitch><duration>4</duration><tie type="start"/><voice>6</voice><type>half</type><stem>down</stem><staff>2</staff><notations><tied type="start"/></notations></note>
+<note><pitch><step>A</step><octave>3</octave></pitch><duration>4</duration><tie type="stop"/><voice>6</voice><type>half</type><stem>down</stem><staff>2</staff><notations><tied type="stop"/></notations></note>
+</measure>
+<measure number="3"><note><pitch><step>C</step><octave>5</octave></pitch><duration>8</duration><voice>1</voice><type>whole</type><staff>1</staff></note>
+<backup><duration>8</duration></backup><note><pitch><step>E</step><octave>3</octave></pitch><duration>2</duration><tie type="start"/><voice>6</voice><type>quarter</type><stem>down</stem><staff>2</staff><notations><tied type="start"/></notations></note>
+<note><pitch><step>E</step><octave>3</octave></pitch><duration>2</duration><tie type="stop"/><voice>6</voice><type>quarter</type><stem>down</stem><staff>2</staff><notations><tied type="stop"/></notations></note>
+<note><pitch><step>G</step><octave>2</octave></pitch><duration>2</duration><tie type="start"/><voice>6</voice><type>quarter</type><stem>up</stem><staff>2</staff><notations><tied type="start"/></notations></note>
+<note><pitch><step>G</step><octave>2</octave></pitch><duration>2</duration><tie type="stop"/><voice>6</voice><type>quarter</type><stem>up</stem><staff>2</staff><notations><tied type="stop"/></notations></note>
+</measure>
+</part>
+<part id="P4">
+<measure number="1"><attributes><divisions>2</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><clef number="1"><sign>G</sign><line>2</line></clef></attributes>
+<note><pitch><step>E</step><octave>5</octave></pitch><duration>4</duration><tie type="start"/><voice>1</voice><type>half</type><stem>up</stem><notations><tied type="start"/></notations></note>
+<note><pitch><step>E</step><octave>5</octave></pitch><duration>4</duration><tie type="stop"/><voice>1</voice><type>half</type><stem>up</stem><notations><tied type="stop"/></notations></note>
+<backup><duration>8</duration></backup><note><pitch><step>G</step><octave>4</octave></pitch><duration>4</duration><tie type="start"/><voice>2</voice><type>half</type><stem>down</stem><notations><tied type="start"/></notations></note>
+<note><pitch><step>G</step><octave>4</octave></pitch><duration>4</duration><tie type="stop"/><voice>2</voice><type>half</type><stem>down</stem><notations><tied type="stop"/></notations></note>
+</measure>
+<measure number="2"><note><pitch><step>D</step><octave>5</octave></pitch><duration>4</duration><tie type="start"/><voice>2</voice><type>half</type><stem>down</stem><notations><tied type="start"/></notations></note>
+<note><pitch><step>D</step><octave>5</octave></pitch><duration>4</duration><tie type="stop"/><voice>2</voice><type>half</type><stem>down</stem><notations><tied type="stop"/></notations></note>
+</measure>
+<measure number="3"><note><rest/><duration>8</duration><voice>1</voice><type>whole</type></note>
+<backup><duration>8</duration></backup><note><pitch><step>G</step><octave>4</octave></pitch><duration>4</duration><tie type="start"/><voice>2</voice><type>half</type><stem>down</stem><notations><tied type="start"/></notations></note>
+<note><pitch><step>G</step><octave>4</octave></pitch><duration>4</duration><tie type="stop"/><voice>2</voice><type>half</type><stem>down</stem><notations><tied type="stop"/></notations></note>
+</measure>
+</part>
+</score-partwise>
