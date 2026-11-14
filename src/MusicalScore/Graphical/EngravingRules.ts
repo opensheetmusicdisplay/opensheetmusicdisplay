@@ -19,6 +19,7 @@ import { Note } from "../VoiceData/Note";
 import { ITextMeasurer } from "../Interfaces/ITextMeasurer";
 import { ITransposeCalculator } from "../Interfaces/ITransposeCalculator";
 import { IGraphicalSymbolFactory } from "../Interfaces/IGraphicalSymbolFactory";
+import { DynamicEnum, InstantaneousDynamicExpression } from "../VoiceData/Expressions/InstantaneousDynamicExpression";
 
 /** Rendering and Engraving options, more fine-grained than [[IOSMDOptions]].
  *  Not all of these options are meant to be modified by users of the library,
@@ -817,6 +818,12 @@ export class EngravingRules {
      *  MusicSheetCalculator.symbolFactory): a static one was replaced for all instances on the page by each new instance.
      */
     public SymbolFactory: IGraphicalSymbolFactory;
+    /** The relative volume (0 to 1) of each dynamic marking in this instance's score (InstantaneousDynamicExpression.Volume),
+     *  e.g. DynamicToRelativeVolumeDict.setValue(DynamicEnum.p, 0.3). Owned here (per OSMD instance) instead of statically (the
+     *  former InstantaneousDynamicExpression.dynamicToRelativeVolumeDict): a value changed in a static table changed all
+     *  instances on the page.
+     */
+    public DynamicToRelativeVolumeDict: Dictionary<DynamicEnum, number>;
     /** How many times osmd.render() was already called on the currently loaded score.
      * Resets after osmd.load() (via osmd.reset()).
      * Can be relevant for transposition or generally informative.
@@ -851,6 +858,7 @@ export class EngravingRules {
     public loadDefaultValues(): void {
         // global variables
         this.SamplingUnit = EngravingRules.unit * 3;
+        this.DynamicToRelativeVolumeDict = InstantaneousDynamicExpression.createDefaultVolumeDict();
 
         // Page Label Variables
         this.SheetTitleHeight = 4.0;

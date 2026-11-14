@@ -131,8 +131,8 @@ describe("ExpressionReader", () => {
         });
 
         it("gives them a playback volume", () => {
-            const mp: number = InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.getValue(DynamicEnum.mp);
-            const f: number = InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.getValue(DynamicEnum.f);
+            const mp: number = InstantaneousDynamicExpression.createDefaultVolumeDict().getValue(DynamicEnum.mp);
+            const f: number = InstantaneousDynamicExpression.createDefaultVolumeDict().getValue(DynamicEnum.f);
             expect(dynamics[0].Volume, "pf (poco forte) lies between mp and f").to.be.within(mp, f);
             expect(dynamics[1].Volume, "sfzp like the other sforzando marks").to.equal(0.5);
             expect(dynamics[2].Volume, "n (niente) is silence").to.equal(0);
