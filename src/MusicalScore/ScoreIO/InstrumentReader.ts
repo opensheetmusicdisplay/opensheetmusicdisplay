@@ -53,6 +53,17 @@ import { musicXmlColorToCss } from "../../Common/DataObjects/XmlColor";
  */
 export class InstrumentReader {
 
+  /**
+   * The most lines that a staff can have (`<staff-lines>`). A larger value is ignored with a warning.
+   * Staves have 1 to 5 lines, tablature one line per string or course (6, up to 14 for a baroque lute or pedal steel guitar).
+   */
+  public static readonly MaxStaffLines: number = 100;
+  /**
+   * The most strokes that a tremolo can have (`<tremolo>`). A larger value is reduced to this, with a warning.
+   * This is the largest value that MusicXML allows (tremolo-marks: 0 to 8).
+   */
+  public static readonly MaxTremoloStrokes: number = 8;
+
   constructor(pluginManager: ReaderPluginManager, repetitionInstructionReader: RepetitionInstructionReader,
     xmlMeasureList: IXmlElement[], instrument: Instrument) {
       this.repetitionInstructionReader = repetitionInstructionReader;
@@ -255,8 +266,15 @@ export class InstrumentReader {
               }
               const staffLinesNode: IXmlElement = staffDetailsNode.element("staff-lines");
               if (staffLinesNode) {
-                staff.StafflineCount = parseInt(staffLinesNode.value, 10);
-                staff.xmlStafflineCount = isNaN(staff.StafflineCount) ? undefined : staff.StafflineCount;
+                const staffLines: number = parseInt(staffLinesNode.value, 10);
+                if (staffLines > InstrumentReader.MaxStaffLines) {
+                  // every line is created and drawn for every measure of the staff: 3000000 lines used up all memory
+                  this.reportIgnoredValue(`ignored <staff-lines>${this.shortValue(staffLinesNode)}</staff-lines> of staff ${staffNumber}` +
+                    `, the most that is read is ${InstrumentReader.MaxStaffLines} lines: the staff keeps its ${staff.StafflineCount} lines`);
+                } else {
+                  staff.StafflineCount = staffLines;
+                  staff.xmlStafflineCount = isNaN(staff.StafflineCount) ? undefined : staff.StafflineCount;
+                }
               }
             }
             // check multi measure rest
@@ -682,6 +700,25 @@ export class InstrumentReader {
     this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
     this.musicSheet.SheetErrors.pushMeasureError(message);
     log.warn("[OSMD] " + message);
+  }
+
+  /**
+   * Reports a value of the current measure that was ignored or changed while its element was still read: as a warning that
+   * names the measure and the part, and in the measure's errors (MusicSheet.SheetErrors.measureErrors).
+   * @param whatHappened e.g. "ignored <staff-lines>3000000</staff-lines> of staff 1, ..."
+   */
+  private reportIgnoredValue(whatHappened: string): void {
+    const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/MeasureError", "Error while reading Measure.");
+    const message: string = `${this.getMeasureDescription()}: ${whatHappened}`;
+    this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
+    this.musicSheet.SheetErrors.pushMeasureError(message);
+    log.warn("[OSMD] " + message);
+  }
+
+  /** An element's text for a warning, cut to 20 characters: a value that is too large can be very long. */
+  private shortValue(xmlNode: IXmlElement): string {
+    const value: string = xmlNode.value.trim();
+    return value.length > 20 ? value.slice(0, 20) + "..." : value;
   }
 
   /**
@@ -1778,6 +1815,20 @@ export class InstrumentReader {
     return null;
   }
 
+  /**
+   * The number of strokes that a `<tremolo>` gives, NaN if it isn't a number. More than MaxTremoloStrokes are reduced to
+   * that, with a warning: every stroke is drawn, so 3000000 strokes used up all memory.
+   */
+  private readTremoloStrokes(tremoloNode: IXmlElement): number {
+    const tremoloStrokes: number = parseInt(tremoloNode.value, 10);
+    if (tremoloStrokes > InstrumentReader.MaxTremoloStrokes) {
+      this.reportIgnoredValue(`a <tremolo> of ${this.shortValue(tremoloNode)} strokes was reduced to ` +
+        `${InstrumentReader.MaxTremoloStrokes} strokes, the most that is read`);
+      return InstrumentReader.MaxTremoloStrokes;
+    }
+    return tremoloStrokes;
+  }
+
   private getTremoloInfo(ornamentsNode: IXmlElement): TremoloInfo {
     let tremoloStrokes: number;
     let tremoloUnmeasured: boolean;
@@ -1790,7 +1841,7 @@ export class InstrumentReader {
         tremoloType = "single"; // the type attribute is optional in MusicXML and defaults to "single"
       }
       if (tremoloType === "single") {
-        const tremoloStrokesGiven: number = parseInt(tremoloNode.value, 10);
+        const tremoloStrokesGiven: number = this.readTremoloStrokes(tremoloNode);
         if (tremoloStrokesGiven > 0) {
           tremoloStrokes = tremoloStrokesGiven;
         }
@@ -1804,7 +1855,7 @@ export class InstrumentReader {
         //   the strokes between the notes are drawn in VexFlowMusicSheetDrawer.drawTremolosBetweenNotes().
         tremoloBetweenNotesStart = tremoloType === "start";
         tremoloBetweenNotesStop = tremoloType === "stop";
-        const tremoloStrokesGiven: number = parseInt(tremoloNode.value, 10);
+        const tremoloStrokesGiven: number = this.readTremoloStrokes(tremoloNode);
         if (tremoloStrokesGiven > 0) {
           tremoloStrokes = tremoloStrokesGiven;
         }
