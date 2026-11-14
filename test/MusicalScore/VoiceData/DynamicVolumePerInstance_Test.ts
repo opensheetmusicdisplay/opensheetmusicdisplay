@@ -5,6 +5,7 @@ import { DynamicEnum, InstantaneousDynamicExpression } from "../../../src/Musica
 import { MultiExpression } from "../../../src/MusicalScore/VoiceData/Expressions/MultiExpression";
 import { PlacementEnum } from "../../../src/MusicalScore/VoiceData/Expressions/AbstractExpression";
 import { SourceMeasure } from "../../../src/MusicalScore/VoiceData/SourceMeasure";
+import { EngravingRules } from "../../../src/MusicalScore/Graphical/EngravingRules";
 
 /** The volume of each dynamic marking belongs to its instance (EngravingRules.DynamicToRelativeVolumeDict), not to all
  *  instances on the page. */
@@ -55,10 +56,16 @@ describe("Dynamic volumes per OSMD instance", (): void => {
         expect(pocoForteVolume(other), "each keeps its own value").to.equal(0.2);
     });
 
-    it("a marking without a measure has the default volume", (): void => {
+    it("new rules have the default volumes, also after another instance's change", async (): Promise<void> => {
+        const changed: OpenSheetMusicDisplay = await createInstance();
+        changed.EngravingRules.DynamicToRelativeVolumeDict.setValue(DynamicEnum.pf, 0.9);
+        expect(new EngravingRules().DynamicToRelativeVolumeDict.getValue(DynamicEnum.pf)).to.be.closeTo(defaultPocoForte, 1e-9);
+        expect(pocoForteVolume(await createInstance()), "a new instance").to.be.closeTo(defaultPocoForte, 1e-9);
+    });
+
+    it("a marking without a measure has no volume", (): void => {
         const marking: InstantaneousDynamicExpression =
             new InstantaneousDynamicExpression("pf", 0, PlacementEnum.Below, 1, undefined);
-        expect(marking.Volume).to.be.closeTo(defaultPocoForte, 1e-9);
-        expect(marking.MidiVolume).to.be.closeTo(92, 1e-9);
+        expect(marking.Volume).to.equal(undefined);
     });
 });

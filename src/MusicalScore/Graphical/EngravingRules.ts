@@ -19,7 +19,7 @@ import { Note } from "../VoiceData/Note";
 import { ITextMeasurer } from "../Interfaces/ITextMeasurer";
 import { ITransposeCalculator } from "../Interfaces/ITransposeCalculator";
 import { IGraphicalSymbolFactory } from "../Interfaces/IGraphicalSymbolFactory";
-import { DynamicEnum, InstantaneousDynamicExpression } from "../VoiceData/Expressions/InstantaneousDynamicExpression";
+import { DynamicEnum } from "../VoiceData/Expressions/InstantaneousDynamicExpression";
 
 /** Rendering and Engraving options, more fine-grained than [[IOSMDOptions]].
  *  Not all of these options are meant to be modified by users of the library,
@@ -855,10 +855,42 @@ export class EngravingRules {
         this.loadDefaultValues();
     }
 
+    /** A new table of the default relative volume (0 to 1) of each dynamic marking, see DynamicToRelativeVolumeDict. */
+    private createDefaultDynamicVolumes(): Dictionary<DynamicEnum, number> {
+        const volumeDict: Dictionary<DynamicEnum, number> = new Dictionary<DynamicEnum, number>();
+        volumeDict.setValue(DynamicEnum.ffffff, 127.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.fffff,  126.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.ffff,   125.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.fff,    124.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.ff,     122.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.f,      108.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.mf,      76.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.sf,     0.5);
+        volumeDict.setValue(DynamicEnum.sfp,    0.5);
+        volumeDict.setValue(DynamicEnum.sfpp,   0.5);
+        volumeDict.setValue(DynamicEnum.fp,     0.5);
+        volumeDict.setValue(DynamicEnum.rf,     0.5);
+        volumeDict.setValue(DynamicEnum.rfz,    0.5);
+        volumeDict.setValue(DynamicEnum.sfz,    0.5);
+        volumeDict.setValue(DynamicEnum.sffz,   0.5);
+        volumeDict.setValue(DynamicEnum.fz,     0.5);
+        volumeDict.setValue(DynamicEnum.sfzp,   0.5);
+        volumeDict.setValue(DynamicEnum.pf,      92.0 / 127.0); // poco forte: between mf and f
+        volumeDict.setValue(DynamicEnum.mp,      60 / 127.0);
+        volumeDict.setValue(DynamicEnum.p,       28.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.pp,      12.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.ppp,     10.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.pppp,    7.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.ppppp,    5.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.pppppp,   4.0 / 127.0);
+        volumeDict.setValue(DynamicEnum.n,        0.0); // niente
+        return volumeDict;
+    }
+
     public loadDefaultValues(): void {
         // global variables
         this.SamplingUnit = EngravingRules.unit * 3;
-        this.DynamicToRelativeVolumeDict = InstantaneousDynamicExpression.createDefaultVolumeDict();
+        this.DynamicToRelativeVolumeDict = this.createDefaultDynamicVolumes();
 
         // Page Label Variables
         this.SheetTitleHeight = 4.0;

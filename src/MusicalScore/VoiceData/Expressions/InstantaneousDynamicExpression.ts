@@ -5,43 +5,9 @@ import {DynamicExpressionSymbolEnum} from "./DynamicExpressionSymbolEnum";
 import {InvalidEnumArgumentException} from "../../Exceptions";
 import { log } from "../../../Common/Logging";
 import { SourceMeasure } from "../SourceMeasure";
-import { Dictionary } from "typescript-collections";
 import { Fraction } from "../../../Common/DataObjects/Fraction";
 
 export class InstantaneousDynamicExpression extends AbstractExpression {
-    /** A new table of the default relative volume (0 to 1) of each dynamic marking: what a new EngravingRules gets as its
-     *  DynamicToRelativeVolumeDict. */
-    public static createDefaultVolumeDict(): Dictionary<DynamicEnum, number> {
-        const volumeDict: Dictionary<DynamicEnum, number> = new Dictionary<DynamicEnum, number>();
-        volumeDict.setValue(DynamicEnum.ffffff, 127.0 / 127.0);
-        volumeDict.setValue(DynamicEnum.fffff,  126.0 / 127.0);
-        volumeDict.setValue(DynamicEnum.ffff,   125.0 / 127.0);
-        volumeDict.setValue(DynamicEnum.fff,    124.0 / 127.0);
-        volumeDict.setValue(DynamicEnum.ff,     122.0 / 127.0);
-        volumeDict.setValue(DynamicEnum.f,      108.0 / 127.0);
-        volumeDict.setValue(DynamicEnum.mf,      76.0 / 127.0);
-        volumeDict.setValue(DynamicEnum.sf,     0.5);
-        volumeDict.setValue(DynamicEnum.sfp,    0.5);
-        volumeDict.setValue(DynamicEnum.sfpp,   0.5);
-        volumeDict.setValue(DynamicEnum.fp,     0.5);
-        volumeDict.setValue(DynamicEnum.rf,     0.5);
-        volumeDict.setValue(DynamicEnum.rfz,    0.5);
-        volumeDict.setValue(DynamicEnum.sfz,    0.5);
-        volumeDict.setValue(DynamicEnum.sffz,   0.5);
-        volumeDict.setValue(DynamicEnum.fz,     0.5);
-        volumeDict.setValue(DynamicEnum.sfzp,   0.5);
-        volumeDict.setValue(DynamicEnum.pf,      92.0 / 127.0); // poco forte: between mf and f
-        volumeDict.setValue(DynamicEnum.mp,      60 / 127.0);
-        volumeDict.setValue(DynamicEnum.p,       28.0 / 127.0);
-        volumeDict.setValue(DynamicEnum.pp,      12.0 / 127.0);
-        volumeDict.setValue(DynamicEnum.ppp,     10.0 / 127.0);
-        volumeDict.setValue(DynamicEnum.pppp,    7.0 / 127.0);
-        volumeDict.setValue(DynamicEnum.ppppp,    5.0 / 127.0);
-        volumeDict.setValue(DynamicEnum.pppppp,   4.0 / 127.0);
-        volumeDict.setValue(DynamicEnum.n,        0.0); // niente
-        return volumeDict;
-    }
-
     constructor(dynamicExpression: string, soundDynamics: number, placement: PlacementEnum, staffNumber: number,
                 measure: SourceMeasure, dynamicEnum?: DynamicEnum) {
         super(placement);
@@ -51,9 +17,6 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
         this.soundDynamic = soundDynamics;
         this.staffNumber = staffNumber;
     }
-
-    /** The default volumes, for a marking without a measure (and so without rules): see Volume. Created on first use. */
-    private static defaultVolumeDict: Dictionary<DynamicEnum, number>;
 
     private multiExpression: MultiExpression;
     private dynamicExpression: string;
@@ -111,18 +74,11 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
     }
 
     /** The relative volume (0 to 1) of this marking, from its OSMD instance's table (EngravingRules.DynamicToRelativeVolumeDict,
-     *  e.g. osmd.EngravingRules.DynamicToRelativeVolumeDict.setValue(DynamicEnum.p, 0.3)). A marking created without a measure
-     *  has the default volume.
+     *  e.g. osmd.EngravingRules.DynamicToRelativeVolumeDict.setValue(DynamicEnum.p, 0.3)). Undefined for a marking created
+     *  without a measure (and so without rules), which the MusicXML reader doesn't do.
      */
     public get Volume(): number {
-        let volumeDict: Dictionary<DynamicEnum, number> = this.parentMeasure?.Rules?.DynamicToRelativeVolumeDict;
-        if (!volumeDict) {
-            if (!InstantaneousDynamicExpression.defaultVolumeDict) {
-                InstantaneousDynamicExpression.defaultVolumeDict = InstantaneousDynamicExpression.createDefaultVolumeDict();
-            }
-            volumeDict = InstantaneousDynamicExpression.defaultVolumeDict;
-        }
-        return volumeDict.getValue(this.dynamicEnum);
+        return this.parentMeasure?.Rules?.DynamicToRelativeVolumeDict.getValue(this.dynamicEnum);
     }
 
     public static isInputStringInstantaneousDynamic(inputString: string): boolean {
