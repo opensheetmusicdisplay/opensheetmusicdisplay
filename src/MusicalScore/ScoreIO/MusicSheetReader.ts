@@ -47,12 +47,6 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     private afterSheetReadingModules: IAfterSheetReadingModule[];
     private musicSheet: MusicSheet;
     private readingError: Error;
-    /**
-     * The most staves that a part can have (`<staves>`). A part with more fails to load, with an error that names it.
-     * Real parts have 1 to 3 staves (organ), rarely a few more; the limit is far above that and keeps what is created
-     * per measure small.
-     */
-    public static readonly MaxStavesPerPart: number = 100;
     private completeNumberOfStaves: number = 0;
     private currentMeasure: SourceMeasure;
     private previousMeasure: SourceMeasure;
@@ -1525,18 +1519,18 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
     /**
      * The number of staves that a part's `<staves>` element gives, NaN if it isn't a number.
-     * Throws for more than MaxStavesPerPart, so that loading fails with an error that names the part and the value:
+     * Throws for more than EngravingRules.MaxStavesPerPart, so that loading fails with an error that names the part and the value:
      * every staff is created for every measure, so `<staves>3000000</staves>` used up all memory.
      */
     private readNumberOfStaves(stavesNode: IXmlElement, partNode: IXmlElement): number {
         const numberOfStaves: number = parseInt(stavesNode.value, 10);
-        if (numberOfStaves > MusicSheetReader.MaxStavesPerPart) {
+        if (numberOfStaves > this.rules.MaxStavesPerPart) {
             const errorMsg: string = ITextTranslation.translateText(
                 "ReaderErrorMessages/StaffError", "Invalid number of staves."
             );
             throw new MusicSheetReadingException(
                 `${errorMsg} Part "${partNode.attribute("id")?.value}" has <staves>${stavesNode.value.trim().slice(0, 20)}</staves>, ` +
-                `the most that is read is ${MusicSheetReader.MaxStavesPerPart} staves per part.`
+                `the most that is read is ${this.rules.MaxStavesPerPart} staves per part.`
             );
         }
         return numberOfStaves;

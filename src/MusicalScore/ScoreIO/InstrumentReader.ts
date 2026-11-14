@@ -53,17 +53,6 @@ import { musicXmlColorToCss } from "../../Common/DataObjects/XmlColor";
  */
 export class InstrumentReader {
 
-  /**
-   * The most lines that a staff can have (`<staff-lines>`). A larger value is ignored with a warning.
-   * Staves have 1 to 5 lines, tablature one line per string or course (6, up to 14 for a baroque lute or pedal steel guitar).
-   */
-  public static readonly MaxStaffLines: number = 100;
-  /**
-   * The most strokes that a tremolo can have (`<tremolo>`). A larger value is reduced to this, with a warning.
-   * This is the largest value that MusicXML allows (tremolo-marks: 0 to 8).
-   */
-  public static readonly MaxTremoloStrokes: number = 8;
-
   constructor(pluginManager: ReaderPluginManager, repetitionInstructionReader: RepetitionInstructionReader,
     xmlMeasureList: IXmlElement[], instrument: Instrument) {
       this.repetitionInstructionReader = repetitionInstructionReader;
@@ -267,10 +256,10 @@ export class InstrumentReader {
               const staffLinesNode: IXmlElement = staffDetailsNode.element("staff-lines");
               if (staffLinesNode) {
                 const staffLines: number = parseInt(staffLinesNode.value, 10);
-                if (staffLines > InstrumentReader.MaxStaffLines) {
+                if (staffLines > this.musicSheet.Rules.MaxStaffLines) {
                   // every line is created and drawn for every measure of the staff: 3000000 lines used up all memory
                   this.reportIgnoredValue(`ignored <staff-lines>${this.shortValue(staffLinesNode)}</staff-lines> of staff ${staffNumber}` +
-                    `, the most that is read is ${InstrumentReader.MaxStaffLines} lines: the staff keeps its ${staff.StafflineCount} lines`);
+                    `, the most that is read is ${this.musicSheet.Rules.MaxStaffLines} lines: the staff keeps its ${staff.StafflineCount} lines`);
                 } else {
                   staff.StafflineCount = staffLines;
                   staff.xmlStafflineCount = isNaN(staff.StafflineCount) ? undefined : staff.StafflineCount;
@@ -1816,15 +1805,15 @@ export class InstrumentReader {
   }
 
   /**
-   * The number of strokes that a `<tremolo>` gives, NaN if it isn't a number. More than MaxTremoloStrokes are reduced to
+   * The number of strokes that a `<tremolo>` gives, NaN if it isn't a number. More than EngravingRules.MaxTremoloStrokes are reduced to
    * that, with a warning: every stroke is drawn, so 3000000 strokes used up all memory.
    */
   private readTremoloStrokes(tremoloNode: IXmlElement): number {
     const tremoloStrokes: number = parseInt(tremoloNode.value, 10);
-    if (tremoloStrokes > InstrumentReader.MaxTremoloStrokes) {
+    if (tremoloStrokes > this.musicSheet.Rules.MaxTremoloStrokes) {
       this.reportIgnoredValue(`a <tremolo> of ${this.shortValue(tremoloNode)} strokes was reduced to ` +
-        `${InstrumentReader.MaxTremoloStrokes} strokes, the most that is read`);
-      return InstrumentReader.MaxTremoloStrokes;
+        `${this.musicSheet.Rules.MaxTremoloStrokes} strokes, the most that is read`);
+      return this.musicSheet.Rules.MaxTremoloStrokes;
     }
     return tremoloStrokes;
   }
