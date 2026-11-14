@@ -103,6 +103,45 @@ describe("Music Sheet Reader", () => {
             expect(creditsSheet.LyricistString, "lyricist kept from the metadata").to.equal("Jane Taylor");
             expect(creditsSheet.CopyrightString, "rights kept from the metadata").to.equal("© 1806 Jane Taylor");
         });
+
+        // With page layout, a centered credit after the title is a subtitle line and a right-aligned one a composer line,
+        //   wherever it stands on the page: the footer's copyright line and page number were read as such.
+        const pageLayout: string = `<defaults><scaling><millimeters>7</millimeters><tenths>40</tenths></scaling>
+            <page-layout><page-height>1697</page-height><page-width>1200</page-width></page-layout>
+            <system-layout><top-system-distance>170</top-system-distance></system-layout></defaults>`;
+
+        it("reads a rights credit of a score with page layout as the copyright and no page number, not as subtitle and composer lines", () => {
+            const creditsSheet: MusicSheet = readScore(scoreXml(`${pageLayout}
+                <credit page="1"><credit-type>title</credit-type>
+                    <credit-words default-x="600" default-y="1620" justify="center" valign="top">Twinkle, Twinkle, Little Star</credit-words></credit>
+                <credit page="1"><credit-type>subtitle</credit-type>
+                    <credit-words default-x="600" default-y="1560" justify="center" valign="top">Ah! vous dirai-je, maman</credit-words></credit>
+                <credit page="1"><credit-type>composer</credit-type>
+                    <credit-words default-x="1130" default-y="1500" justify="right" valign="bottom">Traditional</credit-words></credit>
+                <credit page="1"><credit-type>rights</credit-type>
+                    <credit-words default-x="600" default-y="85" justify="center" valign="bottom">Public domain</credit-words></credit>
+                <credit page="1"><credit-type>page number</credit-type>
+                    <credit-words default-x="1130" default-y="85" justify="right" valign="bottom">1</credit-words></credit>`));
+            expect(creditsSheet.TitleString, "title").to.equal("Twinkle, Twinkle, Little Star");
+            expect(creditsSheet.SubtitleString, "subtitle").to.equal("Ah! vous dirai-je, maman");
+            expect(creditsSheet.ComposerString, "composer").to.equal("Traditional");
+            expect(creditsSheet.CopyrightString, "rights").to.equal("Public domain");
+        });
+
+        it("doesn't read an untyped credit that repeats the rights of the metadata as a subtitle line", () => {
+            const creditsSheet: MusicSheet = readScore(scoreXml(`
+                <identification><rights>© 1806 Jane Taylor. All rights reserved.</rights></identification>${pageLayout}
+                <credit page="1">
+                    <credit-words default-x="600" default-y="1620" justify="center" valign="top">Twinkle, Twinkle, Little Star</credit-words></credit>
+                <credit page="1">
+                    <credit-words default-x="600" default-y="1560" justify="center" valign="top">Ah! vous dirai-je, maman</credit-words></credit>
+                <credit page="1">
+                    <credit-words default-x="600" default-y="85" justify="center" valign="bottom">© 1806 Jane Taylor.
+                        All Rights Reserved.</credit-words></credit>`));
+            expect(creditsSheet.TitleString, "title").to.equal("Twinkle, Twinkle, Little Star");
+            expect(creditsSheet.SubtitleString, "the untyped subtitle, without the copyright line").to.equal("Ah! vous dirai-je, maman");
+            expect(creditsSheet.CopyrightString, "rights").to.equal("© 1806 Jane Taylor. All rights reserved.");
+        });
     });
 
     describe("title of a score without one", () => {
