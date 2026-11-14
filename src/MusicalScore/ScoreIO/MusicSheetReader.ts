@@ -905,10 +905,6 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     }
 
     private readTitleAndComposerFromCredits(root: IXmlElement): void {
-        if (this.rules.SheetComposerSubtitleUseLegacyParsing) {
-            this.readTitleAndComposerFromCreditsLegacy(root);
-            return;
-        }
         // 0 if the score has no <defaults>, no <top-system-distance>, or no <page-height> in <page-layout>
         const systemYCoordinates: number = this.computeSystemYCoordinates(root);
         // let largestTitleCreditSize: number = 1;
@@ -1073,99 +1069,6 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             return [];
         }
         return [creditTypes.length === 1 ? creditTypes[0].value : undefined, text, credit.element("credit-words").attribute("xml:lang")?.value];
-    }
-
-    /** @deprecated Old OSMD < 1.8.6 way of parsing composer + subtitles,
-     * ignores multiline composer + subtitles, uses XML identification tags instead.
-     * Will probably be removed soon.
-     */
-    private readTitleAndComposerFromCreditsLegacy(root: IXmlElement): void {
-        const systemYCoordinates: number = this.computeSystemYCoordinates(root);
-        if (systemYCoordinates === 0) {
-            return;
-        }
-        let largestTitleCreditSize: number = 1;
-        let finalTitle: string = undefined;
-        let largestCreditYInfo: number = 0;
-        let finalSubtitle: string = undefined;
-        let possibleTitle: string = undefined;
-        const creditElements: IXmlElement[] = root.elements("credit");
-        for (let idx: number = 0, len: number = creditElements.length; idx < len; ++idx) {
-            const credit: IXmlElement = creditElements[idx];
-            if (!credit.attribute("page")) {
-                return;
-            }
-            if (credit.attribute("page").value === "1") {
-                let creditChild: IXmlElement = undefined;
-                if (credit) {
-                    creditChild = credit.element("credit-words");
-                    if (!creditChild.attribute("justify")) {
-                        break;
-                    }
-                    const creditJustify: string = creditChild.attribute("justify")?.value;
-                    const creditY: string = creditChild.attribute("default-y")?.value;
-
-                    const creditYGiven: boolean = creditY !== undefined && creditY !== null;
-                    const creditYInfo: number = creditYGiven ? parseFloat(creditY) : Number.MIN_VALUE;
-                    let isSubtitle: boolean = false;
-                    const typeChild: IXmlElement = credit.element("credit-type");
-                    if (typeChild?.value === "subtitle") {
-                        isSubtitle = true;
-                    }
-                    if ((creditYGiven && creditYInfo > systemYCoordinates) || isSubtitle) {
-                        if (!this.musicSheet.Title && !isSubtitle) {
-                            const creditSize: string = creditChild.attribute("font-size")?.value;
-                            if (creditSize) {
-                                const titleCreditSizeInt: number = parseFloat(creditSize);
-                                if (largestTitleCreditSize < titleCreditSizeInt) {
-                                    largestTitleCreditSize = titleCreditSizeInt;
-                                    finalTitle = creditChild.value;
-                                }
-                            }
-                        }
-                        if (!this.musicSheet.Subtitle) {
-                            if (creditJustify !== "right" && creditJustify !== "left" || isSubtitle) {
-                                if (largestCreditYInfo < creditYInfo) {
-                                    largestCreditYInfo = creditYInfo;
-                                    if (possibleTitle) {
-                                        finalSubtitle = possibleTitle;
-                                        possibleTitle = creditChild.value;
-                                    } else {
-                                        possibleTitle = creditChild.value;
-                                    }
-                                } else {
-                                    if (finalSubtitle) {
-                                        finalSubtitle += "\n" + creditChild.value;
-                                    } else {
-                                        finalSubtitle = creditChild.value;
-                                    }
-                                }
-                            }
-                        }
-                        switch (creditJustify) {
-                            case "right":
-                                if (!this.musicSheet.Composer) {
-                                    this.musicSheet.Composer = new Label(this.trimString(creditChild.value));
-                                }
-                                break;
-                            case "left":
-                                if (!this.musicSheet.Lyricist) {
-                                    this.musicSheet.Lyricist = new Label(this.trimString(creditChild.value));
-                                }
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                }
-            }
-        }
-        if (!this.musicSheet.Title && finalTitle) {
-            this.musicSheet.Title = new Label(this.trimString(finalTitle));
-        }
-        if (!this.musicSheet.Subtitle && finalSubtitle) {
-            this.musicSheet.Subtitle = new Label(this.trimString(finalSubtitle));
-        }
     }
 
     private computeSystemYCoordinates(root: IXmlElement): number {

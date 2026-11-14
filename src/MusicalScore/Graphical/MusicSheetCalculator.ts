@@ -43,7 +43,6 @@ import { Pitch } from "../../Common/DataObjects/Pitch";
 import { LinkedVoice } from "../VoiceData/LinkedVoice";
 import { ColDirEnum } from "./BoundingBox";
 import { IGraphicalSymbolFactory } from "../Interfaces/IGraphicalSymbolFactory";
-import { ITextMeasurer } from "../Interfaces/ITextMeasurer";
 import { ITransposeCalculator } from "../Interfaces/ITransposeCalculator";
 import { OctaveShiftParams } from "./OctaveShiftParams";
 import { AccidentalCalculator } from "./AccidentalCalculator";
@@ -87,12 +86,6 @@ import { CollectionUtil } from "../../Util/CollectionUtil";
  */
 export abstract class MusicSheetCalculator {
     public static symbolFactory: IGraphicalSymbolFactory;
-    /** @deprecated Not set anymore: each calculator has its own (the protected stafflineNoteCalculator), with its rules and the
-     *  notes it tracks. A static one was shared by all OSMD instances, and kept the rules of the most recently created one,
-     *  and through them its rendering, in memory.
-     */
-    public static stafflineNoteCalculator: IStafflineNoteCalculator;
-    protected static textMeasurer: ITextMeasurer;
     /** Tracks the pitches on each percussion staff, to put them on one line if there are few of them (PercussionOneLineCutoff). */
     protected stafflineNoteCalculator: IStafflineNoteCalculator;
 
@@ -118,17 +111,6 @@ export abstract class MusicSheetCalculator {
     private multiRestDividedAtDrawRange: boolean = false;
 
     private abstractNotImplementedErrorMessage: string = "abstract, not implemented";
-
-    /** @deprecated OSMD measures texts with each instance's own measurer, EngravingRules.TextMeasurer (osmd.EngravingRules.TextMeasurer).
-     *  This static one measures with default rules (e.g. DefaultFontFamily), and is only used for labels without rules.
-     */
-    public static get TextMeasurer(): ITextMeasurer {
-        return MusicSheetCalculator.textMeasurer;
-    }
-
-    public static set TextMeasurer(value: ITextMeasurer) {
-        MusicSheetCalculator.textMeasurer = value;
-    }
 
     protected get leadSheet(): boolean {
         return this.graphicalMusicSheet.LeadSheet;

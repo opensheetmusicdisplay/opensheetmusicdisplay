@@ -2119,9 +2119,6 @@ export class OpenSheetMusicDisplay {
         if (options.useGeometricSkyBottomLineCalculation !== undefined) {
             this.rules.UseGeometricSkyBottomLineCalculation = options.useGeometricSkyBottomLineCalculation;
         }
-        if (options.preferredSkyBottomLineBatchCalculatorBackend !== undefined) {
-            this.rules.PreferredSkyBottomLineBatchCalculatorBackend = options.preferredSkyBottomLineBatchCalculatorBackend;
-        }
         if (options.skyBottomLineBatchMinMeasures !== undefined) {
             this.rules.SkyBottomLineBatchMinMeasures = options.skyBottomLineBatchMinMeasures;
         }

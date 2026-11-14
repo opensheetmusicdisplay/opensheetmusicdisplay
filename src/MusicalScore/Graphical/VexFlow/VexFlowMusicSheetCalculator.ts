@@ -119,10 +119,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // per instance, not static: see EngravingRules.TextMeasurer
     this.rules.TextMeasurer = new VexFlowTextMeasurer(this.rules);
     this.stafflineNoteCalculator = new VexflowStafflineNoteCalculator(this.rules);
-    if (!MusicSheetCalculator.TextMeasurer) {
-      // the deprecated static one, for apps that use it: with default rules, as an instance's rules would keep that instance in memory
-      MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer(new EngravingRules());
-    }
   }
 
   /** Creates the graphical measures, staff entries and notes, with this instance's VexFlow settings (see
