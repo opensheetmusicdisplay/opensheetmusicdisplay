@@ -255,8 +255,15 @@ export class InstrumentReader {
               }
               const staffLinesNode: IXmlElement = staffDetailsNode.element("staff-lines");
               if (staffLinesNode) {
-                staff.StafflineCount = parseInt(staffLinesNode.value, 10);
-                staff.xmlStafflineCount = isNaN(staff.StafflineCount) ? undefined : staff.StafflineCount;
+                const staffLines: number = parseInt(staffLinesNode.value, 10);
+                if (staffLines > this.musicSheet.Rules.MaxStaffLines) {
+                  // every line is created and drawn for every measure of the staff: 3000000 lines used up all memory
+                  this.reportIgnoredValue(`ignored <staff-lines>${this.shortValue(staffLinesNode)}</staff-lines> of staff ${staffNumber}` +
+                    `, the most that is read is ${this.musicSheet.Rules.MaxStaffLines} lines: the staff keeps its ${staff.StafflineCount} lines`);
+                } else {
+                  staff.StafflineCount = staffLines;
+                  staff.xmlStafflineCount = isNaN(staff.StafflineCount) ? undefined : staff.StafflineCount;
+                }
               }
             }
             // check multi measure rest
@@ -682,6 +689,25 @@ export class InstrumentReader {
     this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
     this.musicSheet.SheetErrors.pushMeasureError(message);
     log.warn("[OSMD] " + message);
+  }
+
+  /**
+   * Reports a value of the current measure that was ignored or changed while its element was still read: as a warning that
+   * names the measure and the part, and in the measure's errors (MusicSheet.SheetErrors.measureErrors).
+   * @param whatHappened e.g. "ignored <staff-lines>3000000</staff-lines> of staff 1, ..."
+   */
+  private reportIgnoredValue(whatHappened: string): void {
+    const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/MeasureError", "Error while reading Measure.");
+    const message: string = `${this.getMeasureDescription()}: ${whatHappened}`;
+    this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
+    this.musicSheet.SheetErrors.pushMeasureError(message);
+    log.warn("[OSMD] " + message);
+  }
+
+  /** An element's text for a warning, cut to 20 characters: a value that is too large can be very long. */
+  private shortValue(xmlNode: IXmlElement): string {
+    const value: string = xmlNode.value.trim();
+    return value.length > 20 ? value.slice(0, 20) + "..." : value;
   }
 
   /**
@@ -1778,6 +1804,20 @@ export class InstrumentReader {
     return null;
   }
 
+  /**
+   * The number of strokes that a `<tremolo>` gives, NaN if it isn't a number. More than EngravingRules.MaxTremoloStrokes are reduced to
+   * that, with a warning: every stroke is drawn, so 3000000 strokes used up all memory.
+   */
+  private readTremoloStrokes(tremoloNode: IXmlElement): number {
+    const tremoloStrokes: number = parseInt(tremoloNode.value, 10);
+    if (tremoloStrokes > this.musicSheet.Rules.MaxTremoloStrokes) {
+      this.reportIgnoredValue(`a <tremolo> of ${this.shortValue(tremoloNode)} strokes was reduced to ` +
+        `${this.musicSheet.Rules.MaxTremoloStrokes} strokes, the most that is read`);
+      return this.musicSheet.Rules.MaxTremoloStrokes;
+    }
+    return tremoloStrokes;
+  }
+
   private getTremoloInfo(ornamentsNode: IXmlElement): TremoloInfo {
     let tremoloStrokes: number;
     let tremoloUnmeasured: boolean;
@@ -1790,7 +1830,7 @@ export class InstrumentReader {
         tremoloType = "single"; // the type attribute is optional in MusicXML and defaults to "single"
       }
       if (tremoloType === "single") {
-        const tremoloStrokesGiven: number = parseInt(tremoloNode.value, 10);
+        const tremoloStrokesGiven: number = this.readTremoloStrokes(tremoloNode);
         if (tremoloStrokesGiven > 0) {
           tremoloStrokes = tremoloStrokesGiven;
         }
@@ -1804,7 +1844,7 @@ export class InstrumentReader {
         //   the strokes between the notes are drawn in VexFlowMusicSheetDrawer.drawTremolosBetweenNotes().
         tremoloBetweenNotesStart = tremoloType === "start";
         tremoloBetweenNotesStop = tremoloType === "stop";
-        const tremoloStrokesGiven: number = parseInt(tremoloNode.value, 10);
+        const tremoloStrokesGiven: number = this.readTremoloStrokes(tremoloNode);
         if (tremoloStrokesGiven > 0) {
           tremoloStrokes = tremoloStrokesGiven;
         }

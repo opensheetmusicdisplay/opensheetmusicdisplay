@@ -1474,7 +1474,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                     if (!stavesNode) {
                         num++;
                     } else {
-                        num += parseInt(stavesNode.value, 10);
+                        num += this.readNumberOfStaves(stavesNode, partNode);
                     }
                 }
             }
@@ -1505,7 +1505,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             if (!attributes || !staves) {
                 num = 1;
             } else {
-                num = parseInt(staves.value, 10);
+                num = this.readNumberOfStaves(staves, partNode);
             }
         }
         if (isNaN(num) || num <= 0) {
@@ -1515,6 +1515,25 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             throw new MusicSheetReadingException(errorMsg);
         }
         return num;
+    }
+
+    /**
+     * The number of staves that a part's `<staves>` element gives, NaN if it isn't a number.
+     * Throws for more than EngravingRules.MaxStavesPerPart, so that loading fails with an error that names the part and the value:
+     * every staff is created for every measure, so `<staves>3000000</staves>` used up all memory.
+     */
+    private readNumberOfStaves(stavesNode: IXmlElement, partNode: IXmlElement): number {
+        const numberOfStaves: number = parseInt(stavesNode.value, 10);
+        if (numberOfStaves > this.rules.MaxStavesPerPart) {
+            const errorMsg: string = ITextTranslation.translateText(
+                "ReaderErrorMessages/StaffError", "Invalid number of staves."
+            );
+            throw new MusicSheetReadingException(
+                `${errorMsg} Part "${partNode.attribute("id")?.value}" has <staves>${stavesNode.value.trim().slice(0, 20)}</staves>, ` +
+                `the most that is read is ${this.rules.MaxStavesPerPart} staves per part.`
+            );
+        }
+        return numberOfStaves;
     }
 
 }

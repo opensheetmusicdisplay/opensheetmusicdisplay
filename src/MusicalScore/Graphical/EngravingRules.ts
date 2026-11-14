@@ -98,6 +98,20 @@ export class EngravingRules {
      * If false, PercussionOneLineCutoff also draws such a staff on one line, e.g. a snare drum with <staff-lines>5.
      */
     public PercussionKeepXMLStafflineCount: boolean;
+    /** The most staves that a part can have in the MusicXML (`<staves>`). Default 100. A part with more fails to load, with
+     * an error that names it: every staff is created for every measure, so a small file with a huge value used up all memory.
+     * Real parts have 1 to 3 staves (organ), rarely a few more.
+     */
+    public MaxStavesPerPart: number;
+    /** The most lines that a staff can have in the MusicXML (`<staff-lines>`). Default 100. A larger value is ignored with a
+     * warning, to not run out of memory: every line is created and drawn for every measure.
+     * Staves have 1 to 5 lines, tablature one line per string or course (6, up to 14 for a baroque lute or pedal steel guitar).
+     */
+    public MaxStaffLines: number;
+    /** The most strokes that a tremolo can have in the MusicXML (`<tremolo>`). Default 8, the largest value that MusicXML
+     * allows (tremolo-marks: 0 to 8). A larger value is reduced to this with a warning, to not run out of memory.
+     */
+    public MaxTremoloStrokes: number;
     public PercussionForceVoicesOneLineCutoff: number;
     public PercussionUseXMLDisplayStep: boolean;
     public PercussionXMLDisplayStepNoteValueShift: number;
@@ -959,6 +973,9 @@ export class EngravingRules {
         this.ClefRightMargin = 0.75;
         this.PercussionOneLineCutoff = 3; // percussion parts with <3 unique note positions rendered on one line
         this.PercussionKeepXMLStafflineCount = true;
+        this.MaxStavesPerPart = 100;
+        this.MaxStaffLines = 100;
+        this.MaxTremoloStrokes = 8;
         this.PercussionForceVoicesOneLineCutoff = 1;
         this.PercussionUseXMLDisplayStep = true;
         this.PercussionXMLDisplayStepNoteValueShift = 0;
