@@ -1,6 +1,6 @@
 import { PagePlacementEnum } from "./GraphicalMusicPage";
 //import {MusicSymbol} from "./MusicSymbol";
-import log from "loglevel";
+import { log } from "../../Common/Logging";
 import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import {

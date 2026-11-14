@@ -1,4 +1,4 @@
-import log from "loglevel";
+import { log } from "../../Common/Logging";
 import { MusicSheet } from "../MusicSheet";
 import { Instrument } from "../Instrument";
 import { Note } from "../VoiceData/Note";

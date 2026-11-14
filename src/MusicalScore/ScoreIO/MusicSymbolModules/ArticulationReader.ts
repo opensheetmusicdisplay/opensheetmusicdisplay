@@ -1,6 +1,6 @@
 ﻿import {ArticulationEnum, VoiceEntry} from "../../VoiceData/VoiceEntry";
 import {IXmlAttribute, IXmlElement} from "../../../Common/FileIO/Xml";
-import log from "loglevel";
+import { log } from "../../../Common/Logging";
 import {TechnicalInstruction, TechnicalInstructionType} from "../../VoiceData/Instructions/TechnicalInstruction";
 import {OrnamentContainer, OrnamentEnum} from "../../VoiceData/OrnamentContainer";
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";

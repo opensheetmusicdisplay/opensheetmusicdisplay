@@ -1,4 +1,4 @@
-import log from "loglevel";
+import { log } from "../../Common/Logging";
 
 /**
  * A virtual VexFlow rendering context that computes the vertical extents (min and max y)

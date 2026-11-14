@@ -4,7 +4,7 @@ import {ChordDegreeText, ChordSymbolContainer, ChordSymbolEnum, Degree} from "..
 import {AccidentalEnum, NoteEnum, Pitch} from "../../../Common/DataObjects/Pitch";
 import {KeyInstruction} from "../../VoiceData/Instructions/KeyInstruction";
 import {ITextTranslation} from "../../Interfaces/ITextTranslation";
-import log from "loglevel";
+import { log } from "../../../Common/Logging";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 
 export class ChordSymbolReader {

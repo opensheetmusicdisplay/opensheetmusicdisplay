@@ -4,7 +4,7 @@ import { EngravingRules } from "./EngravingRules";
 import { SkyBottomLineCalculationResult } from "./SkyBottomLineCalculationResult";
 import { CanvasVexFlowBackend } from "./VexFlow/CanvasVexFlowBackend";
 import { VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
-import log from "loglevel";
+import { log } from "../../Common/Logging";
 
 /**
  * SkyBottomLineBatchCalculatorBackend renders measures in a borderless table.

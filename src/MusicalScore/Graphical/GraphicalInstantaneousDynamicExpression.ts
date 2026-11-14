@@ -4,7 +4,7 @@ import { GraphicalMeasure } from "./GraphicalMeasure";
 import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
-import log from "loglevel";
+import { log } from "../../Common/Logging";
 
 export class GraphicalInstantaneousDynamicExpression extends AbstractGraphicalExpression {
     protected mInstantaneousDynamicExpression: InstantaneousDynamicExpression;

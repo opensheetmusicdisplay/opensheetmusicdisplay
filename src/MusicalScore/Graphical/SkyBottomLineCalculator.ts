@@ -4,7 +4,7 @@ import { PointF2D } from "../../Common/DataObjects/PointF2D";
 import { IVerticalMeasureFormat, VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
 import { SourceMeasure } from "../VoiceData/SourceMeasure";
 import { unitInPixels } from "./VexFlow/VexFlowMusicSheetDrawer";
-import log from "loglevel";
+import { log } from "../../Common/Logging";
 import { BoundingBox } from "./BoundingBox";
 import { SkyBottomLineCalculationResult } from "./SkyBottomLineCalculationResult";
 import { CanvasVexFlowBackend } from "./VexFlow/CanvasVexFlowBackend";

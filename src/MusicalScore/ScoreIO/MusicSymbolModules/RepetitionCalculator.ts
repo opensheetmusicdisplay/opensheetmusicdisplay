@@ -4,7 +4,7 @@ import {RepetitionInstructionComparer} from "../../VoiceData/Instructions/Repeti
 import {ArgumentOutOfRangeException} from "../../Exceptions";
 import {MusicSheet} from "../../MusicSheet";
 import { Repetition } from "../../MusicSource";
-import log from "loglevel";
+import { log } from "../../../Common/Logging";
 import { CollectionUtil } from "../../../Util/CollectionUtil";
 
 export class RepetitionCalculator {

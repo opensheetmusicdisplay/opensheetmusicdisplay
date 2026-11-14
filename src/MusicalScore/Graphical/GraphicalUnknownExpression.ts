@@ -5,7 +5,7 @@ import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
 import { PlacementEnum, AbstractExpression } from "../VoiceData/Expressions/AbstractExpression";
 import { MultiExpression } from "../VoiceData/Expressions/MultiExpression";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
-import log from "loglevel";
+import { log } from "../../Common/Logging";
 import { SourceMeasure } from "../VoiceData/SourceMeasure";
 
 export class GraphicalUnknownExpression extends AbstractGraphicalExpression {

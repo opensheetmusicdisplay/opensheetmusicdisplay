@@ -8,7 +8,7 @@ import { BoundingBox } from "./BoundingBox";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { ISqueezable } from "./ISqueezable";
-import log from "loglevel";
+import { log } from "../../Common/Logging";
 import { SourceMeasure } from "../VoiceData/SourceMeasure";
 
 /**

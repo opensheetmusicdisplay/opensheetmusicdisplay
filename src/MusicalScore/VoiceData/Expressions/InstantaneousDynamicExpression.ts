@@ -3,7 +3,7 @@ import {MultiExpression} from "./MultiExpression";
 import {DynamicExpressionSymbolEnum} from "./DynamicExpressionSymbolEnum";
 //import {ArgumentOutOfRangeException} from "../../Exceptions";
 import {InvalidEnumArgumentException} from "../../Exceptions";
-import log from "loglevel";
+import { log } from "../../../Common/Logging";
 import { SourceMeasure } from "../SourceMeasure";
 import { Dictionary } from "typescript-collections";
 import { Fraction } from "../../../Common/DataObjects/Fraction";
