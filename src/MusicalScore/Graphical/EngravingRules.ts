@@ -798,8 +798,9 @@ export class EngravingRules {
     public NoteToGraphicalNoteMap: Dictionary<number, GraphicalNote>;
     // this is basically a WeakMap, except we save the id in the Note instead of using a WeakMap.
     public NoteToGraphicalNoteMapObjectCount: number = 0;
-    /** Measures the width of texts like labels in this instance's fonts (e.g. DefaultFontFamily), set by the
-     *  VexFlowMusicSheetCalculator. Owned here (per OSMD instance) instead of statically (the former MusicSheetCalculator.TextMeasurer):
+    /** Measures the width of texts like labels in this instance's fonts (e.g. DefaultFontFamily). Set by the OSMD instance that
+     *  creates these rules, or for rules without one by the VexFlowMusicSheetCalculator created with them; one that an app sets is kept.
+     *  Owned here (per OSMD instance) instead of statically (the former MusicSheetCalculator.TextMeasurer):
      *  a static one measured with the rules of the most recently created instance in all instances,
      *  and kept those rules, and through NoteToGraphicalNoteMap that instance's rendering, in memory after it was dropped.
      */
