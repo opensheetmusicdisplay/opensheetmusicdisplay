@@ -5,7 +5,7 @@ import {ClefInstruction} from "../VoiceData/Instructions/ClefInstruction";
 import {OctaveEnum} from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import {AccidentalEnum, Pitch} from "../../Common/DataObjects/Pitch";
 import {GraphicalObject} from "./GraphicalObject";
-import {MusicSheetCalculator} from "./MusicSheetCalculator";
+import { ITransposeCalculator } from "../Interfaces/ITransposeCalculator";
 import {BoundingBox} from "./BoundingBox";
 import {GraphicalVoiceEntry} from "./GraphicalVoiceEntry";
 import {GraphicalMusicPage} from "./GraphicalMusicPage";
@@ -44,8 +44,9 @@ export class GraphicalNote extends GraphicalObject {
 
     public Transpose(keyInstruction: KeyInstruction, activeClef: ClefInstruction, halfTones: number, octaveEnum: OctaveEnum): Pitch {
         let transposedPitch: Pitch = this.sourceNote.Pitch;
-        if (MusicSheetCalculator.transposeCalculator) {
-            transposedPitch = MusicSheetCalculator.transposeCalculator.transposePitch(this.sourceNote.Pitch, keyInstruction, halfTones);
+        const transposeCalculator: ITransposeCalculator = this.rules.TransposeCalculator;
+        if (transposeCalculator) {
+            transposedPitch = transposeCalculator.transposePitch(this.sourceNote.Pitch, keyInstruction, halfTones);
         }
         return transposedPitch;
     }

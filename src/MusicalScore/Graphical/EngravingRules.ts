@@ -18,6 +18,7 @@ import { GeometricSkyBottomLineCaches } from "./GeometricSkyBottomLineContext";
 import { GraphicalNote } from "./GraphicalNote";
 import { Note } from "../VoiceData/Note";
 import { ITextMeasurer } from "../Interfaces/ITextMeasurer";
+import { ITransposeCalculator } from "../Interfaces/ITransposeCalculator";
 
 /** Rendering and Engraving options, more fine-grained than [[IOSMDOptions]].
  *  Not all of these options are meant to be modified by users of the library,
@@ -820,6 +821,11 @@ export class EngravingRules {
      *  and kept those rules, and through NoteToGraphicalNoteMap that instance's rendering, in memory after it was dropped.
      */
     public TextMeasurer: ITextMeasurer;
+    /** The calculator that transposes this instance's notes, chord symbols and key signatures (osmd.TransposeCalculator).
+     *  Owned here (per OSMD instance) instead of statically (the former MusicSheetCalculator.transposeCalculator):
+     *  a static one transposed all instances on the page. Undefined: no transposition.
+     */
+    public TransposeCalculator: ITransposeCalculator;
     /** How many times osmd.render() was already called on the currently loaded score.
      * Resets after osmd.load() (via osmd.reset()).
      * Can be relevant for transposition or generally informative.

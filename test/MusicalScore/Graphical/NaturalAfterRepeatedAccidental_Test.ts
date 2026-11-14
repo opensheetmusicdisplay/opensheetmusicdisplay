@@ -5,7 +5,6 @@ import { AccidentalEnum } from "../../../src/Common/DataObjects/Pitch";
 import { GraphicalStaffEntry } from "../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
 import { GraphicalNote } from "../../../src/MusicalScore/Graphical/GraphicalNote";
 import { TransposeCalculator } from "../../../src/Plugins/Transpose/TransposeCalculator";
-import { ITransposeCalculator } from "../../../src/MusicalScore/Interfaces/ITransposeCalculator";
 
 /**
  * A natural after a repeated sharp or flat of the same pitch in a measure needs its natural sign again, e.g. F# F F# F.
@@ -15,16 +14,13 @@ import { ITransposeCalculator } from "../../../src/MusicalScore/Interfaces/ITran
 describe("Naturals after a repeated sharp or flat", () => {
     let container: HTMLElement;
     let osmd: OpenSheetMusicDisplay;
-    let previousCalculator: ITransposeCalculator;
     beforeEach(() => {
         container = TestUtils.getDivElement(document);
         container.style.width = "800px";
         osmd = TestUtils.createOpenSheetMusicDisplay(container);
-        previousCalculator = osmd.TransposeCalculator;
         osmd.TransposeCalculator = new TransposeCalculator();
     });
     afterEach(() => {
-        osmd.TransposeCalculator = previousCalculator; // a static field shared by all OSMD instances
         osmd.clear();
         container.remove();
     });

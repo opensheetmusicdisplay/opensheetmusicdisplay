@@ -2,7 +2,6 @@ import { expect } from "vitest";
 import { TestUtils } from "../../Util/TestUtils";
 import { IRenderNextResult, OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TransposeCalculator } from "../../../src/Plugins/Transpose/TransposeCalculator";
-import { ITransposeCalculator } from "../../../src/MusicalScore/Interfaces/ITransposeCalculator";
 import { KeyEnum, KeyInstruction } from "../../../src/MusicalScore/VoiceData/Instructions/KeyInstruction";
 import { GraphicalStaffEntry } from "../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
 import { GraphicalNote } from "../../../src/MusicalScore/Graphical/GraphicalNote";
@@ -27,18 +26,15 @@ describe("TransposeCalculator", (): void => {
     describe("with a score", (): void => {
         let div: HTMLElement;
         let osmd: OpenSheetMusicDisplay;
-        let previousCalculator: ITransposeCalculator;
 
         beforeEach((): void => {
             div = TestUtils.getDivElement(document);
             div.style.width = "800px";
             osmd = TestUtils.createOpenSheetMusicDisplay(div);
-            previousCalculator = osmd.TransposeCalculator;
             osmd.TransposeCalculator = new TransposeCalculator();
         });
 
         afterEach((): void => {
-            osmd.TransposeCalculator = previousCalculator; // a static field shared by all OSMD instances
             osmd.clear();
             div.remove();
         });

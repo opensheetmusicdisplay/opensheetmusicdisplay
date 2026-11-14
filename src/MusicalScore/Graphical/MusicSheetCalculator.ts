@@ -87,7 +87,6 @@ import { CollectionUtil } from "../../Util/CollectionUtil";
  */
 export abstract class MusicSheetCalculator {
     public static symbolFactory: IGraphicalSymbolFactory;
-    public static transposeCalculator: ITransposeCalculator;
     /** @deprecated Not set anymore: each calculator has its own (the protected stafflineNoteCalculator), with its rules and the
      *  notes it tracks. A static one was shared by all OSMD instances, and kept the rules of the most recently created one,
      *  and through them its rendering, in memory.
@@ -170,7 +169,7 @@ export abstract class MusicSheetCalculator {
 
         this.graphicalMusicSheet.Initialize();
         // the notes' pitches are transposed when their graphical notes are created (checkNoteForAccidental()), the tablature frets here
-        TabFretTransposer.transposeFrets(musicSheet, MusicSheetCalculator.transposeCalculator !== undefined,
+        TabFretTransposer.transposeFrets(musicSheet, this.rules.TransposeCalculator !== undefined,
             this.rules.TabTransposeMaxFret);
         const measureList: GraphicalMeasure[][] = this.graphicalMusicSheet.MeasureList;
 
@@ -3770,10 +3769,11 @@ export abstract class MusicSheetCalculator {
                             const key: KeyInstruction = new KeyInstruction(originalKey.Parent, originalKey.keyTypeOriginal, originalKey.Mode);
                             // Then transpose if needed (skip percussion instruments)
                             const staff: Staff = this.graphicalMusicSheet.ParentMusicSheet.Staves[i];
+                            const transposeCalculator: ITransposeCalculator = this.rules.TransposeCalculator;
                             if (transposeHalftones !== 0 &&
                                 staff?.ParentInstrument?.MidiInstrumentId !== MidiInstrument.Percussion &&
-                                MusicSheetCalculator.transposeCalculator) {
-                                MusicSheetCalculator.transposeCalculator.transposeKey(key, transposeHalftones);
+                                transposeCalculator) {
+                                transposeCalculator.transposeKey(key, transposeHalftones);
                             }
                             accidentalCalculator.ActiveKeyInstruction = key;
                         }
@@ -3867,13 +3867,14 @@ export abstract class MusicSheetCalculator {
         // Always start from the source spelling so repeated transposition can return to zero (#1383).
         const key: KeyInstruction = new KeyInstruction(instruction.Parent, instruction.keyTypeOriginal, instruction.Mode);
         const transposeHalftones: number = measure.getTransposedHalftones();
-        if (transposeHalftones !== 0 && MusicSheetCalculator.transposeCalculator === undefined) {
+        const transposeCalculator: ITransposeCalculator = this.rules.TransposeCalculator;
+        if (transposeHalftones !== 0 && transposeCalculator === undefined) {
             log.info("[OSMD] transpose requested, but TransposeCalculator undefined. Use osmd.TransposeCalculator = new TransposeCalculator()");
         }
         if (transposeHalftones !== 0 &&
             measure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion &&
-            MusicSheetCalculator.transposeCalculator) {
-            MusicSheetCalculator.transposeCalculator.transposeKey(key, transposeHalftones);
+            transposeCalculator) {
+            transposeCalculator.transposeKey(key, transposeHalftones);
         }
         return key;
     }
