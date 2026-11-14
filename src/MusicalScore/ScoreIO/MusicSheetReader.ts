@@ -945,6 +945,10 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                     }
                     continue;
                 }
+                if (this.readCreditOutsideOfHeadings(credit)) {
+                    // its alignment would make it a subtitle (centered, after the title) or composer line (right-aligned)
+                    continue;
+                }
                 let creditChildren: IXmlElement[] = undefined;
                 if (credit) {
                     let isSubtitle: boolean = false;
@@ -1057,6 +1061,31 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 this.musicSheet.Composer.language = composerLanguage;
             }
         }
+    }
+
+    /** Whether a credit states that it isn't a heading (title, subtitle, composer, lyricist), so that its position and
+     * alignment don't make it one: a credit of the type "rights" or "page number", or one that repeats the copyright
+     * (<identification><rights>), like the copyright line at the bottom of the first page that most programs export.
+     * A "rights" credit becomes the copyright if the sheet has none yet.
+     */
+    private readCreditOutsideOfHeadings(credit: IXmlElement): boolean {
+        const [creditType, creditText, creditLanguage] = this.getCreditTypeTextAndLanguage(credit);
+        if (creditType === "page number") {
+            return true;
+        }
+        if (creditType === "rights") {
+            if (!this.musicSheet.Copyright) {
+                this.musicSheet.Copyright = new Label(this.trimString(creditText), TextAlignmentEnum.CenterBottom, undefined, true);
+                this.musicSheet.Copyright.language = creditLanguage;
+            }
+            return true;
+        }
+        if (creditText === undefined || !this.musicSheet.Copyright) {
+            return false;
+        }
+        // the same words, however their whitespace was exported
+        const normalize: (text: string) => string = (text: string): string => text.replace(/\s+/g, " ").trim().toLowerCase();
+        return normalize(creditText) === normalize(this.musicSheet.Copyright.text);
     }
 
     /** Joins <credit-words> in document order and returns a type only for exactly one <credit-type>, and the xml:lang of
