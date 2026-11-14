@@ -16,7 +16,7 @@ import {EngravingRules} from "./Graphical/EngravingRules";
 import {NoteState} from "./Graphical/DrawingEnums";
 import {Note} from "./VoiceData/Note";
 import {VoiceEntry} from "./VoiceData/VoiceEntry";
-import log from "loglevel";
+import { log } from "../Common/Logging";
 import { TextAlignmentEnum } from "../Common/Enums/TextAlignment";
 import { PlaybackSettings } from "../Common/DataObjects/PlaybackSettings";
 

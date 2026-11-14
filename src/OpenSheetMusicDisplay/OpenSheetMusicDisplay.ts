@@ -11,7 +11,7 @@ import { MusicSheet } from "./../MusicalScore/MusicSheet";
 import { Cursor } from "./Cursor";
 import { MXLFile, MXLHelper } from "../Common/FileIO/Mxl";
 import { AJAX } from "./AJAX";
-import log from "loglevel";
+import { log } from "../Common/Logging";
 import { DrawingParameters } from "../MusicalScore/Graphical/DrawingParameters";
 import { DrawingParametersEnum } from "../Common/Enums/DrawingParametersEnum";
 import { ColoringModes } from "../Common/Enums/ColoringModes";
@@ -2166,37 +2166,45 @@ export class OpenSheetMusicDisplay {
     }
 
     /**
-     * Sets the logging level for this OSMD instance. By default, this is set to `warn`.
+     * Sets the logging level of OSMD: for all OSMD instances on the page, not just this one.
+     * It sets the level of OSMD's own loglevel logger (named "OSMD"), not of loglevel's root logger, so the level of the
+     * page's other loglevel users stays as it is, and it isn't saved in localStorage (it lasts until the page reloads).
      *
-     * @param: content can be `trace`, `debug`, `info`, `warn` or `error`.
+     * Until it's called, OSMD logs with the level the root logger has when OSMD loads: `warn` by default.
+     *
+     * @param level `trace`, `debug`, `info`, `warn`, `error` or `silent`. Any other value logs a warning and sets `warn`.
      */
     public setLogLevel(level: string): void {
         switch (level) {
             case "trace":
-                log.setLevel(log.levels.TRACE);
+                log.setLevel(log.levels.TRACE, false);
                 break;
             case "debug":
-                log.setLevel(log.levels.DEBUG);
+                log.setLevel(log.levels.DEBUG, false);
                 break;
             case "info":
-                log.setLevel(log.levels.INFO);
+                log.setLevel(log.levels.INFO, false);
                 break;
             case "warn":
-                log.setLevel(log.levels.WARN);
+                log.setLevel(log.levels.WARN, false);
                 break;
             case "error":
-                log.setLevel(log.levels.ERROR);
+                log.setLevel(log.levels.ERROR, false);
                 break;
             case "silent":
-                log.setLevel(log.levels.SILENT);
+                log.setLevel(log.levels.SILENT, false);
                 break;
             default:
                 log.warn(`Could not set log level to ${level}. Using warn instead.`);
-                log.setLevel(log.levels.WARN);
+                log.setLevel(log.levels.WARN, false);
                 break;
         }
     }
 
+    /**
+     * Returns OSMD's logging level (for all OSMD instances on the page), as a number of loglevel's `levels`:
+     * 0 = trace, 1 = debug, 2 = info, 3 = warn, 4 = error, 5 = silent. See {@link setLogLevel}.
+     */
     public getLogLevel(): number {
         return log.getLevel();
     }

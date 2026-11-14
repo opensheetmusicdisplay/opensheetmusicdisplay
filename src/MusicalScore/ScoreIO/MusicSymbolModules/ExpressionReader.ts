@@ -15,7 +15,7 @@ import {UnknownExpression} from "../../VoiceData/Expressions/UnknownExpression";
 import {AbstractExpression, PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {TextAlignmentEnum} from "../../../Common/Enums/TextAlignment";
 import {ITextTranslation} from "../../Interfaces/ITextTranslation";
-import log from "loglevel";
+import { log } from "../../../Common/Logging";
 import { FontStyles } from "../../../Common/Enums/FontStyles";
 import { RehearsalExpression } from "../../VoiceData/Expressions/RehearsalExpression";
 import { Pedal } from "../../VoiceData/Expressions/ContinuousExpressions/Pedal";

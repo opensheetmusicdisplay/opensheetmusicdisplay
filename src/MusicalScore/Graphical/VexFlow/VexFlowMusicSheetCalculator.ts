@@ -30,7 +30,7 @@ import { IVerticalMeasureFormat, VexFlowMeasure } from "./VexFlowMeasure";
 import { VexFlowTextMeasurer } from "./VexFlowTextMeasurer";
 import Vex from "vexflow";
 import VF = Vex.Flow;
-import log from "loglevel";
+import { log } from "../../../Common/Logging";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
 import { TechnicalInstruction } from "../../VoiceData/Instructions/TechnicalInstruction";

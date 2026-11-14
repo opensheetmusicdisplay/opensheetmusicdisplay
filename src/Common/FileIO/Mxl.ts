@@ -1,6 +1,6 @@
 import { IXmlElement } from "./Xml";
 import JSZip from "jszip";
-import log from "loglevel";
+import { log } from "../Logging";
 
 export class MXLFile {
     private blob: Blob;

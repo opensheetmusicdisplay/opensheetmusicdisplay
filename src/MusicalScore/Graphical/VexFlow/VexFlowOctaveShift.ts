@@ -6,7 +6,7 @@ import { BoundingBox } from "../BoundingBox";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
-import log from "loglevel";
+import { log } from "../../../Common/Logging";
 
 /**
  * The vexflow adaptation of a graphical shift.

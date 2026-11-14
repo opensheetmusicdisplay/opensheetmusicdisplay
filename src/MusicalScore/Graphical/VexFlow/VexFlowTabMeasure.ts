@@ -12,7 +12,7 @@ import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 import { Arpeggio } from "../../VoiceData/Arpeggio";
 import { Voice } from "../../VoiceData/Voice";
-import log from "loglevel";
+import { log } from "../../../Common/Logging";
 import { ClefEnum, ClefInstruction } from "../../VoiceData/Instructions/ClefInstruction";
 
 /** Endpoints supported by our patched VexFlow Bend (omitted from the VexFlow 1.x typings). */

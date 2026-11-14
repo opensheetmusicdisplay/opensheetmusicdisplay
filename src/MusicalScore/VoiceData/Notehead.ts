@@ -1,5 +1,5 @@
 import { Note } from "./Note";
-import log from "loglevel";
+import { log } from "../../Common/Logging";
 
 /**
  * A note head with shape and fill information belonging to a [[Note]].

@@ -1,4 +1,4 @@
-import log from "loglevel";
+import { log } from "../../src/Common/Logging";
 import { MockInstance, onTestFinished, vi } from "vitest";
 import { OpenSheetMusicDisplay } from "../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 
@@ -46,8 +46,8 @@ export class TestUtils {
     }
 
     /**
-     * Catches the warnings and errors logged from now until the test ends (loglevel's log.warn() and log.error(), which
-     * OSMD logs with, and console.warn() and console.error()) instead of printing them. For a test that expects some and
+     * Catches the warnings and errors logged from now until the test ends (log.warn() and log.error() of OSMD's logger,
+     * src/Common/Logging.ts, and console.warn() and console.error()) instead of printing them. For a test that expects some and
      * checks them, so that the test output only shows unexpected ones.
      * @returns the messages caught, added as they're logged (an Error as its text, e.g. "Error: Corrupted zip ...")
      */

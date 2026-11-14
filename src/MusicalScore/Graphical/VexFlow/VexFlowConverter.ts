@@ -17,7 +17,7 @@ import {SystemLinesEnum} from "../SystemLinesEnum";
 import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {OutlineAndFillStyleEnum, OUTLINE_AND_FILL_STYLE_DICT} from "../DrawingEnums";
-import log from "loglevel";
+import { log } from "../../../Common/Logging";
 import { ArticulationEnum, StemDirectionType, VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { Articulation } from "../../VoiceData/Articulation";
 import { SystemLinePosition } from "../SystemLinePosition";

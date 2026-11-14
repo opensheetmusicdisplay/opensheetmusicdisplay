@@ -13,7 +13,7 @@ import {ContinuousDynamicExpression} from "../VoiceData/Expressions/ContinuousEx
 import {InstantaneousDynamicExpression} from "../VoiceData/Expressions/InstantaneousDynamicExpression";
 import {MultiTempoExpression} from "../VoiceData/Expressions/MultiTempoExpression";
 import {AbstractExpression} from "../VoiceData/Expressions/AbstractExpression";
-import log from "loglevel";
+import { log } from "../../Common/Logging";
 import {MusicSheet} from "../MusicSheet";
 import {NoteHeadShape} from "../VoiceData/Notehead";
 import {PlaybackSettings} from "../../Common/DataObjects/PlaybackSettings";

@@ -25,7 +25,7 @@ import { GraphicalMeasure } from "../GraphicalMeasure";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import { GraphicalInstantaneousTempoExpression } from "../GraphicalInstantaneousTempoExpression";
 import { GraphicalInstantaneousDynamicExpression } from "../GraphicalInstantaneousDynamicExpression";
-import log from "loglevel";
+import { log } from "../../../Common/Logging";
 import { GraphicalContinuousDynamicExpression } from "../GraphicalContinuousDynamicExpression";
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
 import { DrawingParameters } from "../DrawingParameters";

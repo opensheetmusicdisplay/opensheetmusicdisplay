@@ -9,7 +9,7 @@ import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
 import {BackendType} from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import {EngravingRules} from "../EngravingRules";
-import log from "loglevel";
+import { log } from "../../../Common/Logging";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
 
 export class SvgVexFlowBackend extends VexFlowBackend {

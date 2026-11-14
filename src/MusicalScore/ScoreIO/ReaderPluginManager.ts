@@ -1,4 +1,4 @@
-import log from "loglevel";
+import { log } from "../../Common/Logging";
 import { IVoiceMeasureReadPlugin } from "../Interfaces/IVoiceMeasureReadPlugin";
 import { VoiceEntry, RhythmInstruction, KeyInstruction } from "../VoiceData";
 

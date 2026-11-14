@@ -1,4 +1,4 @@
-import log from "loglevel";
+import { log } from "../../Common/Logging";
 import {ArgumentOutOfRangeException} from "../Exceptions";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {SizeF2D} from "../../Common/DataObjects/SizeF2D";
