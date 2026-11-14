@@ -758,13 +758,15 @@ export class MusicPartManagerIterator {
     private getAudibleEntries(entry: VoiceEntry, audibleEntries: VoiceEntry[]): void {
         // is it a tied note?
         if (entry.hasTie()) {
-            // ignore all tied notes that are no start notes:
-            // check on the first note:
-            const note: Note = entry.Notes[0];
-            if (note.NoteTie !== undefined &&
-                note.NoteTie.StartNote !== note) {
-                // ignore the whole voice entry,
-                // as anyway all notes should be tied in a voice:
+            // Only skip the whole entry if EVERY note is tied from a previous note (i.e. there is
+            //   nothing to re-articulate). A chord can mix notes tied from the previous entry with
+            //   notes that are merely slurred / not tied at all, and those must still sound - so we
+            //   must not drop the whole entry based on the first note alone. Players should skip the
+            //   tied-continuation notes left in an audible entry (note.NoteTie.StartNote !== note),
+            //   so they aren't re-articulated.
+            const allNotesTiedFromPrevious: boolean = entry.Notes.every(
+                (note: Note) => note.NoteTie !== undefined && note.NoteTie.StartNote !== note);
+            if (allNotesTiedFromPrevious) {
                 return;
             }
         }
