@@ -319,11 +319,6 @@ export interface IOSMDOptions {
      * If set to false, the previous pixel-based calculation is used, see skyBottomLineBatchMinMeasures.
      */
     useGeometricSkyBottomLineCalculation?: boolean;
-    /** @deprecated No effect. The pixel-based batch calculation (useGeometricSkyBottomLineCalculation false) always reads the pixels
-     * with getImageData (SkyBottomLineBatchCalculatorBackendType.Plain): its WebGL backend was removed,
-     * as the geometric calculation (the default) is faster.
-     */
-    preferredSkyBottomLineBatchCalculatorBackend?: SkyBottomLineBatchCalculatorBackendType;
     /**
      * Defines the minimum number of measures in the entire sheet music where the skyline and bottom-line batch calculation is enabled,
      * if useGeometricSkyBottomLineCalculation is false.
@@ -346,23 +341,6 @@ export enum FillEmptyMeasuresWithWholeRests {
 export enum BackendType {
     SVG = 0,
     Canvas = 1
-}
-
-/**
- * The backends of the pixel-based (raster) skyline calculation in batches, which draws the measures on a canvas and reads its
- * pixels back. OSMD uses it only if EngravingRules.UseGeometricSkyBottomLineCalculation is false (from SkyBottomLineBatchMinMeasures
- * measures on). The geometric calculation, OSMD's default since 2.0.0, uses neither backend and is faster than both.
- */
-export enum SkyBottomLineBatchCalculatorBackendType {
-    /**
-     * Plain, as in without WebGL: scans the canvas pixels, read with getImageData, in JavaScript. The backend of the
-     * pixel-based calculation that OSMD used before the geometric one, which is faster. The only backend since WebGL was removed.
-     */
-    Plain = 0,
-    /** @deprecated No effect: the WebGL backend was removed, as the geometric calculation (the default) is faster;
-     * the pixel-based batch calculation uses Plain.
-     */
-    WebGL = 1,
 }
 
 /** Handles [[IOSMDOptions]], e.g. returning default options with OSMDOptionsStandard() */

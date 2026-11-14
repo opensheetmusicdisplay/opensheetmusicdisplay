@@ -1,6 +1,7 @@
 import { IXmlElement, removeWhitespaceBetweenElements } from "./../Common/FileIO/Xml";
 import { VexFlowMusicSheetCalculator } from "./../MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator";
 import { VexFlowBackend } from "./../MusicalScore/Graphical/VexFlow/VexFlowBackend";
+import { VexFlowTextMeasurer } from "./../MusicalScore/Graphical/VexFlow/VexFlowTextMeasurer";
 import { MusicSheetReader } from "./../MusicalScore/ScoreIO/MusicSheetReader";
 import { GraphicalMusicSheet } from "./../MusicalScore/Graphical/GraphicalMusicSheet";
 import { MusicSheetCalculator } from "./../MusicalScore/Graphical/MusicSheetCalculator";
@@ -1853,6 +1854,8 @@ export class OpenSheetMusicDisplay {
     public setOptions(options: IOSMDOptions): void {
         if (!this.rules) {
             this.rules = new EngravingRules();
+            // from the start, not only from load() on, so that an app can e.g. create a GraphicalLabel before it loads a score
+            this.rules.TextMeasurer = new VexFlowTextMeasurer(this.rules);
         }
         if (!this.drawingParameters && !options?.drawingParameters) {
             this.drawingParameters = new DrawingParameters(DrawingParametersEnum.default, this.rules);
@@ -2118,9 +2121,6 @@ export class OpenSheetMusicDisplay {
         }
         if (options.useGeometricSkyBottomLineCalculation !== undefined) {
             this.rules.UseGeometricSkyBottomLineCalculation = options.useGeometricSkyBottomLineCalculation;
-        }
-        if (options.preferredSkyBottomLineBatchCalculatorBackend !== undefined) {
-            this.rules.PreferredSkyBottomLineBatchCalculatorBackend = options.preferredSkyBottomLineBatchCalculatorBackend;
         }
         if (options.skyBottomLineBatchMinMeasures !== undefined) {
             this.rules.SkyBottomLineBatchMinMeasures = options.skyBottomLineBatchMinMeasures;

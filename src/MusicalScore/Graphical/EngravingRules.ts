@@ -6,8 +6,7 @@ import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import {
     AutoBeamOptions,
     AlignRestOption,
-    FillEmptyMeasuresWithWholeRests,
-    SkyBottomLineBatchCalculatorBackendType
+    FillEmptyMeasuresWithWholeRests
 } from "../../OpenSheetMusicDisplay/OSMDOptions";
 import { ColoringModes as ColoringMode } from "../../Common/Enums/ColoringModes";
 import { Dictionary } from "typescript-collections";
@@ -39,12 +38,6 @@ export class EngravingRules {
     public SheetAuthorHeight: number;
     public SheetCopyrightHeight: number;
     public SheetCopyrightMargin: number;
-    /** Whether to use the (deprecated) OSMD < 1.8.6 way of parsing and displaying subtitles and composer,
-     * which did not read multiple lines from XML credit-words tags.
-     * Option will probably be removed soon.
-     * @deprecated
-     */
-    public SheetComposerSubtitleUseLegacyParsing: boolean;
     public CompactMode: boolean;
     public PagePlacementEnum: PagePlacementEnum;
     public PageHeight: number;
@@ -381,16 +374,6 @@ export class EngravingRules {
     public TieHeightInterpolationK: number;
     public TieHeightInterpolationD: number;
     public SlurNoteHeadYOffset: number;
-    /** Not used anymore: a slur starts and ends SlurNoteHeadYOffset beyond the articulations of its start and end notes on its
-     *  side, as drawn (see GraphicalSlur), not this fixed distance beyond the end note.
-     * @deprecated
-     */
-    public SlurEndArticulationYOffset: number;
-    /** Not used anymore: an accent at the start or end of a slur goes outside it, beyond its curve, unless that is too far from the
-     *  note (see GraphicalSlur), not this fixed distance further out at the start of a slur placed in the XML.
-     * @deprecated
-     */
-    public SlurStartArticulationYOffsetOfArticulation: number;
     public SlurStemXOffset: number;
     public SlurSlopeMaxAngle: number;
     public SlurTangentMinAngle: number;
@@ -815,8 +798,9 @@ export class EngravingRules {
     public NoteToGraphicalNoteMap: Dictionary<number, GraphicalNote>;
     // this is basically a WeakMap, except we save the id in the Note instead of using a WeakMap.
     public NoteToGraphicalNoteMapObjectCount: number = 0;
-    /** Measures the width of texts like labels in this instance's fonts (e.g. DefaultFontFamily), set by the
-     *  VexFlowMusicSheetCalculator. Owned here (per OSMD instance) instead of statically (MusicSheetCalculator.TextMeasurer):
+    /** Measures the width of texts like labels in this instance's fonts (e.g. DefaultFontFamily). Set by the OSMD instance that
+     *  creates these rules, or for rules without one by the VexFlowMusicSheetCalculator created with them; one that an app sets is kept.
+     *  Owned here (per OSMD instance) instead of statically (the former MusicSheetCalculator.TextMeasurer):
      *  a static one measured with the rules of the most recently created instance in all instances,
      *  and kept those rules, and through NoteToGraphicalNoteMap that instance's rendering, in memory after it was dropped.
      */
@@ -842,35 +826,12 @@ export class EngravingRules {
      *  Owned here (per OSMD instance, like NoteToGraphicalNoteMap) instead of statically,
      *  so that multiple OSMD instances stay independent. */
     public GeometricSkyBottomLineCaches: GeometricSkyBottomLineCaches;
-    /** Not used anymore: the pixel-based batch calculation (UseGeometricSkyBottomLineCalculation false) always reads the pixels
-     *  with getImageData (SkyBottomLineBatchCalculatorBackendType.Plain). Its WebGL backend was removed,
-     *  as the geometric calculation (the default) is faster.
-     * @deprecated
-     */
-    public PreferredSkyBottomLineBatchCalculatorBackend: SkyBottomLineBatchCalculatorBackendType;
-    /** Not used anymore: the WebGL backend was removed, see PreferredSkyBottomLineBatchCalculatorBackend.
-     * @deprecated
-     */
-    public DisableWebGLInFirefox: boolean;
-    /** Not used anymore: the WebGL backend was removed, see PreferredSkyBottomLineBatchCalculatorBackend.
-     * @deprecated
-     */
-    public DisableWebGLInSafariAndIOS: boolean;
 
     /** The minimum number of measures in the sheet where the skyline and bottom-line batch calculation is enabled,
      *  if UseGeometricSkyBottomLineCalculation is false.
      *  Batch is faster for medium to large size scores, but slower for very short scores.
      */
     public SkyBottomLineBatchMinMeasures: number;
-    /** Not used anymore: the WebGL backend was removed, see PreferredSkyBottomLineBatchCalculatorBackend.
-     * @deprecated
-     */
-    public SkyBottomLineWebGLMinMeasures: number;
-    /** Not used anymore: the WebGL backend was removed, so there is no backend to choose,
-     *  see PreferredSkyBottomLineBatchCalculatorBackend.
-     * @deprecated
-     */
-    public AlwaysSetPreferredSkyBottomLineBackendAutomatically: boolean;
 
     // Playback settings
     /** Currently only used in audio player */
@@ -892,7 +853,6 @@ export class EngravingRules {
         this.SheetAuthorHeight = 2.0;
         this.SheetCopyrightHeight = 1.5;
         this.SheetCopyrightMargin = 2.0;
-        this.SheetComposerSubtitleUseLegacyParsing = false;
 
         // Staff sizing Variables
         this.CompactMode = false;
@@ -1097,8 +1057,6 @@ export class EngravingRules {
         this.TieHeightInterpolationK = 0.0288;
         this.TieHeightInterpolationD = 0.136;
         this.SlurNoteHeadYOffset = 0.5;
-        this.SlurEndArticulationYOffset = 0.8;
-        this.SlurStartArticulationYOffsetOfArticulation = 0.5;
         this.SlurStemXOffset = 0.3;
         this.SlurSlopeMaxAngle = 15.0;
         this.SlurTangentMinAngle = 30.0;
@@ -1365,11 +1323,6 @@ export class EngravingRules {
         this.UseGeometricSkyBottomLineCalculation = true;
         this.GeometricSkyBottomLineCaches = new GeometricSkyBottomLineCaches();
         this.SkyBottomLineBatchMinMeasures = 5;
-        this.SkyBottomLineWebGLMinMeasures = 80;
-        this.AlwaysSetPreferredSkyBottomLineBackendAutomatically = true;
-        this.DisableWebGLInFirefox = true;
-        this.DisableWebGLInSafariAndIOS = true;
-        this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.Plain;
 
         // Playback
         this.UseInterpolatedTempoForAccelerandoEtc = false; // wait for rit support etc. can also make
@@ -1387,16 +1340,6 @@ export class EngravingRules {
         } catch (ex) {
             log.info("EngravingRules()", ex);
         }
-    }
-
-    /** Not used anymore, without effect: OSMD calculates the skylines geometrically (UseGeometricSkyBottomLineCalculation, default
-     *  true), which is faster than the pixel-based calculation with either of its backends, WebGL or Plain. This only sets
-     *  PreferredSkyBottomLineBatchCalculatorBackend, which isn't read anymore, to Plain, the only backend left.
-     *  It chose WebGL for large scores in Chromium browsers before the WebGL backend was removed.
-     * @deprecated
-     */
-    public setPreferredSkyBottomLineBackendAutomatically(numberOfGraphicalMeasures: number = -1): void {
-        this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.Plain;
     }
 
     /** Makes it so that all musical elements (including key/time signature)

@@ -11,7 +11,7 @@ OSMD calculates the skylines in one of two ways, which these tools compare:
 - **pixel-based**, also called **raster** (`UseGeometricSkyBottomLineCalculation` false, OSMD's method before 2.0.0):
   draws the measures on a canvas and scans its pixels, read with `getImageData`. Per staffline (a canvas per measure),
   or from `SkyBottomLineBatchMinMeasures` measures on in batches (`SkyBottomLineBatchCalculator`, the measures in table
-  canvases), with the batch backend Plain (`SkyBottomLineBatchCalculatorBackendType`; "Plain" as in without WebGL: the
+  canvases), with the batch backend Plain (`PlainSkyBottomLineBatchCalculatorBackend`; "Plain" as in without WebGL: the
   WebGL backend was removed, as it was even slower).
 
 All node tools must be run **from the repository root** and need a current build

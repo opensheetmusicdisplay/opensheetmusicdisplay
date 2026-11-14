@@ -1,6 +1,7 @@
 import { expect } from "vitest";
 import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { PlacementEnum } from "../../../../src/MusicalScore/VoiceData/Expressions/AbstractExpression";
+import { ITextMeasurer } from "../../../../src/MusicalScore/Interfaces/ITextMeasurer";
 import { TestUtils } from "../../../Util/TestUtils";
 
 /**
@@ -62,9 +63,16 @@ describe("VexFlowTextFontFamily", (): void => {
         await osmd.load(TestUtils.getScore("test_repeat_da_capo_al_coda_after_repeat.musicxml"));
         osmd.render();
         expect(Number(text("D.C. al").getAttribute("y"))).to.be.lessThan(Number(text("To").getAttribute("y")));
-        // a custom ITextMeasurer without the optional computeTextWidthInCssFont() (load() sets OSMD's own again)
-        osmd.EngravingRules.TextMeasurer.computeTextWidthInCssFont = undefined;
+        // a custom ITextMeasurer without the optional computeTextWidthInCssFont()
+        const osmdTextMeasurer: ITextMeasurer = osmd.EngravingRules.TextMeasurer;
+        osmd.EngravingRules.TextMeasurer = {
+            fontSize: osmdTextMeasurer.fontSize,
+            fontSizeStandard: osmdTextMeasurer.fontSizeStandard,
+            computeTextWidthToHeightRatio: osmdTextMeasurer.computeTextWidthToHeightRatio.bind(osmdTextMeasurer),
+            setFontSize: osmdTextMeasurer.setFontSize.bind(osmdTextMeasurer),
+        };
         expect((): void => osmd.render()).not.to.throw();
+        osmd.EngravingRules.TextMeasurer = osmdTextMeasurer; // load() keeps the measurer that is set
 
         // A bend reserves its text width plus 3px, with the text in the middle (VexFlow's Bend.updateWidth()),
         //   so the texts of two consecutive bends are 3px apart. Compared by the text advance, which is what is measured.

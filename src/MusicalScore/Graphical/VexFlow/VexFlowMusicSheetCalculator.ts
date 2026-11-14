@@ -116,13 +116,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     super();
     this.rules = rules;
     MusicSheetCalculator.symbolFactory = new VexFlowGraphicalSymbolFactory();
-    // per instance, not static: see EngravingRules.TextMeasurer
-    this.rules.TextMeasurer = new VexFlowTextMeasurer(this.rules);
-    this.stafflineNoteCalculator = new VexflowStafflineNoteCalculator(this.rules);
-    if (!MusicSheetCalculator.TextMeasurer) {
-      // the deprecated static one, for apps that use it: with default rules, as an instance's rules would keep that instance in memory
-      MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer(new EngravingRules());
+    if (!this.rules.TextMeasurer) {
+      // rules that weren't created by an OSMD instance, which sets its rules' measurer (per instance, not static:
+      //   see EngravingRules.TextMeasurer)
+      this.rules.TextMeasurer = new VexFlowTextMeasurer(this.rules);
     }
+    this.stafflineNoteCalculator = new VexflowStafflineNoteCalculator(this.rules);
   }
 
   /** Creates the graphical measures, staff entries and notes, with this instance's VexFlow settings (see

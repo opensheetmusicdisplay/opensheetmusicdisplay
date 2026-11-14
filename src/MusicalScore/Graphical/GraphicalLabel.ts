@@ -4,7 +4,6 @@ import { Note } from "../VoiceData/Note";
 import { BoundingBox } from "./BoundingBox";
 import { Clickable } from "./Clickable";
 import { EngravingRules } from "./EngravingRules";
-import { MusicSheetCalculator } from "./MusicSheetCalculator";
 import { ITextMeasurer } from "../Interfaces/ITextMeasurer";
 
 /**
@@ -84,16 +83,18 @@ export class GraphicalLabel extends Clickable {
         const lines: string[] = this.Label.text.split(/[\n\r]+/g);
         const numOfLines: number = lines.length;
         let maxWidth: number = 0;
-        // the instance's measurer (its fonts), the static one for a label without rules
-        const textMeasurer: ITextMeasurer = this.rules?.TextMeasurer ?? MusicSheetCalculator.TextMeasurer;
+        // the instance's measurer (its fonts), see EngravingRules.TextMeasurer
+        const textMeasurer: ITextMeasurer = this.rules?.TextMeasurer;
+        if (!textMeasurer) {
+            throw new Error("GraphicalLabel: no EngravingRules.TextMeasurer to measure the label's text with. " +
+                "Create the label with the rules of its OSMD instance (osmd.EngravingRules), or set a measurer on its rules.");
+        }
         for (let i: number = 0; i < numOfLines; i++) {
             const line: string = lines[i].trim();
             const widthToHeightRatio: number =
             textMeasurer.computeTextWidthToHeightRatio(
                line, this.Label.font, this.Label.fontStyle, this.label.fontFamily);
             const currWidth: number = this.Label.fontHeight * widthToHeightRatio;
-            // const currWidth: number = MusicSheetCalculator.TextMeasurer.computeTextWidth(
-            //     line, this.Label.font, this.Label.fontStyle, this.label.fontFamily);
             maxWidth = Math.max(maxWidth, currWidth);
             // here push only text and width of the text:
             this.TextLines.push({text: line, xOffset: 0, width: currWidth});
