@@ -18,6 +18,7 @@ import { GraphicalNote } from "./GraphicalNote";
 import { Note } from "../VoiceData/Note";
 import { ITextMeasurer } from "../Interfaces/ITextMeasurer";
 import { ITransposeCalculator } from "../Interfaces/ITransposeCalculator";
+import { IGraphicalSymbolFactory } from "../Interfaces/IGraphicalSymbolFactory";
 
 /** Rendering and Engraving options, more fine-grained than [[IOSMDOptions]].
  *  Not all of these options are meant to be modified by users of the library,
@@ -810,6 +811,11 @@ export class EngravingRules {
      *  a static one transposed all instances on the page. Undefined: no transposition.
      */
     public TransposeCalculator: ITransposeCalculator;
+    /** Creates the graphical objects of this instance (systems, staff lines, measures, staff entries, notes, ...), set by the
+     *  VexFlowMusicSheetCalculator if the app didn't set one. Owned here (per OSMD instance) instead of statically (the former
+     *  MusicSheetCalculator.symbolFactory): a static one was replaced for all instances on the page by each new instance.
+     */
+    public SymbolFactory: IGraphicalSymbolFactory;
     /** How many times osmd.render() was already called on the currently loaded score.
      * Resets after osmd.load() (via osmd.reset()).
      * Can be relevant for transposition or generally informative.

@@ -17,7 +17,6 @@ import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
 import {SystemLinesEnum} from "./SystemLinesEnum";
 import {GraphicalMusicSheet} from "./GraphicalMusicSheet";
-import {MusicSheetCalculator} from "./MusicSheetCalculator";
 import { ITransposeCalculator } from "../Interfaces/ITransposeCalculator";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {CollectionUtil} from "../../Util/CollectionUtil";
@@ -373,7 +372,7 @@ export class MusicSystemBuilder {
      * @returns {MusicSystem}
      */
     protected initMusicSystem(): MusicSystem {
-        const musicSystem: MusicSystem = MusicSheetCalculator.symbolFactory.createMusicSystem(this.globalSystemIndex++, this.rules);
+        const musicSystem: MusicSystem = this.rules.SymbolFactory.createMusicSystem(this.globalSystemIndex++, this.rules);
         this.musicSystems.push(musicSystem);
         this.layoutSystemStaves(musicSystem);
         musicSystem.createMusicSystemLabel(
@@ -454,7 +453,7 @@ export class MusicSystemBuilder {
      */
     protected addStaffLineToMusicSystem(musicSystem: MusicSystem, relativeYPosition: number, staff: Staff): void {
         if (musicSystem) {
-            const staffLine: StaffLine = MusicSheetCalculator.symbolFactory.createStaffLine(musicSystem, staff);
+            const staffLine: StaffLine = this.rules.SymbolFactory.createStaffLine(musicSystem, staff);
             musicSystem.StaffLines.push(staffLine);
             const boundingBox: BoundingBox = staffLine.PositionAndShape;
             const relativePosition: PointF2D = new PointF2D();
@@ -865,7 +864,7 @@ export class MusicSystemBuilder {
     protected addExtraInstructionMeasure(visStaffIdx: number, keyInstruction: KeyInstruction, rhythmInstruction: RhythmInstruction): number {
         const currentSystem: MusicSystem = this.currentSystemParams.currentSystem;
         const measures: GraphicalMeasure[] = [];
-        const measure: GraphicalMeasure = MusicSheetCalculator.symbolFactory.createExtraGraphicalMeasure(currentSystem.StaffLines[visStaffIdx]);
+        const measure: GraphicalMeasure = this.rules.SymbolFactory.createExtraGraphicalMeasure(currentSystem.StaffLines[visStaffIdx]);
         measures.push(measure);
         if (keyInstruction) {
             measure.addKeyAtBegin(keyInstruction, this.activeKeys[visStaffIdx], this.activeClefs[visStaffIdx]);
