@@ -50,7 +50,8 @@ export interface IOSMDOptions {
      *  Setting this to false (also during runtime) removes the observer or listener as well.
      */
     autoResize?: boolean;
-    /** Render Backend, will be SVG if given undefined, "SVG" or "svg", otherwise Canvas. */
+    /** Render backend: "canvas" (in any letter case) for Canvas, anything else for SVG, e.g. "svg" or a misspelled value.
+     *  Default SVG. */
     backend?: string;
     /** Whether the instance keeps a small rendering alive, so that a sheet rendered after clear() renders about as fast as
      *  the one before it: true, false, or "auto" (default): in Chromium-based browsers. Sets osmd.KeepWarm, see there. */
@@ -96,7 +97,12 @@ export interface IOSMDOptions {
     /** Don't show/load cursor. Will override disableCursor in drawingParameters.
      *  false draws the cursors again from the next render(), also after true or a drawingParameters mode without cursors. */
     disableCursor?: boolean;
-    /** Follow Cursor: Scroll the page when cursor.next() is called and the cursor moves into a new system outside of the current view frame. */
+    /** Follow Cursor: Scroll the cursor into view each time it is updated, e.g. by cursor.next(), previous(), reset() or show():
+     *  to the vertical center of the view (smoothly, or at once over a long distance), or to the horizontal center
+     *  with renderSingleHorizontalStaffline. Default off. This also scrolls while the cursor is still in view,
+     *  and only for cursors that have `follow: true` in their cursorsOptions (the standard cursor has).
+     *  Can also be set by osmd.FollowCursor.
+     */
     followCursor?: boolean;
     /** Broad Parameters like compact or preview mode.
      * Also try "compacttight", which is like compact but also reduces margins.
@@ -116,7 +122,7 @@ export interface IOSMDOptions {
     drawComposer?: boolean;
     /** Whether to draw the lyricist's name, if given (top left of the score). */
     drawLyricist?: boolean;
-    /** Whether to draw metronome marks. Default true. (currently OSMD can only draw one at the beginning) */
+    /** Whether to draw metronome marks (e.g. quarter = 120), at each place the score has one. Default true. */
     drawMetronomeMarks?: boolean;
     /** Whether to draw part (instrument) names. Setting this to false also disables drawPartAbbreviations,
      *  unless explicitly enabled (drawPartNames: false, drawPartAbbreviations: true).
@@ -140,7 +146,7 @@ export interface IOSMDOptions {
     measureNumberInterval?: number;
     /** Whether to read measure numbers from the "number" attribute in the xml file as opposed to defaulting to start at measure 1. Default true. */
     useXMLMeasureNumbers?: boolean;
-    /** Whether to draw fingerings (only left to the note for now). Default true (unless solo part).
+    /** Whether to draw fingerings. Default true. For their position, see fingeringPosition.
      *  Can be turned off and on again after load(), with a render(). Only with fingeringPosition left or right, where
      *  the fingerings are created with the notes, call osmd.updateGraphic() before that render().
      */
@@ -206,8 +212,9 @@ export interface IOSMDOptions {
      *  Example: "#FFFFFF" = white. "#12345600" = transparent.
      *  This can be useful when you want to export an image with e.g. white background color
      * instead of transparent, from a CanvasBackend.
-     *  Note: Using a background color will prevent the cursor from being visible for now
-     * (will be fixed at some point).
+     *  With the SVG backend, this is the CSS background-color of each page's <svg> element:
+     * no background rectangle is drawn into the SVG.
+     *  The cursor stays visible: cursor.show() puts it in front of the page instead of behind it.
      */
     pageBackgroundColor?: string;
     /** This makes OSMD render on one single horizontal (staff-)line.
@@ -288,7 +295,7 @@ export interface IOSMDOptions {
      *  IF this value is -1, it will render all percussion clef voices on the single line.
      */
     percussionForceVoicesOneLineCutoff?: number;
-    /** The softmaxFactor for Vexflow's formatter. Default is 5, default in Vexflow is 100 (voice.js).
+    /** The softmaxFactor for Vexflow's formatter. Default is 15, default in Vexflow is 100 (voice.js).
      *  Lowering this factor makes the spacing between individual notes smaller (especially from one half note to the next).
      *  So, to get more compact scores, try lowering this value (or set osmd.zoom, which simply scales),
      *  or try 100 for a more expansive layout.
