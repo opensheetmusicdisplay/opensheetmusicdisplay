@@ -194,7 +194,7 @@ function chordSymbolsOnOneNote(step: string, octave: number, placement: string):
 
 describe("Chord symbols on one note", () => {
     // The chord symbols of a note are placed next to each other, so they should all have the same distance to the notes,
-    //   ChordSymbolYOffset (+ 0.1). The second and third one used to be placed with ChordSymbolYPadding (default 0) instead,
+    //   ChordSymbolYOffset (+ 0.1). The second and third one used to be placed with ChordSymbolYPadding (default 0, a rule removed since) instead,
     //   0.2 closer to the staff than the first one by default, and not moved by ChordSymbolYOffset.
     for (const placement of ["above", "below"]) {
         it(`places the chord symbols of a note at the same height, ${placement} the staff`, () => {
