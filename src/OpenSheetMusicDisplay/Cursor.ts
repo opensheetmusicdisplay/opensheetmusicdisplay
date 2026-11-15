@@ -283,9 +283,10 @@ export class Cursor {
     this.cursorElement.style.display = "";
   }
 
+  /** Returns the graphical measure of the first visible staff at the given (zero-based source) measure index. */
   private findVisibleGraphicalMeasure(measureIndex: number): GraphicalMeasure {
     for (let i: number = 0; i < this.graphic.NumberOfStaves; i++) {
-      const measure: GraphicalMeasure = this.graphic.findGraphicalMeasure(this.iterator.CurrentMeasureIndex, i);
+      const measure: GraphicalMeasure = this.graphic.findGraphicalMeasure(measureIndex, i);
       if (measure?.ParentStaff.isVisible()) {
         return measure;
       }
