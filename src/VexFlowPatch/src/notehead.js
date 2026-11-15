@@ -97,7 +97,11 @@ export class NoteHead extends Note {
     this.y_shift_ledger_rest = 0;
     this.x_shift = head_options.x_shift || 0;
     // Swap out the glyph with ledger lines
-    if (this.glyph.rest && (this.line > 5 || this.line < 0)) {
+    // VexFlowPatch: line 0 is the first ledger line below the staff, where a half or whole rest needs its line too
+    //   (was: this.line < 0 for all rests. The shorter rests keep that limit: isLedgerLinedRest also stops
+    //   StaveNote.format() from moving a rest again, which would move them.)
+    const isHalfOrWholeRest = this.duration === 'h' || this.duration === 'w';
+    if (this.glyph.rest && (this.line > 5 || this.line < (isHalfOrWholeRest ? 1 : 0))) {
       this.isLedgerLinedRest = true;
       if (this.duration === 'h') {
         head_options.custom_glyph_code = 'rhl';
@@ -106,7 +110,8 @@ export class NoteHead extends Note {
       } else if (this.duration === 'w') {
         head_options.custom_glyph_code = 'rwl';
         this.x_shift_ledger_rest -= 4;
-        this.y_shift_ledger_rest = -5; // was too far down
+        // VexFlowPatch: no y shift (was -5, half a line distance up, for the half lines whole rests used to be moved to):
+        //   on a whole line, the glyph's line is at the height of a note's ledger line
       }
     }
     if (head_options.custom_glyph_code) {
