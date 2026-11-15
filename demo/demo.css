@@ -418,6 +418,15 @@ select {
     margin-left: 0;
   }
 
+  /* and for the error row (also a body-level sibling), whose left part the sidebar covered otherwise */
+  #errorContainer{
+    margin-left: var(--desktop-divControls-width);
+    transition: margin-left 0.4s ease;
+  }
+  body.controls-collapsed #errorContainer{
+    margin-left: 0;
+  }
+
   /* minimized: slide the sidebar (and its toggle button) off to the left. index.js then frees the
      reserved width and re-renders once, when the slide finishes (collapse) / right away (expand). */
   body.controls-collapsed #divControls{

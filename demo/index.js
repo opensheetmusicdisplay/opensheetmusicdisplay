@@ -938,6 +938,9 @@ import { IntervalTransposeCalculator } from '../src/Plugins/Transpose/IntervalTr
                 // This gives you access to the osmd object in the console. Do not use in production code
                 window.osmd = openSheetMusicDisplay;
                 openSheetMusicDisplay.zoom = zoom;
+                if (transpose) {
+                    transpose.value = 0; // the new sheet isn't transposed (Sheet.Transpose is 0): don't keep showing the last sample's value
+                }
                 // openSheetMusicDisplay.Sheet.Instruments[0].Staves[1].Visible = false;
                 //openSheetMusicDisplay.Sheet.Transpose = 3; // transpose by 3 halftones up: the next render() applies it
 
@@ -955,14 +958,14 @@ import { IntervalTransposeCalculator } from '../src/Plugins/Transpose/IntervalTr
                 }
                 renderBraille(); // no-op (clears the output) unless the braille display is enabled
             },
-            function (e) {
-                errorLoadingOrRenderingSheet(e, "rendering");
+            function (e) { // load() was rejected
+                errorLoadingOrRenderingSheet(e, "loading");
             }
         ).then(
             function () {
                 return onLoadingEnd(isCustom);
-            }, function (e) {
-                errorLoadingOrRenderingSheet(e, "loading");
+            }, function (e) { // the handler above threw after a successful load(), e.g. render()
+                errorLoadingOrRenderingSheet(e, "rendering");
                 onLoadingEnd(isCustom);
             }
         );
@@ -1097,11 +1100,21 @@ import { IntervalTransposeCalculator } from '../src/Plugins/Transpose/IntervalTr
         }
     }
 
+    /**
+     * Reports an error of load() or render(): in the error row above the score, and with its stack trace in the console.
+     * An aborted load (another sample was selected before this one had loaded) is not an error and isn't reported.
+     * @param e the error
+     * @param loadingOrRenderingString "loading" or "rendering": the step that failed
+     */
     function errorLoadingOrRenderingSheet(e, loadingOrRenderingString) {
+        if (e && e.name === "AbortError") {
+            return;
+        }
         var errorString = "Error " + loadingOrRenderingString + " sheet: " + e;
+        error(errorString);
         // Always giving a StackTrace might give us more and better error reports.
         // TODO for a release, StackTrace control could be reenabled
-        errorString += "\n" + "StackTrace: \n" + e.stack;
+        errorString += "\n" + "StackTrace: \n" + (e && e.stack);
         // }
         console.warn(errorString);
     }
@@ -1145,6 +1158,10 @@ import { IntervalTransposeCalculator } from '../src/Plugins/Transpose/IntervalTr
         }, 0);
     }
 
+    /**
+     * Shows a message in the error row above the score, or hides the row.
+     * @param errString the message. Without one, the row is hidden.
+     */
     function error(errString) {
         if (!errString) {
             error_tr.style.display = "none";
@@ -1152,7 +1169,6 @@ import { IntervalTransposeCalculator } from '../src/Plugins/Transpose/IntervalTr
             console.log("[OSMD demo] error: " + errString)
             err.textContent = errString;
             error_tr.style.display = "";
-            canvas.width = canvas.height = 0;
             enable();
         }
     }
@@ -1266,10 +1282,11 @@ import { IntervalTransposeCalculator } from '../src/Plugins/Transpose/IntervalTr
             exportMode = "image";
         }
         if (openSheetMusicDisplay.backendType !== BackendType.SVG) {
-            console.log("[OSMD] createPdf(): Warning: createPdf is only supported for SVG backend for now, not for Canvas." +
-                " Please use osmd.setOptions({backendType: SVG}).");
+            error("Create PDF needs the SVG backend, the score is drawn with the Canvas backend." +
+                " Open the demo without backendType=canvas in the URL (in your own app: osmd.setOptions({backend: \"svg\"}), then render()).");
             return;
         }
+        error(); // hide a message of an earlier attempt
 
         if (pdfName === undefined) {
             pdfName = openSheetMusicDisplay.sheet.FullNameString + ".pdf";
