@@ -474,11 +474,17 @@ export class EngravingRules {
      * Currently not recommended because rests are now positioned to avoid collisions with notes. */
     public AlignRests: AlignRestOption; // 0 = false, 1 = true, 2 = auto
     public RestCollisionYPadding: number;
-    /** The minimum distance between a half or whole rest of one of several voices in a staff and the notes of the other voices
-     *  that it is moved away from, in units of the distance between two staff lines. The rest moves by whole lines
-     *  (it sits on or hangs from a staff line or ledger line), so the distance can be up to one unit larger. Default 0.5.
+    /** How far a rest of one of several voices in a 5-line staff moves from the middle of the staff while another voice is present,
+     *  in units of the distance between two staff lines: up for voices 1 and 5, down for the others (Behind Bars p. 36).
+     *  Rounded to whole units, so the rest keeps its position relative to the staff lines. 1 puts a half rest of voice 1 on the
+     *  fourth line and of voice 2 on the second line. Default 1.
      */
-    public HalfAndWholeRestMinDistanceToNotes: number;
+    public MultiVoiceRestOffset: number;
+    /** The minimum distance between a rest of one of several voices in a 5-line staff and the notes of the other voices
+     *  that it is moved away from, in units of the distance between two staff lines. The rest moves by whole units
+     *  (e.g. a half rest sits on a staff line or ledger line), so the distance can be up to one unit larger. Default 0.5.
+     */
+    public MultiVoiceRestMinDistanceToNotes: number;
     public FillEmptyMeasuresWithWholeRest: FillEmptyMeasuresWithWholeRests | number;
     /** Draw a staff's measure that only has rests of one voice, filling the measure, as one whole-measure rest. See OSMDOptions. */
     public DrawRestOnlyMeasuresAsWholeMeasureRest: boolean;
@@ -1155,7 +1161,8 @@ export class EngravingRules {
         // Render options (whether to render specific or invisible elements)
         this.AlignRests = AlignRestOption.Never; // 0 = false, 1 = true, 2 = auto
         this.RestCollisionYPadding = 0.0; // 1.0 = half distance between staff lines (e.g. E to F). will be rounded to whole numbers.
-        this.HalfAndWholeRestMinDistanceToNotes = 0.5;
+        this.MultiVoiceRestOffset = 1;
+        this.MultiVoiceRestMinDistanceToNotes = 0.5;
         this.FillEmptyMeasuresWithWholeRest = FillEmptyMeasuresWithWholeRests.No;
         this.DrawRestOnlyMeasuresAsWholeMeasureRest = false;
         this.ArpeggiosGoAcrossVoices = false; // safe option, as otherwise arpeggios will always go across all voices in Vexflow, which is often unwanted
