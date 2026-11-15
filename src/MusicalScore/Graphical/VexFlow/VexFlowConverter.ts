@@ -327,6 +327,73 @@ export class VexFlowConverter {
     }
 
     /**
+     * Whether a note sounds in the middle half of its measure (from a quarter to three quarters of the measure's duration),
+     * where a rest centered in the measure is drawn. A note at the start or end of the measure is too far from the rest
+     * to collide with it.
+     * @param note the note
+     * @param measureDuration the duration of the measure, in whole notes
+     * @returns true if the note starts or still sounds there
+     */
+    private static soundsInMiddleOfMeasure(note: GraphicalNote, measureDuration: number): boolean {
+        const start: number = note.sourceNote.ParentVoiceEntry.Timestamp.RealValue;
+        const end: number = start + note.sourceNote.Length.RealValue;
+        return start < measureDuration * 0.75 && end > measureDuration * 0.25;
+    }
+
+    /** The middle line of a 5-line staff in VexFlow's line numbers (bottom line 1, top line 5, the spaces between at .5),
+     *  where the key "b/4" places a rest (rests get no clef).
+     */
+    private static readonly RestMiddleLine: number = 3;
+
+    /**
+     * The line for a half or whole rest of one of several voices in a 5-line staff, next to notes of the other voices.
+     * A half rest sits on a line and a whole rest hangs from one, so it is always placed at a line: off one, it couldn't be
+     * told apart from the other rest. Like in Behind Bars (pp. 36-37), the rest of an upper voice stays above the middle line,
+     * on the fourth line (as if the only voice, a whole rest hangs from that line), and the rest of a lower voice below it,
+     * on the second line. It only moves further out, line by line, until it is clear of the other voices' notes
+     * (EngravingRules.HalfAndWholeRestMinDistanceToNotes), and past the outer staff line it gets a ledger line (see NoteHead in
+     * VexFlowPatch).
+     * @param isWholeRest whether it is a whole rest (hangs from the line) or else a half rest (sits on it)
+     * @param isUpperVoiceRest whether the rest goes above the other voices' notes, or else below them
+     * @param notesToAvoid the visible notes of the other voices that the rest is next to
+     * @param rules the engraving rules
+     * @returns the line in VexFlow's line numbers: 1 is the bottom line, 5 the top line, 0 the first ledger line below the staff
+     */
+    private static lineOfHalfOrWholeRest(isWholeRest: boolean, isUpperVoiceRest: boolean, notesToAvoid: GraphicalNote[],
+        rules: EngravingRules): number {
+        const direction: number = isUpperVoiceRest ? 1 : -1;
+        const stemTowardsRest: StemDirectionType = isUpperVoiceRest ? StemDirectionType.Up : StemDirectionType.Down;
+        const minDistance: number = rules.HalfAndWholeRestMinDistanceToNotes + Math.ceil(rules.RestCollisionYPadding) * 0.5;
+        const noteheadHalfHeight: number = 0.5;
+        const stemLength: number = 3.5; // VexFlow's default (Stem.HEIGHT), in line distances
+        // how far the rest's block reaches from its line towards the notes: the block is half a line distance high,
+        //   above the line of a half rest and below the line of a whole rest
+        const restExtentTowardsNotes: number = isWholeRest === isUpperVoiceRest ? 0.5 : 0;
+        // the rest's line on its side of the middle line, without notes in the way
+        let line: number = VexFlowConverter.RestMiddleLine + direction;
+        for (const note of notesToAvoid) {
+            const vfpitch: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
+            if (!vfpitch) {
+                continue;
+            }
+            const noteLine: number = VF.keyProperties(vfpitch[0], VexFlowConverter.Clef(vfpitch[2]).type, {}).line;
+            // unfortunately, we don't have functional note bounding boxes at this point,
+            //   so we have to infer the note positions and sizes manually.
+            let noteExtent: number = noteheadHalfHeight;
+            const voiceEntry: VoiceEntry = note.parentVoiceEntry.parentVoiceEntry;
+            if (voiceEntry.WantedStemDirection === stemTowardsRest) {
+                noteExtent = stemLength;
+                if (note.sourceNote.NoteBeam) {
+                    noteExtent += 1; // the stems of beamed notes can be longer, see the note on beams in StaveNote()
+                }
+            }
+            const nearestLine: number = noteLine + direction * (noteExtent + minDistance + restExtentTowardsNotes);
+            line = isUpperVoiceRest ? Math.max(line, Math.ceil(nearestLine)) : Math.min(line, Math.floor(nearestLine));
+        }
+        return line;
+    }
+
+    /**
      * Convert a GraphicalVoiceEntry to a VexFlow StaveNote
      * @param gve the GraphicalVoiceEntry which can hold a note or a chord on the staff belonging to one voice
      * @returns {VF.StaveNote}
@@ -366,6 +433,7 @@ export class VexFlowConverter {
         let alignCenter: boolean = false;
         let xShift: number = 0;
         let isRest: boolean = false;
+        let restStaysOnLine: boolean = false;
         let restYPitch: Pitch;
         for (const note of notes) {
             if (numDots < note.numberOfDots) {
@@ -440,7 +508,21 @@ export class VexFlowConverter {
                 }
                 //If we have more than one visible voice entry, shift the rests so no collision occurs
                 if (note.sourceNote.ParentStaff.Voices.length > 1) {
-                    const staffGves: GraphicalVoiceEntry[] = note.parentVoiceEntry.parentStaffEntry.graphicalVoiceEntries;
+                    let staffGves: GraphicalVoiceEntry[] = note.parentVoiceEntry.parentStaffEntry.graphicalVoiceEntries;
+                    // A half or whole rest is attached to a line: it stays on a staff line or, outside the staff, a ledger line,
+                    //   see lineOfHalfOrWholeRest(). (Staves with another number of lines keep the placement below.)
+                    const restOnLine: boolean = (duration === "h" || duration === "w") &&
+                        gve.parentStaffEntry.parentMeasure.ParentStaff.StafflineCount === 5;
+                    const notesToAvoid: GraphicalNote[] = [];
+                    // A rest centered in the measure is drawn next to the notes in the middle of the measure, not those on its beat.
+                    const avoidsMiddleOfMeasure: boolean = restOnLine && alignCenter;
+                    const measureDuration: number = gve.parentStaffEntry.parentMeasure.parentSourceMeasure.Duration.RealValue;
+                    if (avoidsMiddleOfMeasure) {
+                        staffGves = [];
+                        for (const staffEntry of gve.parentStaffEntry.parentMeasure.staffEntries) {
+                            staffGves.push(...staffEntry.graphicalVoiceEntries);
+                        }
+                    }
                     //Find all visible voice entries (don't want invisible rests/notes causing visible shift)
                     const restVoiceId: number = note.parentVoiceEntry.parentVoiceEntry.ParentVoice.VoiceId;
                     const isUpperVoiceRest: boolean = restVoiceId === 1 || restVoiceId === 5;
@@ -458,6 +540,14 @@ export class VexFlowConverter {
                             //   a line away if it overlaps the note.
                             const noteVoiceId: number = gveNote.parentVoiceEntry.parentVoiceEntry.ParentVoice.VoiceId;
                             if (VexFlowConverter.restMovesTowardsStaffOfVoice(restVoiceId, noteVoiceId, isUpperVoiceRest, numberOfStaves)) {
+                                continue;
+                            }
+                            if (restOnLine) {
+                                // in the measure of a centered rest, its voice can have notes too
+                                if (noteVoiceId !== restVoiceId &&
+                                    (!avoidsMiddleOfMeasure || VexFlowConverter.soundsInMiddleOfMeasure(gveNote, measureDuration))) {
+                                    notesToAvoid.push(gveNote);
+                                }
                                 continue;
                             }
                             // unfortunately, we don't have functional note bounding boxes at this point,
@@ -501,6 +591,12 @@ export class VexFlowConverter {
                                 note.lineShift = linesShift;
                             }
                         }
+                    }
+                    if (notesToAvoid.length > 0) {
+                        keys = ["b/4"]; // the middle line, see VexFlowConverter.RestMiddleLine
+                        note.lineShift = VexFlowConverter.lineOfHalfOrWholeRest(
+                            duration === "w", isUpperVoiceRest, notesToAvoid, rules) - VexFlowConverter.RestMiddleLine;
+                        restStaysOnLine = true;
                     }
                     if (maxHalftone > 0) {
                         let octaveOffset: number = 3;
@@ -703,6 +799,14 @@ export class VexFlowConverter {
         const lineShift: number = gve.notes[0].lineShift;
         if (lineShift !== 0) {
             vfnote.getKeyProps()[0].line += lineShift;
+        }
+        if (restStaysOnLine) {
+            // The line is already clear of the other voices' notes. StaveNote.format() takes the voice added first for the upper one,
+            //   and so e.g. moved voice 1's rest down, line by line with each format, below cross-staff notes of voice 5.
+            (vfnote as any).shiftRestVerticalDisabled = true;
+            // Recreate the notehead for the line: it is created with the note, before the line shift above, which so only
+            //   takes effect if something else recreates the notehead later. (This also selects the rest glyph with a ledger line.)
+            (vfnote as any).setKeyLine(0, vfnote.getKeyProps()[0].line);
         }
         // check for slash noteheads (among other noteheads)
         if (notes.length > 1) {
