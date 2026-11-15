@@ -461,7 +461,6 @@ export abstract class MusicSheetCalculator {
         // calculate max measure length for maximum zoom in.
 
         // let minLength: number = 0; // currently unused
-        // const maxInstructionsLength: number = this.rules.MaxInstructionsConstValue;
         if (this.graphicalMusicSheet.MeasureList.length > 0) {
             /** list of vertically ordered measures belonging to one bar */
             // let measures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[0];
