@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <work><work-title>Technical arrows</work-title></work>
+  <part-list>
+    <score-part id="P1"><part-name>Guitar</part-name></score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>
+      <note>
+        <unpitched><display-step>B</display-step><display-octave>4</display-octave></unpitched>
+        <duration>1</duration><voice>1</voice><type>quarter</type><notehead>x</notehead>
+        <notations><technical>
+          <arrow placement="above" smufl="guitarStrumDown"><arrow-direction>down</arrow-direction></arrow>
+        </technical></notations>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type>
+        <notations><technical><arrow placement="above"><arrow-direction>up</arrow-direction></arrow></technical></notations>
+      </note>
+      <note>
+        <pitch><step>D</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type>
+        <notations><technical><arrow placement="above"><arrow-direction>left</arrow-direction></arrow></technical></notations>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type>
+        <notations><technical><arrow placement="above"><arrow-direction>right</arrow-direction></arrow></technical></notations>
+      </note>
+    </measure>
+    <measure number="2">
+      <note>
+        <pitch><step>F</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type>
+        <notations><technical><arrow placement="above"><arrow-direction>northwest</arrow-direction></arrow></technical></notations>
+      </note>
+      <note>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type>
+        <notations><technical><arrow placement="above"><arrow-direction>northeast</arrow-direction></arrow></technical></notations>
+      </note>
+      <note>
+        <pitch><step>A</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type>
+        <notations><technical><arrow placement="above"><arrow-direction>southeast</arrow-direction></arrow></technical></notations>
+      </note>
+      <note>
+        <pitch><step>B</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type>
+        <notations><technical><arrow placement="above"><arrow-direction>southwest</arrow-direction></arrow></technical></notations>
+      </note>
+    </measure>
+    <measure number="3">
+      <note>
+        <pitch><step>C</step><octave>5</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type>
+        <notations><technical><arrow placement="above"><arrow-direction>left right</arrow-direction></arrow></technical></notations>
+      </note>
+      <note>
+        <pitch><step>D</step><octave>5</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type>
+        <notations><technical><arrow placement="above"><arrow-direction>up down</arrow-direction></arrow></technical></notations>
+      </note>
+      <note>
+        <pitch><step>E</step><octave>5</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type>
+        <notations><technical><arrow placement="above"><arrow-direction>northwest southeast</arrow-direction></arrow></technical></notations>
+      </note>
+      <note>
+        <pitch><step>F</step><octave>5</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type>
+        <notations><technical><arrow placement="above"><arrow-direction>northeast southwest</arrow-direction></arrow></technical></notations>
+      </note>
+    </measure>
+    <measure number="4">
+      <note>
+        <pitch><step>G</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type>
+        <notations><technical><arrow placement="above"><circular-arrow>clockwise</circular-arrow></arrow></technical></notations>
+      </note>
+      <note>
+        <pitch><step>A</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type>
+        <notations><technical><arrow placement="above"><circular-arrow>anticlockwise</circular-arrow></arrow></technical></notations>
+      </note>
+      <note>
+        <pitch><step>B</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type>
+        <notations><technical><arrow placement="below"><arrow-direction>down</arrow-direction></arrow></technical></notations>
+      </note>
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>1</duration><voice>1</voice><type>quarter</type>
+        <notations><technical><arrow placement="above"><arrow-direction>other</arrow-direction></arrow></technical></notations>
+      </note>
+    </measure>
+    <measure number="5">
+      <note>
+        <pitch><step>C</step><octave>4</octave></pitch>
+        <duration>4</duration><voice>1</voice><type>whole</type>
+      </note>
+      <note>
+        <chord/>
+        <pitch><step>E</step><octave>4</octave></pitch>
+        <duration>4</duration><voice>1</voice><type>whole</type>
+        <notations><technical><arrow placement="above"><arrow-direction>up</arrow-direction></arrow></technical></notations>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

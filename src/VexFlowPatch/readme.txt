@@ -199,6 +199,13 @@ preFormat(): add the x_shift of a note moved right (e.g. staggered beside anothe
   the context's extraRightPx, so that the spacing makes room for it: the next note doesn't run into it, and a tie from it
   keeps its length
 
+technicalarrow.js (custom addition):
+MusicXML <technical><arrow>: a directional arrow (arrow-direction, including the four double-ended values)
+  or a circular arrow (circular-clockwise / circular-anticlockwise). A shaft and a filled head, placed like an
+  articulation outside the staff. Guitar down-strums from Dorico are <arrow-direction>down</arrow-direction>
+  with placement above. Formatted after articulations, so an arrow stacks beyond the marks already there.
+draw(): group class vf-technicalarrow. getExtent() is the box draw() uses, so a slur can keep clear of it.
+
 timesignature.js (fixed vexflow 4):
 open group to get SVG group+class for key signature
 

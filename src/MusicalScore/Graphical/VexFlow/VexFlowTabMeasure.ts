@@ -185,6 +185,8 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
         this.createInStaffInstructionVoice();
         //this.createArticulations();
         //this.createOrnaments();
+        this.createTechnicalArrows();
+        this.createTechnicalArrows();
     }
 
     /** Whether a visible single-note bend has MuseScore's hidden-fret endpoint at the bent pitch. */

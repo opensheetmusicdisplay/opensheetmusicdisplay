@@ -27,6 +27,7 @@ import { Notehead, NoteHeadShape } from "../../VoiceData/Notehead";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { EngravingRules } from "../EngravingRules";
 import { Note, TremoloBetweenNotes, TremoloInfo } from "../../../MusicalScore/VoiceData/Note";
+import { TechnicalArrow } from "../../VoiceData/TechnicalArrow";
 import StaveNote = VF.StaveNote;
 import { ArpeggioType } from "../../VoiceData/Arpeggio";
 import { TabNote } from "../../VoiceData/TabNote";
@@ -1200,6 +1201,32 @@ export class VexFlowConverter {
             if (vfArt) {
                 vfArt.setPosition(vfArtPosition);
                 (vfnote as StaveNote).addModifier(0, vfArt);
+            }
+        }
+    }
+
+    /** `<technical><arrow>` on each note of the voice entry. A chord can carry an arrow on one head. */
+    public static generateTechnicalArrows(gve: GraphicalVoiceEntry): void {
+        const TechnicalArrowModifier: new (direction: string) => VF.Modifier = (VF as any).TechnicalArrow;
+        if (!TechnicalArrowModifier) {
+            return;
+        }
+        for (const gNote of gve.notes) {
+            const arrows: TechnicalArrow[] = gNote.sourceNote?.TechnicalArrows;
+            if (!arrows?.length) {
+                continue;
+            }
+            const vfnote: [VF.StemmableNote, number] = (gNote as VexFlowGraphicalNote).vfnote;
+            if (!vfnote || vfnote[0].getAttribute("type") === "GhostNote") {
+                continue;
+            }
+            for (const arrow of arrows) {
+                const spec: string = arrow.circular ? "circular-" + arrow.circular : arrow.direction;
+                const modifier: VF.Modifier = new TechnicalArrowModifier(spec);
+                modifier.setPosition(arrow.placement === PlacementEnum.Below
+                    ? VF.Modifier.Position.BELOW
+                    : VF.Modifier.Position.ABOVE);
+                (vfnote[0] as StaveNote).addModifier(vfnote[1], modifier);
             }
         }
     }
