@@ -31,7 +31,9 @@ export class VexFlowMusicSystem extends MusicSystem {
         this.boundingBox.XBordersHaveBeenSet = true;
 
         const topSkyBottomLineCalculator: SkyBottomLineCalculator = this.staffLines[0].SkyBottomLineCalculator;
-        const top: number = topSkyBottomLineCalculator.getSkyLineMin();
+        // also the first staffline's top border, which includes repetition instructions that reserve no skyline space
+        //   (see VexFlowMusicSheetCalculator.updateStaffLineBorders()): the first system of a page is placed by this border
+        const top: number = Math.min(topSkyBottomLineCalculator.getSkyLineMin(), this.staffLines[0].PositionAndShape.BorderTop);
         this.boundingBox.BorderTop = top;
         this.boundingBox.BorderMarginTop = top;
 

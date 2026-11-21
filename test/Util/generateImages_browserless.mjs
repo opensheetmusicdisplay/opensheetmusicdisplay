@@ -766,6 +766,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestPartAbbreviationsPartlyMissing = sampleFilename.includes("test_part_abbreviations_partly_missing");
     const isTestPartAbbreviationSingleStaff = sampleFilename.includes("test_part_abbreviation_single_staff");
     const isTestPartGroupNames = sampleFilename.includes("test_group_name");
+    const isTestComposerAboveFine = sampleFilename.startsWith("test_composer_above_fine_end_of_first_system");
     // a courtesy key signature at a system break in the alto and bass clef, see test_key_signature_courtesy_clefs: systems as in the file
     const isTestKeySignatureCourtesyClefs = sampleFilename.startsWith("test_key_signature_courtesy_clefs");
     // courtesy key and time signatures of different widths at system breaks, see test_courtesy_signatures_staff_ends: systems as in the file
@@ -835,7 +836,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
             isTestLyricsDashContinuedInNextSystem || isTestTabTiesAcrossSystemBreaks || isTestTabChordSlidesAcrossSystemBreaks ||
             isTestHiddenStaffClefKeyTime ||
             isTestMultipleRestMeasuresXmlBreaks || isTestPedalSignsBelowBeams || isTestPedalLineAndSign || isTestPedalResumeDiscontinue ||
-            isTestPedalAtWholeMeasureRest,
+            isTestPedalAtWholeMeasureRest || isTestComposerAboveFine,
         newSystemFromNewPageInXML: isTestPageBreakImpliesSystemBreak,
         newPageFromXML: isFunctionTestSystemAndPageBreaks || isTestMultipleRestMeasuresXmlBreaks,
         pageBackgroundColor: "#FFFFFF", // reset by drawingparameters default

@@ -1179,6 +1179,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   protected updateStaffLineBorders(staffLine: StaffLine): void {
     staffLine.SkyBottomLineCalculator.updateStaffLineBorders();
+    // Repetition instructions in their default position reserve no skyline space (see placeWordRepetitionInSkyline()),
+    //   so that they don't increase the distance between systems. The top border includes them though:
+    //   the first system of a page is placed below the title by its top border (VexFlowMusicSystem.calculateBorders()),
+    //   and the composer and lyricist above it (calculatePageLabels()), so the composer was drawn over e.g. a "Fine"
+    //   at the end of the first system.
+    const shape: BoundingBox = staffLine.PositionAndShape;
+    for (const box of this.placedWordRepetitionBoxes.get(staffLine) ?? []) {
+      shape.BorderTop = Math.min(shape.BorderTop, box.top);
+      shape.BorderMarginTop = Math.min(shape.BorderMarginTop, box.top);
+    }
   }
 
   protected graphicalMeasureCreatedCalculations(measure: GraphicalMeasure): void {
