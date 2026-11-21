@@ -762,6 +762,14 @@ export abstract class MusicSheetCalculator {
     }
 
     /**
+     * Lays out a tie into a note that ends a tie without a start note (see Note.TieStopWithoutStartDirection).
+     * @param endNote The note the tie ends at.
+     */
+    protected layoutTieWithoutStartNote(endNote: GraphicalNote): void {
+        throw new Error(this.abstractNotImplementedErrorMessage);
+    }
+
+    /**
      * Calculate the Lyrics YPositions for a single [[StaffLine]].
      * @param staffLine
      * @param lyricVersesNumber
@@ -4637,6 +4645,15 @@ export abstract class MusicSheetCalculator {
                                     graphicalTie.EndNote.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentStaffLine
                                 );
                                 this.layoutGraphicalTie(graphicalTie, tieIsAtSystemBreak, measure.ParentStaff.isTab);
+                            }
+                        }
+                        if (!measure.ParentStaff.isTab) {
+                            for (const graphicalVoiceEntry of staffEntry.graphicalVoiceEntries) {
+                                for (const graphicalNote of graphicalVoiceEntry.notes) {
+                                    if (graphicalNote.sourceNote.TieStopWithoutStartDirection !== undefined) {
+                                        this.layoutTieWithoutStartNote(graphicalNote);
+                                    }
+                                }
                             }
                         }
                     }

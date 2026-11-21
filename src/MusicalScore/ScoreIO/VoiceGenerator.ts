@@ -1249,6 +1249,9 @@ export class VoiceGenerator {
               if (tie) {
                 tie.AddNote(this.currentNote);
                 delete this.openTieDict[tieNumber];
+              } else if (tieType === TieTypes.SIMPLE) {
+                // no start note, e.g. at the start of a second ending, tied from the note before the first ending (#713)
+                this.currentNote.TieStopWithoutStartDirection = tieDirection;
               }
             }
           } catch (err) {
