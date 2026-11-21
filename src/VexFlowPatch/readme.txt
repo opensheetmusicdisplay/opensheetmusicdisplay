@@ -170,6 +170,10 @@ able to give an id+class to the stem node in SVG
 stemmablenote.js (custom addition, see stavenote.js):
 Add manual flag rendering variable so we can choose not to render flags if notes are sharing a stem.
 
+strokes.js (custom fix):
+format(): make room for a displaced notehead of any key of the chord, not only of the stroke's key (OSMD: the lowest),
+  and don't add it again when accidentals made room for it already (OSMD #794)
+
 svgcontext.js (custom addition, probably not necessary for vexflow 4):
 able to add extra attributes (like svg node id) to a stroke (e.g. stem)
 fix rect() always using black color, ignoring attributes.stroke (ctx strokeStlye) -> fix defaultColorMusic ignored
