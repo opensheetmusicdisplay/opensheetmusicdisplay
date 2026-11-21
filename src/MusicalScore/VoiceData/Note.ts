@@ -14,6 +14,7 @@ import {NoteType} from "./NoteType";
 import { SourceMeasure } from "./SourceMeasure";
 import { TechnicalInstruction } from "./Instructions";
 import { Glissando } from "../../MusicalScore/VoiceData/Glissando";
+import { PlacementEnum } from "./Expressions/AbstractExpression";
 
 /**
  * Represents a single pitch with a duration (length)
@@ -224,6 +225,12 @@ export class Note {
     public get NoteTies(): readonly Tie[] {
         return this.noteTies;
     }
+    /** If the note ends a tie that has no start note, e.g. the first note of a second ending (volta),
+     *  tied from the note before the first ending (#713): the direction of that tie, given in the MusicXML
+     *  (PlacementEnum.NotYetDefined if none). Undefined if there is no such tie.
+     *  The tie is drawn into the note from the left, like the part of a tie continued in the next system.
+     */
+    public TieStopWithoutStartDirection: PlacementEnum;
     public get NoteSlurs(): Slur[] {
         return this.slurs;
     }

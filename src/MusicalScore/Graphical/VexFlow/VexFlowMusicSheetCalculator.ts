@@ -1379,6 +1379,26 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     return vfTie;
   }
 
+  /**
+   * Lays out a tie into a note that ends a tie without a start note: from the start of the measure,
+   * like the part of a tie continued in the next system (see layoutGraphicalTie()).
+   * @param endNote The note the tie ends at.
+   */
+  protected layoutTieWithoutStartNote(endNote: GraphicalNote): void {
+    const vfEndNote: VF.StemmableNote = (endNote as VexFlowGraphicalNote).vfnote?.[0];
+    if (!vfEndNote) {
+      return;
+    }
+    const vfTie: VF.StaveTie = this.createStaveTie(
+      {
+        last_indices: [(endNote as VexFlowGraphicalNote).vfnote[1]],
+        last_note: vfEndNote
+      },
+      endNote.sourceNote.TieStopWithoutStartDirection
+    );
+    (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure).vfTies.push(vfTie);
+  }
+
   protected calculateDynamicExpressionsForMultiExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
     if (measureIndex < this.rules.MinMeasureToDrawIndex || measureIndex > this.rules.MaxMeasureToDrawIndex) {
       return;
