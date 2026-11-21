@@ -11,6 +11,7 @@
     "lint": "npm run eslint",
     "pretest": "npm run prebuild",
     "test": "tsc --noEmit -p tsconfig.json && vitest run",
+    "test:package": "node ./test/Package/packageTest.mjs",
     "pretest:watch": "npm run prebuild",
     "test:watch": "vitest --browser.headless=false",
     "prebuild": "npm run prebuildVexflow",
@@ -75,9 +76,7 @@
   "dependencies": {
     "@types/vexflow": "^1.2.38",
     "jszip": "3.10.2",
-    "loglevel": "^1.8.0",
-    "typescript-collections": "^1.3.3",
-    "vexflow": "1.2.93"
+    "typescript-collections": "^1.3.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -95,6 +94,7 @@
     "husky": "^9.1.7",
     "jsdom": "^31.0.0",
     "jspdf": "^4.2.1",
+    "loglevel": "^1.8.0",
     "ncp": "^2.0.0",
     "playwright": "^1.64.1",
     "svg2pdf.js": "^2.7.0",
@@ -102,6 +102,7 @@
     "typedoc": "^0.28.19",
     "typescript": "6.0.3",
     "typescript-eslint": "^8.59.2",
+    "vexflow": "1.2.93",
     "vitest": "^5.0.5",
     "webpack": "^5.112.2",
     "webpack-cli": "^7.3.1",
