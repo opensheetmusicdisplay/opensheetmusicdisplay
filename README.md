@@ -78,6 +78,7 @@ There are however limited editing features like making notes invisible, coloring
 ## How to Use OSMD
 
 * Available as [NPM module](https://www.npmjs.com/package/opensheetmusicdisplay), can be used with plain javascript or module managers like webpack
+* Import it as an ES module or with `require()`, or load it with a script tag: see [Loading OSMD](#loading-osmd) below
 * [Getting Started: Detailed instructions in our Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki/Getting-Started)
 * What's new: [changelog](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/blob/develop/CHANGELOG.md), [releases](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/releases), and our [blog](https://opensheetmusicdisplay.org/blog/) with the highlights of each release
 * Contributing: see [Contributing | Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki/Contributing)
@@ -85,6 +86,35 @@ There are however limited editing features like making notes invisible, coloring
   * [Leave a comment in our Discussions section](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/discussions/950) (especially for questions of understanding)
   * [Browse through our Issues](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues?&q=is%3Aissue)
   * [Open a new issue](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/new/choose) (may be moved to Discussions).
+
+### Loading OSMD
+
+The npm package contains OSMD as an ES module and as a UMD build, both with everything they need (VexFlow etc.) and with TypeScript typings:
+
+```js
+// ES module (build/opensheetmusicdisplay.min.mjs): bundlers like Vite or webpack, Node, TypeScript
+import { OpenSheetMusicDisplay } from "opensheetmusicdisplay";
+
+// CommonJS (build/opensheetmusicdisplay.min.js)
+const { OpenSheetMusicDisplay } = require("opensheetmusicdisplay");
+```
+
+```html
+<!-- script tag: the UMD build sets the global variable opensheetmusicdisplay -->
+<script src="node_modules/opensheetmusicdisplay/build/opensheetmusicdisplay.min.js"></script>
+<script>
+  const osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay("osmdContainer");
+</script>
+
+<!-- or as a module, without a bundler -->
+<script type="module">
+  import { OpenSheetMusicDisplay } from "./node_modules/opensheetmusicdisplay/build/opensheetmusicdisplay.min.mjs";
+</script>
+```
+
+The ES module is not in version 3.0.0 and earlier: there, `import` in Node (without a bundler) only provided a default export: `import osmd from "opensheetmusicdisplay"`, which still works.
+
+Use only one of the two builds in a program. `import` and `require()` load different files, so an app that imports OSMD while one of its CommonJS dependencies requires it gets OSMD twice: two sets of classes (`instanceof` fails between them), two sets of static settings like the log level, and both files in a bundle.
 
 ## Sponsor OSMD and get early access to the audio player and more
 
