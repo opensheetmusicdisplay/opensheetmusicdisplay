@@ -1,8 +1,10 @@
 // Links the PRs in the changelog to /pull/N instead of /issues/N.
 // conventional-changelog links every #N of a commit subject to the issue N, also a "(PR #N)". GitHub redirects such a
 // link to the PR, but it should point there directly. This rewrites the link after "PR", each link of the list after
-// "PRs" (e.g. "PRs [#1](...), [#2](...) and [#3](...)") and "[PR #N](...)", in the whole file.
-// Runs after conventional-changelog in npm run changelog. It only changes "/issues/" to "/pull/" in these links (checked
+// "PRs" (e.g. "PRs [#1](...), [#2](...) and [#3](...)") and "[PR #N](...)", in the whole file. A link whose text and
+// URL have different numbers stays as it is.
+// Runs after conventional-changelog in npm run changelog, before changelog_backtick_tags.mjs (which can exit with 1
+// when tags are left to fix by hand). It only changes "/issues/" to "/pull/" in these links (checked
 // before writing), lists the lines it changed, and changes nothing when run again.
 //
 // Usage: node bin/changelog_pr_links.mjs [CHANGELOG.md]
@@ -12,19 +14,34 @@ import fs from "node:fs";
 const file = process.argv[2] ?? "CHANGELOG.md";
 const text = fs.readFileSync(file, "utf8");
 
-const issueLink = String.raw`\[#(\d+)\]\((https://github\.com/[^/\s]+/[^/\s]+)/issues/\d+\)`;
-// "PR [#N](...)", or "PRs [#N](...), [#M](...) and [#K](...)": the PR links, separated by ", " or " and ".
+// [#N](https://github.com/owner/repo/issues/N), also with an anchor like #issuecomment-123 after the number
+const issueLinkSource = String.raw`\[#(\d+)\]\((https://github\.com/[^/\s)]+/[^/\s)]+)/issues/(\d+)([^\s)]*)\)`;
+const linkSeparator = String.raw`(?:,? and |, )`;
+// "PR [#N](...)", or "PRs [#N](...), [#M](...) and [#K](...)": the PR links.
 // After "PR", only the first link is a PR: in "PR #1653, #657" the PR fixes issue 657.
-const prLinkList = new RegExp(String.raw`\bPR ${issueLink}|\bPRs ${issueLink}(?:(?:, | and )${issueLink})*`, "g");
-const singleIssueLink = new RegExp(issueLink, "g");
+const prLinks = new RegExp(String.raw`\bPR ${issueLinkSource}|\bPRs ${issueLinkSource}(?:${linkSeparator}${issueLinkSource})*`, "g");
+const issueLink = new RegExp(issueLinkSource, "g");
 // "[PR #N](...)"
-const bracketedPrLink = /\[PR #(\d+)\]\((https:\/\/github\.com\/[^/\s]+\/[^/\s]+)\/issues\/\d+\)/g;
+const bracketedPrLink = new RegExp(String.raw`\[PR #(\d+)\]\((https://github\.com/[^/\s)]+/[^/\s)]+)/issues/(\d+)([^\s)]*)\)`, "g");
+
+/**
+ * Returns the link to the PR, or the link unchanged if its text and URL have different numbers.
+ * @param {string} link the whole link, e.g. "[#12](https://github.com/owner/repo/issues/12)"
+ * @param {string} label the text of the link without "#" and the number, e.g. "[" or "[PR "
+ * @param {string} number the number in the link's text
+ * @param {string} repo the URL up to the repository, e.g. "https://github.com/owner/repo"
+ * @param {string} urlNumber the number in the URL
+ * @param {string} anchor what follows the number in the URL, e.g. "#issuecomment-123", or ""
+ */
+function pullLink(link, label, number, repo, urlNumber, anchor) {
+    return number === urlNumber ? `${label}#${number}](${repo}/pull/${number}${anchor})` : link;
+}
 
 const changedLines = [];
 const fixedText = text.split("\n").map((line, index) => {
     const fixedLine = line
-        .replace(prLinkList, list => list.replace(singleIssueLink, (_, number, repo) => `[#${number}](${repo}/pull/${number})`))
-        .replace(bracketedPrLink, (_, number, repo) => `[PR #${number}](${repo}/pull/${number})`);
+        .replace(prLinks, list => list.replace(issueLink, (link, ...groups) => pullLink(link, "[", ...groups)))
+        .replace(bracketedPrLink, (link, ...groups) => pullLink(link, "[PR ", ...groups));
     if (fixedLine !== line) {
         changedLines.push(`${file}:${index + 1}`);
     }
