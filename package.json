@@ -4,6 +4,34 @@
   "description": "An open source JavaScript engine for displaying MusicXML based on VexFlow.",
   "main": "build/opensheetmusicdisplay.min.js",
   "types": "build/dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./build/opensheetmusicdisplay.min.d.mts",
+        "default": "./build/opensheetmusicdisplay.min.mjs"
+      },
+      "require": {
+        "types": "./build/dist/src/index.d.ts",
+        "default": "./build/opensheetmusicdisplay.min.js"
+      }
+    },
+    "./build/dist/*.d.ts": "./build/dist/*.d.ts",
+    "./build/dist/*.js": {
+      "types": "./build/dist/*.d.ts"
+    },
+    "./build/dist/*": {
+      "types": [
+        "./build/dist/*.d.ts",
+        "./build/dist/*/index.d.ts"
+      ]
+    },
+    "./build/*": "./build/*",
+    "./package.json": "./package.json",
+    "./AUTHORS": "./AUTHORS",
+    "./CHANGELOG.md": "./CHANGELOG.md",
+    "./LICENSE": "./LICENSE",
+    "./README.md": "./README.md"
+  },
   "scripts": {
     "docs": "typedoc --out ./build/docs --name OpenSheetMusicDisplay ./src",
     "preeslint": "node -e \"if(parseInt(process.versions.node,10)<22){console.error('Linting (eslint-plugin-jsdoc 65) requires Node >=22.22.2 or 24.15 (you have '+process.versions.node+'). Please upgrade Node. (Node 20 is EOL)');process.exit(1)}\"",
@@ -11,6 +39,7 @@
     "lint": "npm run eslint",
     "pretest": "npm run prebuild",
     "test": "tsc --noEmit -p tsconfig.json && vitest run",
+    "test:package": "node ./test/Package/packageTest.mjs",
     "pretest:watch": "npm run prebuild",
     "test:watch": "vitest --browser.headless=false",
     "prebuild": "npm run prebuildVexflow",
@@ -52,6 +81,9 @@
     "build/dist/src",
     "build/opensheetmusicdisplay.min.js",
     "build/opensheetmusicdisplay.min.js.LICENSE.txt",
+    "build/opensheetmusicdisplay.min.mjs",
+    "build/opensheetmusicdisplay.min.mjs.LICENSE.txt",
+    "build/opensheetmusicdisplay.min.d.mts",
     "AUTHORS",
     "CHANGELOG.md",
     "README.md"

@@ -40,3 +40,7 @@ jobs:
         run: npm test
         env:
           CI: true
+
+      # the npm package (npm pack): ES module, require(), script tag, paths of "exports", typings
+      - name: Test package
+        run: npm run test:package
