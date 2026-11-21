@@ -40,3 +40,7 @@ jobs:
         run: npm test
         env:
           CI: true
+
+      # the npm package (npm pack): its files, require(), script tag, typings, and that "dependencies" are enough
+      - name: Test package
+        run: npm run test:package
