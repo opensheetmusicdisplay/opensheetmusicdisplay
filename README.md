@@ -112,7 +112,7 @@ const { OpenSheetMusicDisplay } = require("opensheetmusicdisplay");
 </script>
 ```
 
-The ES module is available from version 3.0. Before, `import` in Node (without a bundler) only provided a default export: `import osmd from "opensheetmusicdisplay"`, which still works.
+The ES module is not in version 3.0.0 and earlier: there, `import` in Node (without a bundler) only provided a default export: `import osmd from "opensheetmusicdisplay"`, which still works.
 
 Use only one of the two builds in a program. `import` and `require()` load different files, so an app that imports OSMD while one of its CommonJS dependencies requires it gets OSMD twice: two sets of classes (`instanceof` fails between them), two sets of static settings like the log level, and both files in a bundle.
 
