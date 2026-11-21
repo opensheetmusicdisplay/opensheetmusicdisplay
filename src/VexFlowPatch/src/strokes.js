@@ -25,17 +25,23 @@ export class Stroke extends Modifier {
   }
 
   // Arrange strokes inside `ModifierContext`
-  static format(strokes, state) {
+  static format(strokes, state, context) {
     const left_shift = state.left_shift;
     const stroke_spacing = 0;
 
     if (!strokes || strokes.length === 0) return this;
 
+    // VexFlowPatch: Accidental.format() already made room for displaced noteheads (state.left_shift includes it), so the
+    //   stroke doesn't add it again (had a notehead's width of gap between the stroke and the accidentals)
+    const roomMadeByAccidentals = context && (context.getModifiers('accidentals') || []).length > 0;
     const strokeList = strokes.map((stroke) => {
       const note = stroke.getNote();
       if (note instanceof StaveNote) {
-        const { line, displaced } = note.getKeyProps()[stroke.getIndex()];
-        const shift = displaced ? note.getExtraLeftPx() : 0;
+        const { line } = note.getKeyProps()[stroke.getIndex()];
+        // VexFlowPatch: make room for a displaced notehead of any key, like Accidental.format(), not only of the stroke's
+        //   key: OSMD attaches the stroke to the lowest key, and the stroke overlapped a displaced notehead above it (OSMD #794)
+        const displaced = note.getKeyProps().some(props => props.displaced);
+        const shift = displaced && !roomMadeByAccidentals ? note.getExtraLeftPx() : 0;
         return { line, shift, stroke };
       } else {
         const { str: string } = note.getPositions()[stroke.getIndex()];
