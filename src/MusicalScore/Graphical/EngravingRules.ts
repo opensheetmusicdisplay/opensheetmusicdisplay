@@ -265,7 +265,7 @@ export class EngravingRules {
     public TabUseXNoteheadShapeForTabNote: boolean;
     public TabUseXNoteheadAlternativeGlyph: boolean;
     public TabXNoteheadScale: number;
-    /** CSS weight of TAB fret text, e.g. "normal", "bold" or "600". Default "normal" keeps the existing font.
+    /** CSS weight of TAB fret text, e.g. "normal", "bold" or "600". "normal" (the default) and "400" keep the existing font/layout.
      * Applies to main and grace frets and their width measurements, leaving glyph-based X notes and other labels unchanged.
      * Set before loading a score, or call updateGraphic() after changing it. */
     public TabFretFontWeight: string;

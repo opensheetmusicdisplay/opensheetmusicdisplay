@@ -62,6 +62,19 @@ describe("TAB fret font weight", () => {
         expect(getComputedStyle(frets()[0]).fontSize).to.equal("13.3333px");
     });
 
+    it("treats normal and numeric 400 as the same default weight and layout", async () => {
+        await render();
+        const minimumWidths: () => number[] = () => osmd.GraphicSheet.MeasureList.map(row => row[0].minimumStaffEntriesWidth);
+        const original: number[] = minimumWidths();
+        for (const weight of ["400", "normal", " 400 ", " NORMAL "]) {
+            osmd.EngravingRules.TabFretFontWeight = weight;
+            osmd.updateGraphic();
+            osmd.render();
+            check("400");
+            expect(minimumWidths()).to.deep.equal(original);
+        }
+    });
+
     it("uses the selected weight when calculating the measure's minimum layout width", async () => {
         await render("400");
         const regular: number = osmd.GraphicSheet.MeasureList[0][0].minimumStaffEntriesWidth;
@@ -74,7 +87,15 @@ describe("TAB fret font weight", () => {
         osmd.EngravingRules.TabFretFontWeight = "bold";
         osmd.updateGraphic();
         osmd.render();
-        expect(Math.abs(osmd.GraphicSheet.MeasureList[0][0].minimumStaffEntriesWidth - regular)).to.be.greaterThan(0.01);
+        expect(osmd.GraphicSheet.MeasureList[0][0].minimumStaffEntriesWidth).to.be.greaterThan(regular + 0.01);
+    });
+
+    it("keeps drawing weighted frets with a custom measurer that has no optional CSS-font method", async () => {
+        await render("bold");
+        osmd.EngravingRules.TextMeasurer.computeTextWidthInCssFont = undefined;
+        osmd.updateGraphic();
+        osmd.render();
+        check("700");
     });
 
     it("reserves space for consecutive wide frets in a narrow measure", async () => {
