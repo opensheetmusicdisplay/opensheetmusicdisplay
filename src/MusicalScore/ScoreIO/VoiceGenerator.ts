@@ -77,6 +77,12 @@ export class VoiceGenerator {
   /** The tuplet of the chord whose part on another staff continueChordInStaffEntry() created, if its first note is in one: the
    *  part's notes join it, also after the first note stopped it (see handleTimeModificationNode()). */
   private chordPartTuplet: Tuplet;
+  /** The numbers of the slurs that start on the grace notes read since this voice's last main note. Vexflow draws those, from
+   *  the grace notes to their main note (see VoiceEntry.GraceSlur), so their start isn't read. A stop of one of these numbers
+   *  on a later grace note of the group ends such a slur, so it isn't read either: it would end no open slur and wait as the
+   *  end of a cross-staff slur, which another staff's slur with the same number, starting in the measure, would then take
+   *  (test_slur_grace_notes_number_of_other_staff.musicxml). */
+  private graceSlurStartNumbers: Set<string> = new Set();
 
   public get GetVoice(): Voice {
     return this.voice;
@@ -154,6 +160,9 @@ export class VoiceGenerator {
               dotsXml: number): Note {
     this.currentStaffEntry = parentStaffEntry;
     this.currentMeasure = parentMeasure;
+    if (!isGraceNote) {
+      this.graceSlurStartNumbers.clear();
+    }
     //log.debug("read called:", restNote);
 
     try {
@@ -191,10 +200,21 @@ export class VoiceGenerator {
           }
         } else if (this.slurReader !== undefined && this.currentNote.ParentVoiceEntry.IsGrace) {
           // A slur that starts on a grace note is drawn by VexFlow, from the grace notes to their main note (see VoiceEntry.GraceSlur).
-          //   One that stops on a grace note (e.g. from a trilled note to its termination) is read like any other slur.
-          const slurStopElements: IXmlElement[] = slurElements.filter((slurElement: IXmlElement) => slurElement.attribute("type")?.value === "stop");
+          //   One that stops on a grace note (e.g. from a trilled note to its termination) is read like any other slur, unless
+          //   it started on an earlier grace note of the group (see graceSlurStartNumbers).
+          const slurNumber: (slurElement: IXmlElement) => string = (slurElement: IXmlElement): string =>
+            slurElement.attribute("number")?.value ?? "1";
+          const slurStopElements: IXmlElement[] = [];
+          for (const slurElement of slurElements.filter((element: IXmlElement) => element.attribute("type")?.value === "stop")) {
+            if (!this.graceSlurStartNumbers.delete(slurNumber(slurElement))) {
+              slurStopElements.push(slurElement);
+            }
+          }
           if (slurStopElements.length > 0) {
             this.slurReader.addSlur(slurStopElements, this.currentNote);
+          }
+          for (const slurElement of slurElements.filter((element: IXmlElement) => element.attribute("type")?.value === "start")) {
+            this.graceSlurStartNumbers.add(slurNumber(slurElement));
           }
         }
         // read Tuplets
