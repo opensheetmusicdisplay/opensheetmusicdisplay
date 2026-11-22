@@ -265,6 +265,10 @@ export class EngravingRules {
     public TabUseXNoteheadShapeForTabNote: boolean;
     public TabUseXNoteheadAlternativeGlyph: boolean;
     public TabXNoteheadScale: number;
+    /** CSS weight of TAB fret text, e.g. "normal", "bold" or "600". Default "normal" keeps the existing font.
+     * Applies to main and grace frets and their width measurements, leaving glyph-based X notes and other labels unchanged.
+     * Set before loading a score, or call updateGraphic() after changing it. */
+    public TabFretFontWeight: string;
 
     /** Whether the first measure is allowed to have a left repeat barline, if explicitly given in the MusicXML. */
     public RepetitionAllowFirstMeasureBeginningRepeatBarline: boolean;
@@ -1021,6 +1025,7 @@ export class EngravingRules {
         this.TabUseXNoteheadShapeForTabNote = true;
         this.TabUseXNoteheadAlternativeGlyph = true;
         this.TabXNoteheadScale = 0.9;
+        this.TabFretFontWeight = "normal";
 
         // Slur and Tie variables
         this.SlurPlacementFromXML = true;

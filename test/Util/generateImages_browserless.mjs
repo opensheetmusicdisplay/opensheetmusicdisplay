@@ -775,6 +775,7 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     const isTestTabSlideLineTypes = sampleFilename.startsWith("test_tab_slide_line_types");
     const isTestTabTieXmlPlacement = sampleFilename.startsWith("test_tab_tie_xml_placement.");
     const isTestTabNoteColors = sampleFilename.startsWith("test_tab_note_colors.");
+    const isTestTabFretFontWeight = sampleFilename.startsWith("test_tab_fret_font_weight.");
     const isTestTabs4Strings = sampleFilename.includes("test_tabs_4_strings");
     const isTestFingeringLeft = sampleFilename.includes("test_fingering_left");
     const isTestArticulationAboveNote = sampleFilename.includes("test_accent_above_except_piano_left_hand");
@@ -900,6 +901,9 @@ function setOsmdTestOptionsBeforeLoad(sampleFilename, options, osmdInstance) {
     }
     if (isTestTabRhythmDots || isTestTabNoteColors) {
         osmdInstance.EngravingRules.TabRhythmRendered = true;
+    }
+    if (isTestTabFretFontWeight) {
+        osmdInstance.EngravingRules.TabFretFontWeight = "bold";
     }
     if (isTestTabs4Strings) {
         osmdInstance.EngravingRules.TabKeySignatureSpacingAdded = false;
