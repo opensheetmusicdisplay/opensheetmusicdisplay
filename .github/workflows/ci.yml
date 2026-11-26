@@ -41,6 +41,6 @@ jobs:
         env:
           CI: true
 
-      # the npm package (npm pack): its files, require(), script tag, typings, and that "dependencies" are enough
+      # the npm package (npm pack): ES module, require(), script tag, paths of "exports", typings
       - name: Test package
         run: npm run test:package
