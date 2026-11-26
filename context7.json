@@ -1,0 +1,30 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "OpenSheetMusicDisplay (OSMD)",
+  "description": "OSMD renders MusicXML (.musicxml, .xml, .mxl) as sheet music in the browser and in Node.js, as SVG or canvas, drawing with a patched VexFlow 1.2.93. TypeScript, BSD-3. Load and render a score, step through it with a cursor, transpose it, color notes, convert it to Music Braille. Guides with tested code: https://opensheetmusicdisplay.org/docs/",
+  "branch": "develop",
+  "excludeFolders": ["test", "bin", "resources", "demo", "src/VexFlowPatch"],
+  "excludeFiles": ["CHANGELOG_old.md"],
+  "rules": [
+    "Await osmd.load() before osmd.render(). load() is async and takes a URL, a MusicXML string, an XML Document or a Blob (.musicxml, .xml or compressed .mxl).",
+    "Wrap load() and render() of files from users in one try/catch: load() rejects when a file can't be read, and broken MusicXML can still make render() throw.",
+    "Use one OpenSheetMusicDisplay instance per container. In React, Vue, Angular or Svelte, call osmd.destroy() (OSMD 3.0) when the component unmounts or its score changes.",
+    "destroy() aborts a load() still in flight, which then rejects with an Error named AbortError: treat that one as expected. OSMD 2.x has no destroy(): call clear() and dispose(), then empty the container.",
+    "Zoom is osmd.Zoom with a capital Z, applied by the next render(). OSMD lays the score out again, so a smaller zoom fits more measures per line instead of shrinking a picture.",
+    "Set options in the constructor or with osmd.setOptions(), then render(). renderSingleHorizontalStaffline and the default notehead color only take effect when set before load(); IOSMDOptions lists every option.",
+    "Every render replaces the SVG elements, and OSMD also renders by itself (autoResize, renderNext batches). Re-attach listeners and colors in the onRender option (OSMD 3.0).",
+    "autoResize is on by default; in 3.0 it follows the container's width and skips rendering a container without width. Set autoResize: false in Node.js.",
+    "To transpose, set osmd.TransposeCalculator = new IntervalTransposeCalculator() first, then osmd.Sheet.Transpose = semitones, then render(). Without a calculator, Transpose does nothing.",
+    "OSMD counts octaves three lower than scientific pitch notation: middle C is octave 1. note.Pitch.ToStringShort(3) gives names like C4.",
+    "Step through a score with osmd.cursor.show(), next(), previous() and reset(); read it with osmd.cursor.NotesUnderCursor() and osmd.cursor.Iterator (EndReached, CurrentMeasureIndex).",
+    "Leave the followCursor option off on pages people scroll themselves: it scrolls the page to the cursor at every step.",
+    "In Node.js the package is a CommonJS build: import the default export and take OpenSheetMusicDisplay from it. Set jsdom's window, document, DOMParser and Node as globals and give the container an offsetWidth.",
+    "For PNG output in Node.js, install @napi-rs/canvas next to jsdom and use backend: 'canvas'. SVG needs jsdom only.",
+    "For long scores, draw a range with drawFromMeasureNumber and drawUpToMeasureNumber, or draw in batches with renderNext() and enableIncrementalRenderingOnScroll().",
+    "Music Braille: load a score, then new BrailleConverter().convert(osmd.Sheet).text gives Unicode braille (Music Braille Code 2015). render() is not needed for it, except for format: 'facsimile', which also needs options.graphicSheet (osmd.GraphicSheet after render()).",
+    "OSMD draws with its own patched VexFlow 1.2.93. Don't install VexFlow 4 or 5 for OSMD or use their APIs on OSMD's output.",
+    "OSMD renders, it doesn't edit: code can hide, color or skip elements, not move or add notes.",
+    "PDF export isn't built into OSMD: render with the SVG backend (call renderRemaining() first after renderNext()), then put each page's SVG, osmd.drawer.Backends[i].getSvgElement(), into a PDF, e.g. with jsPDF, as an image or as vectors with svg2pdf.js. The OSMD demo's createPdf() does this.",
+    "Public OSMD plays no audio. The audio player (PlaybackManager), WAV and MP3 export and OSMD Native are OSMD Extended, the build for GitHub Sponsors. Jianpu (numbered musical notation, 简谱) is OSMD Extended too, in a build of its own (branch feat/jianpu), so that the default build stays small."
+  ]
+}
