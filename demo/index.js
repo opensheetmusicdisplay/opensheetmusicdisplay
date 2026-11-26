@@ -867,29 +867,31 @@ import { IntervalTransposeCalculator } from '../src/Plugins/Transpose/IntervalTr
 
         // test parameter: ?openUrl=https://opensheetmusiceducation.org/index.php?gf-download=2020%2F01%2FJohannSebastianBach_PraeludiumInCDur_BWV846_1.xml&endUrl&form-id=1&field-id=4&hash=c4ba271ef08204a26cbd4cd2d751c53b78f238c25ddbb1f343e1172f2ce2aa53
         //   (enable the console.log at the end of this method for testing)
-        // working test parameter in local demo: ?openUrl=OSMD_function_test_all.xml&endUrl
-    
+        // working test parameters in local demo: ?openUrl=OSMD_function_test_all.xml or ?openUrl=OSMD_function_test_all.xml&endUrl
+        //   '&endUrl' is only needed when the url itself contains '&' (its own parameters, like the test parameter above).
+
         if (parameterName === 'openUrl') {
-            let startParameterName = 'openUrl=';
-            let startParameterName2 = 'openURL=';
-            let endParameterName = '&endUrl';
-            let endParameterName2 = '&endURL';
-            let openUrlIndex = location.search.indexOf(startParameterName);
-            if (openUrlIndex < 0) {
-                openUrlIndex = location.search.indexOf(startParameterName2);
-                if (openUrlIndex < 0) {
+            const search = location.search;
+            let startIndex = search.indexOf('openUrl=');
+            if (startIndex < 0) {
+                startIndex = search.indexOf('openURL=');
+                if (startIndex < 0) {
                     return undefined;
                 }
             }
-            let endIndex = location.search.indexOf(endParameterName) + endParameterName.length;
+            startIndex += 'openUrl='.length;
+            let endIndex = search.indexOf('&endUrl', startIndex);
             if (endIndex < 0) {
-                endIndex = location.search.indexOf(endParameterName2) + endParameterName2.length;
+                endIndex = search.indexOf('&endURL', startIndex);
+            }
+            if (endIndex < 0) {
+                // without '&endUrl', the url ends at the next parameter, like any other parameter's value
+                endIndex = search.indexOf('&', startIndex);
                 if (endIndex < 0) {
-                    console.log("[OSMD] If using openUrl as a parameter, you have to end it with '&endUrl'. openUrl parameter omitted.");
-                    return undefined;
+                    endIndex = search.length;
                 }
             }
-            let urlString = location.search.substring(openUrlIndex + startParameterName.length, endIndex - endParameterName.length);
+            const urlString = search.substring(startIndex, endIndex);
             //console.log("openUrl: " + urlString);
             return urlString;
         }
