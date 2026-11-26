@@ -20,6 +20,7 @@ export * from "./Voice";
 export * from "./VoiceEntry";
 export * from "./Instructions";
 export * from "./Articulation";
+export * from "./TechnicalArrow";
 export * from "./TabNote";
 export * from "./Expressions";
 export * from "./HelperObjects";

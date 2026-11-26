@@ -15,6 +15,7 @@ import { GraceNoteGroup } from './gracenotegroup';
 import { Stroke } from './strokes';
 import { StringNumber } from './stringnumber';
 import { Articulation } from './articulation';
+import { TechnicalArrow } from './technicalarrow';
 import { Ornament } from './ornament';
 import { Annotation } from './annotation';
 import { Bend } from './bend';
@@ -52,6 +53,7 @@ export class ModifierContext {
       NoteSubGroup,
       StringNumber,
       Articulation,
+      TechnicalArrow,
       Ornament,
       Annotation,
       Bend,

@@ -2342,6 +2342,17 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 VexFlowConverter.generateArticulations(vfStaveNote, gve.notes[0], this.rules);
             }
         }
+        this.createTechnicalArrows();
+    }
+
+    /** Arrows from `<technical><arrow>`, on each note of the voice entry (a chord can carry one on a single head).
+     *  Tab measures skip createArticulations() and call this on its own. */
+    protected createTechnicalArrows(): void {
+        for (const graphicalStaffEntry of this.staffEntries) {
+            for (const gve of (graphicalStaffEntry as VexFlowStaffEntry).graphicalVoiceEntries) {
+                VexFlowConverter.generateTechnicalArrows(gve);
+            }
+        }
     }
 
     /**

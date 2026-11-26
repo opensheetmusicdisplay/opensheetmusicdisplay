@@ -13,6 +13,7 @@ import {Arpeggio} from "./Arpeggio";
 import {NoteType} from "./NoteType";
 import { SourceMeasure } from "./SourceMeasure";
 import { TechnicalInstruction } from "./Instructions";
+import { TechnicalArrow } from "./TechnicalArrow";
 import { Glissando } from "../../MusicalScore/VoiceData/Glissando";
 import { PlacementEnum } from "./Expressions/AbstractExpression";
 
@@ -118,6 +119,8 @@ export class Note {
     public Fingering: TechnicalInstruction; // this is also stored in VoiceEntry.TechnicalInstructions
     public StringInstruction: TechnicalInstruction; // this is also stored in VoiceEntry.TechnicalInstructions
     // note that there is also TabNote.StringNumber, so we can't use that identifier here
+    /** Arrows from `<technical><arrow>` (e.g. a guitar strum). One note can have more than one. */
+    public TechnicalArrows: TechnicalArrow[] = [];
     /** Used by GraphicalNote.FromNote(note) and osmd.rules.GNote(note) to get a GraphicalNote from a Note.
      *  Note that we don't want the data model (Note) to be dependent on the graphical implementation (GraphicalNote),
      *    and have (potentially circular) import dependencies of graphical parts, which also applies to other non-graphical classes.

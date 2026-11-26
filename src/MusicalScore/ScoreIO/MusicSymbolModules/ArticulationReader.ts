@@ -7,6 +7,7 @@ import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {AccidentalEnum} from "../../../Common/DataObjects/Pitch";
 import { Articulation } from "../../VoiceData/Articulation";
 import { Note } from "../../VoiceData/Note";
+import { ArrowDirection, CircularArrowDirection, TechnicalArrow } from "../../VoiceData/TechnicalArrow";
 import { EngravingRules } from "../../Graphical/EngravingRules";
 import { MultiExpression } from "../../VoiceData/Expressions/MultiExpression";
 import { SourceMeasure } from "../../VoiceData/SourceMeasure";
@@ -233,6 +234,32 @@ export class ArticulationReader {
       currentTechnicalInstruction.type = TechnicalInstructionType.String;
       currentNote.StringInstruction = currentTechnicalInstruction;
       currentVoiceEntry.TechnicalInstructions.push(currentTechnicalInstruction);
+    }
+
+    this.addArrows(technicalNode, currentNote);
+  }
+
+  /** `<arrow>` inside `<technical>`: a directional or circular arrow, e.g. a guitar strum. */
+  private addArrows(technicalNode: IXmlElement, currentNote: Note): void {
+    for (const arrowNode of technicalNode.elements("arrow")) {
+      const direction: ArrowDirection = TechnicalArrow.directionFromXml(arrowNode.element("arrow-direction")?.value);
+      const circular: CircularArrowDirection = TechnicalArrow.circularFromXml(arrowNode.element("circular-arrow")?.value);
+      if (!direction && !circular) {
+        const raw: string = arrowNode.element("arrow-direction")?.value ?? arrowNode.element("circular-arrow")?.value;
+        if (raw !== undefined) {
+          log.debug("ArticulationReader.addArrows", "ignoring arrow with unknown direction '" + raw.trim() + "'");
+        }
+        continue;
+      }
+      const arrow: TechnicalArrow = new TechnicalArrow();
+      arrow.direction = direction;
+      arrow.circular = circular;
+      arrow.sourceNote = currentNote;
+      arrow.smufl = arrowNode.attribute("smufl")?.value;
+      if (arrowNode.attribute("placement")?.value === "below") {
+        arrow.placement = PlacementEnum.Below;
+      }
+      currentNote.TechnicalArrows.push(arrow);
     }
   }
 

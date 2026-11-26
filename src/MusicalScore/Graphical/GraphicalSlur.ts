@@ -941,7 +941,8 @@ export class GraphicalSlur extends GraphicalCurve {
         const marks: ArticulationOutside[] = vfnote.getModifiers()
             // (a breath mark is after the note)
             .filter((modifier: any) => (modifier.getCategory() === VF.Articulation.CATEGORY && modifier.type !== "abr" ||
-                modifier.getCategory() === VF.Ornament.CATEGORY) && modifier.getPosition() === position)
+                modifier.getCategory() === VF.Ornament.CATEGORY ||
+                modifier.getCategory() === "technicalarrows") && modifier.getPosition() === position)
             .map((articulation: any): ArticulationOutside => {
                 const measure: () => ArticulationExtent = () => {
                     const extent: {left: number, right: number, top: number, bottom: number} = articulation.getExtent();
