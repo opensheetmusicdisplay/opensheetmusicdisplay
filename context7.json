@@ -3,7 +3,7 @@
   "projectTitle": "OpenSheetMusicDisplay (OSMD)",
   "description": "OSMD renders MusicXML (.musicxml, .xml, .mxl) as sheet music in the browser and in Node.js, as SVG or canvas, drawing with a patched VexFlow 1.2.93. TypeScript, BSD-3. Load and render a score, step through it with a cursor, transpose it, color notes, convert it to Music Braille. Guides with tested code: https://opensheetmusicdisplay.org/docs/",
   "branch": "develop",
-  "excludeFolders": ["test", "bin", "resources"],
+  "excludeFolders": ["test", "bin", "resources", "demo", "src/VexFlowPatch"],
   "excludeFiles": ["CHANGELOG_old.md"],
   "rules": [
     "Await osmd.load() before osmd.render(). load() is async and takes a URL, a MusicXML string, an XML Document or a Blob (.musicxml, .xml or compressed .mxl).",
@@ -21,9 +21,10 @@
     "In Node.js the package is a CommonJS build: import the default export and take OpenSheetMusicDisplay from it. Set jsdom's window, document, DOMParser and Node as globals and give the container an offsetWidth.",
     "For PNG output in Node.js, install @napi-rs/canvas next to jsdom and use backend: 'canvas'. SVG needs jsdom only.",
     "For long scores, draw a range with drawFromMeasureNumber and drawUpToMeasureNumber, or draw in batches with renderNext() and enableIncrementalRenderingOnScroll().",
-    "Music Braille: load a score, then new BrailleConverter().convert(osmd.Sheet).text gives Unicode braille (Music Braille Code 2015). render() is not needed for it.",
+    "Music Braille: load a score, then new BrailleConverter().convert(osmd.Sheet).text gives Unicode braille (Music Braille Code 2015). render() is not needed for it, except for format: 'facsimile', which also needs options.graphicSheet (osmd.GraphicSheet after render()).",
     "OSMD draws with its own patched VexFlow 1.2.93. Don't install VexFlow 4 or 5 for OSMD or use their APIs on OSMD's output.",
     "OSMD renders, it doesn't edit: code can hide, color or skip elements, not move or add notes.",
-    "Public OSMD plays no audio. The audio player (PlaybackManager), WAV and MP3 export, Jianpu and OSMD Native are OSMD Extended, the build for GitHub Sponsors."
+    "PDF export isn't built into OSMD: render with the SVG backend (call renderRemaining() first after renderNext()), then put each page's SVG, osmd.drawer.Backends[i].getSvgElement(), into a PDF, e.g. with jsPDF, as an image or as vectors with svg2pdf.js. The OSMD demo's createPdf() does this.",
+    "Public OSMD plays no audio. The audio player (PlaybackManager), WAV and MP3 export and OSMD Native are OSMD Extended, the build for GitHub Sponsors. Jianpu (numbered musical notation, 简谱) is OSMD Extended too, in a build of its own (branch feat/jianpu), so that the default build stays small."
   ]
 }
