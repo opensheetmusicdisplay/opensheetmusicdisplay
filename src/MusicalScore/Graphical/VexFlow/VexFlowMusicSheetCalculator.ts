@@ -548,8 +548,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       //   without the reset, a re-render would read the previous render's extended stems there.
       // - TabNote widths: TabNote.setStave() re-measures the fret text width once a stave has a
       //   rendering context, i.e. during the draws at the end of a render. updateWidth() restores
-      //   the construction-time width (from VexFlow's glyph table), which is what the first
-      //   render's width calculation saw.
+      //   the construction-time width (from VexFlow's glyph table, or the configured fret font measurer),
+      //   which is what the first render's width calculation saw.
       // - stemExtensionOverride: StaveNote.format()'s voice-collision handling shortens stems via
       //   setStemLength() during a render. Restore the value it had before the first render
       //   (usually none - but e.g. the tremolo-between-notes stem lengthening of VexFlowConverter

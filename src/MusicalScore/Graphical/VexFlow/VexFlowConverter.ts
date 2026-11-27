@@ -1442,6 +1442,16 @@ export class VexFlowConverter {
             }
         }
         (vfnote as any).render_options.font = VexFlowConverter.vexFlowTextCssFont((vfnote as any).render_options.font, rules);
+        const requestedWeight: string = rules.TabFretFontWeight?.trim().toLowerCase() || "normal";
+        const fretWeight: string = requestedWeight === "400" ? "normal" : requestedWeight;
+        (vfnote as any).render_options.font_weight = fretWeight;
+        if (fretWeight !== "normal" && rules.TextMeasurer.computeTextWidthInCssFont) {
+            // updateWidth() also runs before system building, before a stave has a rendering context.
+            const fretFont: string = `${fretWeight} ${(vfnote as any).render_options.font}`;
+            (vfnote as any).render_options.measure_fret_text = (text: string): number =>
+                rules.TextMeasurer.computeTextWidthInCssFont(text, fretFont);
+            vfnote.updateWidth();
+        }
         if (isXNotehead) {
             // (vfnote as any).render_options.fretScale = rules.TabXNoteheadScale; // doesn't work, is overwritten later
             (vfnote as any).render_options.scale = rules.TabXNoteheadScale; // VexFlowPatch

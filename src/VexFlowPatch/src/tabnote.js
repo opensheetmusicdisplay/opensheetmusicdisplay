@@ -236,6 +236,11 @@ export class TabNote extends StemmableNote {
       if (this.ghost) fret = '(' + fret + ')';
       const glyphScale = this.render_options.fretScale ?? this.render_options.scale;
       const glyph = Flow.tabToGlyph(fret, glyphScale, this.render_options.TabUseXNoteheadAlternativeGlyph);
+      // VexFlowPatch: a configured weight needs real text widths before a stave/context is assigned too.
+      if (!glyph.code && this.render_options.measure_fret_text) {
+        const width = this.render_options.measure_fret_text(String(glyph.text));
+        glyph.getWidth = () => width;
+      }
       if (fret === 'x') {
         glyph.isXGlyph = true;
       }
@@ -265,7 +270,7 @@ export class TabNote extends StemmableNote {
         const text = '' + glyph.text;
         if (text.toUpperCase() !== 'X') {
           ctx.save();
-          ctx.setRawFont(this.render_options.font);
+          this.setFretFont(ctx);
           glyph.width = ctx.measureText(text).width;
           ctx.restore();
           glyph.getWidth = () => glyph.width;
@@ -455,6 +460,19 @@ export class TabNote extends StemmableNote {
     }
   }
 
+  // VexFlowPatch: measure and paint fret text with the same weight, family and main/grace size.
+  setFretFont(ctx) {
+    const font = this.render_options.font;
+    const weight = this.render_options.font_weight;
+    if (!weight || weight === 'normal') {
+      ctx.setRawFont(font); // Keep the existing default path, including its SVG attributes.
+    } else {
+      // TabNote and GraceTabNote use point sizes (10pt and 7.5pt); the rest is the complete family name.
+      const space = font.indexOf(' ');
+      ctx.setFont(font.slice(space + 1), parseFloat(font), weight);
+    }
+  }
+
   // Render the fret positions onto the context
   drawPositions() {
     const ctx = this.context;
@@ -501,7 +519,7 @@ export class TabNote extends StemmableNote {
           glyph.code);
       } else {
         ctx.save();
-        ctx.setRawFont(this.render_options.font);
+        this.setFretFont(ctx);
         const text = glyph.text.toString();
         // VexFlowPatch: retain the hidden fret's empty SVG text for OSMD's note/modifier lookup.
         // Only empty text gets the extra flag: Canvas interprets a fourth argument as maxWidth.
